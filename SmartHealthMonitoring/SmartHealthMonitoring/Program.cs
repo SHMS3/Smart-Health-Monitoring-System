@@ -1,3 +1,7 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore;
+using SmartHealthMonitoring.Context;
+
 namespace SmartHealthMonitoring
 {
     public class Program
@@ -8,8 +12,19 @@ namespace SmartHealthMonitoring
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            //Đki db
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+           options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var context = services.GetRequiredService<ApplicationDbContext>();
+
+                SeedData.Initialize(context);
+            }
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
