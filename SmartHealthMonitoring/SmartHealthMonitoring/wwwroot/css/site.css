@@ -1,22 +1,53 @@
-html {
-  font-size: 14px;
+html { font-size: 16px; position: relative; min-height: 100%; }
+body { margin: 0; }
+
+.btn:focus, .btn:active:focus, .form-control:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #0ea5e9;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+@media (max-width: 900px) {
+    .navbar-inner { flex-wrap: wrap; }
+}
+@keyframes pd {
+    0%,100% {
+        opacity: 1;
+        transform: scale(1)
+    }
+
+    50% {
+        opacity: .5;
+        transform: scale(.8)
+    }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+@media(max-width:1024px) {
+    .foot-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+@media(max-width:768px) {
+    .nav-links, .nav-actions {
+        display: none;
+    }
+
+    .foot-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .foot-bottom {
+        flex-direction: column;
+        text-align: center;
+    }
 }
 
-body {
-  margin-bottom: 60px;
+@media(max-width:480px) {
+    .nav-inner {
+        padding: 0 20px;
+    }
+
+    .foot-inner {
+        padding: 0 20px;
+    }
 }
