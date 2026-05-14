@@ -1,49 +1,289 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SmartHealthMonitoring</title>
+    <meta name="description" content="SmartHealth - Hệ thống quản lý hồ sơ bệnh án và theo dõi sức khỏe thông minh, cảnh báo bệnh sớm bằng AI." />
+    <title>@ViewData["Title"] - SmartHealth</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/SmartHealthMonitoring.styles.css" asp-append-version="true" />
+
+    <style>
+        :root {
+            --primary:       #0ea5e9;
+            --primary-dark:  #0284c7;
+            --secondary:     #6366f1;
+            --accent:        #10b981;
+            --warn:          #f59e0b;
+            --danger:        #ef4444;
+            --grad:          linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%);
+            --bg:            #ffffff;
+            --bg-soft:       #f8fafc;
+            --border:        #e2e8f0;
+            --text:          #0f172a;
+            --text-sub:      #475569;
+            --text-muted:    #94a3b8;
+        }
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; }
+        a { text-decoration:none; color:inherit; }
+
+        ::-webkit-scrollbar { width:5px; }
+        ::-webkit-scrollbar-track { background:#f1f5f9; }
+        ::-webkit-scrollbar-thumb { background:var(--grad); border-radius:3px; }
+
+        /* ── NAVBAR ── */
+        .navbar-main {
+            position:fixed; top:0; left:0; right:0; z-index:1000;
+            background:rgba(255,255,255,0.92);
+            backdrop-filter:blur(16px);
+            -webkit-backdrop-filter:blur(16px);
+            border-bottom:1px solid var(--border);
+            padding:0;
+            transition:box-shadow .3s;
+        }
+        .navbar-main.elevated { box-shadow:0 4px 24px rgba(14,165,233,.12); }
+
+        .nav-inner {
+            max-width:1280px; margin:0 auto; padding:0 32px;
+            height:70px; display:flex; align-items:center; justify-content:space-between; gap:16px;
+        }
+
+        .nav-logo { display:flex; align-items:center; gap:10px; }
+        .nav-logo-icon {
+            width:40px; height:40px; border-radius:11px;
+            background:var(--grad); display:flex; align-items:center; justify-content:center;
+            box-shadow:0 4px 14px rgba(14,165,233,.35); flex-shrink:0;
+        }
+        .nav-logo-icon i { color:#fff; font-size:17px; }
+        .nav-logo-name {
+            font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:1.15rem;
+            background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+        }
+        .nav-logo-tag { display:block; font-size:.6rem; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-top:-3px; -webkit-text-fill-color:var(--text-muted); }
+
+        .nav-links { display:flex; align-items:center; gap:2px; list-style:none; }
+        .nav-links a {
+            font-size:.875rem; font-weight:500; color:var(--text-sub); padding:7px 15px;
+            border-radius:8px; transition:all .2s; position:relative;
+        }
+        .nav-links a:hover { color:var(--primary); background:rgba(14,165,233,.07); }
+
+        .nav-actions { display:flex; align-items:center; gap:8px; }
+        .btn-ghost {
+            font-size:.875rem; font-weight:500; color:var(--text-sub); padding:7px 18px;
+            border:1px solid var(--border); border-radius:8px; background:transparent; transition:all .2s;
+        }
+        .btn-ghost:hover { color:var(--primary); border-color:var(--primary); background:rgba(14,165,233,.06); }
+
+        .btn-outline-primary-nav {
+            font-size:.875rem; font-weight:600; color:var(--primary); padding:7px 18px;
+            border:1.5px solid rgba(14,165,233,.5); border-radius:8px; background:rgba(14,165,233,.06); transition:all .2s;
+        }
+        .btn-outline-primary-nav:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+        .btn-appointment {
+            font-size:.875rem; font-weight:700; color:#fff; padding:9px 22px;
+            border-radius:50px; background:var(--grad); border:none;
+            box-shadow:0 4px 14px rgba(14,165,233,.3); transition:all .3s; cursor:pointer;
+        }
+        .btn-appointment:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(14,165,233,.45); color:#fff; }
+
+        /* ── PAGE ── */
+        .page-main { background:#fff; }
+
+        /* ── FOOTER ── */
+        footer {
+            background:#0f172a; color:#cbd5e1; padding:72px 0 0;
+            position:relative; overflow:hidden;
+        }
+        footer::before {
+            content:''; position:absolute; top:-180px; left:50%; transform:translateX(-50%);
+            width:900px; height:400px;
+            background:radial-gradient(ellipse,rgba(14,165,233,.08) 0%,transparent 70%);
+            pointer-events:none;
+        }
+        .foot-inner { max-width:1280px; margin:0 auto; padding:0 32px; }
+
+        .foot-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:48px; padding-bottom:56px; }
+
+        .foot-brand p { font-size:.85rem; line-height:1.8; color:#64748b; max-width:270px; margin-top:14px; }
+
+        .foot-socials { display:flex; gap:10px; margin-top:22px; }
+        .soc-btn {
+            width:36px; height:36px; border-radius:9px; border:1px solid rgba(148,163,184,.15);
+            display:flex; align-items:center; justify-content:center;
+            color:#64748b; font-size:.8rem; transition:all .2s;
+        }
+        .soc-btn:hover { border-color:var(--primary); color:var(--primary); background:rgba(14,165,233,.08); transform:translateY(-2px); }
+
+        .foot-col h5 { font-size:.72rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#475569; margin-bottom:18px; }
+        .foot-col ul { list-style:none; }
+        .foot-col ul li { margin-bottom:9px; }
+        .foot-col ul li a { font-size:.84rem; color:#64748b; transition:color .2s; }
+        .foot-col ul li a:hover { color:var(--primary); }
+
+        .foot-contact-item { display:flex; align-items:flex-start; gap:10px; margin-bottom:12px; }
+        .foot-contact-item .ic {
+            width:30px; height:30px; border-radius:7px;
+            background:rgba(14,165,233,.1); display:flex; align-items:center; justify-content:center;
+            color:var(--primary); font-size:.75rem; flex-shrink:0;
+        }
+        .foot-contact-item span { font-size:.82rem; color:#64748b; line-height:1.6; }
+
+        .foot-status {
+            display:inline-flex; align-items:center; gap:6px; margin-top:14px;
+            background:rgba(16,185,129,.1); border:1px solid rgba(16,185,129,.2);
+            border-radius:50px; padding:4px 12px; font-size:.73rem; color:#10b981; font-weight:500;
+        }
+        .pdot { width:6px; height:6px; border-radius:50%; background:#10b981; animation:pd 1.5s infinite; }
+       
+
+        .foot-bottom {
+            border-top:1px solid rgba(148,163,184,.1); padding:22px 0;
+            display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+        }
+        .foot-bottom p, .foot-bottom a { font-size:.78rem; color:#475569; }
+        .foot-bottom a:hover { color:var(--primary); }
+        .foot-bottom-links { display:flex; gap:20px; }
+
+        /* ── RESPONSIVE ── */
+       
+    </style>
+
+    @await RenderSectionAsync("Styles", required: false)
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SmartHealthMonitoring</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+
+<!-- ══════════ NAVBAR ══════════ -->
+<nav class="navbar-main" id="mainNav">
+    <div class="nav-inner">
+
+        <a href="/" class="nav-logo">
+            <div class="nav-logo-icon"><i class="fas fa-heartbeat"></i></div>
+            <div>
+                <span class="nav-logo-name">SmartHealth</span>
+                <span class="nav-logo-tag">Monitoring System</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <li><a href="#features">Tính năng</a></li>
+            <li><a href="#about">Giới thiệu</a></li>
+            <li><a href="#contact">Liên hệ</a></li>
+        </ul>
+
+        <div class="nav-actions">
+            <a asp-controller="Auth" asp-action="Login" class="btn-ghost">Đăng nhập</a>
+            <a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">Đăng ký</a>
+            <a asp-controller="Appointment" asp-action="Index" class="btn-appointment">
+                <i class="fas fa-calendar-plus me-1"></i> Đặt lịch hẹn
+            </a>
+        </div>
+
+    </div>
+</nav>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="page-main">
+    <main role="main">
+        @RenderBody()
+    </main>
+</div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer id="contact">
+    <div class="foot-inner">
+        <div class="foot-grid">
+
+            <div class="foot-brand">
+                <a href="/" class="nav-logo">
+                    <div class="nav-logo-icon"><i class="fas fa-heartbeat"></i></div>
+                    <div>
+                        <span class="nav-logo-name">SmartHealth</span>
+                        <span class="nav-logo-tag">Monitoring System</span>
+                    </div>
+                </a>
+                <p>Hệ thống quản lý hồ sơ bệnh án và theo dõi sức khỏe thông minh. Phát hiện sớm nguy cơ bệnh tật nhờ AI tiên tiến.</p>
+                <div class="foot-socials">
+                    <a href="#" class="soc-btn"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="soc-btn"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="soc-btn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="soc-btn"><i class="fab fa-youtube"></i></a>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - SmartHealthMonitoring - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="foot-col">
+                <h5>Dịch vụ</h5>
+                <ul>
+                    <li><a href="#">Hồ sơ bệnh án</a></li>
+                    <li><a href="#">Đặt lịch khám</a></li>
+                    <li><a href="#">Theo dõi sức khỏe</a></li>
+                    <li><a href="#">Cảnh báo bệnh sớm</a></li>
+                    <li><a href="#">Phân tích AI</a></li>
+                    <li><a href="#">Kê đơn thuốc</a></li>
+                </ul>
+            </div>
+
+            <div class="foot-col">
+                <h5>Hỗ trợ</h5>
+                <ul>
+                    <li><a href="#">Trung tâm trợ giúp</a></li>
+                    <li><a href="#">Hướng dẫn sử dụng</a></li>
+                    <li><a href="#">Chính sách bảo mật</a></li>
+                    <li><a href="#">Điều khoản dịch vụ</a></li>
+                    <li><a href="#">Báo cáo sự cố</a></li>
+                </ul>
+            </div>
+
+            <div class="foot-col">
+                <h5>Liên hệ</h5>
+                <div class="foot-contact-item">
+                    <div class="ic"><i class="fas fa-map-marker-alt"></i></div>
+                    <span>123 Nguyễn Văn Linh,<br>TP. Hồ Chí Minh</span>
+                </div>
+                <div class="foot-contact-item">
+                    <div class="ic"><i class="fas fa-phone-alt"></i></div>
+                    <span>1900 1234 — Hotline 24/7</span>
+                </div>
+                <div class="foot-contact-item">
+                    <div class="ic"><i class="fas fa-envelope"></i></div>
+                    <span>contact@smarthealth.vn</span>
+                </div>
+                <div class="foot-status">
+                    <div class="pdot"></div> Hệ thống hoạt động ổn định
+                </div>
+            </div>
+
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+
+        <div class="foot-bottom">
+            <p>© 2026 SmartHealth Monitoring System. Bảo lưu mọi quyền.</p>
+            <div class="foot-bottom-links">
+                <a href="#">Bảo mật</a>
+                <a href="#">Điều khoản</a>
+                <a href="#">Cookies</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+<script>
+    const nav = document.getElementById('mainNav');
+    window.addEventListener('scroll', () => {
+        nav.classList.toggle('elevated', window.scrollY > 10);
+    });
+</script>
+@await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
