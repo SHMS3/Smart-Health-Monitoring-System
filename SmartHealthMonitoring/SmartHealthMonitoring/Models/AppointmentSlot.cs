@@ -7,7 +7,9 @@ public partial class AppointmentSlot
 {
     public Guid SlotId { get; set; }
 
-    public Guid ScheduleId { get; set; }
+    public Guid DoctorId { get; set; }
+
+    public DateOnly WorkDate { get; set; }
 
     public TimeOnly StartTime { get; set; }
 
@@ -15,7 +17,9 @@ public partial class AppointmentSlot
 
     public bool IsBooked { get; set; }
 
+    public DateTime? CreatedAt { get; set; }
+
     public virtual Appointment? Appointment { get; set; }
 
-    public virtual DoctorSchedule Schedule { get; set; } = null!;
+    public virtual Doctor Doctor { get; set; } = null!;
 }

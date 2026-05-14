@@ -19,8 +19,7 @@ public partial class Appointment
 
     public DateTime? CreatedAt { get; set; }
 
-    public virtual ICollection<MedicalRecord> MedicalRecords { get; set; } = new List<MedicalRecord>();
-
+    public virtual MedicalRecord? MedicalRecord { get; set; }
     public virtual Patient Patient { get; set; } = null!;
 
     public virtual AppointmentSlot Slot { get; set; } = null!;

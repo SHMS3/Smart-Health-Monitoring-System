@@ -133,14 +133,15 @@ namespace SmartHealthMonitoring.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.HasKey("AppointmentId")
-                        .HasName("PK__Appointm__8ECDFCC242B8353B");
+                        .HasName("PK_Appointments");
 
                     b.HasIndex("PatientId");
 
-                    b.HasIndex(new[] { "Status" }, "IX_Appointments_Status");
-
-                    b.HasIndex(new[] { "SlotId" }, "UQ__Appointm__0A124AAE1F24CEC2")
+                    b.HasIndex("SlotId")
                         .IsUnique();
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_Appointments_Status");
 
                     b.ToTable("Appointments");
                 });
@@ -152,22 +153,31 @@ namespace SmartHealthMonitoring.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("(newid())");
 
+                    b.Property<DateTime?>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(getdate())");
+
+                    b.Property<Guid>("DoctorId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time");
 
                     b.Property<bool>("IsBooked")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("ScheduleId")
-                        .HasColumnType("uniqueidentifier");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<TimeOnly>("StartTime")
                         .HasColumnType("time");
 
-                    b.HasKey("SlotId")
-                        .HasName("PK__Appointm__0A124AAF38799BA2");
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date");
 
-                    b.HasIndex("ScheduleId");
+                    b.HasKey("SlotId");
+
+                    b.HasIndex("DoctorId");
 
                     b.ToTable("AppointmentSlots");
                 });
@@ -245,37 +255,6 @@ namespace SmartHealthMonitoring.Migrations
                         .IsUnique();
 
                     b.ToTable("Doctors");
-                });
-
-            modelBuilder.Entity("SmartHealthMonitoring.Models.DoctorSchedule", b =>
-                {
-                    b.Property<Guid>("ScheduleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("(newid())");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("(getdate())");
-
-                    b.Property<Guid>("DoctorId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Shift")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateOnly>("WorkDate")
-                        .HasColumnType("date");
-
-                    b.HasKey("ScheduleId")
-                        .HasName("PK__DoctorSc__9C8A5B49619E8FDC");
-
-                    b.HasIndex("DoctorId");
-
-                    b.ToTable("DoctorSchedules");
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.GlobalThreshold", b =>
@@ -443,13 +422,16 @@ namespace SmartHealthMonitoring.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("RecordId")
-                        .HasName("PK__MedicalR__FBDF78E9225F4F28");
+                        .HasName("PK_MedicalRecords");
 
-                    b.HasIndex("AppointmentId");
+                    b.HasIndex("AppointmentId")
+                        .IsUnique()
+                        .HasFilter("[AppointmentId] IS NOT NULL");
 
                     b.HasIndex("DoctorId");
 
-                    b.HasIndex(new[] { "PatientId" }, "IX_MedicalRecords_PatientId");
+                    b.HasIndex("PatientId")
+                        .HasDatabaseName("IX_MedicalRecords_PatientId");
 
                     b.ToTable("MedicalRecords");
                 });
@@ -698,7 +680,7 @@ namespace SmartHealthMonitoring.Migrations
                         .WithOne("Appointment")
                         .HasForeignKey("SmartHealthMonitoring.Models.Appointment", "SlotId")
                         .IsRequired()
-                        .HasConstraintName("FK_Appointments_Slots");
+                        .HasConstraintName("FK_Appointments_AppointmentSlots");
 
                     b.Navigation("Patient");
 
@@ -707,13 +689,13 @@ namespace SmartHealthMonitoring.Migrations
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.AppointmentSlot", b =>
                 {
-                    b.HasOne("SmartHealthMonitoring.Models.DoctorSchedule", "Schedule")
+                    b.HasOne("SmartHealthMonitoring.Models.Doctor", "Doctor")
                         .WithMany("AppointmentSlots")
-                        .HasForeignKey("ScheduleId")
+                        .HasForeignKey("DoctorId")
                         .IsRequired()
-                        .HasConstraintName("FK_AppointmentSlots_Schedules");
+                        .HasConstraintName("FK_AppointmentSlots_Doctors");
 
-                    b.Navigation("Schedule");
+                    b.Navigation("Doctor");
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.AuditLog", b =>
@@ -736,17 +718,6 @@ namespace SmartHealthMonitoring.Migrations
                         .HasConstraintName("FK_Doctors_Users");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SmartHealthMonitoring.Models.DoctorSchedule", b =>
-                {
-                    b.HasOne("SmartHealthMonitoring.Models.Doctor", "Doctor")
-                        .WithMany("DoctorSchedules")
-                        .HasForeignKey("DoctorId")
-                        .IsRequired()
-                        .HasConstraintName("FK_DoctorSchedules_Doctors");
-
-                    b.Navigation("Doctor");
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.GlobalThreshold", b =>
@@ -793,8 +764,8 @@ namespace SmartHealthMonitoring.Migrations
             modelBuilder.Entity("SmartHealthMonitoring.Models.MedicalRecord", b =>
                 {
                     b.HasOne("SmartHealthMonitoring.Models.Appointment", "Appointment")
-                        .WithMany("MedicalRecords")
-                        .HasForeignKey("AppointmentId")
+                        .WithOne("MedicalRecord")
+                        .HasForeignKey("SmartHealthMonitoring.Models.MedicalRecord", "AppointmentId")
                         .HasConstraintName("FK_MedicalRecords_Appointments");
 
                     b.HasOne("SmartHealthMonitoring.Models.Doctor", "Doctor")
@@ -850,7 +821,7 @@ namespace SmartHealthMonitoring.Migrations
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.Appointment", b =>
                 {
-                    b.Navigation("MedicalRecords");
+                    b.Navigation("MedicalRecord");
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.AppointmentSlot", b =>
@@ -860,14 +831,9 @@ namespace SmartHealthMonitoring.Migrations
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.Doctor", b =>
                 {
-                    b.Navigation("DoctorSchedules");
+                    b.Navigation("AppointmentSlots");
 
                     b.Navigation("MedicalRecords");
-                });
-
-            modelBuilder.Entity("SmartHealthMonitoring.Models.DoctorSchedule", b =>
-                {
-                    b.Navigation("AppointmentSlots");
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.HealthMetric", b =>

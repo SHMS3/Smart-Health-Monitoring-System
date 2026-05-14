@@ -177,20 +177,22 @@ namespace SmartHealthMonitoring.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DoctorSchedules",
+                name: "AppointmentSlots",
                 columns: table => new
                 {
-                    ScheduleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "(newid())"),
+                    SlotId = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "(newid())"),
                     DoctorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     WorkDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    Shift = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    StartTime = table.Column<TimeOnly>(type: "time", nullable: false),
+                    EndTime = table.Column<TimeOnly>(type: "time", nullable: false),
+                    IsBooked = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "(getdate())")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__DoctorSc__9C8A5B49619E8FDC", x => x.ScheduleId);
+                    table.PrimaryKey("PK_AppointmentSlots", x => x.SlotId);
                     table.ForeignKey(
-                        name: "FK_DoctorSchedules_Doctors",
+                        name: "FK_AppointmentSlots_Doctors",
                         column: x => x.DoctorId,
                         principalTable: "Doctors",
                         principalColumn: "DoctorId");
@@ -246,23 +248,30 @@ namespace SmartHealthMonitoring.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AppointmentSlots",
+                name: "Appointments",
                 columns: table => new
                 {
-                    SlotId = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "(newid())"),
-                    ScheduleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StartTime = table.Column<TimeOnly>(type: "time", nullable: false),
-                    EndTime = table.Column<TimeOnly>(type: "time", nullable: false),
-                    IsBooked = table.Column<bool>(type: "bit", nullable: false)
+                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "(newid())"),
+                    SlotId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PatientId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SymptomsNote = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "(getdate())")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Appointm__0A124AAF38799BA2", x => x.SlotId);
+                    table.PrimaryKey("PK_Appointments", x => x.AppointmentId);
                     table.ForeignKey(
-                        name: "FK_AppointmentSlots_Schedules",
-                        column: x => x.ScheduleId,
-                        principalTable: "DoctorSchedules",
-                        principalColumn: "ScheduleId");
+                        name: "FK_Appointments_AppointmentSlots",
+                        column: x => x.SlotId,
+                        principalTable: "AppointmentSlots",
+                        principalColumn: "SlotId");
+                    table.ForeignKey(
+                        name: "FK_Appointments_Patients",
+                        column: x => x.PatientId,
+                        principalTable: "Patients",
+                        principalColumn: "PatientId");
                 });
 
             migrationBuilder.CreateTable(
@@ -293,33 +302,6 @@ namespace SmartHealthMonitoring.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Appointments",
-                columns: table => new
-                {
-                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "(newid())"),
-                    SlotId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PatientId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SymptomsNote = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "Pending"),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "(getdate())")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK__Appointm__8ECDFCC242B8353B", x => x.AppointmentId);
-                    table.ForeignKey(
-                        name: "FK_Appointments_Patients",
-                        column: x => x.PatientId,
-                        principalTable: "Patients",
-                        principalColumn: "PatientId");
-                    table.ForeignKey(
-                        name: "FK_Appointments_Slots",
-                        column: x => x.SlotId,
-                        principalTable: "AppointmentSlots",
-                        principalColumn: "SlotId");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "MedicalRecords",
                 columns: table => new
                 {
@@ -336,7 +318,7 @@ namespace SmartHealthMonitoring.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__MedicalR__FBDF78E9225F4F28", x => x.RecordId);
+                    table.PrimaryKey("PK_MedicalRecords", x => x.RecordId);
                     table.ForeignKey(
                         name: "FK_MedicalRecords_Appointments",
                         column: x => x.AppointmentId,
@@ -396,20 +378,20 @@ namespace SmartHealthMonitoring.Migrations
                 column: "PatientId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Appointments_Status",
-                table: "Appointments",
-                column: "Status");
-
-            migrationBuilder.CreateIndex(
-                name: "UQ__Appointm__0A124AAE1F24CEC2",
+                name: "IX_Appointments_SlotId",
                 table: "Appointments",
                 column: "SlotId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_AppointmentSlots_ScheduleId",
+                name: "IX_Appointments_Status",
+                table: "Appointments",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppointmentSlots_DoctorId",
                 table: "AppointmentSlots",
-                column: "ScheduleId");
+                column: "DoctorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AuditLogs_UserId",
@@ -421,11 +403,6 @@ namespace SmartHealthMonitoring.Migrations
                 table: "Doctors",
                 column: "UserId",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DoctorSchedules_DoctorId",
-                table: "DoctorSchedules",
-                column: "DoctorId");
 
             migrationBuilder.CreateIndex(
                 name: "UQ_GlobalThresholds",
@@ -456,7 +433,9 @@ namespace SmartHealthMonitoring.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_MedicalRecords_AppointmentId",
                 table: "MedicalRecords",
-                column: "AppointmentId");
+                column: "AppointmentId",
+                unique: true,
+                filter: "[AppointmentId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MedicalRecords_DoctorId",
@@ -544,13 +523,10 @@ namespace SmartHealthMonitoring.Migrations
                 name: "Appointments");
 
             migrationBuilder.DropTable(
-                name: "Patients");
-
-            migrationBuilder.DropTable(
                 name: "AppointmentSlots");
 
             migrationBuilder.DropTable(
-                name: "DoctorSchedules");
+                name: "Patients");
 
             migrationBuilder.DropTable(
                 name: "Doctors");

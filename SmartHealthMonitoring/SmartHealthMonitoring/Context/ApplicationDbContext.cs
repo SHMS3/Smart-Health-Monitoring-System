@@ -28,8 +28,6 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<Doctor> Doctors { get; set; }
 
-    public virtual DbSet<DoctorSchedule> DoctorSchedules { get; set; }
-
     public virtual DbSet<GlobalThreshold> GlobalThresholds { get; set; }
 
     public virtual DbSet<HealthMetric> HealthMetrics { get; set; }
@@ -90,40 +88,59 @@ public partial class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Appointment>(entity =>
         {
-            entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCC242B8353B");
+            entity.HasKey(e => e.AppointmentId)
+                .HasName("PK_Appointments");
 
-            entity.HasIndex(e => e.Status, "IX_Appointments_Status");
+            entity.HasIndex(e => e.Status)
+                .HasDatabaseName("IX_Appointments_Status");
 
-            entity.HasIndex(e => e.SlotId, "UQ__Appointm__0A124AAE1F24CEC2").IsUnique();
+            entity.HasIndex(e => e.SlotId)
+                .IsUnique();
 
-            entity.Property(e => e.AppointmentId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.AppointmentId)
+                .HasDefaultValueSql("(newid())");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())");
+
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .HasDefaultValue("Pending");
-            entity.Property(e => e.SymptomsNote).HasMaxLength(500);
 
-            entity.HasOne(d => d.Patient).WithMany(p => p.Appointments)
+            entity.Property(e => e.SymptomsNote)
+                .HasMaxLength(500);
+
+            entity.HasOne(d => d.Patient)
+                .WithMany(p => p.Appointments)
                 .HasForeignKey(d => d.PatientId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Appointments_Patients");
 
-            entity.HasOne(d => d.Slot).WithOne(p => p.Appointment)
+            entity.HasOne(d => d.Slot)
+                .WithOne(p => p.Appointment)
                 .HasForeignKey<Appointment>(d => d.SlotId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Appointments_Slots");
+                .HasConstraintName("FK_Appointments_AppointmentSlots");
         });
 
         modelBuilder.Entity<AppointmentSlot>(entity =>
         {
-            entity.HasKey(e => e.SlotId).HasName("PK__Appointm__0A124AAF38799BA2");
+            entity.HasKey(e => e.SlotId);
 
-            entity.Property(e => e.SlotId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.SlotId)
+                .HasDefaultValueSql("(newid())");
 
-            entity.HasOne(d => d.Schedule).WithMany(p => p.AppointmentSlots)
-                .HasForeignKey(d => d.ScheduleId)
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())");
+
+            entity.Property(e => e.IsBooked)
+                .HasDefaultValue(false);
+
+            entity.HasOne(d => d.Doctor)
+                .WithMany(p => p.AppointmentSlots)
+                .HasForeignKey(d => d.DoctorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_AppointmentSlots_Schedules");
+                .HasConstraintName("FK_AppointmentSlots_Doctors");
         });
 
         modelBuilder.Entity<AuditLog>(entity =>
@@ -158,20 +175,6 @@ public partial class ApplicationDbContext : DbContext
                 .HasForeignKey<Doctor>(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Doctors_Users");
-        });
-
-        modelBuilder.Entity<DoctorSchedule>(entity =>
-        {
-            entity.HasKey(e => e.ScheduleId).HasName("PK__DoctorSc__9C8A5B49619E8FDC");
-
-            entity.Property(e => e.ScheduleId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.Shift).HasMaxLength(50);
-
-            entity.HasOne(d => d.Doctor).WithMany(p => p.DoctorSchedules)
-                .HasForeignKey(d => d.DoctorId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_DoctorSchedules_Doctors");
         });
 
         modelBuilder.Entity<GlobalThreshold>(entity =>
@@ -235,26 +238,38 @@ public partial class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<MedicalRecord>(entity =>
         {
-            entity.HasKey(e => e.RecordId).HasName("PK__MedicalR__FBDF78E9225F4F28");
+            entity.HasKey(e => e.RecordId)
+                .HasName("PK_MedicalRecords");
 
-            entity.HasIndex(e => e.PatientId, "IX_MedicalRecords_PatientId");
+            entity.HasIndex(e => e.PatientId)
+                .HasDatabaseName("IX_MedicalRecords_PatientId");
 
-            entity.Property(e => e.RecordId).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+            entity.HasIndex(e => e.AppointmentId)
+                .IsUnique();
+
+            entity.Property(e => e.RecordId)
+                .HasDefaultValueSql("(newid())");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())");
+
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
                 .HasDefaultValue("Open");
 
-            entity.HasOne(d => d.Appointment).WithMany(p => p.MedicalRecords)
-                .HasForeignKey(d => d.AppointmentId)
+            entity.HasOne(d => d.Appointment)
+                .WithOne(p => p.MedicalRecord)
+                .HasForeignKey<MedicalRecord>(d => d.AppointmentId)
                 .HasConstraintName("FK_MedicalRecords_Appointments");
 
-            entity.HasOne(d => d.Doctor).WithMany(p => p.MedicalRecords)
+            entity.HasOne(d => d.Doctor)
+                .WithMany(p => p.MedicalRecords)
                 .HasForeignKey(d => d.DoctorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_MedicalRecords_Doctors");
 
-            entity.HasOne(d => d.Patient).WithMany(p => p.MedicalRecords)
+            entity.HasOne(d => d.Patient)
+                .WithMany(p => p.MedicalRecords)
                 .HasForeignKey(d => d.PatientId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_MedicalRecords_Patients");
