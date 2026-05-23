@@ -24,6 +24,9 @@
 
   <ItemGroup>
     <Folder Include="Areas\" />
+    <Folder Include="Context\" />
+    <Folder Include="Migrations\" />
+    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>
