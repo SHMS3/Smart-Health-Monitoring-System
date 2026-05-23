@@ -1,6 +1,8 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Minio;
 using SmartHealthMonitoring.Context;
+//using SmartHealthMonitoring.Services;
+using System;
 
 namespace SmartHealthMonitoring
 {
@@ -10,20 +12,31 @@ namespace SmartHealthMonitoring
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // 1. Cấu hình kết nối MinIO
+            builder.Services.AddMinio(configureClient => configureClient
+                .WithEndpoint("localhost:9000") 
+                .WithCredentials("admin", "admin123") 
+                .WithSSL(false) // Đang chạy localhost nên tắt SSL
+                .Build());
+
+            // 2. Đăng ký MinioService
+            //builder.Services.AddScoped<IMinioService, MinioService>();
+
             // Add services to the container.
-            builder.Services.AddControllersWithViews();
+            //builder.Services.AddControllersWithViews();
+            builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
             //Đki db
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-           options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
-                var context = services.GetRequiredService<ApplicationDbContext>();
+                var context = services.GetRequiredService<SmartHealthMonitoringContext>();
 
-                SeedData.Initialize(context);
+               // SeedData.Initialize(context);
             }
 
             // Configure the HTTP request pipeline.

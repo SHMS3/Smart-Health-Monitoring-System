@@ -1,0 +1,226 @@
+﻿@model SmartHealthMonitoring.ViewModels.PatientDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard Bệnh Nhân";
+}
+
+<div class="container-xl" style="margin-top: 90px; margin-bottom: 50px;">
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 w-100">
+        <h2 class="text-primary fw-bold mb-3 mb-md-0">
+            <i class="fa-solid fa-clipboard-user me-2"></i> Hồ sơ Sức khỏe Bệnh nhân
+        </h2>
+        <a asp-controller="DoctorDashboard" asp-action="Index" class="btn btn-outline-secondary shadow-sm">
+            <i class="fa-solid fa-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-12">
+            <div class="card shadow-sm border-0 text-white rounded-3" style="background: var(--grad, linear-gradient(135deg, #0d6efd, #0dcaf0)) !important;">
+                <div class="card-body p-4 d-flex align-items-center gap-4">
+                    <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 85px; height: 85px;">
+                        <i class="fa-solid fa-user fs-1"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-1">@Model.FullName</h3>
+                        <div class="d-flex flex-wrap gap-4 mt-2" style="font-size: 0.95rem;">
+                            <span><i class="fa-solid fa-cake-candles opacity-75 me-1"></i> @Model.Age tuổi</span>
+                            <span><i class="fa-solid fa-venus-mars opacity-75 me-1"></i> @Model.Gender</span>
+                            <span>
+                                <i class="fa-solid fa-droplet opacity-75 me-1 text-danger"></i> Nhóm máu:
+                                <span class="fw-semibold">@(string.IsNullOrEmpty(Model.BloodType) ? "Chưa cập nhật" : Model.BloodType)</span>
+                            </span>
+                            <span>
+                                <i class="fa-solid fa-phone opacity-75 me-1"></i>
+                                @(string.IsNullOrEmpty(Model.PhoneNumber) ? "Chưa cập nhật" : Model.PhoneNumber)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 fw-bold text-dark">
+                        <i class="fa-solid fa-heart-pulse text-success me-2"></i> Chi tiết các chỉ số sinh tồn đã ghi nhận
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted">
+                                <tr>
+                                    <th class="ps-4 py-3" style="width: 20%">Thời gian</th>
+                                    <th class="py-3" style="width: 20%">Loại chỉ số</th>
+                                    <th class="py-3" style="width: 15%">Giá trị đo</th>
+                                    <th class="py-3" style="width: 15%">Cảnh báo</th>
+                                    <th class="py-3" style="width: 30%">Ghi chú của bệnh nhân</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.MetricsHistory != null && Model.MetricsHistory.Any())
+                                {
+                                    foreach (var item in Model.MetricsHistory)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 py-3 text-muted">@item.MeasuredAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td class="py-3 fw-semibold text-dark">@item.MetricName</td>
+                                            <td class="py-3">
+                                                <span class="badge bg-info text-dark fs-6 px-3 py-2 fw-bold rounded-pill shadow-sm">
+                                                    @item.Value @item.Unit
+                                                </span>
+                                            </td>
+                                            <td class="py-3">
+                                                @if (item.MetricName.ToLower().Contains("huyết áp") && item.Value >= 140)
+                                                {
+                                                    <span class="badge bg-danger px-2 py-1 shadow-sm"><i class="fa-solid fa-triangle-exclamation"></i> Cao</span>
+                                                }
+                                                else if (item.MetricName.ToLower().Contains("nhịp tim") && (item.Value > 100 || item.Value < 60))
+                                                {
+                                                    <span class="badge bg-warning text-dark px-2 py-1 shadow-sm"><i class="fa-solid fa-bell"></i> Bất thường</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success px-2 py-1 shadow-sm"><i class="fa-solid fa-check"></i> Ổn định</span>
+                                                }
+                                            </td>
+                                            <td class="py-3 text-secondary">@(string.IsNullOrEmpty(item.Notes) ? "Không có" : item.Notes)</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="fa-solid fa-folder-open fs-1 text-light mb-3 d-block"></i>
+                                            Bệnh nhân này chưa có dữ liệu sức khỏe nào.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold text-dark">
+                        <i class="fa-solid fa-file-medical text-primary me-2"></i> Kết quả Cận lâm sàng & Hình ảnh
+                    </h5>
+                    <button type="button" class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> Tải file lên
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted">
+                                <tr>
+                                    <th class="ps-4 py-3" style="width: 20%">Ngày tải lên</th>
+                                    <th class="py-3" style="width: 45%">Tên hồ sơ / Chỉ định xét nghiệm</th>
+                                    <th class="py-3 text-end pe-4" style="width: 35%">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.LabResults != null && Model.LabResults.Any())
+                                {
+                                    foreach (var lab in Model.LabResults)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 py-3 text-muted">@lab.UploadedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td class="py-3 fw-semibold text-dark">@lab.TestName</td>
+                                            <td class="py-3 text-end pe-4">
+                                                @if (!string.IsNullOrEmpty(lab.FileUrl))
+                                                {
+                                                    <a href="@lab.FileUrl" target="_blank" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                                                        <i class="fa-solid fa-eye me-1"></i> Xem KQ
+                                                    </a>
+                                                    <a href="@lab.FileUrl" download class="btn btn-sm btn-outline-success rounded-pill px-3 ms-2">
+                                                        <i class="fa-solid fa-download me-1"></i> Tải về
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted fst-italic">Lỗi file đính kèm</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3" class="text-center py-5 text-muted">
+                                            <i class="fa-solid fa-file-image fs-1 text-light mb-3 d-block"></i>
+                                            Chưa có dữ liệu xét nghiệm hoặc hình ảnh nào được tải lên.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa-solid fa-upload me-2"></i> Tải lên Hồ sơ Xét nghiệm
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form asp-action="UploadLabResult" method="post" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="patientId" value="@Model.PatientId" />
+                    <input type="hidden" name="recordId" value="@Model.CurrentRecordId" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tên loại Xét nghiệm / Chụp chiếu</label>
+                        <input type="text" name="testName" class="form-control" placeholder="VD: Siêu âm ổ bụng, Kết quả X-Quang..." required />
+                        <div class="form-text">Nhập tên để bác sĩ dễ dàng tra cứu lại sau này.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Chọn file tải lên</label>
+                        <input type="file" name="uploadFile" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required />
+                        <div class="form-text text-muted">Hỗ trợ định dạng ảnh (JPG, PNG) hoặc tài liệu (PDF, Word). Tối đa 10MB.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary px-4">Tải lên hệ thống</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

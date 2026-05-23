@@ -5,20 +5,19 @@ namespace SmartHealthMonitoring.Models;
 
 public partial class Doctor
 {
-    public Guid DoctorId { get; set; }
+    public int Id { get; set; }
 
-    public Guid UserId { get; set; }
+    public int UserId { get; set; }
 
-    public string FullName { get; set; } = null!;
+    public string Specialty { get; set; } = null!;
 
-    public string? Specialty { get; set; }
+    public bool IsOnShift { get; set; }
 
-    public string? LicenseNumber { get; set; }
+    public bool IsDeleted { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
-
-    public virtual ICollection<AppointmentSlot> AppointmentSlots { get; set; } = new List<AppointmentSlot>();
-    public virtual ICollection<MedicalRecord> MedicalRecords { get; set; } = new List<MedicalRecord>();
+    public virtual ICollection<ClinicalRecord> ClinicalRecords { get; set; } = new List<ClinicalRecord>();
 
     public virtual User User { get; set; } = null!;
+
+    public virtual ICollection<WarningAlert> WarningAlerts { get; set; } = new List<WarningAlert>();
 }
