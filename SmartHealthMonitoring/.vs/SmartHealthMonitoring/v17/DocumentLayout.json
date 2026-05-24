@@ -1,0 +1,356 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\areas\\admin\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\areas\\admin\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\repositories\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\models\\clinicalrecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\models\\clinicalrecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\models\\patient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\models\\patient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\context\\smarthealthmonitoringcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\context\\smarthealthmonitoringcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\controllers\\doctordashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\controllers\\doctordashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\viewmodels\\healthtrackerviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\viewmodels\\healthtrackerviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\services\\minioservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\services\\minioservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\views\\_viewimports.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\views\\_viewimports.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\views\\_viewstart.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\views\\_viewstart.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\controllers\\healthtrackercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\controllers\\healthtrackercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\views\\doctordashboard\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\views\\doctordashboard\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\viewmodels\\patientdashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\viewmodels\\patientdashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\views\\doctordashboard\\patienthealth.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\views\\doctordashboard\\patienthealth.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|d:\\semester 8\\swp391\\smarthealthmonitoring\\smarthealthmonitoring\\views\\healthtracker\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{87ED6773-FEA8-4BD3-A085-29C61B91BE93}|SmartHealthMonitoring\\SmartHealthMonitoring.csproj|solutionrelative:smarthealthmonitoring\\views\\healthtracker\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "UserController.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Areas\\Admin\\Controllers\\UserController.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Areas\\Admin\\Controllers\\UserController.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Areas\\Admin\\Controllers\\UserController.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\Areas\\Admin\\Controllers\\UserController.cs",
+              "ViewState": "AgIAADAAAAAAAAAAAAASwEMAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-24T09:10:29.527Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "UserRepository.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Repositories\\UserRepository.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Repositories\\UserRepository.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Repositories\\UserRepository.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\Repositories\\UserRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-24T09:09:44.252Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Patient.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Models\\Patient.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Models\\Patient.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Models\\Patient.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\Models\\Patient.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAIwCEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-23T18:44:45.996Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ClinicalRecord.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Models\\ClinicalRecord.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Models\\ClinicalRecord.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Models\\ClinicalRecord.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\Models\\ClinicalRecord.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-23T18:41:36.362Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "SmartHealthMonitoringContext.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Context\\SmartHealthMonitoringContext.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Context\\SmartHealthMonitoringContext.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Context\\SmartHealthMonitoringContext.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\Context\\SmartHealthMonitoringContext.cs",
+              "ViewState": "AgIAAB0BAAAAAAAAAAAAACcBAABxAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-23T17:31:42.607Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\appsettings.Development.json",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\appsettings.Development.json",
+              "RelativeToolTip": "SmartHealthMonitoring\\appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-05-23T17:23:30.632Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "DoctorDashboardController.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Controllers\\DoctorDashboardController.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Controllers\\DoctorDashboardController.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Controllers\\DoctorDashboardController.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\Controllers\\DoctorDashboardController.cs",
+              "ViewState": "AgIAAJwAAAAAAAAAAAAcwMkAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-18T02:36:48.352Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "HealthTrackerViewModel.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\ViewModels\\HealthTrackerViewModel.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\ViewModels\\HealthTrackerViewModel.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\ViewModels\\HealthTrackerViewModel.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\ViewModels\\HealthTrackerViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-17T03:10:34.705Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Program.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Program.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Program.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-17T03:55:06.118Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "MinioService.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Services\\MinioService.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Services\\MinioService.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Services\\MinioService.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\Services\\MinioService.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAowDcAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-18T06:17:07.227Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\appsettings.json",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\appsettings.json",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\appsettings.json",
+              "RelativeToolTip": "SmartHealthMonitoring\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-05-14T09:35:58.095Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "HomeController.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Controllers\\HomeController.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Controllers\\HomeController.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Controllers\\HomeController.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\Controllers\\HomeController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-17T03:55:50.768Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "_ViewImports.cshtml",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\_ViewImports.cshtml",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Views\\_ViewImports.cshtml",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\_ViewImports.cshtml",
+              "RelativeToolTip": "SmartHealthMonitoring\\Views\\_ViewImports.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-17T03:56:31.096Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "_ViewStart.cshtml",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\_ViewStart.cshtml",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Views\\_ViewStart.cshtml",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\_ViewStart.cshtml",
+              "RelativeToolTip": "SmartHealthMonitoring\\Views\\_ViewStart.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-17T03:56:28.863Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "HealthTrackerController.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Controllers\\HealthTrackerController.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Controllers\\HealthTrackerController.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Controllers\\HealthTrackerController.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\Controllers\\HealthTrackerController.cs",
+              "ViewState": "AgIAADcAAAAAAAAAAAAIwGMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-17T03:11:56.178Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\DoctorDashboard\\Index.cshtml",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Views\\DoctorDashboard\\Index.cshtml",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\DoctorDashboard\\Index.cshtml",
+              "RelativeToolTip": "SmartHealthMonitoring\\Views\\DoctorDashboard\\Index.cshtml",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAABsAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-18T02:52:46.988Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "_Layout.cshtml",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\Shared\\_Layout.cshtml",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Views\\Shared\\_Layout.cshtml",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\Shared\\_Layout.cshtml",
+              "RelativeToolTip": "SmartHealthMonitoring\\Views\\Shared\\_Layout.cshtml",
+              "ViewState": "AgIAAI0BAAAAAAAAAAAUwKUBAABqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-17T03:56:35.928Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "PatientDashboardViewModel.cs",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\ViewModels\\PatientDashboardViewModel.cs",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\ViewModels\\PatientDashboardViewModel.cs",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\ViewModels\\PatientDashboardViewModel.cs",
+              "RelativeToolTip": "SmartHealthMonitoring\\ViewModels\\PatientDashboardViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAABWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-18T02:35:45.867Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "PatientHealth.cshtml",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\DoctorDashboard\\PatientHealth.cshtml",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Views\\DoctorDashboard\\PatientHealth.cshtml",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\DoctorDashboard\\PatientHealth.cshtml",
+              "RelativeToolTip": "SmartHealthMonitoring\\Views\\DoctorDashboard\\PatientHealth.cshtml",
+              "ViewState": "AgIAAKIAAAAAAAAAAAAuwMgAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-18T02:38:29.167Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\HealthTracker\\Index.cshtml",
+              "RelativeDocumentMoniker": "SmartHealthMonitoring\\Views\\HealthTracker\\Index.cshtml",
+              "ToolTip": "D:\\Semester 8\\SWP391\\SmartHealthMonitoring\\SmartHealthMonitoring\\Views\\HealthTracker\\Index.cshtml",
+              "RelativeToolTip": "SmartHealthMonitoring\\Views\\HealthTracker\\Index.cshtml",
+              "ViewState": "AgIAADcAAAAAAAAAAAAqwEgAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-05-17T03:52:14.148Z"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:35:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -5,27 +5,21 @@ namespace SmartHealthMonitoring.Models;
 
 public partial class User
 {
-    public Guid UserId { get; set; }
+    public int Id { get; set; }
 
-    public string Username { get; set; } = null!;
+    public string FullName { get; set; } = null!;
 
     public string Email { get; set; } = null!;
 
     public string PasswordHash { get; set; } = null!;
 
-    public int RoleId { get; set; }
+    public byte Role { get; set; }
 
-    public bool IsActive { get; set; }
+    public bool IsDeleted { get; set; }
 
     public DateTime CreatedAt { get; set; }
 
-    public virtual ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+    public virtual ICollection<Doctor> Doctors { get; set; } = new List<Doctor>();
 
-    public virtual Doctor? Doctor { get; set; }
-
-    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
-
-    public virtual Patient? Patient { get; set; }
-
-    public virtual Role Role { get; set; } = null!;
+    public virtual ICollection<Patient> Patients { get; set; } = new List<Patient>();
 }

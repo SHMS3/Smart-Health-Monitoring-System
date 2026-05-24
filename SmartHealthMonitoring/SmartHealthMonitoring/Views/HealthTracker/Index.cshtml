@@ -1,0 +1,115 @@
+﻿@model SmartHealthMonitoring.ViewModels.HealthTrackerViewModel
+@{
+    ViewData["Title"] = "My Health Tracker";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-primary"><i class="bi bi-heart-pulse"></i> Theo dõi chỉ số sức khỏe cá nhân</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-plus-circle-fill"></i> Nhập chỉ số mới</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="CreateMetric" method="post">
+
+                        <div class="mb-3">
+                            <label asp-for="MetricTypeId" class="form-label fw-semibold">Loại chỉ số</label>
+                            <select asp-for="MetricTypeId" asp-items="Model.AvailableMetrics" class="form-select py-2">
+                                <option value="">-- Chọn loại dữ liệu đo --</option>
+                            </select>
+                            <span asp-validation-for="MetricTypeId" class="text-danger small fw-semibold"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Value" class="form-label fw-semibold">Giá trị kết quả đo</label>
+                            <input asp-for="Value" type="number" step="0.01" class="form-control py-2" placeholder="Ví dụ: 120, 75, v.v..." />
+                            <span asp-validation-for="Value" class="text-danger small fw-semibold"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label fw-semibold">Ghi chú trạng thái cơ thể</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Nhập trạng thái sức khỏe lúc đo hoặc các triệu chứng nếu có..."></textarea>
+                            <span asp-validation-for="Notes" class="text-danger small fw-semibold"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">Lưu dữ liệu</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-clock-history"></i> Nhật ký đo gần đây</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3" style="width: 25%">Thời gian đo</th>
+                                    <th style="width: 20%">Tên chỉ số</th>
+                                    <th style="width: 20%">Kết quả thu được</th>
+                                    <th style="width: 25%">Ghi chú bệnh nhân</th>
+                                    <th class="pe-3 text-center" style="width: 10%">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.History != null && Model.History.Any())
+                                {
+                                    foreach (var item in Model.History)
+                                    {
+                                        <tr>
+                                            <td class="ps-3 text-muted">@item.MeasuredAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td><span class="fw-semibold text-dark">@item.MetricName</span></td>
+                                            <td>
+                                                <span class="badge bg-info text-dark fs-6 px-2 py-1 fw-semibold">
+                                                    @item.Value @item.Unit
+                                                </span>
+                                            </td>
+                                            <td class="text-secondary">@(string.IsNullOrEmpty(item.Notes) ? "-" : item.Notes)</td>
+
+                                            <td class="pe-3 text-center">
+                                                <form asp-action="DeleteMetric" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa kết quả đo này không?');">
+                                                    <input type="hidden" name="id" value="@item.MetricId" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Xóa kết quả do nhập sai">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-5 fs-6">
+                                            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                                            Hệ thống chưa ghi nhận dữ liệu lịch sử. Hãy tiến hành nhập chỉ số đầu tiên!
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
