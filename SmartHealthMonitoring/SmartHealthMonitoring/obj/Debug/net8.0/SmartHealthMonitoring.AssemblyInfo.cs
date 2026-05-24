@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SmartHealthMonitoring")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+947802dc565e6e3264252fdfe293ace8c0a1ec38")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dadcd6f7535897727ef738c8c817ca42d9ba2934")]
 [assembly: System.Reflection.AssemblyProductAttribute("SmartHealthMonitoring")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SmartHealthMonitoring")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

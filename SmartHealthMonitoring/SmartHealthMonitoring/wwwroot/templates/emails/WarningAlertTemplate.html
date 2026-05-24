@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
+        .container { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        .header { background-color: #d9534f; color: #ffffff; padding: 15px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { margin-top: 20px; line-height: 1.6; color: #333333; }
+        .alert-box { background-color: #fcf8e3; border: 1px solid #faebcc; padding: 15px; border-radius: 4px; margin: 15px 0; }
+        .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #999999; border-top: 1px solid #eeeeee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Cảnh báo Sức khỏe - Smart Health</h2>
+        </div>
+        <div class="content">
+            <p>Chào <strong>{{PatientName}}</strong>,</p>
+            <p>Hệ thống Smart Health Monitoring vừa ghi nhận một số chỉ số bất thường từ bạn vào lúc <strong>{{Timestamp}}</strong>. Vui lòng kiểm tra lại ngay:</p>
+            
+            <div class="alert-box">
+                <p><strong>Nhịp tim:</strong> <span style="color: #d9534f">{{HeartRate}}</span> bpm</p>
+                <p><strong>Huyết áp:</strong> <span style="color: #d9534f">{{BloodPressure}}</span> mmHg</p>
+            </div>
+            
+            <p><strong>Lời khuyên từ hệ thống:</strong></p>
+            <p><em>{{Advice}}</em></p>
+
+            <p>Vui lòng liên hệ với bác sĩ chuyên trách nếu bạn cảm thấy khó chịu. Chúc bạn sức khỏe!</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 Smart Health Monitoring System. Trí tuệ AI tập trung (AI Focus).</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -17,6 +17,12 @@ public partial class EmailNotification
 
     public byte Status { get; set; }
 
+    public bool IsSent { get; set; } = false;
+    public DateTime? SentAt { get; set; }
+    public string? ErrorMessage { get; set; }
+    public string ToEmail { get; set; } = string.Empty;
+    public int? SentByDoctorId { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public virtual WarningAlert Alert { get; set; } = null!;
