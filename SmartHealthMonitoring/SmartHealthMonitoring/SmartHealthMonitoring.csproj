@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\" />
-    <Folder Include="ViewModels\" />
+    <Folder Include="Areas\Admin\Views\Doctor\" />
+    <Folder Include="Areas\Admin\Views\Patient\" />
   </ItemGroup>
 
 </Project>

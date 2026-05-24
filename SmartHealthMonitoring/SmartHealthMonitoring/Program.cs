@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Repositories;
 
 namespace SmartHealthMonitoring
 {
@@ -15,6 +16,9 @@ namespace SmartHealthMonitoring
             //Đki db
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            //Repo
+            builder.Services.AddScoped<UserRepository>();
 
             var app = builder.Build();
 
@@ -39,7 +43,12 @@ namespace SmartHealthMonitoring
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            app.UseAuthentication();
+          //  app.UseAuthorization();
+
+            app.MapControllerRoute(
+                 name: "areas",
+                 pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
             app.MapControllerRoute(
                 name: "default",

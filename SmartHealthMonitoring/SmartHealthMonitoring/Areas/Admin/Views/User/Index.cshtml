@@ -1,0 +1,348 @@
+﻿@model SmartHealthMonitoring.Common.PagedResult<SmartHealthMonitoring.ViewModels.UserViewModel>
+
+@{
+    ViewData["Title"] = "Quản lí người dùng";
+    int cnt = 1;
+}
+
+<style>
+    :root {
+    --primary: #4f46e5;
+    --primary-soft: #eef2ff;
+    --success: #10b981;
+    --success-soft: #ecfdf5;
+    --warning: #f59e0b;
+    --warning-soft: #fffbeb;
+    --danger: #ef4444;
+    --danger-soft: #fef2f2;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --bg-body: #f8fafc;
+    --radius: 12px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Search Bar Tinh tế */
+    .search-container .input-group {
+    background: white;
+    padding: 5px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    border: 1px solid #e2e8f0;
+    }
+
+    .search-container input {
+    border: none;
+    box-shadow: none !important;
+    padding-left: 15px;
+    }
+
+    .search-container .btn-search {
+    background: var(--primary);
+    color: white;
+    border-radius: 8px !important;
+    padding: 8px 20px;
+    transition: 0.3s;
+    }
+
+    .search-container .btn-search:hover {
+    background: #4338ca;
+    transform: translateY(-1px);
+    }
+
+    /* Table Styling */
+    .custom-card {
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    background: white;
+    }
+
+    .custom-table {
+    margin-bottom: 0;
+    }
+
+    .custom-table thead th {
+    background-color: #f1f5f9;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    padding: 16px;
+    border: none;
+    }
+
+    .custom-table tbody tr {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f1f5f9;
+    }
+
+    .custom-table tbody tr:hover {
+    background-color: var(--primary-soft);
+    }
+
+    .custom-table td {
+    padding: 16px;
+    vertical-align: middle;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    }
+
+    /* Avatar & Badges */
+    .username-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    }
+
+    .user-avatar {
+    width: 38px;
+    height: 38px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: bold;
+    }
+
+    .email-badge {
+    background-color: #f8fafc;
+    color: var(--text-muted);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    border: 1px solid #e2e8f0;
+    font-family: 'Monaco', monospace;
+    }
+
+    /* Buttons */
+    .action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    }
+
+    .btn-action {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    }
+
+    .btn-update {
+    color: var(--warning);
+    background: var(--warning-soft);
+    }
+
+    .btn-update:hover {
+    background: var(--warning);
+    color: white;
+    }
+
+    .btn-lock {
+    color: var(--danger);
+    background: var(--danger-soft);
+    }
+
+    .btn-lock:hover {
+    background: var(--danger);
+    color: white;
+    }
+
+    /* Pagination */
+    .pagination .page-link {
+    border: none;
+    color: var(--text-muted);
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px !important;
+    margin: 0 4px;
+    font-weight: 500;
+    transition: 0.3s;
+    }
+
+    .pagination .page-item.active .page-link {
+    background-color: var(--primary);
+    color: white;
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold m-0 text-dark" style="letter-spacing: -0.5px;">@ViewData["Title"]</h3>
+            <p class="text-muted small mb-0">Quản lý và phân quyền người dùng hệ thống</p>
+        </div>
+        <div>
+            <form asp-action="Index" asp-controller="User" asp-area="Admin" method="get">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+
+                    <option value="">Tất cả</option>
+
+                    <option value="active" selected="@(ViewBag.Status == "active")">
+                        Tài khoản hoạt động
+                    </option>
+
+                    <option value="locked" selected="@(ViewBag.Status == "locked")">
+                        Tài khoản bị khóa
+                    </option>
+
+                </select>
+            </form>
+        </div>
+        <div class="search-container">
+            <form asp-action="Index" asp-controller="User" asp-area="Admin" class="input-group">
+                <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm tên, email...">            
+                <button class="btn btn-search" type="submit">
+                    <i class="fas fa-search me-1"></i> Tìm kiếm
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card custom-card">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th class="text-center" width="8%">STT</th>
+                        <th width="30%">Người dùng</th>
+                        <th width="25%">Email</th>
+                        <th class="text-center" width="15%">Ngày tạo</th>
+                        <th class="text-center" width="22%">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items != null && Model.Items.Any())
+                    {
+                        int displayCnt = (Model.Page - 1) * Model.PageSize + 1;
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td class="text-center">
+                                    <span class="text-muted fw-bold">#@displayCnt</span>
+                                </td>
+                                <td>
+                                    <div class="username-wrapper">
+                                        <div class="user-avatar">
+                                            @item.Username.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <span class="fw-bold">@item.Username</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="email-badge">@item.Email</span>
+                                </td>
+                                <td class="text-center text-muted">
+                                    <i class="far fa-calendar-alt me-1"></i> @item.CreatedAt.ToString("dd/MM/yyyy")
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        @if (@item.IsActive == true)
+                                        {
+                                            <a asp-action="UpdateAccount" asp-area="Admin" asp-controller="User" asp-route-Id="@item.UserId" class="btn-action btn-update" title="Chỉnh sửa">
+                                                <i class="fas fa-user-edit"></i> Sửa
+                                            </a>
+                                            <a asp-action="LockAccount"
+                                               asp-area="Admin"
+                                               asp-controller="User"
+                                               asp-route-id="@item.UserId"
+                                               asp-route-status="locked"
+                                               onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản này?')"
+                                               class="btn-action btn-lock">
+
+                                                <i class="fas fa-user-lock"></i> Khóa
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-action="LockAccount"
+                                               asp-area="Admin"
+                                               asp-controller="User"
+                                               asp-route-id="@item.UserId"
+                                               asp-route-status="active"
+                                               onclick="return confirm('Bạn có chắc chắn muốn mở tài khoản này?')"
+                                               class="btn-action btn-lock">
+
+                                                <i class="fas fa-unlock"></i> Mở
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                            displayCnt++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">Không tìm thấy dữ liệu người dùng.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                @if (Model.Page > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link shadow-sm"
+                           asp-route-page="@(Model.Page - 1)"
+                           asp-route-search="@ViewBag.Search"
+                           asp-route-status="@ViewBag.Status">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                }
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.Page ? "active" : "")">
+                        <a class="page-link shadow-sm"
+                           asp-route-page="@i"
+                           asp-route-search="@ViewBag.Search"
+                           asp-route-status="@ViewBag.Status">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                @if (Model.Page < Model.TotalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link shadow-sm"
+                           asp-route-page="@(Model.Page + 1)"
+                           asp-route-search="@ViewBag.Search"
+                           asp-route-status="@ViewBag.Status">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </div>
+</div>
