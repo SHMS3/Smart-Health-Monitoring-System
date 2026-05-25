@@ -26,6 +26,11 @@ namespace SmartHealthMonitoring
             // Add services to the container.
             //builder.Services.AddControllersWithViews();
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
+            // Configure Email Settings and Service
+            builder.Services.Configure<SmartHealthMonitoring.Models.Configurations.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+            builder.Services.AddScoped<SmartHealthMonitoring.Services.IEmailService, SmartHealthMonitoring.Services.EmailService>();
+
             //Đki db
             builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
