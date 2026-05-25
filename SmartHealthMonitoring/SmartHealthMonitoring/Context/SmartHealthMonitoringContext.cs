@@ -153,6 +153,12 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.Subject).HasMaxLength(200);
 
+            entity.Property(e => e.ToEmail).HasMaxLength(150).IsUnicode(false).HasDefaultValue(string.Empty);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.IsSent).HasDefaultValue(false);
+            entity.Property(e => e.Status).HasDefaultValue((byte)0);
+            entity.Property(e => e.SentAt);
+
             entity.HasOne(d => d.Alert).WithMany(p => p.EmailNotifications)
                 .HasForeignKey(d => d.AlertId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -369,16 +375,16 @@ public partial class SmartHealthMonitoringContext : DbContext
 
         // 10. EmailNotifications
         modelBuilder.Entity<EmailNotification>().HasData(
-            new EmailNotification { Id = 1, AlertId = 1, PatientId = 1, Subject = "CẢNH BÁO: Huyết áp bất thường", Body = "Vui lòng liên hệ bác sĩ ngay", CreatedAt = baseDate.AddHours(1).AddMinutes(7) },
-            new EmailNotification { Id = 2, AlertId = 2, PatientId = 2, Subject = "Cập nhật sinh hiệu", Body = "Chỉ số của bạn ổn định", CreatedAt = baseDate.AddHours(2).AddMinutes(7) },
-            new EmailNotification { Id = 3, AlertId = 3, PatientId = 3, Subject = "Theo dõi nhịp tim", Body = "Nhịp tim bình thường", CreatedAt = baseDate.AddHours(3).AddMinutes(7) },
-            new EmailNotification { Id = 4, AlertId = 4, PatientId = 4, Subject = "Báo cáo ổn định", Body = "Cảnh báo đã được giải quyết", CreatedAt = baseDate.AddHours(4).AddMinutes(7) },
-            new EmailNotification { Id = 5, AlertId = 5, PatientId = 5, Subject = "CẢNH BÁO NHẸ: Huyết áp tăng", Body = "Theo dõi thêm tại nhà", CreatedAt = baseDate.AddHours(5).AddMinutes(7) },
-            new EmailNotification { Id = 6, AlertId = 6, PatientId = 6, Subject = "Đã tiếp nhận hồ sơ", Body = "Bác sĩ đang xem xét", CreatedAt = baseDate.AddHours(6).AddMinutes(7) },
-            new EmailNotification { Id = 7, AlertId = 7, PatientId = 7, Subject = "CẢNH BÁO KHẨN CẤP: Tiền tai biến", Body = "Gọi cấp cứu 115 lập tức!", CreatedAt = baseDate.AddHours(7).AddMinutes(7) },
-            new EmailNotification { Id = 8, AlertId = 8, PatientId = 8, Subject = "Hệ thống tự động hủy cảnh báo", Body = "Cảnh báo nhầm", CreatedAt = baseDate.AddHours(8).AddMinutes(7) },
-            new EmailNotification { Id = 9, AlertId = 9, PatientId = 9, Subject = "Kiểm tra định kỳ", Body = "Vui lòng nhập sinh hiệu", CreatedAt = baseDate.AddHours(9).AddMinutes(7) },
-            new EmailNotification { Id = 10, AlertId = 10, PatientId = 10, Subject = "CẢNH BÁO: Huyết áp tâm thu cao", Body = "Bác sĩ An đã tiếp nhận", CreatedAt = baseDate.AddHours(10).AddMinutes(7) }
+            new EmailNotification { Id = 1, AlertId = 1, PatientId = 1, ToEmail = "patient.hoa@gmail.com", Subject = "CẢNH BÁO: Huyết áp bất thường", Body = "Vui lòng liên hệ bác sĩ ngay", IsSent = true, Status = 1, SentAt = baseDate.AddHours(1).AddMinutes(7), CreatedAt = baseDate.AddHours(1).AddMinutes(7) },
+            new EmailNotification { Id = 2, AlertId = 2, PatientId = 2, ToEmail = "patient.minh@gmail.com", Subject = "Cập nhật sinh hiệu", Body = "Chỉ số của bạn ổn định", IsSent = true, Status = 1, SentAt = baseDate.AddHours(2).AddMinutes(7), CreatedAt = baseDate.AddHours(2).AddMinutes(7) },
+            new EmailNotification { Id = 3, AlertId = 3, PatientId = 3, ToEmail = "patient.nhung@gmail.com", Subject = "Theo dõi nhịp tim", Body = "Nhịp tim bình thường", IsSent = true, Status = 1, SentAt = baseDate.AddHours(3).AddMinutes(7), CreatedAt = baseDate.AddHours(3).AddMinutes(7) },
+            new EmailNotification { Id = 4, AlertId = 4, PatientId = 4, ToEmail = "patient.tam@gmail.com", Subject = "Báo cáo ổn định", Body = "Cảnh báo đã được giải quyết", IsSent = true, Status = 1, SentAt = baseDate.AddHours(4).AddMinutes(7), CreatedAt = baseDate.AddHours(4).AddMinutes(7) },
+            new EmailNotification { Id = 5, AlertId = 5, PatientId = 5, ToEmail = "patient.long@gmail.com", Subject = "CẢNH BÁO NHẸ: Huyết áp tăng", Body = "Theo dõi thêm tại nhà", IsSent = false, Status = 0, SentAt = null, ErrorMessage = "SMTP timeout", CreatedAt = baseDate.AddHours(5).AddMinutes(7) },
+            new EmailNotification { Id = 6, AlertId = 6, PatientId = 6, ToEmail = "patient.thuy@gmail.com", Subject = "Đã tiếp nhận hồ sơ", Body = "Bác sĩ đang xem xét", IsSent = true, Status = 1, SentAt = baseDate.AddHours(6).AddMinutes(7), CreatedAt = baseDate.AddHours(6).AddMinutes(7) },
+            new EmailNotification { Id = 7, AlertId = 7, PatientId = 7, ToEmail = "patient.hai@gmail.com", Subject = "CẢNH BÁO KHẨN CẤP: Tiền tai biến", Body = "Gọi cấp cứu 115 lập tức!", IsSent = true, Status = 1, SentAt = baseDate.AddHours(7).AddMinutes(7), CreatedAt = baseDate.AddHours(7).AddMinutes(7) },
+            new EmailNotification { Id = 8, AlertId = 8, PatientId = 8, ToEmail = "patient.yen@gmail.com", Subject = "Hệ thống tự động hủy cảnh báo", Body = "Cảnh báo nhầm", IsSent = false, Status = 0, SentAt = null, ErrorMessage = "Invalid address", CreatedAt = baseDate.AddHours(8).AddMinutes(7) },
+            new EmailNotification { Id = 9, AlertId = 9, PatientId = 9, ToEmail = "patient.phong@gmail.com", Subject = "Kiểm tra định kỳ", Body = "Vui lòng nhập sinh hiệu", IsSent = true, Status = 1, SentAt = baseDate.AddHours(9).AddMinutes(7), CreatedAt = baseDate.AddHours(9).AddMinutes(7) },
+            new EmailNotification { Id = 10, AlertId = 10, PatientId = 10, ToEmail = "patient.mai@gmail.com", Subject = "CẢNH BÁO: Huyết áp tâm thu cao", Body = "Bác sĩ An đã tiếp nhận", IsSent = true, Status = 1, SentAt = baseDate.AddHours(10).AddMinutes(7), CreatedAt = baseDate.AddHours(10).AddMinutes(7) }
         );
 
         OnModelCreatingPartial(modelBuilder);
