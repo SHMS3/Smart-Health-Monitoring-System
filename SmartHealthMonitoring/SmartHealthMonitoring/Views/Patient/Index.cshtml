@@ -1,0 +1,471 @@
+﻿@using SmartHealthMonitoring.ViewModels
+@model SmartHealthMonitoring.Common.PagedResult<DailyVitalLogViewModel>
+
+@{
+    ViewData["title"] = "Sổ tay chỉ số hằng ngày";
+}
+
+<div class="dashboard-container">
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4 d-flex align-items-center" role="alert" style="border-radius: 12px; border-left: 5px solid #ef4444; background-color: #fef2f2;">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-danger"></i>
+            <div>
+                <strong class="text-danger">Không hợp lệ!</strong>
+                <span class="text-danger opacity-75 ms-1">@TempData["ErrorMessage"]</span>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h3 class="fw-bold mb-1 text-dark">Sổ tay chỉ số hằng ngày</h3>
+            <p class="text-muted fs-7 mb-0">Quản lý, tìm kiếm và thao tác với dữ liệu sức khỏe của bạn.</p>
+        </div>
+
+        <div class="text-end">
+            @if ((bool)ViewBag.CanLog)
+            {
+                <a class="btn custom-btn-primary px-4 py-2 fw-medium d-flex align-items-center gap-2"
+                   asp-action="Create">
+
+                    <i class="bi bi-plus-circle-fill"></i>
+                    Ghi log hôm nay
+                </a>
+            }
+            else
+            {
+                <button class="btn btn-secondary px-4 py-2 fw-medium d-flex align-items-center gap-2"
+                        disabled>
+
+                    <i class="bi bi-lock-fill"></i>
+                    <span id="countdownText">
+                        @ViewBag.LogMessage
+                    </span>
+                </button>
+
+                @if (ViewBag.RemainingSeconds > 0)
+                {
+                    <small class="text-warning d-block mt-2">
+                        Còn:
+                        <span id="timer"
+                              data-seconds="@ViewBag.RemainingSeconds">
+                        </span>
+                    </small>
+                }
+            }
+
+            <small class="text-muted d-block mt-1 fs-8">
+                Quy định: Tối đa 4 lần/ngày, cách nhau 4 tiếng.
+            </small>
+        </div>
+    </div>
+
+    <div class="dashboard-card mb-4 p-4">
+        <form method="get" asp-action="Index" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label text-muted fw-semibold fs-7 mb-1">Từ ngày</label>
+                <div class="input-icon">
+                    <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control custom-input w-100" />
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label text-muted fw-semibold fs-7 mb-1">Đến ngày</label>
+                <div class="input-icon">
+                    <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control custom-input w-100" />
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <button type="submit" class="btn custom-btn-outline w-100 py-2 fw-medium">
+                    <i class="bi bi-funnel me-1"></i> Lọc dữ liệu
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="dashboard-card p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table custom-table align-middle mb-0" id="myTable">
+                <thead>
+                    <tr>
+                        <th class="ps-4" width="8%">ID</th>
+                        <th width="22%">Thời gian đo</th>
+                        <th width="15%">Huyết áp (mmHg)</th>
+                        <th width="15%">Nhịp tim (bpm)</th>
+                        <th width="15%">Đau ngực</th>
+                        <th width="15%">Vận động</th>
+                        <th class="text-center pe-4" width="10%">Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items != null && Model.Items.Any())
+                    {
+                        @foreach (var item in Model.Items)
+                        {
+                            // Cấu hình class màu sắc động theo mức độ cảnh báo
+                            string badgeColorClass = item.AlertLevel switch
+                            {
+                                "Danger" => "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25",
+                                "Warning" => "bg-warning bg-opacity-10 text-warning-dark border border-warning border-opacity-50",
+                                _ => "bg-success bg-opacity-10 text-success border border-success border-opacity-25"
+                            };
+
+                            string pulseColorClass = item.AlertLevel switch
+                            {
+                                "Danger" => "bg-danger",
+                                "Warning" => "bg-warning",
+                                _ => "bg-success"
+                            };
+
+                            <tr>
+                                <td class="ps-4">
+                                    <span class="text-muted fw-medium">#@item.Id</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-dark fs-6 d-block">@item.LoggedAt.ToString("dd/MM/yyyy")</span>
+                                    <span class="text-muted fs-7">@item.LoggedAt.ToString("HH:mm")</span>
+                                </td>
+                                <td>
+                                    <span class="badge-custom @badgeColorClass">
+                                        <i class="bi bi-activity me-1"></i> @item.BloodPressureDisplay
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="pulse-dot-dynamic @pulseColorClass"></div>
+                                        <span class="fw-semibold text-dark">@item.HeartRate bpm</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-medium text-dark">Mức @item.ChestPainLevel</span>
+                                </td>
+                                <td>
+                                    @if (item.HasExerciseAngina)
+                                    {
+                                        <span class="badge-custom bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 fs-7">Có đau</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-custom bg-light text-muted border px-2 py-1 fs-7">Không</span>
+                                    }
+                                </td>
+                                <td class="text-center pe-4">
+                                    <a asp-action="Details" asp-controller="Patient" asp-route-Id="@item.Id"
+                                       class="btn-action text-primary" data-bs-toggle="tooltip" title="Xem chi tiết">
+                                        <i class="bi bi-arrow-right-short fs-4"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <div class="empty-state">
+                                    <i class="bi bi-clipboard2-pulse fs-1 d-block mb-3 text-light-blue"></i>
+                                    <h6 class="fw-semibold text-dark">Chưa có chỉ số nào</h6>
+                                    <p class="fs-7 mb-0">Không tìm thấy dữ liệu trong khoảng thời gian này.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div class="px-4 py-3 border-top d-flex justify-content-between align-items-center bg-white">
+                <span class="text-muted fs-7 fw-medium">
+                    Trang @Model.Page / @Model.TotalPages
+                </span>
+                <ul class="pagination custom-pagination mb-0 gap-1">
+                    @if (Model.Page > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-fromDate="@ViewBag.FromDate" asp-route-toDate="@ViewBag.ToDate">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                    }
+
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-fromDate="@ViewBag.FromDate" asp-route-toDate="@ViewBag.ToDate">@i</a>
+                        </li>
+                    }
+
+                    @if (Model.Page < Model.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-fromDate="@ViewBag.FromDate" asp-route-toDate="@ViewBag.ToDate">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    /* Bọc toàn bộ nội dung để canh giữa và giới hạn độ rộng */
+    .dashboard-container {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    /* Khối Card tiêu chuẩn Premium */
+    .dashboard-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+        border: 1px solid #f1f5f9;
+    }
+
+    /* Buttons */
+    .custom-btn-primary {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+        transition: all 0.3s ease;
+    }
+
+        .custom-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.35);
+            color: #fff;
+        }
+
+    .custom-btn-outline {
+        background: #fff;
+        color: #0ea5e9;
+        border: 1.5px solid #0ea5e9;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+
+        .custom-btn-outline:hover {
+            background: #f0f9ff;
+            color: #0284c7;
+        }
+
+    /* Inputs */
+    .custom-input {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        color: #334155;
+        transition: border-color 0.2s;
+    }
+
+        .custom-input:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+            outline: none;
+        }
+
+    /* Table */
+    .custom-table {
+        margin-bottom: 0;
+    }
+
+        .custom-table thead th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .custom-table tbody td {
+            padding: 1.2rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .custom-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+    /* Badges & Icons */
+    .badge-custom {
+        padding: 6px 12px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .bg-light-blue {
+        background-color: #f0f9ff;
+    }
+
+    .text-primary-dark {
+        color: #0284c7;
+    }
+
+    .bg-light-danger {
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+
+    .bg-light-success {
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+
+    /* Nút Action trong bảng */
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background-color: #f0f9ff;
+        transition: all 0.2s;
+    }
+
+        .btn-action:hover {
+            background-color: #e0f2fe;
+            transform: translateX(3px); /* Hiệu ứng trượt nhẹ */
+        }
+
+    /* Dot nhịp tim */
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #ef4444;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+
+    /* Pagination */
+    .custom-pagination .page-link {
+        border: none;
+        color: #64748b;
+        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        margin: 0 2px;
+        transition: all 0.2s;
+    }
+
+    .custom-pagination .page-item:not(.active) .page-link:hover {
+        background-color: #f1f5f9;
+        color: #0ea5e9;
+    }
+
+    .custom-pagination .page-item.active .page-link {
+        background-color: #0ea5e9;
+        color: white;
+        box-shadow: 0 4px 10px rgba(14, 165, 233, 0.2);
+    }
+
+    .text-warning-dark {
+        color: #b45309 !important;
+    }
+    /* Màu vàng đậm dễ đọc trên nền trắng */
+    .pulse-dot-dynamic {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+        .pulse-dot-dynamic.bg-danger {
+            animation: pulse-red-fx 2s infinite;
+        }
+
+    @@keyframes pulse-red-fx {
+        0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const timer = document.getElementById("timer");
+
+        if (!timer) return;
+
+        let seconds =
+            parseInt(timer.dataset.seconds);
+
+        function updateTimer() {
+
+            if (seconds <= 0) {
+
+                timer.innerHTML =
+                    "Có thể ghi log ngay";
+
+                location.reload();
+
+                return;
+            }
+
+            let h =
+                Math.floor(seconds / 3600);
+
+            let m =
+                Math.floor(
+                    (seconds % 3600) / 60
+                );
+
+            let s =
+                seconds % 60;
+
+            timer.innerHTML =
+                `${h}h ${m}m ${s}s`;
+
+            seconds--;
+        }
+
+        updateTimer();
+
+        setInterval(updateTimer, 1000);
+
+    });
+</script>

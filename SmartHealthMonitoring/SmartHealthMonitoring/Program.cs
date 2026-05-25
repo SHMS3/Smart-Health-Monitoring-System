@@ -2,6 +2,8 @@
 using Minio;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Repositories;
+using SmartHealthMonitoring.Services;
+
 //using SmartHealthMonitoring.Services;
 using System;
 
@@ -30,6 +32,7 @@ namespace SmartHealthMonitoring
             // Configure Email Settings and Service
             builder.Services.Configure<SmartHealthMonitoring.Models.Configurations.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
             builder.Services.AddScoped<SmartHealthMonitoring.Services.IEmailService, SmartHealthMonitoring.Services.EmailService>();
+            builder.Services.AddScoped<DailyVitalLogService>();
 
             //Đki db
             builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
@@ -37,6 +40,7 @@ namespace SmartHealthMonitoring
 
             //Repo
             builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped<DailyVitalLogRepository>();
 
             var app = builder.Build();
 

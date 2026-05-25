@@ -22,6 +22,11 @@ public partial class DailyVitalLog
     public bool HasExerciseAngina { get; set; }
 
     public bool IsDeleted { get; set; }
+    // số lần đã sửa
+    public byte UpdateCount { get; set; } = 0;
+
+    // khóa chỉnh sửa khi có log mới
+    public bool IsUpdateLocked { get; set; } = false;
 
     public virtual ICollection<AiriskPrediction> AiriskPredictions { get; set; } = new List<AiriskPrediction>();
 
