@@ -414,13 +414,8 @@
 
             <ul class="nav-links">
                 @{
-                    // Lấy tên Controller hiện tại để làm hiệu ứng nổi bật màu xanh
                     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-
-                    // CẤU HÌNH CHỜ CHECK ROLE:
-                    // Hiện tại gán tạm = true để bạn test hiển thị nút.
-                    // Sau khi nhóm làm xong Login, hãy thay true thành: User.Identity.IsAuthenticated && User.IsInRole("Doctor")
-                    bool isDoctor = true;
+                    bool isDoctor = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Doctor");
                 }
 
                 <li>
@@ -453,8 +448,49 @@
             </ul>
 
             <div class="nav-actions">
-                <a asp-controller="Auth" asp-action="Login" class="btn-ghost">Đăng nhập</a>
-                <a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">Đăng ký</a>
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    var fullName = User.FindFirst("FullName")?.Value ?? User.Identity.Name ?? "Tài khoản";
+                    var role = User.IsInRole("Doctor") ? "Bác sĩ" : "Bệnh nhân";
+                    <div class="nav-user-menu" style="position:relative;display:flex;align-items:center;gap:10px;">
+                        <div class="nav-user-avatar" id="userMenuToggle" onclick="document.getElementById('userDropdown').classList.toggle('open')" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 14px 6px 8px;border-radius:50px;border:1.5px solid var(--border);background:rgba(14,165,233,.05);transition:all .2s;">
+                            <div style="width:34px;height:34px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(14,165,233,.3);flex-shrink:0;">
+                                <i class="fas fa-user" style="color:#fff;font-size:14px;"></i>
+                            </div>
+                            <div style="line-height:1.2;">
+                                <div style="font-size:.83rem;font-weight:600;color:var(--text);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@fullName</div>
+                                <div style="font-size:.7rem;color:var(--primary);font-weight:500;">@role</div>
+                            </div>
+                            <i class="fas fa-chevron-down" style="font-size:.65rem;color:var(--text-muted);margin-left:2px;"></i>
+                        </div>
+                        <div id="userDropdown" style="display:none;position:absolute;top:calc(100% + 10px);right:0;min-width:200px;background:#fff;border-radius:14px;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:9999;overflow:hidden;">
+                            <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border);">
+                                <div style="font-size:.82rem;font-weight:600;color:var(--text);">@fullName</div>
+                                <div style="font-size:.73rem;color:var(--text-muted);margin-top:2px;">@User.Identity.Name</div>
+                            </div>
+                            <div style="padding:6px;">
+                                <a href="#" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:.84rem;color:var(--text-sub);transition:all .2s;" onmouseover="this.style.background='rgba(14,165,233,.07)';this.style.color='var(--primary)'" onmouseout="this.style.background='';this.style.color='var(--text-sub)'">
+                                    <i class="fas fa-user-circle" style="width:16px;text-align:center;"></i> Hồ sơ cá nhân
+                                </a>
+                                <a href="#" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:.84rem;color:var(--text-sub);transition:all .2s;" onmouseover="this.style.background='rgba(14,165,233,.07)';this.style.color='var(--primary)'" onmouseout="this.style.background='';this.style.color='var(--text-sub)'">
+                                    <i class="fas fa-cog" style="width:16px;text-align:center;"></i> Cài đặt
+                                </a>
+                                <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+                                <form asp-controller="Auth" asp-action="Logout" method="post" style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:.84rem;color:#ef4444;background:none;border:none;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(239,68,68,.07)'" onmouseout="this.style.background=''">
+                                        <i class="fas fa-sign-out-alt" style="width:16px;text-align:center;"></i> Đăng xuất
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <a asp-controller="Auth" asp-action="Login" class="btn-ghost">Đăng nhập</a>
+                    <a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">Đăng ký</a>
+                }
                 <a asp-controller="Appointment" asp-action="Index" class="btn-appointment">
                     <i class="fas fa-calendar-plus me-1"></i> Đặt lịch hẹn
                 </a>
@@ -553,6 +589,25 @@
         window.addEventListener('scroll', () => {
             nav.classList.toggle('elevated', window.scrollY > 10);
         });
+
+        // Đóng dropdown khi click ra ngoài
+        document.addEventListener('click', function (e) {
+            const menu = document.getElementById('userDropdown');
+            const toggle = document.getElementById('userMenuToggle');
+            if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Toggle dropdown show/hide
+        const toggle = document.getElementById('userMenuToggle');
+        if (toggle) {
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const menu = document.getElementById('userDropdown');
+                menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+            });
+        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 
