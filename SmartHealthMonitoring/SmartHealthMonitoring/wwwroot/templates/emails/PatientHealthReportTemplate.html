@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .email-container {
+            background-color: #ffffff;
+            padding: 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            max-width: 650px;
+            margin: 0 auto;
+            overflow: hidden;
+            border: 1px solid #e1e8ed;
+        }
+
+        .header {
+            background-color: #0056b3;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .body-content {
+            padding: 25px;
+            line-height: 1.6;
+        }
+
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .intro-text {
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .info-table th {
+            background-color: #f7f9fa;
+            border: 1px solid #dce4e6;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            width: 35%;
+            color: #0056b3;
+        }
+
+        .info-table td {
+            border: 1px solid #dce4e6;
+            padding: 12px;
+        }
+
+        .severity-high {
+            color: #d9534f;
+            font-weight: bold;
+        }
+
+        .severity-medium {
+            color: #f0ad4e;
+            font-weight: bold;
+        }
+
+        .severity-low {
+            color: #5cb85c;
+            font-weight: bold;
+        }
+
+        .advice-box {
+            background-color: #e8f4fd;
+            border-left: 4px solid #0056b3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .advice-title {
+            font-weight: bold;
+            color: #0056b3;
+            margin-bottom: 5px;
+            margin-top: 0;
+        }
+
+        .footer {
+            background-color: #f7f9fa;
+            color: #888;
+            text-align: center;
+            padding: 15px;
+            font-size: 13px;
+            border-top: 1px solid #e1e8ed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h2>Báo cáo Tình trạng Y tế - Smart Health</h2>
+        </div>
+        <div class="body-content">
+            <div class="greeting">
+                Chào <strong>{{PatientName}}</strong>,
+            </div>
+            <div class="intro-text">
+                Hệ thống Smart Health Monitoring xin gửi đến bạn thông tin chi tiết về hồ sơ sức khỏe và chẩn đoán mới
+                nhất được cập nhật vào lúc <strong>{{RecordDate}}</strong>.
+            </div>
+
+            <table class="info-table">
+                <tr>
+                    <th>Chẩn đoán (Bệnh)</th>
+                    <td>{{Diagnosis}}</td>
+                </tr>
+                <tr>
+                    <th>Mức độ nghiêm trọng</th>
+                    <td>{{Severity}}</td>
+                </tr>
+                <tr>
+                    <th>Các chỉ số nổi bật</th>
+                    <td>{{VitalSigns}}</td>
+                </tr>
+            </table>
+
+            <div class="advice-box">
+                <p class="advice-title">📌 Lời khuyên từ Bác sĩ chuyên khoa:</p>
+                <p style="margin: 0; font-style: italic;">"{{DoctorAdvice}}"</p>
+            </div>
+
+            <p style="margin-top: 20px;">Vui lòng tuân thủ các chỉ định của bác sĩ và liên hệ khám lại sớm nếu thấy bất
+                kỳ triệu chứng nào bất thường.</p>
+            <p>Trân trọng,<br /><strong>Đội ngũ Y Tế Smart Health</strong></p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 Smart Health Monitoring System. Nền tảng Y tế tích hợp AI.</p>
+        </div>
+    </div>
+</body>
+
+</html>

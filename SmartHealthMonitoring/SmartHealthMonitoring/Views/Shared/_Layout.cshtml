@@ -441,6 +441,18 @@
 							Bệnh nhân
 						</a>
 					</li>
+					<li>
+						<a asp-controller="WarningAlert" asp-action="Dashboard"
+						   style="@(currentController == "WarningAlert" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+							Cảnh báo AI
+						</a>
+					</li>
+					<li>
+						<a asp-controller="EmailNotification" asp-action="Index"
+						   style="@(currentController == "EmailNotification" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+							Lịch sử Email
+						</a>
+					</li>
 				}
 				else
 				{

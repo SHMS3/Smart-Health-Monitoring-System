@@ -156,7 +156,10 @@
 
         <div class="card-body p-4 p-md-5">
             <form id="clinicalForm" asp-action="Create" method="post">
-                <input type="hidden" asp-for="PatientId" id="patientIdHidden" />
+                <input type="hidden"
+id="patientIdHidden"
+name="PatientId"
+value="@Model.PatientId" />
 
                 <div class="row g-4 mb-5">
                     <div class="col-lg-4">
