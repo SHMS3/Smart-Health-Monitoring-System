@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "Doctor")]
+    [Authorize(Roles = "Doctor,Patient")]
     public class ClinicalRecordController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
@@ -17,11 +17,50 @@ namespace SmartHealthMonitoring.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> MyRecords()
+        {
+            var email = User.Identity?.Name;
+
+            var patient = await _context.Patients
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p =>
+                    p.User.Email == email &&
+                    !p.IsDeleted);
+
+            if (patient == null)
+            {
+                return Forbid();
+            }
+
+            return RedirectToAction(nameof(Index), new { id = patient.Id });
+        }
+
         [HttpGet]
+        [Authorize(Roles = "Doctor,Patient")]
         public async Task<IActionResult> Index(int id)
         {
             try
             {
+                // Nếu là Patient -> chỉ được xem hồ sơ của chính mình
+                if (User.IsInRole("Patient"))
+                {
+                    var email = User.Identity?.Name;
+
+                    var currentPatient = await _context.Patients
+                        .Include(p => p.User)
+                        .FirstOrDefaultAsync(p =>
+                            p.User.Email == email &&
+                            !p.IsDeleted);
+
+                    // Patient cố xem hồ sơ người khác
+                    if (currentPatient == null || currentPatient.Id != id)
+                    {
+                        return Forbid();
+                    }
+                }
+
+                // Doctor hoặc patient hợp lệ mới tới đây
                 var patient = await _context.Patients
                     .Include(p => p.User)
                     .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
@@ -29,10 +68,19 @@ namespace SmartHealthMonitoring.Controllers
                 if (patient == null)
                 {
                     TempData["Error"] = "Không tìm thấy bệnh nhân.";
-                    return RedirectToAction("Index", "DoctorDashboard");
+
+                    // Doctor quay về dashboard
+                    if (User.IsInRole("Doctor"))
+                    {
+                        return RedirectToAction("Index", "DoctorDashboard");
+                    }
+
+                    // Patient quay về trang chủ
+                    return RedirectToAction("Index", "Home");
                 }
 
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
                 var records = await _context.ClinicalRecords
                     .Where(r => r.PatientId == id && !r.IsDeleted)
                     .OrderByDescending(r => r.VisitDate)
@@ -45,7 +93,6 @@ namespace SmartHealthMonitoring.Controllers
                         MaxHeartRate = r.MaxHeartRate,
                         ChestPainTypeDisplay = GetChestPainDisplay(r.ChestPainType),
 
-                        // --- MAP THÊM DỮ LIỆU ---
                         FastingBS = r.FastingBs,
                         RestECG = r.RestEcg,
                         ExerciseAngina = r.ExerciseAngina,
@@ -60,7 +107,8 @@ namespace SmartHealthMonitoring.Controllers
                 {
                     PatientId = patient.Id,
                     PatientName = patient.User.FullName,
-                    Age = today.Year - patient.DateOfBirth.Year - (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0),
+                    Age = today.Year - patient.DateOfBirth.Year -
+                          (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0),
                     SexDisplay = patient.Sex == 1 ? "Nam" : "Nữ",
                     Records = records
                 };
@@ -70,11 +118,18 @@ namespace SmartHealthMonitoring.Controllers
             catch (Exception)
             {
                 TempData["Error"] = "Lỗi khi tải hồ sơ y tế.";
-                return RedirectToAction("Index", "DoctorDashboard");
+
+                if (User.IsInRole("Doctor"))
+                {
+                    return RedirectToAction("Index", "DoctorDashboard");
+                }
+
+                return RedirectToAction("Index", "Home");
             }
         }
 
         [HttpPost]
+        [Authorize(Roles = "Doctor")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id) // Action này đóng vai trò là Void/Hủy
         {
