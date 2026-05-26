@@ -87,85 +87,56 @@
         }
 
         .nav-inner {
-        max-width: 1280px;
-        margin: 0 auto;
-        padding: 0 32px;
-        height: 70px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .nav-logo {
-        display: flex;
-        align-items: center;
-        gap: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1; /* Chiếm 1 phần không gian để cân bằng với bên phải */
         }
 
-        .nav-logo-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 11px;
-        background: var(--grad);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 14px rgba(14,165,233,.35);
-        flex-shrink: 0;
-        }
-
-        .nav-logo-icon i {
-        color: #fff;
-        font-size: 17px;
-        }
-
-        .nav-logo-name {
-        font-family: 'Plus Jakarta Sans',sans-serif;
-        font-weight: 800;
-        font-size: 1.15rem;
-        background: var(--grad);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        }
-
-        .nav-logo-tag {
-        display: block;
-        font-size: .6rem;
-        color: var(--text-muted);
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        margin-top: -3px;
-        -webkit-text-fill-color: var(--text-muted);
-        }
-
+        /* Các link điều hướng */
         .nav-links {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px; /* Tăng khoảng cách giữa các link để dễ nhìn hơn */
+            list-style: none;
+            margin-bottom: 0; /* ÉP BUỘC: Xóa margin mặc định của <ul> trong Bootstrap để không bị lệch dọc */
         }
 
-        .nav-links a {
-        font-size: .875rem;
-        font-weight: 500;
-        color: var(--text-sub);
-        padding: 7px 15px;
-        border-radius: 8px;
-        transition: all .2s;
-        position: relative;
-        }
+            .nav-links a {
+                font-size: .875rem;
+                font-weight: 500;
+                color: var(--text-sub);
+                padding: 7px 15px;
+                border-radius: 8px;
+                transition: all .2s;
+                position: relative;
+                /* Thêm thuộc tính này để chữ không bị bẻ dòng nếu màn hình thu nhỏ */
+                white-space: nowrap;
+            }
 
-        .nav-links a:hover {
-        color: var(--primary);
-        background: rgba(14,165,233,.07);
-        }
+                .nav-links a:hover {
+                    color: var(--primary);
+                    background: rgba(14,165,233,.07);
+                }
 
+        /* Khu vực nút bấm */
         .nav-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Đẩy các nút về sát lề phải */
+            gap: 12px; /* Tăng khoảng cách giữa nút Đăng nhập và Đăng ký */
+            flex: 1; /* Chiếm 1 phần không gian để ép cụm .nav-links vào đúng vị trí center */
         }
 
         .btn-ghost {
@@ -226,7 +197,7 @@
         .page-main {
         background: #fff;
         flex: 1;
-            padding-top: 90px; /* THÊM DÒNG NÀY ĐỂ ĐẨY NỘI DUNG XUỐNG */
+        padding-top: 90px; /* THÊM DÒNG NÀY ĐỂ ĐẨY NỘI DUNG XUỐNG */
         }
 
         /* ── FOOTER ĐÃ ĐƯỢC THU GỌN ── */
@@ -420,21 +391,13 @@
                     // CẤU HÌNH CHỜ CHECK ROLE:
                     // Hiện tại gán tạm = true để bạn test hiển thị nút.
                     // Sau khi nhóm làm xong Login, hãy thay true thành: User.Identity.IsAuthenticated && User.IsInRole("Doctor")
-                    bool isPatient = true;
                     bool isDoctor = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Doctor");
                 }
 
                 <li>
                     <a asp-controller="Home" asp-action="Index"
-                       style="@(currentController == "Home" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+                    style="@(currentController == "Home" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
                         Trang chủ
-                    </a>
-                </li>
-
-                <li>
-                    <a asp-controller="HealthTracker" asp-action="Index"
-                       style="@(currentController == "HealthTracker" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
-                        Sức khỏe
                     </a>
                 </li>
 
@@ -442,29 +405,81 @@
                 {
                     <li>
                         <a asp-controller="DoctorDashboard" asp-action="Index"
-                           style="@(currentController == "DoctorDashboard" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+                        style="@(currentController == "DoctorDashboard" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
                             Bệnh nhân
                         </a>
                     </li>
                 }
 
-                <li>
-                    <a asp-controller="Patient" asp-action="Index"
-                       style="@(currentController == "Patient" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
-                        Sổ tay khám bệnh
-                    </a>
-                </li>
-                <li>
-                    <a asp-controller="Patient" asp-action="MedicalRecord">
-                        Hồ sơ bệnh án
-                    </a>
-                </li>
-                <li><a href="#contact">Liên hệ</a></li>
+                @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Patient"))
+                {
+                    <li>
+                        <a asp-controller="Patient" asp-action="Index">
+                            Sổ tay hằng ngày
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="Patient" asp-action="MedicalRecord">
+                            Hồ sơ bệnh án
+                        </a>    
+                    </li>
+
+                    <li>
+                        <a asp-controller="Patient" asp-action="DoctorAlert">
+                            Cảnh báo hằng ngày
+                        </a>
+                    </li>
+                }
+                else
+                {
+                    <li>
+                        <a asp-controller="Auth" asp-action="Login">
+                            Sổ tay hằng ngày
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="Auth" asp-action="Login">
+                            Hồ sơ bệnh án
+                        </a>
+                    </li>
+
+                    <li>
+                        <a asp-controller="Auth" asp-action="Login">
+                            Cảnh báo hằng ngày
+                        </a>
+                    </li>
+                }
+                <li><a asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
             </ul>
 
             <div class="nav-actions">
-                <a asp-controller="Auth" asp-action="Login" class="btn-ghost">Đăng nhập</a>
-                <a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">Đăng ký</a>
+
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <span>
+                        Xin chào @User.FindFirst("FullName")?.Value
+                    </span>
+
+                    <form asp-controller="Auth" asp-action="Logout" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit" class="btn-ghost">
+                            Đăng xuất
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Auth" asp-action="Login" class="btn-ghost">
+                        Đăng nhập
+                    </a>
+
+                    <a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">
+                        Đăng ký
+                    </a>
+                }
             </div>
 
         </div>

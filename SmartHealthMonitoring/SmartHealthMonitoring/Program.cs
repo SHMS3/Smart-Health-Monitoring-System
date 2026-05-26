@@ -44,13 +44,13 @@ namespace SmartHealthMonitoring
                     options.AccessDeniedPath = "/Auth/AccessDenied";
                     options.ExpireTimeSpan = TimeSpan.FromHours(24);
                     options.SlidingExpiration = true;
-                })
-                .AddGoogle(options =>
-                {
-                    options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
-                    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
-                    options.CallbackPath = "/Auth/GoogleCallback";
                 });
+                //.AddGoogle(options =>
+                //{
+                //    options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
+                //    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+                //    options.CallbackPath = "/Auth/GoogleCallback";
+                //});
 
             //Đki db
             builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
@@ -84,7 +84,7 @@ namespace SmartHealthMonitoring
             app.UseRouting();
 
             app.UseAuthentication();
-          //  app.UseAuthorization();
+            app.UseAuthorization();
 
             app.MapControllerRoute(
                  name: "areas",

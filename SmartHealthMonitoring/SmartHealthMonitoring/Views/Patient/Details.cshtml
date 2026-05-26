@@ -1,218 +1,213 @@
 ﻿@model SmartHealthMonitoring.ViewModels.DailyVitalLogViewModel
 
 @{
-    ViewData["Title"] = "Chi tiết hồ sơ #" + Model.Id;
+	ViewData["Title"] = "Chi tiết hồ sơ #" + Model.Id;
 
-    string alertContainerClass = Model.AlertLevel switch
-    {
-        "Danger" => "bg-danger bg-opacity-10 border-danger border-opacity-25 text-danger",
-        "Warning" => "bg-warning bg-opacity-10 border-warning border-opacity-50 text-warning-dark",
-        _ => "bg-success bg-opacity-10 border-success border-opacity-25 text-success"
-    };
-    string alertIconClass = Model.AlertLevel switch
-    {
-        "Danger" => "bi-exclamation-triangle-fill text-danger bg-danger",
-        "Warning" => "bi-exclamation-circle-fill text-warning-dark bg-warning",
-        _ => "bi-check-circle-fill text-white bg-success"
-    };
+	string alertContainerClass = Model.AlertLevel switch
+	{
+		"Danger" => "bg-danger bg-opacity-10 border-danger border-opacity-25 text-danger",
+		"Warning" => "bg-warning bg-opacity-10 border-warning border-opacity-50 text-warning-dark",
+		_ => "bg-success bg-opacity-10 border-success border-opacity-25 text-success"
+	};
+	string alertIconClass = Model.AlertLevel switch
+	{
+		"Danger" => "bi-exclamation-triangle-fill text-danger bg-danger",
+		"Warning" => "bi-exclamation-circle-fill text-warning-dark bg-warning",
+		_ => "bi-check-circle-fill text-white bg-success"
+	};
 }
 
 <div class="dashboard-container" style="max-width: 900px;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <a asp-action="Index" class="btn btn-link text-muted p-0 mb-2 d-inline-flex align-items-center text-decoration-none fw-medium transition-all">
-                <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
-            </a>
-            <h3 class="fw-bold mb-1 text-dark">Hồ sơ chỉ số #@Model.Id</h3>
-            <p class="text-muted fs-7 mb-0">
-                Thời gian ghi nhận: <span class="fw-semibold text-dark">
-                    @Model.LoggedAt.ToString("dd/MM/yyyy HH:mm")
-                </span>
-            </p>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn custom-btn-outline px-4 py-2 fw-medium d-flex align-items-center gap-2" onclick="window.print()">
-                <i class="bi bi-printer"></i> In ấn
-            </button>
-            @if (Model.CanUpdate)
-            {
-                <a class="btn btn-warning" asp-action="Update" asp-route-id="@Model.Id">
-                    Cập nhật
-                    (@(2 - Model.UpdateCount)/2)
-                </a>
-            }
-            else
-            {
-                <button class="btn btn-secondary" disabled> Đã khóa chỉnh sửa </button>
-            }
-        </div>
-    </div>
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<div>
+			<a asp-action="Index" class="btn btn-link text-muted p-0 mb-2 d-inline-flex align-items-center text-decoration-none fw-medium transition-all">
+				<i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+			</a>
+			<h3 class="fw-bold mb-1 text-dark">Hồ sơ chỉ số #@Model.Id</h3>
+			<p class="text-muted fs-7 mb-0">
+				Thời gian ghi nhận: <span class="fw-semibold text-dark">
+					@Model.LoggedAt.ToString("dd/MM/yyyy HH:mm")
+				</span>
+			</p>
+		</div>
+		<div class="d-flex gap-2">
+			<button class="btn custom-btn-outline px-4 py-2 fw-medium d-flex align-items-center gap-2" onclick="window.print()">
+				<i class="bi bi-printer"></i> In ấn
+			</button>
+			@if (Model.CanUpdate)
+			{
+				<a class="btn btn-warning" asp-action="Update" asp-route-id="@Model.Id">
+					Cập nhật
+					(@(2 - Model.UpdateCount)/2)
+				</a>
+			}
+			else
+			{
+				<button class="btn btn-secondary" disabled> Đã khóa chỉnh sửa </button>
+			}
+		</div>
+	</div>
 
-    <div class="alert @alertContainerClass border rounded-4 p-4 mb-4 shadow-sm">
-        <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 @(Model.AlertLevel == "Danger" ? "pulse-danger-fx" : "")" style="width: 45px; height: 45px; background-color: currentColor;">
-                <i class="bi @alertIconClass fs-4" style="color: #fff;"></i>
-            </div>
-            <div>
-                <h5 class="fw-bold mb-1">Trạng thái sức khỏe: @Model.AlertText</h5>
-                @if (Model.AlertLevel == "Danger")
-                {
-                    <p class="mb-0 fs-7 opacity-90">Hệ thống phát hiện chỉ số của bạn đang vượt ngưỡng an toàn nghiêm trọng. Vui lòng nghỉ ngơi và liên hệ nhân viên y tế nếu có triệu chứng mệt mỏi.</p>
-                }
-                else if (Model.AlertLevel == "Warning")
-                {
-                    <p class="mb-0 fs-7 opacity-90">Chỉ số sức khỏe hơi cao hơn mức bình thường. Bạn nên chú ý điều chỉnh chế độ ăn uống, sinh hoạt và đo lại sau vài giờ.</p>
-                }
-                else
-                {
-                    <p class="mb-0 fs-7 opacity-90">Tuyệt vời! Các chỉ số đo đạc trong ngày của bạn hoàn toàn nằm trong phạm vi an toàn lý tưởng.</p>
-                }
-            </div>
-        </div>
-    </div>
+	<div class="alert @alertContainerClass border rounded-4 p-4 mb-4 shadow-sm">
+		<div class="d-flex align-items-center gap-3">
+			<div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 @(Model.AlertLevel == "Danger" ? "pulse-danger-fx" : "")" style="width: 45px; height: 45px; background-color: currentColor;">
+				<i class="bi @alertIconClass fs-4" style="color: #fff;"></i>
+			</div>
+			<div>
+				<h5 class="fw-bold mb-1">Trạng thái sức khỏe: @Model.AlertText</h5>
+				@if (Model.AlertLevel == "Danger")
+				{
+					<p class="mb-0 fs-7 opacity-90">Hệ thống phát hiện chỉ số của bạn đang vượt ngưỡng an toàn nghiêm trọng. Vui lòng nghỉ ngơi và liên hệ nhân viên y tế nếu có triệu chứng mệt mỏi.</p>
+				}
+				else if (Model.AlertLevel == "Warning")
+				{
+					<p class="mb-0 fs-7 opacity-90">Chỉ số sức khỏe hơi cao hơn mức bình thường. Bạn nên chú ý điều chỉnh chế độ ăn uống, sinh hoạt và đo lại sau vài giờ.</p>
+				}
+				else
+				{
+					<p class="mb-0 fs-7 opacity-90">Tuyệt vời! Các chỉ số đo đạc trong ngày của bạn hoàn toàn nằm trong phạm vi an toàn lý tưởng.</p>
+				}
+			</div>
+		</div>
+	</div>
 
-    <div class="dashboard-card p-4 p-md-5">
-        <h5 class="fw-bold text-primary-dark mb-4 border-bottom pb-3">
-            <i class="bi bi-clipboard2-data me-2"></i>Thông số chi tiết
-        </h5>
+	<div class="dashboard-card p-4 p-md-5">
+		<h5 class="fw-bold text-primary-dark mb-4 border-bottom pb-3">
+			<i class="bi bi-clipboard2-data me-2"></i>Thông số chi tiết
+		</h5>
 
-        <div class="row g-4 row-cols-1 row-cols-md-2">
-            <div class="col">
-                <div class="vital-card p-4 rounded-4 bg-light">
-                    <span class="text-muted fw-semibold fs-7 text-uppercase">Huyết áp tâm thu</span>
-                    <h2 class="display-6 fw-bold my-2 text-dark">@Model.SystolicBp <span class="fs-6 text-muted font-normal">mmHg</span></h2>
-                    <span class="fs-7 @(Model.SystolicBp >= 130 ? "text-danger fw-medium" : "text-success")">
-                        @(Model.SystolicBp >= 130 ? "⚠️ Cao hơn mức tiêu chuẩn (<120)" : "✓ Bình thường")
-                    </span>
-                </div>
-            </div>
+		<div class="row g-4 row-cols-1 row-cols-md-2">
+			<div class="col">
+				<div class="vital-card p-4 rounded-4 bg-light">
+					<span class="text-muted fw-semibold fs-7 text-uppercase">Huyết áp tâm thu</span>
+					<h2 class="display-6 fw-bold my-2 text-dark">@Model.SystolicBp <span class="fs-6 text-muted font-normal">mmHg</span></h2>
+					<span class="fs-7 @(Model.SystolicBp >= 130 ? "text-danger fw-medium" : "text-success")">
+						@(Model.SystolicBp >= 130 ? "⚠️ Cao hơn mức tiêu chuẩn (<120)" : "✓ Bình thường")
+					</span>
+				</div>
+			</div>
 
-            <div class="col">
-                <div class="vital-card p-4 rounded-4 bg-light">
-                    <span class="text-muted fw-semibold fs-7 text-uppercase">Huyết áp tâm trương</span>
-                    <h2 class="display-6 fw-bold my-2 text-dark">@Model.DiastolicBp <span class="fs-6 text-muted font-normal">mmHg</span></h2>
-                    <span class="fs-7 @(Model.DiastolicBp >= 80 ? "text-danger fw-medium" : "text-success")">
-                        @(Model.DiastolicBp >= 80 ? "⚠️ Cao hơn mức tiêu chuẩn (<80)" : "✓ Bình thường")
-                    </span>
-                </div>
-            </div>
+			<div class="col">
+				<div class="vital-card p-4 rounded-4 bg-light">
+					<span class="text-muted fw-semibold fs-7 text-uppercase">Huyết áp tâm trương</span>
+					<h2 class="display-6 fw-bold my-2 text-dark">@Model.DiastolicBp <span class="fs-6 text-muted font-normal">mmHg</span></h2>
+					<span class="fs-7 @(Model.DiastolicBp >= 80 ? "text-danger fw-medium" : "text-success")">
+						@(Model.DiastolicBp >= 80 ? "⚠️ Cao hơn mức tiêu chuẩn (<80)" : "✓ Bình thường")
+					</span>
+				</div>
+			</div>
 
-            <div class="col">
-                <div class="vital-card p-4 rounded-4 bg-light">
-                    <span class="text-muted fw-semibold fs-7 text-uppercase">Nhịp tim</span>
-                    <h2 class="display-6 fw-bold my-2 text-dark">@Model.HeartRate <span class="fs-6 text-muted font-normal">bpm</span></h2>
-                    <span class="fs-7 @(Model.IsAbnormalHeartRate ? "text-danger fw-medium" : "text-success")">
-                        @(Model.IsAbnormalHeartRate ? "⚠️ Nằm ngoài khoảng an toàn (60-100)" : "✓ Bình thường")
-                    </span>
-                </div>
-            </div>
+			<div class="col">
+				<div class="vital-card p-4 rounded-4 bg-light">
+					<span class="text-muted fw-semibold fs-7 text-uppercase">Nhịp tim</span>
+					<h2 class="display-6 fw-bold my-2 text-dark">@Model.HeartRate <span class="fs-6 text-muted font-normal">bpm</span></h2>
+					<span class="fs-7 @(Model.IsAbnormalHeartRate ? "text-danger fw-medium" : "text-success")">
+						@(Model.IsAbnormalHeartRate ? "⚠️ Nằm ngoài khoảng an toàn (60-100)" : "✓ Bình thường")
+					</span>
+				</div>
+			</div>
 
-            <div class="col">
-                <div class="vital-card p-4 rounded-4 bg-light">
-                    <span class="text-muted fw-semibold fs-7 text-uppercase">Mức độ đau ngực</span>
-                    <h2 class="display-6 fw-bold my-2 text-dark">Mức @Model.ChestPainLevel</h2>
-                    <span class="fs-7 text-muted">Thang điểm theo dõi triệu chứng cơ thể</span>
-                </div>
-            </div>
+			<div class="col">
+				<div class="vital-card p-4 rounded-4 bg-light">
+					<span class="text-muted fw-semibold fs-7 text-uppercase">Mức độ đau ngực</span>
+					<h2 class="display-6 fw-bold my-2 text-dark">Mức @Model.ChestPainLevel</h2>
+					<span class="fs-7 text-muted">Thang điểm theo dõi triệu chứng cơ thể</span>
+				</div>
+			</div>
 
-            <div class="col-md-12">
-                <div class="vital-card p-4 rounded-4 @(Model.HasExerciseAngina ? "bg-light-danger" : "bg-light-success") d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="text-muted fw-semibold fs-7 text-uppercase d-block mb-1">Cơn đau thắt ngực khi vận động</span>
-                        <p class="mb-0 fs-7 text-muted">Có xuất hiện cảm giác đau tức ngực khi đi bộ hoặc làm việc nặng không.</p>
-                    </div>
-                    <h3 class="fw-bold mb-0 @(Model.HasExerciseAngina ? "text-danger" : "text-success")">
-                        @(Model.HasExerciseAngina ? "CÓ TRIỆU CHỨNG" : "KHÔNG BỊ ĐAU")
-                    </h3>
-                </div>
-            </div>
-        </div>
-    </div>
+			<div class="col-md-12">
+				<div class="vital-card p-4 rounded-4 @(Model.HasExerciseAngina ? "bg-light-danger" : "bg-light-success") d-flex justify-content-between align-items-center">
+					<div>
+						<span class="text-muted fw-semibold fs-7 text-uppercase d-block mb-1">Cơn đau thắt ngực khi vận động</span>
+						<p class="mb-0 fs-7 text-muted">Có xuất hiện cảm giác đau tức ngực khi đi bộ hoặc làm việc nặng không.</p>
+					</div>
+					<h3 class="fw-bold mb-0 @(Model.HasExerciseAngina ? "text-danger" : "text-success")">
+						@(Model.HasExerciseAngina ? "CÓ TRIỆU CHỨNG" : "KHÔNG BỊ ĐAU")
+					</h3>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 
 <style>
-    .dashboard-container {
-        margin: 0 auto;
-        padding: 2rem 1rem;
-    }
+	.dashboard-container {
+		margin: 0 auto;
+		padding: 2rem 1rem;
+	}
 
-    .dashboard-card {
-        background: #ffffff;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
-        border: 1px solid #f1f5f9;
-    }
+	.dashboard-card {
+		background: #ffffff;
+		border-radius: 16px;
+		box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+		border: 1px solid #f1f5f9;
+	}
 
-    .text-primary-dark {
-        color: #0284c7;
-    }
+	.text-primary-dark {
+		color: #0284c7;
+	}
 
-    .text-warning-dark {
-        color: #b45309 !important;
-    }
+	.text-warning-dark {
+		color: #b45309 !important;
+	}
 
-    .font-normal {
-        font-weight: normal;
-    }
+	.font-normal {
+		font-weight: normal;
+	}
 
-    .vital-card {
-        border: 1px solid #edf2f7;
-    }
+	.vital-card {
+		border: 1px solid #edf2f7;
+	}
 
-    .custom-btn-outline {
-        background: #fff;
-        color: #64748b;
-        border: 1.5px solid #cbd5e1;
-        border-radius: 10px;
-    }
+	.custom-btn-outline {
+		background: #fff;
+		color: #64748b;
+		border: 1.5px solid #cbd5e1;
+		border-radius: 10px;
+	}
 
-        .custom-btn-outline:hover {
-            background: #f1f5f9;
-            color: #334155;
-        }
+		.custom-btn-outline:hover {
+			background: #f1f5f9;
+			color: #334155;
+		}
 
-    .custom-btn-warning {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        color: #fff;
-        border: none;
-        border-radius: 10px;
-    }
+	.custom-btn-warning {
+		background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+		color: #fff;
+		border: none;
+		border-radius: 10px;
+	}
 
-    .pulse-danger-fx {
-        animation: pulse-danger-fx 2s infinite;
-    }
-    @@keyframes pulse-danger-fx {
-        0%
+	.pulse-danger-fx {
+		animation: pulse-danger-fx 2s infinite;
+	}
 
-    {
-        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
-    }
+	@@keyframes pulse-danger-fx {
+		0% {
+			box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+		}
 
-    70% {
-        box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
-    }
+		70% {
+			box-shadow: 0 0 0 8px rgba(220, 53, 69, 0);
+		}
 
-    100% {
-        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
-    }
+		100% {
+			box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+		}
+	}
 
-    }
+	@@media print {
+		.btn, .navbar-main, footer, .alert {
+			display: none !important;
+		}
 
-    @@media print {
-        .btn, .navbar-main, footer, .alert
+		.dashboard-container {
+			padding: 0;
+		}
 
-    {
-        display: none !important;
-    }
-
-    .dashboard-container {
-        padding: 0;
-    }
-
-    .dashboard-card {
-        box-shadow: none;
-        border: 1px solid #ccc;
-    }
-
-    }
+		.dashboard-card {
+			box-shadow: none;
+			border: 1px solid #ccc;
+		}
+	}
 </style>
