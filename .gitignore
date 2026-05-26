@@ -428,6 +428,11 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
+.vs/
+bin/
+obj/
+*.user
+*.suo
 # Ignore local configuration files containing credentials
 appsettings.json
 appsettings.Development.json
