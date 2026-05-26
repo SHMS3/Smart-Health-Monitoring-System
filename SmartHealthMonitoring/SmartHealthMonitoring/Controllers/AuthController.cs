@@ -93,7 +93,7 @@ namespace SmartHealthMonitoring.Controllers
                 IsPersistent = model.RememberMe,
                 ExpiresUtc = model.RememberMe
                     ? DateTimeOffset.UtcNow.AddDays(30)
-                    : DateTimeOffset.UtcNow.AddMinutes(1)
+                    : DateTimeOffset.UtcNow.AddMinutes(30)
             };
 
             // 4. Đăng nhập (ghi cookie)
@@ -103,7 +103,7 @@ namespace SmartHealthMonitoring.Controllers
                 authProperties);
 
             // 5. Redirect
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl != "/")
             {
                 return Redirect(returnUrl);
             }
@@ -197,7 +197,7 @@ namespace SmartHealthMonitoring.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24) });
 
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Patient");
             }
             catch
             {
@@ -293,7 +293,7 @@ namespace SmartHealthMonitoring.Controllers
                 new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24) });
 
             // 4. Redirect
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl != "/")
                 return Redirect(returnUrl);
 
             return RedirectByRole(user.Role);
@@ -324,7 +324,15 @@ namespace SmartHealthMonitoring.Controllers
         // ==========================================
         private IActionResult RedirectByRole(byte? role = null)
         {
-            // TẠM THỜI: Cho cả Doctor và Patient đều nhảy về trang Home để không bị lỗi 404
+            if (role == 1 || (role == null && User.IsInRole("Doctor")))
+            {
+                return RedirectToAction("Index", "DoctorDashboard");
+            }
+            else if (role == 0 || (role == null && User.IsInRole("Patient")))
+            {
+                return RedirectToAction("Index", "Patient");
+            }
+
             return RedirectToAction("Index", "Home");
         }
     } 
