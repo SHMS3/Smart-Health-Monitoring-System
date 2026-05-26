@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using Minio;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Repositories;
@@ -33,6 +34,23 @@ namespace SmartHealthMonitoring
             builder.Services.Configure<SmartHealthMonitoring.Models.Configurations.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
             builder.Services.AddScoped<SmartHealthMonitoring.Services.IEmailService, SmartHealthMonitoring.Services.EmailService>();
             builder.Services.AddScoped<DailyVitalLogService>();
+
+            // Cookie Authentication + Google OAuth
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Auth/Login";
+                    options.LogoutPath = "/Auth/Logout";
+                    options.AccessDeniedPath = "/Auth/AccessDenied";
+                    options.ExpireTimeSpan = TimeSpan.FromHours(24);
+                    options.SlidingExpiration = true;
+                })
+                .AddGoogle(options =>
+                {
+                    options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
+                    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+                    options.CallbackPath = "/Auth/GoogleCallback";
+                });
 
             //Đki db
             builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>

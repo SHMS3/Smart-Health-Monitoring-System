@@ -415,14 +415,13 @@
 
             <ul class="nav-links">
                 @{
-                    // Lấy tên Controller hiện tại để làm hiệu ứng nổi bật màu xanh
                     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
 
                     // CẤU HÌNH CHỜ CHECK ROLE:
                     // Hiện tại gán tạm = true để bạn test hiển thị nút.
                     // Sau khi nhóm làm xong Login, hãy thay true thành: User.Identity.IsAuthenticated && User.IsInRole("Doctor")
-                    bool isDoctor = true;
                     bool isPatient = true;
+                    bool isDoctor = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Doctor");
                 }
 
                 <li>
@@ -561,6 +560,25 @@
         window.addEventListener('scroll', () => {
             nav.classList.toggle('elevated', window.scrollY > 10);
         });
+
+        // Đóng dropdown khi click ra ngoài
+        document.addEventListener('click', function (e) {
+            const menu = document.getElementById('userDropdown');
+            const toggle = document.getElementById('userMenuToggle');
+            if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Toggle dropdown show/hide
+        const toggle = document.getElementById('userMenuToggle');
+        if (toggle) {
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const menu = document.getElementById('userDropdown');
+                menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+            });
+        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 
