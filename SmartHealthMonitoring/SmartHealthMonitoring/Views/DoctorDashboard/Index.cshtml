@@ -1,57 +1,125 @@
-﻿@model IEnumerable<SmartHealthMonitoring.ViewModels.PatientListDto>
+﻿@model IEnumerable<SmartHealthMonitoring.ViewModels.PatientListViewModel>
 @{
-    ViewData["Title"] = "Danh sách Bệnh nhân";
+    ViewData["Title"] = "Dashboard - Danh sách Bệnh nhân";
 }
 
-<div class="container-xl" style="margin-top: 90px; margin-bottom: 50px;">
-    <h2 class="text-primary fw-bold mb-4">
-        <i class="fa-solid fa-users-medical me-2"></i> Danh sách Bệnh nhân
-    </h2>
+<div class="container pt-5 mt-5 pb-5">
 
-    <div class="card shadow-sm border-0 rounded-3">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light text-muted">
-                        <tr>
-                            <th class="ps-4 py-3">Họ và Tên</th>
-                            <th class="py-3">Tuổi</th>
-                            <th class="py-3">Giới tính</th>
-                            <th class="py-3">Số điện thoại</th>
-                            <th class="pe-4 py-3 text-end">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model != null && Model.Any())
-                        {
-                            foreach (var item in Model)
-                            {
-                                <tr>
-                                    <td class="ps-4 py-3 fw-semibold text-dark">@item.FullName</td>
-                                    <td class="py-3">@item.Age</td>
-                                    <td class="py-3">@item.Gender</td>
-                                    <td class="py-3">@(string.IsNullOrEmpty(item.PhoneNumber) ? "-" : item.PhoneNumber)</td>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
+        <div>
+            <h2 class="h3 mb-1 fw-bold text-primary d-flex align-items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-people-fill me-2" viewBox="0 0 16 16">
+                    <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7Zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5.784 6A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216ZM4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+                </svg>
+                Quản lý Bệnh nhân
+            </h2>
+            <p class="text-muted mb-0">Theo dõi hồ sơ y tế và cảnh báo sớm tim mạch AI</p>
+        </div>
 
-                                    <td class="pe-4 py-3 text-end">
-                                        <a asp-action="PatientHealth" asp-route-patientId="@item.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
-                                            <i class="fa-solid fa-eye me-1"></i> Xem hồ sơ
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
-                                    <i class="fa-solid fa-folder-open fs-1 text-light mb-3 d-block"></i>
-                                    Chưa có bệnh nhân nào trong hệ thống.
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+        <div class="bg-white rounded-pill shadow-sm px-4 py-2 border d-flex align-items-center">
+            <span class="text-muted fw-medium me-2">Tổng số:</span>
+            <span class="badge bg-primary rounded-pill fs-6 px-3">@Model.Count()</span>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger rounded-3 border-0 shadow-sm mb-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white p-2">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0 rounded-start-pill text-muted ps-4 pe-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                        </svg>
+                    </span>
+                    <input type="text" class="form-control bg-light border-0 rounded-end-pill py-2 shadow-none" placeholder="Tìm kiếm bệnh nhân theo tên...">
+                </div>
             </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-nowrap">
+                <thead class="table-light text-muted" style="font-size: 0.9rem;">
+                    <tr>
+                        <th class="ps-4 py-3 fw-medium border-bottom-0">Thông tin Bệnh nhân</th>
+                        <th class="py-3 fw-medium border-bottom-0">Tuổi</th>
+                        <th class="py-3 fw-medium border-bottom-0">Giới tính</th>
+                        <th class="text-end pe-4 py-3 fw-medium border-bottom-0">Hồ sơ Y khoa</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="text-muted mb-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-inboxes opacity-50" viewBox="0 0 16 16">
+                                        <path d="M4.98 1a.5.5 0 0 0-.39.188L1.54 5H6a.5.5 0 0 1 .5.5 1.5 1.5 0 0 0 3 0A.5.5 0 0 1 10 5h4.46l-3.05-3.812A.5.5 0 0 0 11.02 1H4.98zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562A.5.5 0 0 0 1.884 9h12.234a.5.5 0 0 0 .496-.438L14.933 6zM3.809.563A1.5 1.5 0 0 1 4.981 0h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 10H1.883A1.5 1.5 0 0 1 .394 8.686l-.39-3.124a.5.5 0 0 1 .106-.374L3.81.563zM.125 11.17A.5.5 0 0 1 .5 11H6a.5.5 0 0 1 .5.5 1.5 1.5 0 0 0 3 0 .5.5 0 0 1 .5-.5h5.5a.5.5 0 0 1 .496.562l-.39 3.124A1.5 1.5 0 0 1 14.117 16H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .121-.392zm.941.83.32 2.562a.5.5 0 0 0 .496.438h12.234a.5.5 0 0 0 .496-.438l.32-2.562H10.45a2.5 2.5 0 0 1-4.9 0H1.066z" />
+                                    </svg>
+                                </div>
+                                <h6 class="fw-medium text-dark">Chưa có bệnh nhân</h6>
+                                <p class="text-muted small">Hệ thống hiện tại chưa có dữ liệu bệnh nhân nào.</p>
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var p in Model)
+                    {
+                        var initial = string.IsNullOrWhiteSpace(p.FullName) ? "?" : p.FullName.Substring(0, 1).ToUpper();
+
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold" style="width: 45px; height: 45px; font-size: 1.1rem;">
+                                        @initial
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark mb-1">@p.FullName</div>
+                                        <div class="small text-muted d-flex align-items-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-telephone-fill me-1 opacity-75" viewBox="0 0 16 16">
+                                                <path fill-rule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z" />
+                                            </svg>
+                                            @p.Phone
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                <span class="fw-medium text-dark">@p.Age</span> <span class="text-muted small">tuổi</span>
+                            </td>
+                            <td class="py-3">
+                                @if (p.SexDisplay == "Nam")
+                                {
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-3">
+                                        <i class="bi bi-gender-male me-1"></i> Nam
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-3">
+                                        <i class="bi bi-gender-female me-1"></i> Nữ
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end pe-4 py-3">
+                                <a asp-controller="ClinicalRecord" asp-action="Index" asp-route-id="@p.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 py-1 shadow-sm d-inline-flex align-items-center">
+                                    Xem Lịch sử
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-chevron-right ms-1" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                                    </svg>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
