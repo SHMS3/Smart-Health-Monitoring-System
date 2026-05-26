@@ -1,0 +1,220 @@
+﻿@model SmartHealthMonitoring.ViewModels.PatientRecordIndexViewModel
+@{
+    ViewData["Title"] = "Hồ sơ Y tế - " + Model.PatientName;
+}
+
+<div class="container pt-5 mt-5 pb-5">
+
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="DoctorDashboard" asp-action="Index" class="text-decoration-none text-muted">Danh sách Bệnh nhân</a>
+                    </li>
+                    <li class="breadcrumb-item active fw-medium" aria-current="page">Hồ sơ Y tế</li>
+                </ol>
+            </nav>
+            <h2 class="h3 mb-0 fw-bold text-primary">Lịch sử Y khoa</h2>
+        </div>
+        <div>
+            <a asp-action="Create" asp-route-patientId="@Model.PatientId" class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                </svg>
+                Thêm mới Hồ sơ
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 border-0 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger rounded-3 border-0 shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white">
+        <div class="card-body p-4 d-flex align-items-center">
+            <div class="bg-light rounded-circle d-flex justify-content-center align-items-center me-4" style="width: 60px; height: 60px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#0d6efd" class="bi bi-person-fill" viewBox="0 0 16 16">
+                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                </svg>
+            </div>
+            <div>
+                <h4 class="mb-1 fw-bold text-dark">@Model.PatientName</h4>
+                <div class="text-muted small">
+                    <span class="me-3"><i class="bi bi-calendar-event me-1"></i> Tuổi: <strong>@Model.Age</strong></span>
+                    <span><i class="bi bi-gender-ambiguous me-1"></i> Giới tính: <strong>@Model.SexDisplay</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-nowrap">
+                <thead class="table-light text-muted" style="font-size: 0.9rem;">
+                    <tr>
+                        <th class="ps-4 py-3 fw-medium border-bottom-0">Ngày khám</th>
+                        <th class="py-3 fw-medium border-bottom-0">Huyết áp (mmHg)</th>
+                        <th class="py-3 fw-medium border-bottom-0">Cholesterol (mg/dl)</th>
+                        <th class="py-3 fw-medium border-bottom-0">Nhịp tim tối đa</th>
+                        <th class="py-3 fw-medium border-bottom-0">Loại đau ngực</th>
+                        <th class="text-end pe-4 py-3 fw-medium border-bottom-0">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    @if (!Model.Records.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-folder2-open opacity-50" viewBox="0 0 16 16">
+                                        <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v.64c.57.265.94.876.856 1.546l-.64 5.124A2.5 2.5 0 0 1 12.733 15H3.266a2.5 2.5 0 0 1-2.481-2.19l-.64-5.124A1.5 1.5 0 0 1 1 6.14V3.5zM2 6h12v-.5a.5.5 0 0 0-.5-.5H9c-.964 0-1.71-.629-2.174-1.154C6.374 3.334 5.82 3 5.264 3H2.5a.5.5 0 0 0-.5.5V6zm-.367 1a.5.5 0 0 0-.496.562l.64 5.124A1.5 1.5 0 0 0 3.266 14h9.468a1.5 1.5 0 0 0 1.489-1.314l.64-5.124A.5.5 0 0 0 14.367 7H1.633z" />
+                                    </svg>
+                                </div>
+                                <span>Chưa có hồ sơ y tế nào được ghi nhận.</span>
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var record in Model.Records)
+                    {
+                        <tr>
+                            <td class="ps-4 py-3 fw-medium text-dark">@record.VisitDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="py-3">
+                                <span class="fw-semibold">@record.RestingBP</span>
+                            </td>
+                            <td class="py-3">
+                                <span class="fw-semibold">@record.Cholesterol</span>
+                            </td>
+                            <td class="py-3">
+                                <span class="fw-semibold text-danger">@record.MaxHeartRate</span>
+                            </td>
+                            <td class="py-3">
+                                <span class="badge bg-light text-dark border px-2 py-1">@record.ChestPainTypeDisplay</span>
+                            </td>
+                            <td class="text-end pe-4 py-3">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-3 me-1" data-bs-toggle="modal" data-bs-target="#detailModal-@record.Id">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-eye mb-1 me-1" viewBox="0 0 16 16">
+                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
+                                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
+                                    </svg>
+                                    Chi tiết
+                                </button>
+
+                                <form asp-action="Delete" asp-route-id="@record.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn đánh dấu hồ sơ này là nhập sai/hủy bỏ không? Dữ liệu này sẽ không còn giá trị phân tích AI.');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-3" title="Đánh dấu hủy hồ sơ">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-trash3 mb-1 me-1" viewBox="0 0 16 16">
+                                            <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.813 1-.853 10.66a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.187 3.5h9.626Zm-7.172 2.5a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 1 0v-7a.5.5 0 0 0-.5-.5Zm3 0a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 1 0v-7a.5.5 0 0 0-.5-.5Zm3 0a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 1 0v-7a.5.5 0 0 0-.5-.5Z" />
+                                        </svg>
+                                        Hủy
+                                    </button>
+                                </form>
+
+                                <div class="modal fade text-start" id="detailModal-@record.Id" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                        <div class="modal-content rounded-4 border-0 shadow">
+                                            <div class="modal-header border-bottom-0 pb-0">
+                                                <h5 class="modal-title fw-bold text-primary">Chi tiết Hồ sơ Y khoa</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p class="text-muted small mb-4">Ngày khám: @record.VisitDate.ToString("dd/MM/yyyy HH:mm")</p>
+                                                <div class="row g-3">
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">Loại đau ngực</span>
+                                                            <strong class="text-dark">@record.ChestPainTypeDisplay</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">Huyết áp nghỉ</span>
+                                                            <strong class="text-dark">@record.RestingBP mmHg</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">Cholesterol</span>
+                                                            <strong class="text-dark">@record.Cholesterol mg/dl</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">Đường huyết đói > 120</span>
+                                                            <strong class="text-dark">@(record.FastingBS == 1 ? "Có" : "Không")</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">Điện tâm đồ (ECG)</span>
+                                                            <strong class="text-dark">
+                                                                @(record.RestECG == 0 ? "Normal" : record.RestECG == 1 ? "ST-T Abnormality" : "LVH")
+                                                            </strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">Nhịp tim tối đa</span>
+                                                            <strong class="text-danger">@record.MaxHeartRate bpm</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">Đau ngực gắng sức</span>
+                                                            <strong class="text-dark">@(record.ExerciseAngina == 1 ? "Có" : "Không")</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">OldPeak</span>
+                                                            <strong class="text-dark">@record.OldPeak</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">Độ dốc ST</span>
+                                                            <strong class="text-dark">
+                                                                @(record.STSlope == 0 ? "Upsloping" : record.STSlope == 1 ? "Flat" : "Downsloping")
+                                                            </strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">Số mạch máu (0-3)</span>
+                                                            <strong class="text-dark">@record.MajorVessels</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="p-3 bg-light rounded-3">
+                                                            <span class="d-block small text-muted">Khuyết tật Thal</span>
+                                                            <strong class="text-dark">
+                                                                @(record.ThalResult == 0 ? "Normal" : record.ThalResult == 1 ? "Fixed Defect" : "Reversable Defect")
+                                                            </strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-top-0 pt-0 mt-3">
+                                                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng lại</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
