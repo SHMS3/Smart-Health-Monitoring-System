@@ -436,3 +436,4 @@ obj/
 
 # Ignore local configuration files containing credentials
 .env
+/SmartHealthMonitoring/SmartHealthMonitoring/.env
