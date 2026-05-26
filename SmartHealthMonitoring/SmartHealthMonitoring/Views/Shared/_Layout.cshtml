@@ -488,34 +488,31 @@
 				<li><a asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
 			</ul>
 
-			<div class="nav-actions">
+			@if (User.Identity != null && User.Identity.IsAuthenticated)
+			{
+				<span class="text-nowrap fw-medium text-dark me-3">
+					Xin chào @User.FindFirst("FullName")?.Value
+				</span>
 
-				@if (User.Identity != null && User.Identity.IsAuthenticated)
-				{
-					<span class="text-nowrap fw-medium text-dark me-3">
-						Xin chào @User.FindFirst("FullName")?.Value
-					</span>
+				<form asp-controller="Auth" asp-action="Logout" method="post" class="m-0 d-flex align-items-center">
+					@Html.AntiForgeryToken()
 
-					<form asp-controller="Auth" asp-action="Logout" method="post" class="m-0 d-flex align-items-center">
-						@Html.AntiForgeryToken()
 
-						<button type="submit" class="btn-ghost">
-							Đăng xuất
-						</button>
-					</form>
-				}
-				else
-				{
-					<a asp-controller="Auth" asp-action="Login" class="btn-ghost">
-						Đăng nhập
-					</a>
+					<button type="submit" class="btn-ghost">
+						Đăng xuất
+					</button>
+				</form>
+			}
+			else
+			{
+				<a asp-controller="Auth" asp-action="Login" class="btn-ghost">
+					Đăng nhập
+				</a>
 
-					<a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">
-						Đăng ký
-					</a>
-				}
-			</div>
-
+				<a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">
+					Đăng ký
+				</a>
+			}
 		</div>
 	</nav>
 
