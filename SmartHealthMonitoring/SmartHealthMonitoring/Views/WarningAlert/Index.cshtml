@@ -328,6 +328,7 @@
                             <th>Điểm rủi ro</th>
                             <th>Trạng thái</th>
                             <th>Thời gian gắn cờ</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -398,13 +399,29 @@
                                             @item.FlaggedAt.ToString("dd/MM/yyyy HH:mm")
                                         </span>
                                     </td>
+                                    <td>
+                                        @if (item.Status != 2)
+                                        {
+                                            <a asp-action="Resolve" asp-route-id="@item.Id"
+                                               class="btn btn-sm btn-primary"
+                                               style="border-radius:8px;font-size:.78rem;padding:5px 14px;">
+                                                <i class="fas fa-shield-alt me-1"></i> Xử lý
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-resolved" style="font-size:.75rem;">
+                                                <i class="fas fa-check"></i> Hoàn tất
+                                            </span>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="6">
+                                <td colspan="7">
                                     <div class="empty-state">
                                         <i class="fas fa-inbox"></i>
                                         <p>Không có cảnh báo nào phù hợp với bộ lọc hiện tại.</p>
