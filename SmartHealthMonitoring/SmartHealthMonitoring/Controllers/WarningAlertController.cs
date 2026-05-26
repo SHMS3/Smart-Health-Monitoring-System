@@ -26,6 +26,17 @@ namespace SmartHealthMonitoring.Controllers
             var alerts = await _warningAlertService
                 .GetAlertsAsync(status);
 
+            // Truyền doctorId để UI chỉ hiển thị Resolution note cho đúng bác sĩ đã claim
+            int? doctorId = null;
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out var userId))
+            {
+                var doctor = await _doctorService.GetDoctorByUserIdAsync(userId);
+                doctorId = doctor?.Id;
+            }
+
+            ViewData["DoctorId"] = doctorId;
+
 
             return View(alerts);
         }
@@ -74,6 +85,50 @@ namespace SmartHealthMonitoring.Controllers
             return RedirectToAction(
             "Dashboard");
 
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Resolve(int id,string resolutionNote)
+        {
+            var userIdString = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userIdString))
+            {
+                return Unauthorized();
+            }
+
+            int userId = int.Parse(userIdString);
+
+            var doctor = await _doctorService
+                .GetDoctorByUserIdAsync(userId);
+
+            if (doctor == null)
+            {
+                TempData["Error"] =
+                    "Doctor not found";
+
+                return RedirectToAction("Dashboard");
+            }
+
+            var success = await _warningAlertService
+                .ResolveAlertAsync(
+                    id,
+                    doctor.Id,
+                    resolutionNote);
+
+            if (success)
+            {
+                TempData["Success"] =
+                    "Resolved successfully";
+            }
+            else
+            {
+                TempData["Error"] =
+                    "You cannot resolve this alert";
+            }
+
+            return RedirectToAction("Dashboard");
         }
     }
 }
