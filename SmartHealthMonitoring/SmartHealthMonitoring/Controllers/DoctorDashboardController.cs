@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization; // THÊM THƯ VIỆN NÀY
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
@@ -7,12 +8,12 @@ using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace SmartHealthMonitoring.Controllers
 {
+    [Authorize(Roles = "1")] // 1. THÊM DÒNG NÀY: Khóa cửa, chỉ cho Bác sĩ vào
     public class DoctorDashboardController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
@@ -31,7 +32,8 @@ namespace SmartHealthMonitoring.Controllers
 
                 var patients = await _context.Patients
                     .Include(p => p.User)
-                    .Where(p => !p.IsDeleted && !p.User.IsDeleted)
+                    // 2. THÊM ĐIỀU KIỆN p.User.Role == 0 VÀO ĐÂY: Chỉ lấy Bệnh nhân
+                    .Where(p => !p.IsDeleted && !p.User.IsDeleted && p.User.Role == 0)
                     .Select(p => new PatientListViewModel
                     {
                         PatientId = p.Id,

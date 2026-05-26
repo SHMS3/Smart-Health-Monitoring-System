@@ -57,12 +57,6 @@ namespace SmartHealthMonitoring
                     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
                     options.CallbackPath = "/Auth/GoogleCallback";
                 });
-                //.AddGoogle(options =>
-                //{
-                //    options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
-                //    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
-                //    options.CallbackPath = "/Auth/GoogleCallback";
-                //});
 
             // Đăng ký Memory Cache cho Webhook
             builder.Services.AddMemoryCache();
