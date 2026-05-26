@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;
 
 namespace SmartHealthMonitoring.Controllers
 {
+    [Authorize(Roles = "Patient")]
     public class PatientController : Controller
     {
         private readonly DailyVitalLogService _dailyVitalLogService;
@@ -16,7 +19,8 @@ namespace SmartHealthMonitoring.Controllers
         [HttpGet("history")]
         public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, int page = 1)
         {
-            int patientId = 3;
+            int patientId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            
             var todayLogs = (await _dailyVitalLogService
                 .GetLogsByDateAsync(patientId, DateTime.Today))
                 .OrderByDescending(x => x.LoggedAt)
@@ -44,8 +48,7 @@ namespace SmartHealthMonitoring.Controllers
                     canLog = false;
                     logMessage = "Đang trong thời gian chờ";
 
-                    remainingSeconds =
-                        (int)(nextLogTime.Value - DateTime.Now).TotalSeconds;
+                    remainingSeconds = (int)(nextLogTime.Value - DateTime.Now).TotalSeconds;
                 }
             }
 
@@ -83,10 +86,11 @@ namespace SmartHealthMonitoring.Controllers
             {
                 return View(model);
             }
+            int patientId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
             try
             {
-                await _dailyVitalLogService.CreateLogAsync(3, model);
+                await _dailyVitalLogService.CreateLogAsync(patientId, model);
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
