@@ -1,0 +1,436 @@
+﻿@model SmartHealthMonitoring.ViewModels.ContactViewModel
+
+@{
+	ViewData["Title"] = "Liên hệ";
+}
+
+<style>
+	/* Phần Header Tối Màu */
+	.contact-hero {
+	background: #0f172a;
+	background-image: radial-gradient(circle at 50% -20%, rgba(14, 165, 233, 0.15), transparent 70%);
+	padding: 80px 20px;
+	text-align: center;
+	color: white;
+	}
+
+	.contact-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	background: rgba(255, 255, 255, 0.1);
+	padding: 6px 16px;
+	border-radius: 50px;
+	font-size: 0.85rem;
+	font-weight: 500;
+	margin-bottom: 20px;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	}
+
+	.contact-hero h1 {
+	font-weight: 800;
+	font-size: 2.5rem;
+	margin-bottom: 15px;
+	}
+
+	.contact-hero p {
+	color: #94a3b8;
+	max-width: 600px;
+	margin: 0 auto;
+	font-size: 1rem;
+	}
+
+	/* Phần Nội Dung Body */
+	.contact-section {
+	padding: 60px 0;
+	background: #f8fafc;
+	}
+
+	/* Card Thông Tin (Grid 2x2) */
+	.info-card {
+	background: #fff;
+	padding: 20px;
+	border-radius: 16px;
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+	height: 100%;
+	border: 1px solid #f1f5f9;
+	transition: transform 0.2s;
+	}
+
+	.info-card:hover {
+	transform: translateY(-2px);
+	}
+
+	.icon-box {
+	width: 48px;
+	height: 48px;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.2rem;
+	flex-shrink: 0;
+	}
+
+	.icon-blue {
+	background: rgba(14, 165, 233, 0.1);
+	color: #0ea5e9;
+	}
+
+	.icon-green {
+	background: rgba(16, 185, 129, 0.1);
+	color: #10b981;
+	}
+
+	.icon-orange {
+	background: rgba(245, 158, 11, 0.1);
+	color: #f59e0b;
+	}
+
+	.icon-purple {
+	background: rgba(139, 92, 246, 0.1);
+	color: #8b5cf6;
+	}
+
+	.info-content h6 {
+	margin: 0;
+	font-size: 0.85rem;
+	color: #64748b;
+	font-weight: 600;
+	text-transform: uppercase;
+	}
+
+	.info-content p {
+	margin: 5px 0 0 0;
+	font-size: 0.95rem;
+	color: #0f172a;
+	font-weight: 600;
+	}
+
+	/* Nút Mạng Xã Hội */
+	.social-title {
+	font-size: 0.9rem;
+	font-weight: 700;
+	color: #334155;
+	margin: 25px 0 15px 0;
+	}
+
+	.social-btns {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	}
+
+	.btn-social {
+	background: #fff;
+	border: 1px solid #e2e8f0;
+	padding: 8px 20px;
+	border-radius: 50px;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: #475569;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+	transition: all 0.2s;
+	}
+
+	.btn-social:hover {
+	background: #0ea5e9;
+	color: #fff;
+	border-color: #0ea5e9;
+	}
+
+	/* Form Liên Hệ */
+	.form-wrapper {
+	margin-top: 30px;
+	background: #fff;
+	border-radius: 16px;
+	overflow: hidden;
+	box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+	border: 1px solid #f1f5f9;
+	}
+
+	.form-header {
+	background: #6366f1;
+	padding: 20px;
+	color: #fff;
+	}
+
+	.form-header h5 {
+	margin: 0 0 5px 0;
+	font-weight: 700;
+	font-size: 1.1rem;
+	}
+
+	.form-header p {
+	margin: 0;
+	font-size: 0.85rem;
+	opacity: 0.8;
+	}
+
+	.form-body {
+	padding: 24px;
+	}
+
+	.form-body label {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: #475569;
+	margin-bottom: 8px;
+	}
+
+	.form-control {
+	border-radius: 10px;
+	padding: 12px 15px;
+	border: 1px solid #e2e8f0;
+	font-size: 0.95rem;
+	background: #f8fafc;
+	}
+
+	.form-control:focus {
+	border-color: #6366f1;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+	background: #fff;
+	}
+
+	.btn-submit {
+	background: #6366f1;
+	color: #fff;
+	border: none;
+	width: 100%;
+	padding: 12px;
+	border-radius: 10px;
+	font-weight: 600;
+	margin-top: 10px;
+	transition: 0.3s;
+	}
+
+	.btn-submit:hover {
+	background: #4f46e5;
+	}
+
+	/* Bản đồ & Thống kê */
+	.map-card {
+	background: #fff;
+	padding: 15px;
+	border-radius: 16px;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+	border: 1px solid #f1f5f9;
+	display: flex;
+	flex-direction: column;
+	}
+
+	.map-card h6 {
+	font-weight: 700;
+	color: #1e293b;
+	margin-bottom: 15px;
+	padding-left: 5px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	}
+
+	.map-frame {
+	flex: 1;
+	border-radius: 12px;
+	overflow: hidden;
+	min-height: 450px;
+	}
+
+	.stats-card {
+	background: #0f172a;
+	border-radius: 16px;
+	padding: 24px;
+	margin-top: 24px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	color: #fff;
+	text-align: center;
+	}
+
+	.stat-item h3 {
+	font-weight: 800;
+	font-size: 1.5rem;
+	margin: 0;
+	color: #fff;
+	}
+
+	.stat-item p {
+	margin: 5px 0 0 0;
+	font-size: 0.75rem;
+	color: #94a3b8;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	}
+</style>
+
+<div class="contact-hero">
+	<div class="container">
+		<div class="contact-badge">
+			<i class="fas fa-headset"></i> Liên hệ với chúng tôi
+		</div>
+		<h1>Chúng tôi luôn sẵn sàng hỗ trợ bạn</h1>
+		<p>Có câu hỏi về hồ sơ sức khỏe, cảnh báo AI hay cần tư vấn? Đừng ngại liên hệ – đội ngũ chuyên gia SmartHealth luôn ở đây để giúp bạn!</p>
+	</div>
+</div>
+
+<div class="contact-section">
+	<div class="container" style="max-width: 1200px;">
+		<div class="row g-4">
+
+			<div class="col-lg-6">
+				<div class="row g-3">
+					<div class="col-md-6">
+						<div class="info-card">
+							<div class="icon-box icon-blue"><i class="fas fa-building"></i></div>
+							<div class="info-content">
+								<h6>Trụ sở chính</h6>
+								<p>Khu CNC Hòa Lạc, Hà Nội</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="info-card">
+							<div class="icon-box icon-green"><i class="fas fa-phone-alt"></i></div>
+							<div class="info-content">
+								<h6>Điện thoại</h6>
+								<p>0123 456 789</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="info-card">
+							<div class="icon-box icon-orange"><i class="fas fa-envelope"></i></div>
+							<div class="info-content">
+								<h6>Email hỗ trợ</h6>
+								<p>support@smarthealth.vn</p>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="info-card">
+							<div class="icon-box icon-purple"><i class="fas fa-clock"></i></div>
+							<div class="info-content">
+								<h6>Giờ làm việc</h6>
+								<p>Thứ 2 - T7: 8h00 - 17h30</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				@if (TempData["Success"] != null)
+				{
+					<div class="alert alert-success alert-dismissible fade show mb-4">
+						<i class="fas fa-check-circle me-2"></i>
+						@TempData["Success"]
+
+						<button type="button"
+						class="btn-close"
+						data-bs-dismiss="alert">
+						</button>
+					</div>
+				}
+				<div class="form-wrapper">
+					<div class="form-header">
+						<h5><i class="fas fa-paper-plane me-2"></i> Gửi Tin Nhắn</h5>
+						<p>Điền form bên dưới - chúng tôi sẽ phản hồi trong 24h</p>
+					</div>
+					<div class="form-body">
+						@if (User.Identity != null && User.Identity.IsAuthenticated)
+						{
+							<form asp-controller="Home" asp-action="Contact" method="post">
+								@Html.AntiForgeryToken()
+								<div class="row g-3">
+									<div class="col-md-6">
+										<label>Họ và tên *</label>
+										<input asp-for="FullName" class="form-control" placeholder="Nguyễn Văn A" required>
+									</div>
+									<div class="col-md-6">
+										<label>Email *</label>
+										<input asp-for="Email" class="form-control" placeholder="email@example.com" required>
+									</div>
+									<div class="col-12">
+										<label>Số điện thoại</label>
+										<input asp-for="Phone" class="form-control" placeholder="0912 345 678">
+									</div>
+									<div class="col-12">
+										<label>Nội dung tin nhắn *</label>
+										<textarea asp-for="Message" class="form-control" rows="4" placeholder="Nhập câu hỏi hoặc vấn đề bạn cần hỗ trợ..." required></textarea>
+									</div>
+									<div class="col-12">
+										<button type="submit" class="btn-submit">
+											<i class="fas fa-paper-plane me-2"></i> Gửi Tin Nhắn
+										</button>
+									</div>
+								</div>
+							</form>
+						}
+						else
+						{
+							<div class="row g-3">
+								<div class="col-md-6">
+									<label>Họ và tên *</label>
+									<input class="form-control" placeholder="Nguyễn Văn A" required>
+								</div>
+								<div class="col-md-6">
+									<label>Email *</label>
+									<input class="form-control" placeholder="email@example.com" required>
+								</div>
+								<div class="col-12">
+									<label>Số điện thoại</label>
+									<input class="form-control" placeholder="0912 345 678">
+								</div>
+								<div class="col-12">
+									<label>Nội dung tin nhắn *</label>
+									<textarea  class="form-control" rows="4" placeholder="Nhập câu hỏi hoặc vấn đề bạn cần hỗ trợ..." required></textarea>
+								</div>
+								<div class="col-12 text-center">
+									<a asp-controller="Auth" asp-action="Login" class="btn-login-contact">
+										<i class="fas fa-sign-in-alt me-2"></i> Đăng nhập ngay
+									</a>
+								</div>
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+
+			<div class="col-lg-6">
+				<div class="map-card">
+					<h6><i class="fas fa-map-marker-alt text-danger"></i> Vị Trí Của Chúng Tôi</h6>
+					<div class="map-frame">
+						<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14898.025365835705!2d105.50623478715819!3d21.012416700000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135abc60e7d3f19%3A0x2be9d7d0b5abcbf4!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBGUFQgSMOgIE7hu5lp!5e0!3m2!1svi!2s!4v1779762521330!5m2!1svi!2s"
+								width="600"
+								height="450"
+								style="border:0;"
+								allowfullscreen=""
+								loading="lazy"
+								referrerpolicy="no-referrer-when-downgrade">
+						</iframe>
+					</div>
+				</div>
+
+				<div class="stats-card">
+					<div class="stat-item">
+						<h3>< 24h</h3>
+						<p>Thời gian phản hồi</p>
+					</div>
+					<div class="stat-item">
+						<h3> @ViewBag.NumberOfDoctor+ </h3>
+						<p>Bác sĩ đối tác</p>
+					</div>
+					<div class="stat-item">
+						<h3> @ViewBag.NumberOfPatient+ </h3>
+						<p>Bệnh nhân</p>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>

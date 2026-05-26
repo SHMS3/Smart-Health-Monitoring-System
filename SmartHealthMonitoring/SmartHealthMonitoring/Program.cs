@@ -51,6 +51,12 @@ namespace SmartHealthMonitoring
                     options.ExpireTimeSpan = TimeSpan.FromHours(24);
                     options.SlidingExpiration = true;
                 });
+                //.AddGoogle(options =>
+                //{
+                //    options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
+                //    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+                //    options.CallbackPath = "/Auth/GoogleCallback";
+                //});
 
             var app = builder.Build();
 
@@ -73,7 +79,7 @@ namespace SmartHealthMonitoring
             app.UseRouting();
 
             app.UseAuthentication();
-            // app.UseAuthorization();
+            app.UseAuthorization();
 
             app.MapControllerRoute(
                  name: "areas",
