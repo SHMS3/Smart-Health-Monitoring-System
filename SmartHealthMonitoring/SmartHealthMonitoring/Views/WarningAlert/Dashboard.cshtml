@@ -209,6 +209,28 @@
         font-size: .84rem;
     }
 
+    .cell-muted {
+        color: #94a3b8;
+        font-size: .84rem;
+        font-weight: 500;
+    }
+
+    .claimed-by {
+        color: #0f172a;
+        font-weight: 600;
+        font-size: .86rem;
+        white-space: nowrap;
+    }
+
+    .note-cell {
+        color: #475569;
+        font-size: .86rem;
+        max-width: 360px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     .claim-btn {
         border: none;
         background: linear-gradient(135deg, #0ea5e9, #6366f1);
@@ -237,6 +259,41 @@
         font-weight: 600;
         font-size: .82rem;
     }
+
+    .resolve-form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .resolve-input {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: .82rem;
+        min-width: 220px;
+        resize: vertical;
+    }
+
+        .resolve-input:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+    .resolve-btn {
+        border: none;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: .8rem;
+        font-weight: 600;
+        transition: .25s;
+    }
+
+        .resolve-btn:hover {
+            transform: translateY(-2px);
+        }
 
 </style>
 
@@ -331,7 +388,9 @@
                             <th>Điểm rủi ro</th>
                             <th>Trạng thái</th>
                             <th>Thời gian gắn cờ</th>
-                            <th>Hành động / Thao tác</th>
+                            <th>Bác sĩ tiếp nhận</th>
+                            <th>Ghi chú xử lý</th>
+                            <th>Thao tác</th>
                         </tr>
 
                     </thead>
@@ -428,6 +487,35 @@
 
                                     </td>
                                     <td>
+                                        @if (item.ClaimedByDoctor?.User?.FullName != null)
+                                        {
+                                            <span class="claimed-by">
+                                                <i class="fas fa-user-md me-1" style="color:#94a3b8;font-size:.8rem"></i>
+                                                @item.ClaimedByDoctor.User.FullName
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="cell-muted">—</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (item.Status == 2
+                                            && item.ClaimedByDoctorId == (ViewData["DoctorId"] as int?)
+                                            && !string.IsNullOrWhiteSpace(item.ResolutionNote))
+                                        {
+                                            <span class="note-cell" title="@item.ResolutionNote">
+                                                @item.ResolutionNote
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="cell-muted">—</span>
+                                        }
+                                    </td>
+
+                                    <td>
                                         @if (item.Status == 0)
                                         {
                                             <form asp-action="Claim" method="post" style="display:inline;">
@@ -438,13 +526,30 @@
                                                 </button>
                                             </form>
                                         }
+                                        else if (item.Status == 1
+                                        && item.ClaimedByDoctorId == (ViewData["DoctorId"] as int?))
+                                        {
+                                            <form asp-action="Resolve" method="post" class="resolve-form">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                
+                                                <textarea name="resolutionNote" class="resolve-input" placeholder="Nhập ghi chú xử lý..." required></textarea>
+                                                
+                                                <div class="form-check mt-1 mb-2 text-start">
+                                                    <input class="form-check-input" type="checkbox" name="sendEmailInvitation" value="true" id="sendEmail_@item.Id" checked>
+                                                    <label class="form-check-label text-muted" style="font-size:.75rem;" for="sendEmail_@item.Id">
+                                                        Gửi email mời tái khám
+                                                    </label>
+                                                </div>
+                                                
+                                                <button type="submit" class="resolve-btn">Hoàn tất</button>
+                                            </form>
+                                        }
                                         else if (item.Status == 1)
                                         {
-                                            <a asp-action="Resolve" asp-route-id="@item.Id"
-                                               class="btn btn-sm btn-primary"
-                                               style="border-radius:8px;font-size:.78rem;padding:5px 14px; display:inline-block; margin-top:2px;">
-                                                <i class="fas fa-shield-alt me-1"></i> Xử lý
-                                            </a>
+                                            <span class="claimed-text">
+                                                Đang được bác sĩ khác xử lý
+                                            </span>
                                         }
                                         else
                                         {
@@ -452,14 +557,14 @@
                                                 <i class="fas fa-check"></i> Hoàn tất
                                             </span>
                                         }
-                                    </td>
+                                    </td>   
                                 </tr>
                             }
                         }
                         else
                         {
                             <tr>
-                                <td colspan="7">
+                                <td colspan="9">
                                     <div class="empty-state">
                                         <i class="fas fa-inbox"></i>
                                         <p>Không có cảnh báo nào phù hợp với bộ lọc hiện tại.</p>
