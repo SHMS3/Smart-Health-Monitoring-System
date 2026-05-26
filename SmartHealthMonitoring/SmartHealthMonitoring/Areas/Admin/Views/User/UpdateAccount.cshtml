@@ -1,0 +1,145 @@
+﻿@model SmartHealthMonitoring.ViewModels.UserViewModel;
+
+<style>
+    /* Giới hạn độ rộng form */
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px;
+    }
+
+    /* Style cho các ô nhập liệu (Input, Select) */
+    .custom-input {
+        background-color: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 12px 18px;
+        font-size: 15px;
+        color: var(--text-main);
+        transition: all 0.3s ease;
+        box-shadow: none;
+    }
+
+        /* Hiệu ứng khi focus */
+        .custom-input:focus {
+            background-color: #ffffff;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 4px rgba(0, 224, 184, 0.15);
+        }
+
+        .custom-input::placeholder {
+            color: #adb5bd;
+            font-size: 14px;
+        }
+
+    /* Style cho Radio Buttons */
+    .custom-radio .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+        margin-top: 0.15em;
+        cursor: pointer;
+    }
+
+        .custom-radio .form-check-input:checked {
+            background-color: var(--primary-accent);
+            border-color: var(--primary-accent);
+        }
+
+    .custom-radio .form-check-label {
+        cursor: pointer;
+        padding-left: 5px;
+        color: var(--text-main);
+    }
+
+    /* Style cho Nút Bấm */
+    .custom-btn-submit {
+        background-color: var(--primary-accent);
+        border: none;
+        color: #fff;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+        .custom-btn-submit:hover {
+            background-color: var(--primary-accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 224, 184, 0.3);
+        }
+
+    .custom-btn-cancel {
+        background-color: #f1f3f9;
+        border: 1px solid #e5e7eb;
+        color: #4b5563;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+        .custom-btn-cancel:hover {
+            background-color: #e5e7eb;
+            color: #1f2937;
+        }
+
+    /* Tiện ích text nhỏ */
+    .fs-7 {
+        font-size: 0.875rem;
+    }
+
+    /* Hiển thị box thông báo lỗi nếu có nội dung */
+    .validation-summary-errors {
+        display: block !important;
+    }
+
+    .validation-summary-valid {
+        display: none !important;
+    }
+</style>
+
+<div class="card-dashboard form-container">
+    <div class="form-header mb-4">
+        <h3>Cập nhật tài khoản người dùng</h3>
+        <p class="text-muted fs-7">Chỉnh sửa và cập nhật các thông tin cần thiết của tài khoản trong hệ thống.</p>
+    </div>
+
+    <form method="post" asp-action="UpdateAccount" asp-area="Admin" asp-controller="User" enctype="multipart/form-data">
+
+        <input type="hidden" asp-for="UserId" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 rounded p-3 bg-danger-subtle d-none"></div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <label class="form-label fw-medium"> Email <span class="text-danger">*</span></label>
+                <input readonly asp-for="Email" class="form-control custom-input" />
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <label class="form-label fw-medium"> Username <span class="text-danger">*</span></label>
+                <input readonly asp-for="Username" class="form-control custom-input" />
+            </div>
+
+            <div class="col-12 mb-4">
+                <label class="form-label fw-medium">Vai trò</label>
+                <select asp-for="RoleId" class="form-select custom-input">
+                    @foreach (var obj in ViewBag.Roles)
+                    {
+                        <option value="@obj.RoleId">@obj.RoleName</option>
+                    }
+                </select>
+                <span asp-validation-for="RoleId" class="text-danger fs-7 mt-1 d-block"></span>
+            </div>
+        </div>
+
+        <hr class="my-4 text-muted opacity-25" />
+
+        <div class="d-flex justify-content-end gap-3">
+            <a asp-action="Index" class="btn btn-light btn-lg px-4 fw-medium custom-btn-cancel">
+                Hủy bỏ
+            </a>
+            <button type="submit" class="btn btn-primary btn-lg px-5 fw-medium custom-btn-submit">
+                <i class="bi bi-save me-2"></i> Lưu thay đổi
+            </button>
+        </div>
+
+    </form>
+</div>
+

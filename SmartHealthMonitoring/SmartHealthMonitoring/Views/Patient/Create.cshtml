@@ -1,0 +1,188 @@
+﻿@model SmartHealthMonitoring.ViewModels.DailyVitalLogViewModel
+
+@{
+    ViewData["Title"] = "Ghi chỉ số hôm nay";
+}
+
+<div class="dashboard-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a asp-action="Index" class="btn btn-link text-muted p-0 mb-2 d-inline-flex align-items-center text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại sổ tay
+            </a>
+            <h3 class="fw-bold mb-0 text-dark">Ghi chỉ số sức khỏe mới</h3>
+        </div>
+    </div>
+
+    <div class="dashboard-card p-4 p-md-5 mx-auto" style="max-width: 800px;">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 mb-4"></div>
+
+            <h5 class="fw-bold text-primary-dark mb-4 border-bottom pb-2"><i class="bi bi-activity me-2"></i>Chỉ số đo đạc vật lý</h5>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <label asp-for="SystolicBp" class="form-label fw-semibold text-dark">Huyết áp tâm thu (Chỉ số trên) <span class="text-danger">*</span></label>
+                    <div class="input-group custom-input-group">
+                        <input asp-for="SystolicBp" class="form-control custom-input" placeholder="Ví dụ: 120" />
+                        <span class="input-group-text bg-light border-start-0 text-muted">mmHg</span>
+                    </div>
+                    <span asp-validation-for="SystolicBp" class="text-danger fs-7 mt-1 d-block"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="DiastolicBp" class="form-label fw-semibold text-dark">Huyết áp tâm trương (Chỉ số dưới) <span class="text-danger">*</span></label>
+                    <div class="input-group custom-input-group">
+                        <input asp-for="DiastolicBp" class="form-control custom-input" placeholder="Ví dụ: 80" />
+                        <span class="input-group-text bg-light border-start-0 text-muted">mmHg</span>
+                    </div>
+                    <span asp-validation-for="DiastolicBp" class="text-danger fs-7 mt-1 d-block"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="HeartRate" class="form-label fw-semibold text-dark">Nhịp tim <span class="text-danger">*</span></label>
+                    <div class="input-group custom-input-group">
+                        <input asp-for="HeartRate" class="form-control custom-input" placeholder="Ví dụ: 75" />
+                        <span class="input-group-text bg-light border-start-0 text-muted">bpm</span>
+                    </div>
+                    <span asp-validation-for="HeartRate" class="text-danger fs-7 mt-1 d-block"></span>
+                </div>
+            </div>
+
+            <h5 class="fw-bold text-primary-dark mb-4 border-bottom pb-2"><i class="bi bi-person-bounding-box me-2"></i>Triệu chứng lâm sàng</h5>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <label asp-for="ChestPainLevel" class="form-label fw-semibold text-dark">Mức độ đau ngực</label>
+                    <select asp-for="ChestPainLevel" class="form-select custom-input">
+                        <option value="0">Mức 0: Không có triệu chứng</option>
+                        <option value="1">Mức 1: Đau ngực không điển hình</option>
+                        <option value="2">Mức 2: Đau thắt ngực điển hình (nhẹ)</option>
+                        <option value="3">Mức 3: Đau thắt ngực dữ dội</option>
+                    </select>
+                    <span asp-validation-for="ChestPainLevel" class="text-danger fs-7 mt-1 d-block"></span>
+                </div>
+
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="custom-switch-wrapper p-3 border rounded-3 w-100 d-flex justify-content-between align-items-center bg-light-blue">
+                        <label asp-for="HasExerciseAngina" class="form-check-label fw-semibold text-dark mb-0">Đau thắt ngực khi vận động?</label>
+                        <div class="form-check form-switch m-0">
+                            <input asp-for="HasExerciseAngina" class="form-check-input custom-switch-input" type="checkbox" role="switch">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 border-top pt-4">
+                <a asp-action="Index" class="btn custom-btn-outline px-4 py-2 fw-medium">Hủy bỏ</a>
+                <button type="submit" class="btn custom-btn-primary px-5 py-2 fw-medium">Lưu hồ sơ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Kế thừa các style từ trang Index */
+    .dashboard-container {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .dashboard-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+        border: 1px solid #f1f5f9;
+    }
+
+    .text-primary-dark {
+        color: #0284c7;
+    }
+
+    .bg-light-blue {
+        background-color: #f8fafc;
+    }
+
+    /* Buttons */
+    .custom-btn-primary {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+        transition: all 0.3s ease;
+    }
+
+        .custom-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.35);
+            color: #fff;
+        }
+
+    .custom-btn-outline {
+        background: #fff;
+        color: #64748b;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+
+        .custom-btn-outline:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+    /* Inputs chuyên biệt cho Form */
+    .custom-input {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.7rem 1rem;
+        font-size: 0.95rem;
+        color: #334155;
+        transition: border-color 0.2s;
+    }
+
+        .custom-input:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+            outline: none;
+        }
+
+    /* Chỉnh sửa Input Group để ghép với đơn vị đo (mmHg, bpm) */
+    .custom-input-group .custom-input {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-right: none;
+    }
+
+    .custom-input-group .input-group-text {
+        border: 1.5px solid #e2e8f0;
+        border-top-right-radius: 10px;
+        border-bottom-right-radius: 10px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .custom-input-group:focus-within .input-group-text {
+        border-color: #0ea5e9;
+    }
+
+    /* Style cho Toggle Switch đẹp hơn checkbox mặc định */
+    .custom-switch-input {
+        width: 3em !important;
+        height: 1.5em !important;
+        cursor: pointer;
+    }
+
+        .custom-switch-input:checked {
+            background-color: #ef4444; /* Bật lên màu đỏ cảnh báo */
+            border-color: #ef4444;
+        }
+</style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
