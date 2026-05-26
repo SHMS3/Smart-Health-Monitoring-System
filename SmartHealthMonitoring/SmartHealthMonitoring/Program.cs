@@ -12,9 +12,10 @@ namespace SmartHealthMonitoring
     {
         public static void Main(string[] args)
         {
+            Env.Load();
+
             var builder = WebApplication.CreateBuilder(args);
 
-            Env.Load();
             var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION");
 
             // 1. Đăng ký DB Context
@@ -50,6 +51,11 @@ namespace SmartHealthMonitoring
                     options.AccessDeniedPath = "/Auth/AccessDenied";
                     options.ExpireTimeSpan = TimeSpan.FromHours(24);
                     options.SlidingExpiration = true;
+                }).AddGoogle(options =>
+                {
+                    options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
+                    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+                    options.CallbackPath = "/Auth/GoogleCallback";
                 });
                 //.AddGoogle(options =>
                 //{
@@ -58,13 +64,14 @@ namespace SmartHealthMonitoring
                 //    options.CallbackPath = "/Auth/GoogleCallback";
                 //});
 
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var context = services.GetRequiredService<SmartHealthMonitoringContext>();
-                // SeedData.Initialize(context);
+                 //SeedData.Initialize(context);
             }
 
             if (!app.Environment.IsDevelopment())
