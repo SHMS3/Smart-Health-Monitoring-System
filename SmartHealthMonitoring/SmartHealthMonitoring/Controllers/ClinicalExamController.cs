@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHealthMonitoring.Controllers
 {
+    [Authorize(Roles = "Doctor")]
     public class ClinicalExamController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;

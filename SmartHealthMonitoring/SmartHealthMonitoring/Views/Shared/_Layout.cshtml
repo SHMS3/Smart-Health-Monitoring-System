@@ -446,13 +446,15 @@
                 </li> *@
 
 
-                <li>
-                    <a asp-controller="DoctorDashboard" asp-action="Index"
-                       style="@(currentController == "DoctorDashboard" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
-                        Bệnh nhân
-                    </a>
-                </li>
-
+                @if (isDoctor)
+                {
+                    <li>
+                        <a asp-controller="DoctorDashboard" asp-action="Index"
+                           style="@(currentController == "DoctorDashboard" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+                            Bệnh nhân
+                        </a>
+                    </li>
+                }
 
                 @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Patient"))
                 {
@@ -474,7 +476,7 @@
                         </a>
                     </li>
                 }
-                else
+                else if (User.Identity == null || !User.Identity.IsAuthenticated)
                 {
                     <li>
                         <a asp-controller="Auth" asp-action="Login">
