@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Controllers\ClinicalRecordController.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="DotNetEnv" Version="3.2.0" />
     <PackageReference Include="MailKit" Version="4.16.0" />

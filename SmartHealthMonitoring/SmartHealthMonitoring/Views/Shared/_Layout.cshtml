@@ -401,15 +401,21 @@
                     </a>
                 </li>
 
-                @if (isDoctor)
-                {
+                @* <li>
+                    <a asp-controller="HealthTracker" asp-action="Index"
+                       style="@(currentController == "HealthTracker" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+                        Sức khỏe
+                    </a>
+                </li> *@
+
+                
                     <li>
                         <a asp-controller="DoctorDashboard" asp-action="Index"
                         style="@(currentController == "DoctorDashboard" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
                             Bệnh nhân
                         </a>
                     </li>
-                }
+                
 
                 @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Patient"))
                 {

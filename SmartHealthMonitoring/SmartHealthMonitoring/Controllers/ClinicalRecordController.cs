@@ -72,62 +72,6 @@ namespace SmartHealthMonitoring.Controllers
             }
         }
 
-        [HttpGet]
-        public IActionResult Create(int patientId)
-        {
-            var model = new ClinicalRecordFormViewModel { PatientId = patientId };
-            return View(model);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ClinicalRecordFormViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = string.Join(" | ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
-                TempData["Error"] = $"Lỗi dữ liệu đầu vào: {errors}";
-                // Bắn ngược về trang Index để hiển thị lỗi thay vì kẹt ở form
-                return RedirectToAction(nameof(Index), new { id = model.PatientId });
-            }
-
-            try
-            {
-                int currentDoctorId = 1;
-
-                var entity = new ClinicalRecord
-                {
-                    PatientId = model.PatientId,
-                    DoctorId = currentDoctorId,
-                    VisitDate = DateTime.UtcNow,
-                    ChestPainType = model.ChestPainType,
-                    RestingBp = model.RestingBP,
-                    Cholesterol = model.Cholesterol,
-                    FastingBs = model.FastingBS,
-                    RestEcg = model.RestECG,
-                    MaxHeartRate = model.MaxHeartRate,
-                    ExerciseAngina = model.ExerciseAngina,
-                    OldPeak = model.OldPeak,
-                    Stslope = model.STSlope,
-                    MajorVessels = model.MajorVessels,
-                    ThalResult = model.ThalResult,
-                    IsDeleted = false
-                };
-
-                _context.ClinicalRecords.Add(entity);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = "Thêm mới hồ sơ y tế thành công.";
-                return RedirectToAction(nameof(Index), new { id = model.PatientId });
-            }
-            catch (Exception)
-            {
-                TempData["Error"] = "Đã xảy ra lỗi khi lưu dữ liệu.";
-                return View(model);
-            }
-        }
-
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id) // Action này đóng vai trò là Void/Hủy
