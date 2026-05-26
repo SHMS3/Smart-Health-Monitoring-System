@@ -58,6 +58,8 @@ namespace SmartHealthMonitoring
                     options.CallbackPath = "/Auth/GoogleCallback";
                 });
 
+            // Đăng ký Memory Cache cho Webhook
+            builder.Services.AddMemoryCache();
 
             var app = builder.Build();
 
@@ -80,7 +82,7 @@ namespace SmartHealthMonitoring
             app.UseRouting();
 
             app.UseAuthentication();
-            // app.UseAuthorization();
+            app.UseAuthorization();
 
             app.MapControllerRoute(
                  name: "areas",
