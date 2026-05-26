@@ -58,7 +58,7 @@ namespace SmartHealthMonitoring
                 //    options.CallbackPath = "/Auth/GoogleCallback";
                 //});
 
-            var app = builder.Build();
+            var app = builder.Build();  
 
             using (var scope = app.Services.CreateScope())
             {
