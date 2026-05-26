@@ -5,9 +5,11 @@ using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHealthMonitoring.Controllers
 {
+    [Authorize(Roles = "Doctor")]
     public class ClinicalExamController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;

@@ -1,29 +1,37 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;
+using System.Security.Claims;
 
 namespace SmartHealthMonitoring.Controllers
 {
+    [Authorize(Roles = "Doctor")]
+
     public class WarningAlertController : Controller
     {
         private readonly IWarningAlertService _warningAlertService;
         private readonly SmartHealthMonitoringContext _context;
         private readonly IEmailService _emailService;
 
+        private readonly IDoctorService _doctorService;
+
         public WarningAlertController(
             IWarningAlertService warningAlertService,
+            IDoctorService doctorService,
             SmartHealthMonitoringContext context,
             IEmailService emailService)
         {
             _warningAlertService = warningAlertService;
+            _doctorService = doctorService;
             _context = context;
             _emailService = emailService;
         }
 
-        public async Task<IActionResult> Index(byte? status)
+        public async Task<IActionResult> Dashboard(byte? status)
         {
             var alerts = await _warningAlertService.GetAlertsAsync(status);
             return View(alerts);
@@ -41,13 +49,13 @@ namespace SmartHealthMonitoring.Controllers
             if (alert == null)
             {
                 TempData["Error"] = "Không tìm thấy cảnh báo.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard");
             }
 
             if (alert.Status == 2)
             {
                 TempData["Error"] = "Cảnh báo này đã được xử lý rồi.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard");
             }
 
             var model = new ResolveWarningViewModel
@@ -73,7 +81,7 @@ namespace SmartHealthMonitoring.Controllers
             if (alert == null)
             {
                 TempData["Error"] = "Không tìm thấy cảnh báo.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Dashboard");
             }
 
             // Cập nhật trạng thái cảnh báo → Resolved
@@ -150,7 +158,44 @@ namespace SmartHealthMonitoring.Controllers
 
             TempData["Success"] = "Đã xử lý cảnh báo thành công!" +
                 (model.SendEmailInvitation ? " Thư mời tái khám đã được gửi cho bệnh nhân." : "");
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Dashboard");
+        }
+
+        //Claim WarningAlert by Doctor
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Claim(int id)
+        {
+            // lấy user login
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userIdString))
+            {
+                return Unauthorized();
+            }
+
+            int userId = int.Parse(userIdString);
+
+            var doctor = await _doctorService.GetDoctorByUserIdAsync(userId);
+
+            if (doctor == null)
+            {
+                TempData["Error"] = "Doctor not found";
+                return RedirectToAction("Dashboard");
+            }
+
+            var success = await _warningAlertService.ClaimAlertAsync(id, doctor.Id);
+
+            if (success)
+            {
+                TempData["Success"] = "Claim alert successfully";
+            }
+            else
+            {
+                TempData["Error"] = "Alert already claimed";
+            }
+            return RedirectToAction("Dashboard");
         }
     }
 }

@@ -1,13 +1,20 @@
 ﻿@model List<SmartHealthMonitoring.Models.WarningAlert>
+
 @{
     ViewData["Title"] = "Cảnh báo sức khỏe";
-    var currentStatus = ViewContext.HttpContext.Request.Query["status"].ToString();
+
+    var currentStatus =
+        ViewContext.HttpContext.Request.Query["status"]
+        .ToString();
+
     bool IsActive(string? status) =>
-        string.IsNullOrEmpty(status) && string.IsNullOrEmpty(currentStatus)
+        string.IsNullOrEmpty(status)
+        && string.IsNullOrEmpty(currentStatus)
         || status == currentStatus;
 }
 
 <style>
+
     .alert-page {
         margin-top: 70px;
         padding: 48px 0 80px;
@@ -36,8 +43,7 @@
     }
 
     .section-title {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        font-size: clamp(1.6rem, 3vw, 2.2rem);
+        font-size: 2rem;
         font-weight: 800;
         color: #0f172a;
         margin-bottom: 8px;
@@ -47,7 +53,6 @@
         color: #64748b;
         font-size: .95rem;
         line-height: 1.7;
-        max-width: 640px;
         margin-bottom: 28px;
     }
 
@@ -55,19 +60,18 @@
         background: #fff;
         border-radius: 16px;
         border: 1px solid #e2e8f0;
-        box-shadow: 0 8px 32px rgba(14, 165, 233, .08);
         overflow: hidden;
+        box-shadow: 0 8px 32px rgba(14,165,233,.08);
     }
 
     .alert-card-toolbar {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
         justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
         gap: 16px;
         padding: 20px 24px;
         border-bottom: 1px solid #e2e8f0;
-        background: linear-gradient(135deg, rgba(14, 165, 233, .04), rgba(99, 102, 241, .04));
     }
 
     .filter-group {
@@ -79,51 +83,40 @@
     .filter-pill {
         padding: 8px 18px;
         border-radius: 50px;
+        border: 1px solid #e2e8f0;
+        text-decoration: none;
+        color: #475569;
         font-size: .82rem;
         font-weight: 600;
-        border: 1.5px solid #e2e8f0;
-        background: #fff;
-        color: #475569;
-        transition: all .25s;
+        transition: .25s;
     }
 
-    .filter-pill:hover {
-        border-color: rgba(14, 165, 233, .4);
-        color: #0ea5e9;
-        background: rgba(14, 165, 233, .06);
-    }
+        .filter-pill:hover {
+            background: rgba(14,165,233,.06);
+            color: #0ea5e9;
+        }
 
-    .filter-pill.active {
-        background: linear-gradient(135deg, #0ea5e9, #6366f1);
-        border-color: transparent;
-        color: #fff;
-        box-shadow: 0 4px 14px rgba(14, 165, 233, .35);
-    }
+        .filter-pill.active {
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            color: white;
+            border-color: transparent;
+        }
 
-    .filter-pill.filter-pending.active {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        box-shadow: 0 4px 14px rgba(239, 68, 68, .35);
-    }
+        .filter-pill.filter-pending.active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
 
-    .filter-pill.filter-processing.active {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        box-shadow: 0 4px 14px rgba(245, 158, 11, .35);
-    }
+        .filter-pill.filter-processing.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
 
-    .filter-pill.filter-resolved.active {
-        background: linear-gradient(135deg, #10b981, #059669);
-        box-shadow: 0 4px 14px rgba(16, 185, 129, .35);
-    }
+        .filter-pill.filter-resolved.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
 
     .alert-count {
         font-size: .85rem;
         color: #64748b;
-        font-weight: 500;
-    }
-
-    .alert-count strong {
-        color: #0f172a;
-        font-weight: 700;
     }
 
     .alert-table-wrap {
@@ -133,45 +126,31 @@
     .alert-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 0;
     }
 
-    .alert-table thead th {
-        padding: 14px 20px;
-        font-size: .72rem;
-        font-weight: 700;
-        letter-spacing: .8px;
-        text-transform: uppercase;
-        color: #64748b;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        white-space: nowrap;
-    }
+        .alert-table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: .72rem;
+            text-transform: uppercase;
+            padding: 14px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
 
-    .alert-table tbody td {
-        padding: 16px 20px;
-        font-size: .88rem;
-        color: #334155;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: middle;
-    }
+        .alert-table tbody td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            font-size: .88rem;
+        }
 
-    .alert-table tbody tr {
-        transition: background .2s;
-    }
-
-    .alert-table tbody tr:hover {
-        background: rgba(14, 165, 233, .04);
-    }
-
-    .alert-table tbody tr:last-child td {
-        border-bottom: none;
-    }
+        .alert-table tbody tr:hover {
+            background: rgba(14,165,233,.04);
+        }
 
     .alert-id {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        font-weight: 700;
         color: #0ea5e9;
+        font-weight: 700;
     }
 
     .patient-name {
@@ -188,59 +167,41 @@
         border-radius: 50px;
         font-size: .75rem;
         font-weight: 700;
-        letter-spacing: .3px;
     }
 
     .risk-low {
-        background: rgba(16, 185, 129, .12);
+        background: rgba(16,185,129,.12);
         color: #059669;
-        border: 1px solid rgba(16, 185, 129, .25);
     }
 
     .risk-medium {
-        background: rgba(245, 158, 11, .12);
+        background: rgba(245,158,11,.12);
         color: #d97706;
-        border: 1px solid rgba(245, 158, 11, .3);
     }
 
     .risk-high {
-        background: rgba(239, 68, 68, .12);
+        background: rgba(239,68,68,.12);
         color: #dc2626;
-        border: 1px solid rgba(239, 68, 68, .25);
     }
 
     .status-pending {
-        background: rgba(239, 68, 68, .12);
+        background: rgba(239,68,68,.12);
         color: #dc2626;
-        border: 1px solid rgba(239, 68, 68, .25);
     }
 
     .status-processing {
-        background: rgba(245, 158, 11, .12);
+        background: rgba(245,158,11,.12);
         color: #d97706;
-        border: 1px solid rgba(245, 158, 11, .3);
     }
 
     .status-resolved {
-        background: rgba(16, 185, 129, .12);
+        background: rgba(16,185,129,.12);
         color: #059669;
-        border: 1px solid rgba(16, 185, 129, .25);
-    }
-
-    .status-unknown {
-        background: rgba(100, 116, 139, .12);
-        color: #475569;
-        border: 1px solid rgba(100, 116, 139, .25);
     }
 
     .risk-score {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        font-size: 1rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #0ea5e9, #6366f1);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: #0ea5e9;
     }
 
     .flagged-time {
@@ -248,79 +209,121 @@
         font-size: .84rem;
     }
 
-    .empty-state {
-        text-align: center;
-        padding: 56px 24px;
-        color: #94a3b8;
+    .claim-btn {
+        border: none;
+        background: linear-gradient(135deg, #0ea5e9, #6366f1);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: .8rem;
+        font-weight: 600;
+        transition: .25s;
+        box-shadow: 0 4px 14px rgba(14,165,233,.25);
     }
 
-    .empty-state i {
-        font-size: 2.5rem;
-        color: #cbd5e1;
-        margin-bottom: 12px;
-        display: block;
-    }
-
-    .empty-state p {
-        font-size: .95rem;
-        margin: 0;
-    }
-
-    @@media (max-width: 768px) {
-        .alert-page-inner {
-            padding: 0 20px;
+        .claim-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(14,165,233,.35);
         }
 
-        .alert-card-toolbar {
-            flex-direction: column;
-            align-items: flex-start;
-        }
+    .claimed-text {
+        color: #d97706;
+        font-weight: 600;
+        font-size: .82rem;
     }
+
+    .resolved-text {
+        color: #059669;
+        font-weight: 600;
+        font-size: .82rem;
+    }
+
 </style>
 
 <section class="alert-page">
+
     <div class="alert-page-inner">
 
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+
         <div class="section-tag">
-            <i class="fas fa-bell"></i> AI Early Warning
+            <i class="fas fa-bell"></i>
+            AI Early Warning
         </div>
-        <h1 class="section-title">Bảng cảnh báo sức khỏe</h1>
+
+        <h1 class="section-title">
+            Bảng cảnh báo sức khỏe
+        </h1>
+
         <p class="section-sub">
-            Theo dõi và xử lý các cảnh báo nguy cơ từ hệ thống AI. Lọc theo trạng thái để quản lý hàng chờ bác sĩ hiệu quả hơn.
+            Theo dõi và xử lý các cảnh báo nguy cơ từ hệ thống AI.
         </p>
 
         <div class="alert-card">
+
             <div class="alert-card-toolbar">
+
                 <div class="filter-group">
-                    <a asp-action="Index"
+
+                    <a asp-action="Dashboard"
                        class="filter-pill @(IsActive(null) ? "active" : "")">
-                        <i class="fas fa-list me-1"></i> Tất cả
+
+                        Tất cả
+
                     </a>
-                    <a asp-action="Index"
+
+                    <a asp-action="Dashboard"
                        asp-route-status="0"
                        class="filter-pill filter-pending @(IsActive("0") ? "active" : "")">
-                        <i class="fas fa-clock me-1"></i> Chờ xử lý
+
+                        Chờ xử lý
+
                     </a>
-                    <a asp-action="Index"
+
+                    <a asp-action="Dashboard"
                        asp-route-status="1"
                        class="filter-pill filter-processing @(IsActive("1") ? "active" : "")">
-                        <i class="fas fa-spinner me-1"></i> Đang xử lý
+
+                        Đang xử lý
+
                     </a>
-                    <a asp-action="Index"
+
+                    <a asp-action="Dashboard"
                        asp-route-status="2"
                        class="filter-pill filter-resolved @(IsActive("2") ? "active" : "")">
-                        <i class="fas fa-check-circle me-1"></i> Đã xử lý
+
+                        Đã xử lý
+
                     </a>
+
                 </div>
+
                 <div class="alert-count">
-                    <i class="fas fa-database me-1" style="color:#0ea5e9"></i>
-                    Tổng cộng: <strong>@Model.Count</strong> cảnh báo
+                    Tổng cộng:
+                    <strong>@Model.Count</strong>
+                    cảnh báo
                 </div>
+
             </div>
 
             <div class="alert-table-wrap">
+
                 <table class="alert-table">
+
                     <thead>
+
                         <tr>
                             <th>Mã</th>
                             <th>Bệnh nhân</th>
@@ -328,83 +331,118 @@
                             <th>Điểm rủi ro</th>
                             <th>Trạng thái</th>
                             <th>Thời gian gắn cờ</th>
-                            <th>Hành động</th>
+                            <th>Hành động / Thao tác</th>
                         </tr>
+
                     </thead>
+
                     <tbody>
+
                         @if (Model.Any())
                         {
                             @foreach (var item in Model)
                             {
                                 <tr>
-                                    <td><span class="alert-id">#@item.Id</span></td>
+
+                                    <td>
+                                        <span class="alert-id">
+                                            #@item.Id
+                                        </span>
+                                    </td>
+
                                     <td>
                                         <span class="patient-name">
-                                            <i class="fas fa-user-injured me-1" style="color:#94a3b8;font-size:.8rem"></i>
                                             @item.Patient.User.FullName
                                         </span>
                                     </td>
+
                                     <td>
+
                                         @switch (item.Prediction.RiskLevel)
                                         {
                                             case 0:
+
                                                 <span class="priority-badge risk-low">
-                                                    <i class="fas fa-circle" style="font-size:.45rem"></i> Thấp
+                                                    Thấp
                                                 </span>
                                                 break;
+
                                             case 1:
+
                                                 <span class="priority-badge risk-medium">
-                                                    <i class="fas fa-circle" style="font-size:.45rem"></i> Trung bình
+                                                    Trung bình
                                                 </span>
                                                 break;
+
                                             case 2:
+
                                                 <span class="priority-badge risk-high">
-                                                    <i class="fas fa-circle" style="font-size:.45rem"></i> Cao
+                                                    Cao
                                                 </span>
-                                                break;
-                                            default:
-                                                <span class="priority-badge status-unknown">Không xác định</span>
                                                 break;
                                         }
+
                                     </td>
+
                                     <td>
-                                        <span class="risk-score">@((item.Prediction.RiskScore * 100).ToString("0.00"))%</span>
+
+                                        <span class="risk-score">
+                                            @((item.Prediction.RiskScore * 100).ToString("0.00"))%
+                                        </span>
+
                                     </td>
+
                                     <td>
+
                                         @switch (item.Status)
                                         {
                                             case 0:
+
                                                 <span class="status-badge status-pending">
-                                                    <i class="fas fa-clock"></i> Chờ xử lý
+                                                    Chờ xử lý
                                                 </span>
                                                 break;
+
                                             case 1:
+
                                                 <span class="status-badge status-processing">
-                                                    <i class="fas fa-spinner"></i> Đang xử lý
+                                                    Đang xử lý
                                                 </span>
                                                 break;
+
                                             case 2:
+
                                                 <span class="status-badge status-resolved">
-                                                    <i class="fas fa-check"></i> Đã xử lý
+                                                    Đã xử lý
                                                 </span>
-                                                break;
-                                            default:
-                                                <span class="status-badge status-unknown">Không xác định</span>
                                                 break;
                                         }
+
                                     </td>
+
                                     <td>
+
                                         <span class="flagged-time">
-                                            <i class="far fa-calendar-alt me-1"></i>
-                                            @item.FlaggedAt.ToString("dd/MM/yyyy HH:mm")
+                                            @item.FlaggedAt
                                         </span>
+
                                     </td>
                                     <td>
-                                        @if (item.Status != 2)
+                                        @if (item.Status == 0)
+                                        {
+                                            <form asp-action="Claim" method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="claim-btn">
+                                                    Tiếp nhận
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (item.Status == 1)
                                         {
                                             <a asp-action="Resolve" asp-route-id="@item.Id"
                                                class="btn btn-sm btn-primary"
-                                               style="border-radius:8px;font-size:.78rem;padding:5px 14px;">
+                                               style="border-radius:8px;font-size:.78rem;padding:5px 14px; display:inline-block; margin-top:2px;">
                                                 <i class="fas fa-shield-alt me-1"></i> Xử lý
                                             </a>
                                         }
@@ -427,12 +465,18 @@
                                         <p>Không có cảnh báo nào phù hợp với bộ lọc hiện tại.</p>
                                     </div>
                                 </td>
+
                             </tr>
                         }
+
                     </tbody>
+
                 </table>
+
             </div>
+
         </div>
 
     </div>
+
 </section>
