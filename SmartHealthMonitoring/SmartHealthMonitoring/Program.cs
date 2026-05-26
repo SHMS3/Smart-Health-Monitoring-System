@@ -1,3 +1,4 @@
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Minio;
@@ -15,6 +16,13 @@ namespace SmartHealthMonitoring
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            Env.Load();
+
+            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION");
+
+            builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
+                options.UseSqlServer(connectionString));
 
             // 1. Cấu hình kết nối MinIO
             builder.Services.AddMinio(configureClient => configureClient
@@ -44,13 +52,13 @@ namespace SmartHealthMonitoring
                     options.AccessDeniedPath = "/Auth/AccessDenied";
                     options.ExpireTimeSpan = TimeSpan.FromHours(24);
                     options.SlidingExpiration = true;
-                })
-                .AddGoogle(options =>
-                {
-                    options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
-                    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
-                    options.CallbackPath = "/Auth/GoogleCallback";
                 });
+                //.AddGoogle(options =>
+                //{
+                //    options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
+                //    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+                //    options.CallbackPath = "/Auth/GoogleCallback";
+                //});
 
             //Đki db
             builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
