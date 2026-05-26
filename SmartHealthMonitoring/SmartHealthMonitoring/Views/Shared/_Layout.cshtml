@@ -1,601 +1,635 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="SmartHealth - Hệ thống quản lý hồ sơ bệnh án và theo dõi sức khỏe thông minh, cảnh báo bệnh sớm bằng AI." />
-    <title>@ViewData["Title"] - SmartHealth</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="description" content="SmartHealth - Hệ thống quản lý hồ sơ bệnh án và theo dõi sức khỏe thông minh, cảnh báo bệnh sớm bằng AI." />
+	<title>@ViewData["Title"] - SmartHealth</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-    <style>
-        :root {
-        --primary: #0ea5e9;
-        --primary-dark: #0284c7;
-        --secondary: #6366f1;
-        --accent: #10b981;
-        --warn: #f59e0b;
-        --danger: #ef4444;
-        --grad: linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%);
-        --bg: #ffffff;
-        --bg-soft: #f8fafc;
-        --border: #e2e8f0;
-        --text: #0f172a;
-        --text-sub: #475569;
-        --text-muted: #94a3b8;
-        }
+	<style>
+		:root {
+			--primary: #0ea5e9;
+			--primary-dark: #0284c7;
+			--secondary: #6366f1;
+			--accent: #10b981;
+			--warn: #f59e0b;
+			--danger: #ef4444;
+			--grad: linear-gradient(135deg,#0ea5e9 0%,#6366f1 100%);
+			--bg: #ffffff;
+			--bg-soft: #f8fafc;
+			--border: #e2e8f0;
+			--text: #0f172a;
+			--text-sub: #475569;
+			--text-muted: #94a3b8;
+		}
 
-        *, *::before, *::after {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        }
+		*, *::before, *::after {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
 
-        html {
-        scroll-behavior: smooth;
-        }
+		html {
+			scroll-behavior: smooth;
+		}
 
-        /* ĐÃ THÊM FLEXBOX VÀO BODY ĐỂ ÉP FOOTER XUỐNG ĐÁY */
-        body {
-        font-family: 'Inter',sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        overflow-x: hidden;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        }
+		/* ĐÃ THÊM FLEXBOX VÀO BODY ĐỂ ÉP FOOTER XUỐNG ĐÁY */
+		body {
+			font-family: 'Inter',sans-serif;
+			background: var(--bg);
+			color: var(--text);
+			overflow-x: hidden;
+			display: flex;
+			flex-direction: column;
+			min-height: 100vh;
+		}
 
-        a {
-        text-decoration: none;
-        color: inherit;
-        }
+		a {
+			text-decoration: none;
+			color: inherit;
+		}
 
-        ::-webkit-scrollbar {
-        width: 5px;
-        }
+		::-webkit-scrollbar {
+			width: 5px;
+		}
 
-        ::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        }
+		::-webkit-scrollbar-track {
+			background: #f1f5f9;
+		}
 
-        ::-webkit-scrollbar-thumb {
-        background: var(--grad);
-        border-radius: 3px;
-        }
+		::-webkit-scrollbar-thumb {
+			background: var(--grad);
+			border-radius: 3px;
+		}
 
-        /* ── NAVBAR ── */
-        .navbar-main {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        background: rgba(255,255,255,0.92);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-bottom: 1px solid var(--border);
-        padding: 0;
-        transition: box-shadow .3s;
-        }
+		/* ── NAVBAR ── */
+		.navbar-main {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			z-index: 1000;
+			background: rgba(255,255,255,0.92);
+			backdrop-filter: blur(16px);
+			-webkit-backdrop-filter: blur(16px);
+			border-bottom: 1px solid var(--border);
+			padding: 0;
+			transition: box-shadow .3s;
+		}
 
-        .navbar-main.elevated {
-        box-shadow: 0 4px 24px rgba(14,165,233,.12);
-        }
+			.navbar-main.elevated {
+				box-shadow: 0 4px 24px rgba(14,165,233,.12);
+			}
 
-        .nav-inner {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 0 32px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+		.nav-inner {
+			max-width: 1280px;
+			margin: 0 auto;
+			padding: 0 32px;
+			height: 70px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
 
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1; /* Chiếm 1 phần không gian để cân bằng với bên phải */
-        }
+		.nav-logo {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			flex: 1; /* Chiếm 1 phần không gian để cân bằng với bên phải */
+		}
 
-        /* Các link điều hướng */
-        .nav-links {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 24px; /* Tăng khoảng cách giữa các link để dễ nhìn hơn */
-            list-style: none;
-            margin-bottom: 0; /* ÉP BUỘC: Xóa margin mặc định của <ul> trong Bootstrap để không bị lệch dọc */
-        }
+		.nav-logo-icon {
+			width: 40px;
+			height: 40px;
+			border-radius: 11px;
+			background: var(--grad);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 0 4px 14px rgba(14,165,233,.35);
+			flex-shrink: 0;
+		}
 
-            .nav-links a {
-                font-size: .875rem;
-                font-weight: 500;
-                color: var(--text-sub);
-                padding: 7px 15px;
-                border-radius: 8px;
-                transition: all .2s;
-                position: relative;
-                /* Thêm thuộc tính này để chữ không bị bẻ dòng nếu màn hình thu nhỏ */
-                white-space: nowrap;
-            }
+			.nav-logo-icon i {
+				color: #fff;
+				font-size: 17px;
+			}
 
-                .nav-links a:hover {
-                    color: var(--primary);
-                    background: rgba(14,165,233,.07);
-                }
+		.nav-logo-name {
+			font-family: 'Plus Jakarta Sans',sans-serif;
+			font-weight: 800;
+			font-size: 1.15rem;
+			background: var(--grad);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
 
-        /* Khu vực nút bấm */
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end; /* Đẩy các nút về sát lề phải */
-            gap: 12px; /* Tăng khoảng cách giữa nút Đăng nhập và Đăng ký */
-            flex: 1; /* Chiếm 1 phần không gian để ép cụm .nav-links vào đúng vị trí center */
-        }
+		.nav-logo-tag {
+			display: block;
+			font-size: .6rem;
+			color: var(--text-muted);
+			letter-spacing: 1px;
+			text-transform: uppercase;
+			margin-top: -3px;
+			-webkit-text-fill-color: var(--text-muted);
+		}
 
-        .btn-ghost {
-        font-size: .875rem;
-        font-weight: 500;
-        color: var(--text-sub);
-        padding: 7px 18px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        background: transparent;
-        transition: all .2s;
-        }
+		/* Các link điều hướng */
+		.nav-links {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 24px; /* Tăng khoảng cách giữa các link để dễ nhìn hơn */
+			list-style: none;
+			margin-bottom: 0; /* ÉP BUỘC: Xóa margin mặc định của <ul> trong Bootstrap để không bị lệch dọc */
+		}
 
-        .btn-ghost:hover {
-        color: var(--primary);
-        border-color: var(--primary);
-        background: rgba(14,165,233,.06);
-        }
+			.nav-links a {
+				font-size: .875rem;
+				font-weight: 500;
+				color: var(--text-sub);
+				padding: 7px 15px;
+				border-radius: 8px;
+				transition: all .2s;
+				position: relative;
+				/* Thêm thuộc tính này để chữ không bị bẻ dòng nếu màn hình thu nhỏ */
+				white-space: nowrap;
+			}
 
-        .btn-outline-primary-nav {
-        font-size: .875rem;
-        font-weight: 600;
-        color: var(--primary);
-        padding: 7px 18px;
-        border: 1.5px solid rgba(14,165,233,.5);
-        border-radius: 8px;
-        background: rgba(14,165,233,.06);
-        transition: all .2s;
-        }
+				.nav-links a:hover {
+					color: var(--primary);
+					background: rgba(14,165,233,.07);
+				}
 
-        .btn-outline-primary-nav:hover {
-        background: var(--primary);
-        color: #fff;
-        border-color: var(--primary);
-        }
+		/* Khu vực nút bấm */
+		.nav-actions {
+			display: flex;
+			align-items: center;
+			justify-content: flex-end; /* Đẩy các nút về sát lề phải */
+			gap: 12px; /* Tăng khoảng cách giữa nút Đăng nhập và Đăng ký */
+			flex: 1; /* Chiếm 1 phần không gian để ép cụm .nav-links vào đúng vị trí center */
+		}
 
-        .btn-appointment {
-        font-size: .875rem;
-        font-weight: 700;
-        color: #fff;
-        padding: 9px 22px;
-        border-radius: 50px;
-        background: var(--grad);
-        border: none;
-        box-shadow: 0 4px 14px rgba(14,165,233,.3);
-        transition: all .3s;
-        cursor: pointer;
-        }
+		.btn-ghost {
+			font-size: .875rem;
+			font-weight: 500;
+			color: var(--text-sub);
+			padding: 7px 18px;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			background: transparent;
+			transition: all .2s;
+		}
 
-        .btn-appointment:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(14,165,233,.45);
-        color: #fff;
-        }
+			.btn-ghost:hover {
+				color: var(--primary);
+				border-color: var(--primary);
+				background: rgba(14,165,233,.06);
+			}
 
-        /* ── PAGE ── */
-        /* ĐÃ THÊM flex: 1 ĐỂ NỘI DUNG TỰ ĐỘNG GIÃN RA ĐẨY FOOTER XUỐNG DƯỚI */
-        .page-main {
-        background: #fff;
-        flex: 1;
-        padding-top: 90px; /* THÊM DÒNG NÀY ĐỂ ĐẨY NỘI DUNG XUỐNG */
-        }
+		.btn-outline-primary-nav {
+			font-size: .875rem;
+			font-weight: 600;
+			color: var(--primary);
+			padding: 7px 18px;
+			border: 1.5px solid rgba(14,165,233,.5);
+			border-radius: 8px;
+			background: rgba(14,165,233,.06);
+			transition: all .2s;
+		}
 
-        /* ── FOOTER ĐÃ ĐƯỢC THU GỌN ── */
-        footer {
-        background: #0f172a;
-        color: #cbd5e1;
-        padding: 40px 0 0;
-        position: relative;
-        overflow: hidden;
-        }
+			.btn-outline-primary-nav:hover {
+				background: var(--primary);
+				color: #fff;
+				border-color: var(--primary);
+			}
 
-        footer::before {
-        content: '';
-        position: absolute;
-        top: -180px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 900px;
-        height: 400px;
-        background: radial-gradient(ellipse,rgba(14,165,233,.08) 0%,transparent 70%);
-        pointer-events: none;
-        }
+		.btn-appointment {
+			font-size: .875rem;
+			font-weight: 700;
+			color: #fff;
+			padding: 9px 22px;
+			border-radius: 50px;
+			background: var(--grad);
+			border: none;
+			box-shadow: 0 4px 14px rgba(14,165,233,.3);
+			transition: all .3s;
+			cursor: pointer;
+		}
 
-        .foot-inner {
-        max-width: 1280px;
-        margin: 0 auto;
-        padding: 0 32px;
-        }
+			.btn-appointment:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 8px 24px rgba(14,165,233,.45);
+				color: #fff;
+			}
 
-        .foot-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr;
-        gap: 24px;
-        padding-bottom: 30px;
-        }
+		/* ── PAGE ── */
+		/* ĐÃ THÊM flex: 1 ĐỂ NỘI DUNG TỰ ĐỘNG GIÃN RA ĐẨY FOOTER XUỐNG DƯỚI */
+		.page-main {
+			background: #fff;
+			flex: 1;
+			padding-top: 90px; /* THÊM DÒNG NÀY ĐỂ ĐẨY NỘI DUNG XUỐNG */
+		}
 
-        .foot-brand p {
-        font-size: .85rem;
-        line-height: 1.6;
-        color: #64748b;
-        max-width: 270px;
-        margin-top: 10px;
-        }
+		/* ── FOOTER ĐÃ ĐƯỢC THU GỌN ── */
+		footer {
+			background: #0f172a;
+			color: #cbd5e1;
+			padding: 40px 0 0;
+			position: relative;
+			overflow: hidden;
+		}
 
-        .foot-socials {
-        display: flex;
-        gap: 10px;
-        margin-top: 12px;
-        }
+			footer::before {
+				content: '';
+				position: absolute;
+				top: -180px;
+				left: 50%;
+				transform: translateX(-50%);
+				width: 900px;
+				height: 400px;
+				background: radial-gradient(ellipse,rgba(14,165,233,.08) 0%,transparent 70%);
+				pointer-events: none;
+			}
 
-        .soc-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        border: 1px solid rgba(148,163,184,.15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #64748b;
-        font-size: .8rem;
-        transition: all .2s;
-        }
+		.foot-inner {
+			max-width: 1280px;
+			margin: 0 auto;
+			padding: 0 32px;
+		}
 
-        .soc-btn:hover {
-        border-color: var(--primary);
-        color: var(--primary);
-        background: rgba(14,165,233,.08);
-        transform: translateY(-2px);
-        }
+		.foot-grid {
+			display: grid;
+			grid-template-columns: 2fr 1fr 1fr 1fr;
+			gap: 24px;
+			padding-bottom: 30px;
+		}
 
-        .foot-col h5 {
-        font-size: .72rem;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        color: #475569;
-        margin-bottom: 12px;
-        }
+		.foot-brand p {
+			font-size: .85rem;
+			line-height: 1.6;
+			color: #64748b;
+			max-width: 270px;
+			margin-top: 10px;
+		}
 
-        .foot-col ul {
-        list-style: none;
-        }
+		.foot-socials {
+			display: flex;
+			gap: 10px;
+			margin-top: 12px;
+		}
 
-        .foot-col ul li {
-        margin-bottom: 6px;
-        }
+		.soc-btn {
+			width: 32px;
+			height: 32px;
+			border-radius: 8px;
+			border: 1px solid rgba(148,163,184,.15);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #64748b;
+			font-size: .8rem;
+			transition: all .2s;
+		}
 
-        .foot-col ul li a {
-        font-size: .84rem;
-        color: #64748b;
-        transition: color .2s;
-        }
+			.soc-btn:hover {
+				border-color: var(--primary);
+				color: var(--primary);
+				background: rgba(14,165,233,.08);
+				transform: translateY(-2px);
+			}
 
-        .foot-col ul li a:hover {
-        color: var(--primary);
-        }
+		.foot-col h5 {
+			font-size: .72rem;
+			font-weight: 700;
+			letter-spacing: 1.5px;
+			text-transform: uppercase;
+			color: #475569;
+			margin-bottom: 12px;
+		}
 
-        .foot-contact-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        margin-bottom: 8px;
-        }
+		.foot-col ul {
+			list-style: none;
+		}
 
-        .foot-contact-item .ic {
-        width: 26px;
-        height: 26px;
-        border-radius: 6px;
-        background: rgba(14,165,233,.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--primary);
-        font-size: .7rem;
-        flex-shrink: 0;
-        }
+			.foot-col ul li {
+				margin-bottom: 6px;
+			}
 
-        .foot-contact-item span {
-        font-size: .82rem;
-        color: #64748b;
-        line-height: 1.5;
-        }
+				.foot-col ul li a {
+					font-size: .84rem;
+					color: #64748b;
+					transition: color .2s;
+				}
 
-        .foot-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin-top: 8px;
-        background: rgba(16,185,129,.1);
-        border: 1px solid rgba(16,185,129,.2);
-        border-radius: 50px;
-        padding: 4px 10px;
-        font-size: .7rem;
-        color: #10b981;
-        font-weight: 500;
-        }
+					.foot-col ul li a:hover {
+						color: var(--primary);
+					}
 
-        .pdot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #10b981;
-        animation: pd 1.5s infinite;
-        }
+		.foot-contact-item {
+			display: flex;
+			align-items: flex-start;
+			gap: 10px;
+			margin-bottom: 8px;
+		}
 
-        .foot-bottom {
-        border-top: 1px solid rgba(148,163,184,.1);
-        padding: 16px 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 12px;
-        }
+			.foot-contact-item .ic {
+				width: 26px;
+				height: 26px;
+				border-radius: 6px;
+				background: rgba(14,165,233,.1);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				color: var(--primary);
+				font-size: .7rem;
+				flex-shrink: 0;
+			}
 
-        .foot-bottom p, .foot-bottom a {
-        font-size: .78rem;
-        color: #475569;
-        }
+			.foot-contact-item span {
+				font-size: .82rem;
+				color: #64748b;
+				line-height: 1.5;
+			}
 
-        .foot-bottom a:hover {
-        color: var(--primary);
-        }
+		.foot-status {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			margin-top: 8px;
+			background: rgba(16,185,129,.1);
+			border: 1px solid rgba(16,185,129,.2);
+			border-radius: 50px;
+			padding: 4px 10px;
+			font-size: .7rem;
+			color: #10b981;
+			font-weight: 500;
+		}
 
-        .foot-bottom-links {
-        display: flex;
-        gap: 20px;
-        }
-    </style>
+		.pdot {
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: #10b981;
+			animation: pd 1.5s infinite;
+		}
 
-    @await RenderSectionAsync("Styles", required: false)
+		.foot-bottom {
+			border-top: 1px solid rgba(148,163,184,.1);
+			padding: 16px 0;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 12px;
+		}
+
+			.foot-bottom p, .foot-bottom a {
+				font-size: .78rem;
+				color: #475569;
+			}
+
+				.foot-bottom a:hover {
+					color: var(--primary);
+				}
+
+		.foot-bottom-links {
+			display: flex;
+			gap: 20px;
+		}
+	</style>
+
+	@await RenderSectionAsync("Styles", required: false)
 </head>
 
 <body>
 
-    <nav class="navbar-main" id="mainNav">
-        <div class="nav-inner">
+	<nav class="navbar-main" id="mainNav">
+		<div class="nav-inner">
 
-            <a href="/" class="nav-logo">
-                <div class="nav-logo-icon"><i class="fas fa-heartbeat"></i></div>
-                <div>
-                    <span class="nav-logo-name">SmartHealth</span>
-                    <span class="nav-logo-tag">Monitoring System</span>
-                </div>
-            </a>
+			<a href="/" class="nav-logo">
+				<div class="nav-logo-icon"><i class="fas fa-heartbeat"></i></div>
+				<div>
+					<span class="nav-logo-name">SmartHealth</span>
+					<span class="nav-logo-tag">Monitoring System</span>
+				</div>
+			</a>
 
-            <ul class="nav-links">
-                @{
-                    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+			<ul class="nav-links">
+				@{
+					var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+					bool isDoctor = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Doctor");
+				}
 
-                    // CẤU HÌNH CHỜ CHECK ROLE:
-                    // Hiện tại gán tạm = true để bạn test hiển thị nút.
-                    // Sau khi nhóm làm xong Login, hãy thay true thành: User.Identity.IsAuthenticated && User.IsInRole("Doctor")
-                    bool isDoctor = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Doctor");
-                }
+				<li>
+					<a asp-controller="Home" asp-action="Index"
+					   style="@(currentController == "Home" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+						Trang chủ
+					</a>
+				</li>
+				@if (isDoctor)
+				{
+					<li>
+						<a asp-controller="DoctorDashboard" asp-action="Index"
+						   style="@(currentController == "DoctorDashboard" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+							Bệnh nhân
+						</a>
+					</li>
+				}
+				else
+				{
+					@if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Patient"))
+					{
+						<li>
+							<a asp-controller="Patient" asp-action="Index">
+								Sổ tay hằng ngày
+							</a>
+						</li>
 
-                <li>
-                    <a asp-controller="Home" asp-action="Index"
-                    style="@(currentController == "Home" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
-                        Trang chủ
-                    </a>
-                </li>
+						<li>
+							<a asp-controller="Patient" asp-action="MedicalRecord">
+								Hồ sơ bệnh án
+							</a>
+						</li>
 
-                @if (isDoctor)
-                {
-                    <li>
-                        <a asp-controller="DoctorDashboard" asp-action="Index"
-                        style="@(currentController == "DoctorDashboard" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
-                            Bệnh nhân
-                        </a>
-                    </li>
-                }
+						<li>
+							<a asp-controller="Patient" asp-action="DoctorAlert">
+								Cảnh báo hằng ngày
+							</a>
+						</li>
+					}
+					else
+					{
+						<li>
+							<a asp-controller="Auth" asp-action="Login">
+								Sổ tay hằng ngày
+							</a>
+						</li>
 
-                @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Patient"))
-                {
-                    <li>
-                        <a asp-controller="Patient" asp-action="Index">
-                            Sổ tay hằng ngày
-                        </a>
-                    </li>
+						<li>
+							<a asp-controller="Auth" asp-action="Login">
+								Hồ sơ bệnh án
+							</a>
+						</li>
 
-                    <li>
-                        <a asp-controller="Patient" asp-action="MedicalRecord">
-                            Hồ sơ bệnh án
-                        </a>    
-                    </li>
+						<li>
+							<a asp-controller="Auth" asp-action="Login">
+								Cảnh báo hằng ngày
+							</a>
+						</li>
+					}
+				}
+				<li><a asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
+			</ul>
 
-                    <li>
-                        <a asp-controller="Patient" asp-action="DoctorAlert">
-                            Cảnh báo hằng ngày
-                        </a>
-                    </li>
-                }
-                else
-                {
-                    <li>
-                        <a asp-controller="Auth" asp-action="Login">
-                            Sổ tay hằng ngày
-                        </a>
-                    </li>
+			<div class="nav-actions">
 
-                    <li>
-                        <a asp-controller="Auth" asp-action="Login">
-                            Hồ sơ bệnh án
-                        </a>
-                    </li>
+				@if (User.Identity != null && User.Identity.IsAuthenticated)
+				{
+					<span class="text-nowrap fw-medium text-dark me-3">
+						Xin chào @User.FindFirst("FullName")?.Value
+					</span>
 
-                    <li>
-                        <a asp-controller="Auth" asp-action="Login">
-                            Cảnh báo hằng ngày
-                        </a>
-                    </li>
-                }
-                <li><a asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
-            </ul>
+					<form asp-controller="Auth" asp-action="Logout" method="post" class="m-0 d-flex align-items-center">
+						@Html.AntiForgeryToken()
 
-            <div class="nav-actions">
+						<button type="submit" class="btn-ghost">
+							Đăng xuất
+						</button>
+					</form>
+				}
+				else
+				{
+					<a asp-controller="Auth" asp-action="Login" class="btn-ghost">
+						Đăng nhập
+					</a>
 
-                @if (User.Identity != null && User.Identity.IsAuthenticated)
-                {
-                    <span>
-                        Xin chào @User.FindFirst("FullName")?.Value
-                    </span>
+					<a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">
+						Đăng ký
+					</a>
+				}
+			</div>
 
-                    <form asp-controller="Auth" asp-action="Logout" method="post">
-                        @Html.AntiForgeryToken()
+		</div>
+	</nav>
 
-                        <button type="submit" class="btn-ghost">
-                            Đăng xuất
-                        </button>
-                    </form>
-                }
-                else
-                {
-                    <a asp-controller="Auth" asp-action="Login" class="btn-ghost">
-                        Đăng nhập
-                    </a>
+	<div class="page-main">
+		<main role="main">
+			@RenderBody()
+		</main>
+	</div>
 
-                    <a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">
-                        Đăng ký
-                    </a>
-                }
-            </div>
+	<footer id="contact">
+		<div class="foot-inner">
+			<div class="foot-grid">
 
-        </div>
-    </nav>
+				<div class="foot-brand">
+					<a href="/" class="nav-logo">
+						<div class="nav-logo-icon"><i class="fas fa-heartbeat"></i></div>
+						<div>
+							<span class="nav-logo-name">SmartHealth</span>
+							<span class="nav-logo-tag">Monitoring System</span>
+						</div>
+					</a>
+					<p>Hệ thống quản lý hồ sơ bệnh án và theo dõi sức khỏe thông minh. Phát hiện sớm nguy cơ bệnh tật nhờ AI tiên tiến.</p>
+					<div class="foot-socials">
+						<a href="#" class="soc-btn"><i class="fab fa-facebook-f"></i></a>
+						<a href="#" class="soc-btn"><i class="fab fa-twitter"></i></a>
+						<a href="#" class="soc-btn"><i class="fab fa-linkedin-in"></i></a>
+						<a href="#" class="soc-btn"><i class="fab fa-youtube"></i></a>
+					</div>
+				</div>
 
-    <div class="page-main">
-        <main role="main">
-            @RenderBody()
-        </main>
-    </div>
+				<div class="foot-col">
+					<h5>Dịch vụ</h5>
+					<ul>
+						<li><a href="#">Hồ sơ bệnh án</a></li>
+						<li><a href="#">Đặt lịch khám</a></li>
+						<li><a href="#">Theo dõi sức khỏe</a></li>
+						<li><a href="#">Cảnh báo bệnh sớm</a></li>
+						<li><a href="#">Phân tích AI</a></li>
+						<li><a href="#">Kê đơn thuốc</a></li>
+					</ul>
+				</div>
 
-    <footer id="contact">
-        <div class="foot-inner">
-            <div class="foot-grid">
+				<div class="foot-col">
+					<h5>Hỗ trợ</h5>
+					<ul>
+						<li><a href="#">Trung tâm trợ giúp</a></li>
+						<li><a href="#">Hướng dẫn sử dụng</a></li>
+						<li><a href="#">Chính sách bảo mật</a></li>
+						<li><a href="#">Điều khoản dịch vụ</a></li>
+						<li><a href="#">Báo cáo sự cố</a></li>
+					</ul>
+				</div>
 
-                <div class="foot-brand">
-                    <a href="/" class="nav-logo">
-                        <div class="nav-logo-icon"><i class="fas fa-heartbeat"></i></div>
-                        <div>
-                            <span class="nav-logo-name">SmartHealth</span>
-                            <span class="nav-logo-tag">Monitoring System</span>
-                        </div>
-                    </a>
-                    <p>Hệ thống quản lý hồ sơ bệnh án và theo dõi sức khỏe thông minh. Phát hiện sớm nguy cơ bệnh tật nhờ AI tiên tiến.</p>
-                    <div class="foot-socials">
-                        <a href="#" class="soc-btn"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="soc-btn"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="soc-btn"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="soc-btn"><i class="fab fa-youtube"></i></a>
-                    </div>
-                </div>
+				<div class="foot-col">
+					<h5>Liên hệ</h5>
+					<div class="foot-contact-item">
+						<div class="ic"><i class="fas fa-map-marker-alt"></i></div>
+						<span>123 Nguyễn Văn Linh,<br>TP. Hồ Chí Minh</span>
+					</div>
+					<div class="foot-contact-item">
+						<div class="ic"><i class="fas fa-phone-alt"></i></div>
+						<span>1900 1234 — Hotline 24/7</span>
+					</div>
+					<div class="foot-contact-item">
+						<div class="ic"><i class="fas fa-envelope"></i></div>
+						<span>contact@smarthealth.vn</span>
+					</div>
+					<div class="foot-status">
+						<div class="pdot"></div> Hệ thống hoạt động ổn định
+					</div>
+				</div>
 
-                <div class="foot-col">
-                    <h5>Dịch vụ</h5>
-                    <ul>
-                        <li><a href="#">Hồ sơ bệnh án</a></li>
-                        <li><a href="#">Đặt lịch khám</a></li>
-                        <li><a href="#">Theo dõi sức khỏe</a></li>
-                        <li><a href="#">Cảnh báo bệnh sớm</a></li>
-                        <li><a href="#">Phân tích AI</a></li>
-                        <li><a href="#">Kê đơn thuốc</a></li>
-                    </ul>
-                </div>
+			</div>
 
-                <div class="foot-col">
-                    <h5>Hỗ trợ</h5>
-                    <ul>
-                        <li><a href="#">Trung tâm trợ giúp</a></li>
-                        <li><a href="#">Hướng dẫn sử dụng</a></li>
-                        <li><a href="#">Chính sách bảo mật</a></li>
-                        <li><a href="#">Điều khoản dịch vụ</a></li>
-                        <li><a href="#">Báo cáo sự cố</a></li>
-                    </ul>
-                </div>
+			<div class="foot-bottom">
+				<p>© 2026 SmartHealth Monitoring System. Bảo lưu mọi quyền.</p>
+				<div class="foot-bottom-links">
+					<a href="#">Bảo mật</a>
+					<a href="#">Điều khoản</a>
+					<a href="#">Cookies</a>
+				</div>
+			</div>
+		</div>
+	</footer>
 
-                <div class="foot-col">
-                    <h5>Liên hệ</h5>
-                    <div class="foot-contact-item">
-                        <div class="ic"><i class="fas fa-map-marker-alt"></i></div>
-                        <span>123 Nguyễn Văn Linh,<br>TP. Hồ Chí Minh</span>
-                    </div>
-                    <div class="foot-contact-item">
-                        <div class="ic"><i class="fas fa-phone-alt"></i></div>
-                        <span>1900 1234 — Hotline 24/7</span>
-                    </div>
-                    <div class="foot-contact-item">
-                        <div class="ic"><i class="fas fa-envelope"></i></div>
-                        <span>contact@smarthealth.vn</span>
-                    </div>
-                    <div class="foot-status">
-                        <div class="pdot"></div> Hệ thống hoạt động ổn định
-                    </div>
-                </div>
+	<script src="~/lib/jquery/dist/jquery.min.js"></script>
+	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="~/js/site.js" asp-append-version="true"></script>
+	<script>
+		const nav = document.getElementById('mainNav');
+		window.addEventListener('scroll', () => {
+			nav.classList.toggle('elevated', window.scrollY > 10);
+		});
 
-            </div>
+		// Đóng dropdown khi click ra ngoài
+		document.addEventListener('click', function (e) {
+			const menu = document.getElementById('userDropdown');
+			const toggle = document.getElementById('userMenuToggle');
+			if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
+				menu.style.display = 'none';
+			}
+		});
 
-            <div class="foot-bottom">
-                <p>© 2026 SmartHealth Monitoring System. Bảo lưu mọi quyền.</p>
-                <div class="foot-bottom-links">
-                    <a href="#">Bảo mật</a>
-                    <a href="#">Điều khoản</a>
-                    <a href="#">Cookies</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-        const nav = document.getElementById('mainNav');
-        window.addEventListener('scroll', () => {
-            nav.classList.toggle('elevated', window.scrollY > 10);
-        });
-
-        // Đóng dropdown khi click ra ngoài
-        document.addEventListener('click', function (e) {
-            const menu = document.getElementById('userDropdown');
-            const toggle = document.getElementById('userMenuToggle');
-            if (menu && toggle && !toggle.contains(e.target) && !menu.contains(e.target)) {
-                menu.style.display = 'none';
-            }
-        });
-
-        // Toggle dropdown show/hide
-        const toggle = document.getElementById('userMenuToggle');
-        if (toggle) {
-            toggle.addEventListener('click', function (e) {
-                e.stopPropagation();
-                const menu = document.getElementById('userDropdown');
-                menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
-            });
-        }
-    </script>
-    @await RenderSectionAsync("Scripts", required: false)
+		// Toggle dropdown show/hide
+		const toggle = document.getElementById('userMenuToggle');
+		if (toggle) {
+			toggle.addEventListener('click', function (e) {
+				e.stopPropagation();
+				const menu = document.getElementById('userDropdown');
+				menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+			});
+		}
+	</script>
+	@await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

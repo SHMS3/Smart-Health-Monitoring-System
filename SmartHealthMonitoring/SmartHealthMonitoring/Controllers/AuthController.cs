@@ -324,7 +324,15 @@ namespace SmartHealthMonitoring.Controllers
         // ==========================================
         private IActionResult RedirectByRole(byte? role = null)
         {
-            // TẠM THỜI: Cho cả Doctor và Patient đều nhảy về trang Home để không bị lỗi 404
+            if (role == 1 || (role == null && User.IsInRole("Doctor")))
+            {
+                return RedirectToAction("Index", "DoctorDashboard");
+            }
+            else if (role == 0 || (role == null && User.IsInRole("Patient")))
+            {
+                return RedirectToAction("Index", "Patient");
+            }
+
             return RedirectToAction("Index", "Home");
         }
     } 
