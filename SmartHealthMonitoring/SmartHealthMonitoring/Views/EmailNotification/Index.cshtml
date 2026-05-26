@@ -1,0 +1,119 @@
+@model SmartHealthMonitoring.ViewModels.EmailHistoryIndexViewModel
+@{
+    ViewData["Title"] = "Lịch sử Gửi Email";
+}
+
+<div class="container mt-4" style="max-width: 1200px;">
+    <h2 class="mb-4 text-primary" style="font-weight: 700;">
+        <i class="bi bi-clock-history"></i> Lịch Sử Gửi Email
+    </h2>
+
+    <div class="card shadow-sm border-0 mb-4 rounded-3">
+        <div class="card-body bg-light rounded-3">
+            <form method="get" asp-action="Index" class="d-flex align-items-center gap-3 m-0">
+                <label for="status" class="fw-bold mb-0 text-secondary">Lọc trạng thái:</label>
+                <select name="status" asp-for="FilterStatus" asp-items="Model.StatusOptions" class="form-select w-auto shadow-sm">
+                </select>
+                <button type="submit" class="btn btn-primary px-4 shadow-sm" style="border-radius: 5px;">
+                    <i class="bi bi-funnel"></i> Áp dụng bộ lọc
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 overflow-hidden rounded-3">
+        <div class="card-body p-0 table-responsive">
+            <table class="table table-hover mb-0" style="vertical-align: middle;">
+                <thead class="table-primary opacity-75" style="border-bottom: 2px solid #b3d4fc;">
+                    <tr>
+                        <th class="ps-4 py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Thời gian tạo</th>
+                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Bệnh nhân</th>
+                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Email nhận</th>
+                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Tiêu đề</th>
+                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Trạng thái</th>
+                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Thời gian gửi</th>
+                        <th class="pe-4 py-3 text-secondary text-uppercase text-center" style="font-size: 0.85rem;">Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Emails.Any())
+                    {
+                        foreach (var item in Model.Emails)
+                        {
+                            <tr>
+                                <td class="ps-4 text-muted small">@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="fw-bold text-dark">@item.PatientName</td>
+                                <td>@item.ToEmail</td>
+                                <td>
+                                    <span class="text-truncate d-inline-block" style="max-width: 250px;" title="@item.Subject">@item.Subject</span>
+                                </td>
+                                <td>
+                                    @if (item.Status == 1)
+                                    {
+                                        <span class="badge bg-success px-3 py-2 rounded-pill shadow-sm">@item.StatusDisplay</span>
+                                    }
+                                    else if (item.Status == 2)
+                                    {
+                                        <span class="badge bg-danger px-3 py-2 rounded-pill shadow-sm">@item.StatusDisplay</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">@item.StatusDisplay</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if(item.SentAt.HasValue)
+                                    {
+                                        <span class="text-muted small">@item.SentAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="pe-4 text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#emailModal-@item.Id">
+                                        <i class="bi bi-eye"></i> Xem thư
+                                    </button>
+
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="emailModal-@item.Id" tabindex="-1" aria-hidden="true" style="text-align: left;">
+                                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                                            <div class="modal-content border-0 shadow">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title"><i class="bi bi-envelope-open me-2"></i> Nội dung thư: @item.Subject</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                                </div>
+                                                <div class="modal-body p-4 bg-light">
+                                                    <div class="bg-white border rounded shadow-sm p-0 mb-3" style="overflow-x: auto; overflow-y: hidden;">
+                                                        <iframe srcdoc="@item.Body" style="width: 100%; height: 500px; border: none; display: block;"></iframe>
+                                                    </div>
+                                                    @if(item.Status == 2 && !string.IsNullOrEmpty(item.ErrorMessage))
+                                                    {
+                                                        <div class="alert alert-danger mt-3 mb-0">
+                                                            <strong><i class="bi bi-exclamation-triangle-fill"></i> Lỗi hệ thống:</strong> @item.ErrorMessage
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- End Modal -->
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <h1 class="display-4 text-secondary mb-3"><i class="bi bi-inbox-fill"></i></h1>
+                                <p class="fs-5 mb-0">Chưa có email nào trong hệ thống hoặc phù hợp với lựa chọn lọc.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
