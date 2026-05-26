@@ -8,21 +8,26 @@ namespace SmartHealthMonitoring.Services
     public class DailyVitalLogService
     {
         private readonly DailyVitalLogRepository _repository;
+        private readonly PatientRepository _patientRepository;
 
-        public DailyVitalLogService(DailyVitalLogRepository repository)
+        public DailyVitalLogService(DailyVitalLogRepository repository, PatientRepository patientRepository)
         {
             _repository = repository;
+            _patientRepository = patientRepository;
         }
 
-        public async Task<PagedResult<DailyVitalLogViewModel>> GetPatientVitalsHistoryAsync( int patientId, DateTime? fromDate, DateTime? toDate, int pageIndex = 1, int pageSize = 10)
+        public async Task<PagedResult<DailyVitalLogViewModel>> GetPatientVitalsHistoryAsync( int userId, DateTime? fromDate, DateTime? toDate, int pageIndex = 1, int pageSize = 10)
         {
-            // 1. Bắt lỗi: "Từ ngày" lớn hơn "Đến ngày"
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+
+            if (patient == null)
+                throw new Exception("Không tìm thấy hồ sơ bệnh nhân");
+
             if (fromDate.HasValue && toDate.HasValue && fromDate.Value.Date > toDate.Value.Date)
             {
                 throw new ArgumentException("Khoảng thời gian không hợp lệ: 'Từ ngày' không được lớn hơn 'Đến ngày'.");
             }
 
-            // 2. Bắt lỗi: "Từ ngày" hoặc "Đến ngày" nằm ở tương lai (Vô lý đối với lịch sử đo đạc)
             var today = DateTime.Now.Date;
             if ((fromDate.HasValue && fromDate.Value.Date > today) ||
                 (toDate.HasValue && toDate.Value.Date > today))
@@ -30,7 +35,7 @@ namespace SmartHealthMonitoring.Services
                 throw new ArgumentException("Không thể tìm kiếm dữ liệu ở tương lai.");
             }
 
-            var pagedEntity = await _repository.GetAllDailyLogByPatientIdAsync(patientId, fromDate, toDate, pageIndex, pageSize);
+            var pagedEntity = await _repository.GetAllDailyLogByPatientIdAsync(patient.Id, fromDate, toDate, pageIndex, pageSize);
 
             var viewModels = pagedEntity.Items.Select(entity => new DailyVitalLogViewModel
             {
@@ -52,13 +57,18 @@ namespace SmartHealthMonitoring.Services
             };
         }
 
-        public async Task CreateLogAsync(int patientId, DailyVitalLogViewModel model)
+        public async Task CreateLogAsync(int userId, DailyVitalLogViewModel model)
         {
-            await _repository.LockPreviousLogsAsync(patientId);
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+
+            if (patient == null)
+                throw new Exception("Không tìm thấy hồ sơ bệnh nhân");
+
+            await _repository.LockPreviousLogsAsync(patient.Id);
 
             var entity = new DailyVitalLog
             {
-                PatientId = patientId,
+                PatientId = patient.Id,
                 LoggedAt = DateTime.Now,
 
                 SystolicBp = model.SystolicBp,

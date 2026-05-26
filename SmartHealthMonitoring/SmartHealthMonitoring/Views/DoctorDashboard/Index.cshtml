@@ -16,9 +16,14 @@
             <p class="text-muted mb-0">Theo dõi hồ sơ y tế và cảnh báo sớm tim mạch AI</p>
         </div>
 
-        <div class="bg-white rounded-pill shadow-sm px-4 py-2 border d-flex align-items-center">
-            <span class="text-muted fw-medium me-2">Tổng số:</span>
-            <span class="badge bg-primary rounded-pill fs-6 px-3">@Model.Count()</span>
+        <div class="d-flex align-items-center gap-3">
+            <a asp-controller="EmailNotification" asp-action="Index" class="btn btn-primary rounded-pill shadow-sm px-4 py-2 d-flex align-items-center fw-medium" style="background: linear-gradient(135deg, #0ea5e9, #6366f1); border: none;">
+                <i class="fas fa-envelope-open-text me-2"></i> Lịch sử Gửi Mail
+            </a>
+            <div class="bg-white rounded-pill shadow-sm px-4 py-2 border d-flex align-items-center">
+                <span class="text-muted fw-medium me-2">Tổng bệnh nhân:</span>
+                <span class="badge bg-primary rounded-pill fs-6 px-3">@Model.Count()</span>
+            </div>
         </div>
     </div>
 

@@ -387,6 +387,11 @@ public partial class SmartHealthMonitoringContext : DbContext
             new EmailNotification { Id = 10, AlertId = 10, PatientId = 10, ToEmail = "patient.mai@gmail.com", Subject = "CẢNH BÁO: Huyết áp tâm thu cao", Body = "Bác sĩ An đã tiếp nhận", IsSent = true, Status = 1, SentAt = baseDate.AddHours(10).AddMinutes(7), CreatedAt = baseDate.AddHours(10).AddMinutes(7) }
         );
 
+        // bật RowVersion để tránh 2 người sửa cùng lúc
+        modelBuilder.Entity<WarningAlert>()
+            .Property(x => x.RowVersion)
+            .IsRowVersion();
+
         OnModelCreatingPartial(modelBuilder);
     }
 

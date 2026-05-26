@@ -103,7 +103,7 @@ namespace SmartHealthMonitoring.Controllers
                 authProperties);
 
             // 5. Redirect
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl != "/")
             {
                 return Redirect(returnUrl);
             }

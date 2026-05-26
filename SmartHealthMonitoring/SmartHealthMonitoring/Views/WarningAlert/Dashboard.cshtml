@@ -1,0 +1,587 @@
+﻿@model List<SmartHealthMonitoring.Models.WarningAlert>
+
+@{
+    ViewData["Title"] = "Cảnh báo sức khỏe";
+
+    var currentStatus =
+        ViewContext.HttpContext.Request.Query["status"]
+        .ToString();
+
+    bool IsActive(string? status) =>
+        string.IsNullOrEmpty(status)
+        && string.IsNullOrEmpty(currentStatus)
+        || status == currentStatus;
+}
+
+<style>
+
+    .alert-page {
+        margin-top: 70px;
+        padding: 48px 0 80px;
+        background: #f8fafc;
+        min-height: calc(100vh - 70px);
+    }
+
+    .alert-page-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 32px;
+    }
+
+    .section-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(239, 68, 68, .08);
+        border: 1px solid rgba(239, 68, 68, .2);
+        border-radius: 50px;
+        padding: 5px 14px;
+        font-size: .75rem;
+        color: #ef4444;
+        font-weight: 600;
+        margin-bottom: 14px;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 8px;
+    }
+
+    .section-sub {
+        color: #64748b;
+        font-size: .95rem;
+        line-height: 1.7;
+        margin-bottom: 28px;
+    }
+
+    .alert-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(14,165,233,.08);
+    }
+
+    .alert-card-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 20px 24px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .filter-pill {
+        padding: 8px 18px;
+        border-radius: 50px;
+        border: 1px solid #e2e8f0;
+        text-decoration: none;
+        color: #475569;
+        font-size: .82rem;
+        font-weight: 600;
+        transition: .25s;
+    }
+
+        .filter-pill:hover {
+            background: rgba(14,165,233,.06);
+            color: #0ea5e9;
+        }
+
+        .filter-pill.active {
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            color: white;
+            border-color: transparent;
+        }
+
+        .filter-pill.filter-pending.active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .filter-pill.filter-processing.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .filter-pill.filter-resolved.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+    .alert-count {
+        font-size: .85rem;
+        color: #64748b;
+    }
+
+    .alert-table-wrap {
+        overflow-x: auto;
+    }
+
+    .alert-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .alert-table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: .72rem;
+            text-transform: uppercase;
+            padding: 14px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .alert-table tbody td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            font-size: .88rem;
+        }
+
+        .alert-table tbody tr:hover {
+            background: rgba(14,165,233,.04);
+        }
+
+    .alert-id {
+        color: #0ea5e9;
+        font-weight: 700;
+    }
+
+    .patient-name {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .priority-badge,
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: .75rem;
+        font-weight: 700;
+    }
+
+    .risk-low {
+        background: rgba(16,185,129,.12);
+        color: #059669;
+    }
+
+    .risk-medium {
+        background: rgba(245,158,11,.12);
+        color: #d97706;
+    }
+
+    .risk-high {
+        background: rgba(239,68,68,.12);
+        color: #dc2626;
+    }
+
+    .status-pending {
+        background: rgba(239,68,68,.12);
+        color: #dc2626;
+    }
+
+    .status-processing {
+        background: rgba(245,158,11,.12);
+        color: #d97706;
+    }
+
+    .status-resolved {
+        background: rgba(16,185,129,.12);
+        color: #059669;
+    }
+
+    .risk-score {
+        font-weight: 800;
+        color: #0ea5e9;
+    }
+
+    .flagged-time {
+        color: #64748b;
+        font-size: .84rem;
+    }
+
+    .cell-muted {
+        color: #94a3b8;
+        font-size: .84rem;
+        font-weight: 500;
+    }
+
+    .claimed-by {
+        color: #0f172a;
+        font-weight: 600;
+        font-size: .86rem;
+        white-space: nowrap;
+    }
+
+    .note-cell {
+        color: #475569;
+        font-size: .86rem;
+        max-width: 360px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .claim-btn {
+        border: none;
+        background: linear-gradient(135deg, #0ea5e9, #6366f1);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: .8rem;
+        font-weight: 600;
+        transition: .25s;
+        box-shadow: 0 4px 14px rgba(14,165,233,.25);
+    }
+
+        .claim-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(14,165,233,.35);
+        }
+
+    .claimed-text {
+        color: #d97706;
+        font-weight: 600;
+        font-size: .82rem;
+    }
+
+    .resolved-text {
+        color: #059669;
+        font-weight: 600;
+        font-size: .82rem;
+    }
+
+    .resolve-form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .resolve-input {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: .82rem;
+        min-width: 220px;
+        resize: vertical;
+    }
+
+        .resolve-input:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+    .resolve-btn {
+        border: none;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: .8rem;
+        font-weight: 600;
+        transition: .25s;
+    }
+
+        .resolve-btn:hover {
+            transform: translateY(-2px);
+        }
+
+</style>
+
+<section class="alert-page">
+
+    <div class="alert-page-inner">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="section-tag">
+            <i class="fas fa-bell"></i>
+            AI Early Warning
+        </div>
+
+        <h1 class="section-title">
+            Bảng cảnh báo sức khỏe
+        </h1>
+
+        <p class="section-sub">
+            Theo dõi và xử lý các cảnh báo nguy cơ từ hệ thống AI.
+        </p>
+
+        <div class="alert-card">
+
+            <div class="alert-card-toolbar">
+
+                <div class="filter-group">
+
+                    <a asp-action="Dashboard"
+                       class="filter-pill @(IsActive(null) ? "active" : "")">
+
+                        Tất cả
+
+                    </a>
+
+                    <a asp-action="Dashboard"
+                       asp-route-status="0"
+                       class="filter-pill filter-pending @(IsActive("0") ? "active" : "")">
+
+                        Chờ xử lý
+
+                    </a>
+
+                    <a asp-action="Dashboard"
+                       asp-route-status="1"
+                       class="filter-pill filter-processing @(IsActive("1") ? "active" : "")">
+
+                        Đang xử lý
+
+                    </a>
+
+                    <a asp-action="Dashboard"
+                       asp-route-status="2"
+                       class="filter-pill filter-resolved @(IsActive("2") ? "active" : "")">
+
+                        Đã xử lý
+
+                    </a>
+
+                </div>
+
+                <div class="alert-count">
+                    Tổng cộng:
+                    <strong>@Model.Count</strong>
+                    cảnh báo
+                </div>
+
+            </div>
+
+            <div class="alert-table-wrap">
+
+                <table class="alert-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Mã</th>
+                            <th>Bệnh nhân</th>
+                            <th>Mức ưu tiên</th>
+                            <th>Điểm rủi ro</th>
+                            <th>Trạng thái</th>
+                            <th>Thời gian gắn cờ</th>
+                            <th>Bác sĩ tiếp nhận</th>
+                            <th>Ghi chú xử lý</th>
+                            <th>Thao tác</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @if (Model.Any())
+                        {
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+
+                                    <td>
+                                        <span class="alert-id">
+                                            #@item.Id
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <span class="patient-name">
+                                            @item.Patient.User.FullName
+                                        </span>
+                                    </td>
+
+                                    <td>
+
+                                        @switch (item.Prediction.RiskLevel)
+                                        {
+                                            case 0:
+
+                                                <span class="priority-badge risk-low">
+                                                    Thấp
+                                                </span>
+                                                break;
+
+                                            case 1:
+
+                                                <span class="priority-badge risk-medium">
+                                                    Trung bình
+                                                </span>
+                                                break;
+
+                                            case 2:
+
+                                                <span class="priority-badge risk-high">
+                                                    Cao
+                                                </span>
+                                                break;
+                                        }
+
+                                    </td>
+
+                                    <td>
+
+                                        <span class="risk-score">
+                                            @((item.Prediction.RiskScore * 100).ToString("0.00"))%
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+
+                                        @switch (item.Status)
+                                        {
+                                            case 0:
+
+                                                <span class="status-badge status-pending">
+                                                    Chờ xử lý
+                                                </span>
+                                                break;
+
+                                            case 1:
+
+                                                <span class="status-badge status-processing">
+                                                    Đang xử lý
+                                                </span>
+                                                break;
+
+                                            case 2:
+
+                                                <span class="status-badge status-resolved">
+                                                    Đã xử lý
+                                                </span>
+                                                break;
+                                        }
+
+                                    </td>
+
+                                    <td>
+
+                                        <span class="flagged-time">
+                                            @item.FlaggedAt
+                                        </span>
+
+                                    </td>
+                                    <td>
+                                        @if (item.ClaimedByDoctor?.User?.FullName != null)
+                                        {
+                                            <span class="claimed-by">
+                                                <i class="fas fa-user-md me-1" style="color:#94a3b8;font-size:.8rem"></i>
+                                                @item.ClaimedByDoctor.User.FullName
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="cell-muted">—</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (item.Status == 2
+                                            && item.ClaimedByDoctorId == (ViewData["DoctorId"] as int?)
+                                            && !string.IsNullOrWhiteSpace(item.ResolutionNote))
+                                        {
+                                            <span class="note-cell" title="@item.ResolutionNote">
+                                                @item.ResolutionNote
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="cell-muted">—</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (item.Status == 0)
+                                        {
+                                            <form asp-action="Claim" method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <button type="submit" class="claim-btn">
+                                                    Tiếp nhận
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (item.Status == 1
+                                        && item.ClaimedByDoctorId == (ViewData["DoctorId"] as int?))
+                                        {
+                                            <form asp-action="Resolve" method="post" class="resolve-form">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                
+                                                <textarea name="resolutionNote" class="resolve-input" placeholder="Nhập ghi chú xử lý..." required></textarea>
+                                                
+                                                <div class="form-check mt-1 mb-2 text-start">
+                                                    <input class="form-check-input" type="checkbox" name="sendEmailInvitation" value="true" id="sendEmail_@item.Id" checked>
+                                                    <label class="form-check-label text-muted" style="font-size:.75rem;" for="sendEmail_@item.Id">
+                                                        Gửi email mời tái khám
+                                                    </label>
+                                                </div>
+                                                
+                                                <button type="submit" class="resolve-btn">Hoàn tất</button>
+                                            </form>
+                                        }
+                                        else if (item.Status == 1)
+                                        {
+                                            <span class="claimed-text">
+                                                Đang được bác sĩ khác xử lý
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-resolved" style="font-size:.75rem;">
+                                                <i class="fas fa-check"></i> Hoàn tất
+                                            </span>
+                                        }
+                                    </td>   
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>Không có cảnh báo nào phù hợp với bộ lọc hiện tại.</p>
+                                    </div>
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
