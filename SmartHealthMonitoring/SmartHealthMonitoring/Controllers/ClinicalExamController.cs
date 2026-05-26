@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;
 
 namespace SmartHealthMonitoring.Controllers
@@ -10,11 +12,13 @@ namespace SmartHealthMonitoring.Controllers
     {
         private readonly SmartHealthMonitoringContext _context;
         private readonly IMemoryCache _cache;
+        private readonly IEmailService _emailService;
 
-        public ClinicalExamController(SmartHealthMonitoringContext context, IMemoryCache cache)
+        public ClinicalExamController(SmartHealthMonitoringContext context, IMemoryCache cache, IEmailService emailService)
         {
             _context = context;
             _cache = cache;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -25,9 +29,11 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
+        
         public async Task<IActionResult> Create(ClinicalExamFormViewModel model)
         {
+
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại các trường.";
@@ -62,6 +68,38 @@ namespace SmartHealthMonitoring.Controllers
 
                 // DỌN DẸP CACHE SAU KHI LƯU DB THÀNH CÔNG
                 _cache.Remove($"LabResult_{model.PatientId}");
+
+                // GỬI EMAIL TỰ ĐỘNG
+                try
+                {
+                    var patient = await _context.Patients
+                        .Include(p => p.User)
+                        .FirstOrDefaultAsync(p => p.Id == model.PatientId);
+
+                    if (patient != null && patient.User != null && !string.IsNullOrEmpty(patient.User.Email))
+                    {
+                        var replacements = new Dictionary<string, string>
+                        {
+                            { "{{PatientName}}", patient.User.FullName },
+                            { "{{RecordDate}}", record.VisitDate.ToString("dd/MM/yyyy HH:mm") },
+                            { "{{Diagnosis}}", "Kết quả khám lâm sàng" }, 
+                            { "{{Severity}}", "Bình thường" },
+                            { "{{VitalSigns}}", $"Nhịp tim Max: {record.MaxHeartRate} bpm | Huyết áp tĩnh: {record.RestingBp} mm/Hg" },
+                            { "{{DoctorAdvice}}", "Các chỉ số hiện tại đã được ghi nhận. Vui lòng theo dõi hoặc liên hệ trực tiếp bác sĩ nếu có dấu hiệu mệt mỏi, khó thở bất thường." }
+                        };
+
+                        string htmlContent = _emailService.GetHtmlContentFromFile("PatientHealthReportTemplate.html", replacements);
+                        if (!string.IsNullOrEmpty(htmlContent))
+                        {
+                            await _emailService.SendEmailAsync(patient.User.Email, "Báo cáo Tình trạng Y tế - Smart Health", htmlContent);
+                        }
+                    }
+                }
+                catch (Exception emailEx)
+                {
+                    // Catch và bỏ qua để lỗi gửi mail không làm crash luồng lưu dữ liệu y tế
+                    Console.WriteLine($"Lỗi khi gửi email sau khi lưu: {emailEx.Message}");
+                }
 
                 TempData["Success"] = "Đã lưu phiếu khám lâm sàng thành công.";
                 return RedirectToAction("Index", "ClinicalRecord", new { id = model.PatientId });
