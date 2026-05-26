@@ -1,11 +1,9 @@
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Minio;
 using SmartHealthMonitoring.Context;
-using SmartHealthMonitoring.Repositories;
-using SmartHealthMonitoring.Services;
-
-//using SmartHealthMonitoring.Services;
+using SmartHealthMonitoring.DI; // Gọi namespace DI của bạn
 using System;
 
 namespace SmartHealthMonitoring
@@ -16,26 +14,34 @@ namespace SmartHealthMonitoring
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // 1. Cấu hình kết nối MinIO
+            Env.Load();
+            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION");
+
+            // 1. Đăng ký DB Context
+            builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
+                options.UseSqlServer(connectionString ?? builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // 2. Cấu hình kết nối MinIO
             builder.Services.AddMinio(configureClient => configureClient
-                .WithEndpoint("localhost:9000") 
-                .WithCredentials("admin", "admin123") 
-                .WithSSL(false) // Đang chạy localhost nên tắt SSL
+                .WithEndpoint("localhost:9000")
+                .WithCredentials("admin", "admin123")
+                .WithSSL(false)
                 .Build());
 
-            // 2. Đăng ký MinioService
-            //builder.Services.AddScoped<IMinioService, MinioService>();
-
-            // Add services to the container.
-            //builder.Services.AddControllersWithViews();
+            // 3. MVC & Razor
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
 
-            // Configure Email Settings and Service
-            builder.Services.Configure<SmartHealthMonitoring.Models.Configurations.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-            builder.Services.AddScoped<SmartHealthMonitoring.Services.IEmailService, SmartHealthMonitoring.Services.EmailService>();
-            builder.Services.AddScoped<DailyVitalLogService>();
+            // 4. Configure Email Settings
+            builder.Services.Configure<SmartHealthMonitoring.Models.Configurations.EmailSettings>(
+                builder.Configuration.GetSection("EmailSettings"));
 
-            // Cookie Authentication + Google OAuth
+            // ====================================================================
+            // 5. GỌI HÀM QUÉT TỰ ĐỘNG TỪ THƯ MỤC DI
+            // ====================================================================
+            builder.Services.AddApplicationServices();
+            // ====================================================================
+
+            // 6. Cookie Authentication
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
@@ -52,29 +58,18 @@ namespace SmartHealthMonitoring
                 //    options.CallbackPath = "/Auth/GoogleCallback";
                 //});
 
-            //Đki db
-            builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            //Repo
-            builder.Services.AddScoped<UserRepository>();
-            builder.Services.AddScoped<DailyVitalLogRepository>();
-
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var context = services.GetRequiredService<SmartHealthMonitoringContext>();
-
-               // SeedData.Initialize(context);
+                // SeedData.Initialize(context);
             }
 
-            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 

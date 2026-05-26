@@ -1,0 +1,185 @@
+﻿@model SmartHealthMonitoring.ViewModels.ClinicalExamFormViewModel
+@{
+    ViewData["Title"] = "Nhập Phiếu Khám Lâm Sàng";
+}
+
+<div class="container pt-5 mt-4 pb-5">
+    <div class="card border-0 shadow rounded-4 overflow-hidden bg-white">
+
+        <div class="card-header bg-light border-bottom-0 p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h4 class="fw-bold text-primary mb-1">Phiếu Khám Cận Lâm Sàng</h4>
+                <p class="text-muted small mb-0">Hệ thống LIS Integration đang chờ dữ liệu từ phòng máy.</p>
+            </div>
+            <button type="button" id="btnFetchWebhook" class="btn btn-info text-white btn-lg rounded-pill shadow-sm fw-bold px-4">
+                <i class="bi bi-arrow-repeat me-2"></i> 🔄 Kéo dữ liệu từ Máy Xét Nghiệm
+            </button>
+        </div>
+
+        <div class="card-body p-5">
+            <form id="clinicalForm" asp-action="Create" method="post">
+                <input type="hidden" asp-for="PatientId" id="patientIdHidden" />
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <label asp-for="ChestPainType" class="form-label fw-medium text-secondary">Loại đau ngực</label>
+                        <select asp-for="ChestPainType" class="form-select bg-light auto-field" disabled>
+                            <option value="">-- Trống --</option>
+                            <option value="0">Typical Angina (TA)</option>
+                            <option value="1">Atypical Angina (ATA)</option>
+                            <option value="2">Non-Anginal Pain (NAP)</option>
+                            <option value="3">Asymptomatic (ASY)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ExerciseAngina" class="form-label fw-medium text-secondary">Đau ngực gắng sức</label>
+                        <select asp-for="ExerciseAngina" class="form-select bg-light auto-field" disabled>
+                            <option value="">-- Trống --</option>
+                            <option value="0">Không</option>
+                            <option value="1">Có</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="FastingBS" class="form-label fw-medium text-secondary">Đường huyết đói > 120</label>
+                        <select asp-for="FastingBS" class="form-select bg-light auto-field" disabled>
+                            <option value="">-- Trống --</option>
+                            <option value="0">Bình thường</option>
+                            <option value="1">Cao (> 120)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="RestECG" class="form-label fw-medium text-secondary">Điện tâm đồ (ECG)</label>
+                        <select asp-for="RestECG" class="form-select bg-light auto-field" disabled>
+                            <option value="">-- Trống --</option>
+                            <option value="0">Normal</option>
+                            <option value="1">ST-T Abnormality</option>
+                            <option value="2">LVH</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="STSlope" class="form-label fw-medium text-secondary">Độ dốc ST</label>
+                        <select asp-for="STSlope" class="form-select bg-light auto-field" disabled>
+                            <option value="">-- Trống --</option>
+                            <option value="0">Upsloping</option>
+                            <option value="1">Flat</option>
+                            <option value="2">Downsloping</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="MajorVessels" class="form-label fw-medium text-secondary">Mạch máu chính</label>
+                        <select asp-for="MajorVessels" class="form-select bg-light auto-field" disabled>
+                            <option value="">-- Trống --</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ThalResult" class="form-label fw-medium text-secondary">Khuyết tật Thal</label>
+                        <select asp-for="ThalResult" class="form-select bg-light auto-field" disabled>
+                            <option value="">-- Trống --</option>
+                            <option value="0">Normal</option>
+                            <option value="1">Fixed Defect</option>
+                            <option value="2">Reversable Defect</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="RestingBP" class="form-label fw-medium text-secondary">Huyết áp nghỉ (mmHg)</label>
+                        <input asp-for="RestingBP" type="number" class="form-control bg-light auto-field" placeholder="..." readonly />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Cholesterol" class="form-label fw-medium text-secondary">Cholesterol (mg/dl)</label>
+                        <input asp-for="Cholesterol" type="number" class="form-control bg-light auto-field" placeholder="..." readonly />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="MaxHeartRate" class="form-label fw-medium text-secondary">Nhịp tim tối đa</label>
+                        <input asp-for="MaxHeartRate" type="number" class="form-control bg-light auto-field" placeholder="..." readonly />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="OldPeak" class="form-label fw-medium text-secondary">Oldpeak</label>
+                        <input asp-for="OldPeak" type="number" step="0.1" class="form-control bg-light auto-field" placeholder="..." readonly />
+                    </div>
+                </div>
+
+                <div class="border-top pt-4 mt-2 d-flex justify-content-end align-items-center">
+                    <button type="submit" id="btnSubmitForm" class="btn btn-primary btn-lg rounded-pill px-5" disabled>
+                        Xác nhận & Lưu Hồ Sơ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btnFetch = document.getElementById('btnFetchWebhook');
+            const btnSubmit = document.getElementById('btnSubmitForm');
+            const patientId = document.getElementById('patientIdHidden').value;
+            const form = document.getElementById('clinicalForm');
+
+            btnFetch.addEventListener('click', function () {
+                const originalHtml = btnFetch.innerHTML;
+                btnFetch.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang kiểm tra dữ liệu...';
+                btnFetch.disabled = true;
+
+                fetch(`/api/LabWebhook/CheckResult/${patientId}`)
+                    .then(response => {
+                        if (response.status === 404) {
+                            throw new Error('404_NOT_FOUND');
+                        }
+                        if (!response.ok) {
+                            throw new Error('SERVER_ERROR');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Autofill Form
+                        document.getElementById('ChestPainType').value = data.chestPainType;
+                        document.getElementById('RestingBP').value = data.restingBP;
+                        document.getElementById('Cholesterol').value = data.cholesterol;
+                        document.getElementById('FastingBS').value = data.fastingBS;
+                        document.getElementById('RestECG').value = data.restECG;
+                        document.getElementById('MaxHeartRate').value = data.maxHeartRate;
+                        document.getElementById('ExerciseAngina').value = data.exerciseAngina;
+                        document.getElementById('OldPeak').value = data.oldPeak;
+                        document.getElementById('STSlope').value = data.stSlope;
+                        document.getElementById('MajorVessels').value = data.majorVessels;
+                        document.getElementById('ThalResult').value = data.thalResult;
+
+                        // Unlock các ô nhập liệu
+                        document.querySelectorAll('.auto-field').forEach(el => {
+                            el.removeAttribute('readonly');
+                            el.removeAttribute('disabled');
+                            el.classList.remove('bg-light');
+                        });
+
+                        btnSubmit.removeAttribute('disabled');
+
+                        // Đổi state nút
+                        btnFetch.innerHTML = '<i class="bi bi-check-circle me-2"></i> Đã đồng bộ thành công';
+                        btnFetch.classList.replace('btn-info', 'btn-success');
+                    })
+                    .catch(error => {
+                        if (error.message === '404_NOT_FOUND') {
+                            alert("Chưa có kết quả từ máy xét nghiệm. Vui lòng đợi thiết bị đẩy dữ liệu.");
+                        } else {
+                            alert("Có lỗi xảy ra khi kết nối đến hệ thống nội bộ.");
+                        }
+                        btnFetch.innerHTML = originalHtml;
+                        btnFetch.disabled = false;
+                    });
+            });
+
+            // Mở khóa các thẻ disabled trước khi submit POST
+            form.addEventListener('submit', function() {
+                document.querySelectorAll('.auto-field').forEach(el => {
+                    el.removeAttribute('disabled');
+                });
+            });
+        });
+    </script>
+}
