@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization; // THÊM THƯ VIỆN NÀY
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.Services;
@@ -10,11 +12,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "1")] // 1. THÊM DÒNG NÀY: Khóa cửa, chỉ cho Bác sĩ vào
+    [Authorize(Roles = "1")] // Chỉ cho phép Bác sĩ (Role = 1) truy cập
     public class DoctorDashboardController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
@@ -25,16 +26,25 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10) // Thêm tham số phân trang
         {
             try
             {
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-                var patients = await _context.Patients
+                // 1. Dựng Query cơ sở (Chưa thực thi xuống Database)
+                var query = _context.Patients
                     .Include(p => p.User)
-                    // 2. THÊM ĐIỀU KIỆN p.User.Role == 0 VÀO ĐÂY: Chỉ lấy Bệnh nhân
-                    .Where(p => !p.IsDeleted && !p.User.IsDeleted && p.User.Role == 0)
+                    .Where(p => !p.IsDeleted && !p.User.IsDeleted && p.User.Role == 0);
+
+                // 2. Đếm tổng số bệnh nhân thỏa mãn điều kiện (Hit DB lần 1)
+                int totalRecords = await query.CountAsync();
+
+                // 3. Thực hiện phân trang và map dữ liệu sang ViewModel (Hit DB lần 2)
+                var items = await query
+                    .OrderByDescending(p => p.User.CreatedAt) // Sắp xếp bệnh nhân mới lên đầu
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
                     .Select(p => new PatientListViewModel
                     {
                         PatientId = p.Id,
@@ -45,13 +55,23 @@ namespace SmartHealthMonitoring.Controllers
                     })
                     .ToListAsync();
 
-                return View(patients);
+                // 4. Đóng gói kết quả vào class PagedResult của bạn
+                var result = new PagedResult<PatientListViewModel>
+                {
+                    Items = items,
+                    TotalCount = totalRecords,
+                    Page = page,
+                    PageSize = pageSize
+                };
+
+                return View(result);
             }
             catch (Exception ex)
             {
-                // TODO: Log exception (Serilog/NLog)
                 TempData["Error"] = "Lỗi khi tải danh sách bệnh nhân: " + ex.Message;
-                return View(new List<PatientListViewModel>());
+
+                // Trường hợp lỗi, trả về một PagedResult trống để giao diện không bị crash
+                return View(new PagedResult<PatientListViewModel>());
             }
         }
     }
