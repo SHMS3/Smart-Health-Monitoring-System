@@ -1,13 +1,17 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels;
-using Microsoft.AspNetCore.Authorization;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "1")]
+    [Authorize(Roles = "0,1")] // Cho phép cả Bệnh nhân và Bác sĩ đi qua cổng Controller
     public class ClinicalRecordController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
@@ -38,12 +42,12 @@ namespace SmartHealthMonitoring.Controllers
 
         [HttpGet]
         [Authorize(Roles = "0,1")]
-        public async Task<IActionResult> Index(int id)
+        public async Task<IActionResult> Index(int id, int page = 1, int pageSize = 10)
         {
             try
             {
                 // Nếu là Patient -> chỉ được xem hồ sơ của chính mình
-                if (User.IsInRole("Patient"))
+                if (User.IsInRole("0"))
                 {
                     var email = User.Identity?.Name;
 
@@ -69,21 +73,29 @@ namespace SmartHealthMonitoring.Controllers
                 {
                     TempData["Error"] = "Không tìm thấy bệnh nhân.";
 
-                    // Doctor quay về dashboard
-                    if (User.IsInRole("Doctor"))
+                    if (User.IsInRole("1"))
                     {
                         return RedirectToAction("Index", "DoctorDashboard");
                     }
 
-                    // Patient quay về trang chủ
                     return RedirectToAction("Index", "Home");
                 }
 
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                var age = today.Year - patient.DateOfBirth.Year - (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
 
-                var records = await _context.ClinicalRecords
+                // 1. Dựng Query danh sách hồ sơ
+                var query = _context.ClinicalRecords
                     .Where(r => r.PatientId == id && !r.IsDeleted)
-                    .OrderByDescending(r => r.VisitDate)
+                    .OrderByDescending(r => r.VisitDate);
+
+                // 2. Đếm tổng số bản ghi
+                int totalRecords = await query.CountAsync();
+
+                // 3. Phân trang bằng Skip & Take
+                var items = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
                     .Select(r => new ClinicalRecordSummaryViewModel
                     {
                         Id = r.Id,
@@ -103,14 +115,21 @@ namespace SmartHealthMonitoring.Controllers
                     })
                     .ToListAsync();
 
+                // 4. Gói dữ liệu vào ViewModel
                 var viewModel = new PatientRecordIndexViewModel
                 {
                     PatientId = patient.Id,
                     PatientName = patient.User.FullName,
-                    Age = today.Year - patient.DateOfBirth.Year -
-                          (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0),
+                    Age = age,
                     SexDisplay = patient.Sex == 1 ? "Nam" : "Nữ",
-                    Records = records
+
+                    Records = new PagedResult<ClinicalRecordSummaryViewModel>
+                    {
+                        Items = items,
+                        TotalCount = totalRecords,
+                        Page = page,
+                        PageSize = pageSize
+                    }
                 };
 
                 return View(viewModel);
@@ -119,7 +138,7 @@ namespace SmartHealthMonitoring.Controllers
             {
                 TempData["Error"] = "Lỗi khi tải hồ sơ y tế.";
 
-                if (User.IsInRole("Doctor"))
+                if (User.IsInRole("1"))
                 {
                     return RedirectToAction("Index", "DoctorDashboard");
                 }
@@ -129,13 +148,12 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = "1")] // Chỉ Bác sĩ mới được quyền Hủy hồ sơ
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id) // Action này đóng vai trò là Void/Hủy
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                // Lấy record cần hủy, không quan tâm nó đã bị xóa hay chưa để kiểm tra null an toàn
                 var record = await _context.ClinicalRecords.FirstOrDefaultAsync(r => r.Id == id);
 
                 if (record == null)
@@ -152,9 +170,6 @@ namespace SmartHealthMonitoring.Controllers
 
                 // Chuyển trạng thái sang Soft Delete (Void)
                 record.IsDeleted = true;
-
-                // (Optional) Nếu database của bạn có thêm cột VoidedAt hoặc VoidedBy, 
-                // đây là nơi lý tưởng để gán giá trị: record.VoidedAt = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
 

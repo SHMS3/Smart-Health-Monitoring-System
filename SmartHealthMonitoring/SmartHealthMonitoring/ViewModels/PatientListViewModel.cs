@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using SmartHealthMonitoring.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels
 {
@@ -19,7 +20,7 @@ namespace SmartHealthMonitoring.ViewModels
         public string PatientName { get; set; } = null!;
         public int Age { get; set; }
         public string SexDisplay { get; set; } = null!;
-        public List<ClinicalRecordSummaryViewModel> Records { get; set; } = new();
+        public PagedResult<ClinicalRecordSummaryViewModel> Records { get; set; } = new();
     }
 
     public class ClinicalRecordSummaryViewModel

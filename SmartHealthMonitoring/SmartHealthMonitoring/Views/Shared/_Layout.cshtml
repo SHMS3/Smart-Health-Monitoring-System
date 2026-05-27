@@ -424,7 +424,7 @@
 			<ul class="nav-links">
 				@{
 					var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-					bool isDoctor = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Doctor");
+					bool isDoctor = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("1");
 				}
 
 				<li>
@@ -456,87 +456,68 @@
 				}
 				else
 				{
-					@if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Patient"))
+					@if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("0"))
 					{
 						<li>
-							<a asp-controller="Patient" asp-action="Index">
-								Sổ tay hằng ngày
-							</a>
+							<a asp-controller="Patient" asp-action="Index">Sổ tay hằng ngày</a>
 						</li>
-
 						<li>
-							<a asp-controller="ClinicalRecord" asp-action="MyRecords">
-								Hồ sơ bệnh án
-							</a>
+							<a asp-controller="ClinicalRecord" asp-action="MyRecords">Hồ sơ bệnh án</a>
 						</li>
-
 						<li>
-							<a asp-controller="Patient" asp-action="DoctorAlert">
-								Cảnh báo hằng ngày
-							</a>
+							<a asp-controller="Patient" asp-action="DoctorAlert">Cảnh báo hằng ngày</a>
 						</li>
 					}
 					else
 					{
 						<li>
-							<a asp-controller="Auth" asp-action="Login">
-								Sổ tay hằng ngày
-							</a>
+							<a asp-controller="Auth" asp-action="Login">Sổ tay hằng ngày</a>
 						</li>
-
 						<li>
-							<a asp-controller="Auth" asp-action="Login">
-								Hồ sơ bệnh án
-							</a>
+							<a asp-controller="Auth" asp-action="Login">Hồ sơ bệnh án</a>
 						</li>
-
 						<li>
-							<a asp-controller="Auth" asp-action="Login">
-								Cảnh báo hằng ngày
-							</a>
+							<a asp-controller="Auth" asp-action="Login">Cảnh báo hằng ngày</a>
 						</li>
 					}
 				}
 				<li><a asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
 			</ul>
 
-			@if (User.Identity != null && User.Identity.IsAuthenticated)
-			{
-				var fullName = User.FindFirst("FullName")?.Value ?? "";
-				var lastName = fullName.Split(' ').LastOrDefault() ?? "";
+			<div class="nav-actions">
+				@if (User.Identity != null && User.Identity.IsAuthenticated)
+				{
+					var fullName = User.FindFirst("FullName")?.Value ?? "";
+					var lastName = fullName.Split(' ').LastOrDefault() ?? "";
 
-				<a asp-controller="Home" asp-action="Profile" class="d-flex align-items-center gap-2 text-decoration-none">
+					<a asp-controller="Home" asp-action="Profile" class="d-flex align-items-center gap-2 text-decoration-none">
+						<div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex justify-content-center align-items-center"
+							 style="width: 36px; height: 36px;">
+							<i class="fas fa-user"></i>
+						</div>
+						<span class="text-nowrap fw-semibold text-dark">
+							@lastName
+						</span>
+					</a>
 
-					<div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex justify-content-center align-items-center"
-						 style="width: 36px; height: 36px;">
-						<i class="fas fa-user"></i>
-					</div>
-
-					<span class="text-nowrap fw-semibold text-dark">
-						@lastName
-					</span>
-				</a>
-				<div>
 					<form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
 						@Html.AntiForgeryToken()
-
 						<button type="submit" class="btn-ghost">
 							Đăng xuất
 						</button>
 					</form>
+				}
+				else
+				{
+					<a asp-controller="Auth" asp-action="Login" class="btn-ghost">
+						Đăng nhập
+					</a>
+					<a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">
+						Đăng ký
+					</a>
+				}
+			</div>
 
-				</div>
-			}
-			else
-			{
-				<a asp-controller="Auth" asp-action="Login" class="btn-ghost">
-					Đăng nhập
-				</a>
-
-				<a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">
-					Đăng ký
-				</a>
-			}
 		</div>
 	</nav>
 
