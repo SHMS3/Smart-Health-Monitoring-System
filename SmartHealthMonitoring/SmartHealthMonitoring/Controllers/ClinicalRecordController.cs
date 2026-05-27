@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "Doctor")]
+    [Authorize(Roles = "1")]
     public class ClinicalRecordController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
