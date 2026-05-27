@@ -108,7 +108,7 @@
 		<div>
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb mb-1">
-					@if (User.IsInRole("Doctor"))
+					@if (User.IsInRole("1"))
 					{
 						<li class="breadcrumb-item">
 							<a asp-controller="DoctorDashboard" asp-action="Index" class="text-decoration-none text-muted">Danh sách Bệnh nhân</a>
@@ -120,7 +120,7 @@
 			<h2 class="h3 mb-0 fw-bold text-dark">Hồ sơ Bệnh án</h2>
 		</div>
 		<div>
-			@if (User.IsInRole("Doctor"))
+			@if (User.IsInRole("1"))
 			{
 				<a asp-controller="ClinicalExam"
 				   asp-action="Create"
@@ -234,7 +234,7 @@
 							<button type="button" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3 shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#detailModal-@record.Id">
 								<i class="fas fa-eye me-1"></i> Chi tiết
 							</button>
-							@if (User.IsInRole("Doctor"))
+							@if (User.IsInRole("1"))
 							{
 								<form asp-action="Delete" asp-route-id="@record.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn đánh dấu hồ sơ này là HỦY BỎ?');">
 									<button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0;" title="Hủy hồ sơ">

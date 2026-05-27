@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "Doctor,Patient")]
+    [Authorize(Roles = "1")]
     public class ClinicalRecordController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
@@ -17,7 +17,7 @@ namespace SmartHealthMonitoring.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "Patient")]
+        [Authorize(Roles = "0")]
         public async Task<IActionResult> MyRecords()
         {
             var email = User.Identity?.Name;
@@ -37,7 +37,7 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Doctor,Patient")]
+        [Authorize(Roles = "0,1")]
         public async Task<IActionResult> Index(int id)
         {
             try
@@ -129,7 +129,7 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Doctor")]
+        [Authorize(Roles = "1")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id) // Action này đóng vai trò là Void/Hủy
         {

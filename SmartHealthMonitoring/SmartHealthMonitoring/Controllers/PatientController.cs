@@ -7,7 +7,7 @@ using SmartHealthMonitoring.ViewModels;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "Patient")]
+    [Authorize(Roles = "0")]
     public class PatientController : Controller
     {
         private readonly DailyVitalLogService _dailyVitalLogService;
