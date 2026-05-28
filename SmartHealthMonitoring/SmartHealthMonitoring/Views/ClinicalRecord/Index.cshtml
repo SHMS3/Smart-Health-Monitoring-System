@@ -1,105 +1,93 @@
 ﻿@model SmartHealthMonitoring.ViewModels.PatientRecordIndexViewModel
 @{
-	ViewData["Title"] = "Hồ sơ Y tế - " + Model.PatientName;
+    ViewData["Title"] = "Hồ sơ Y tế - " + Model.PatientName;
 }
 
 @section Styles {
-<style>
-	.patient-card {
-	background: linear-gradient(to right, #f8fafc, #eff6ff);
-	border-left: 5px solid #0ea5e9;
-	}
+    <style>
+        .patient-card {
+            background: linear-gradient(to right, #f8fafc, #eff6ff);
+            border-left: 5px solid #0ea5e9;
+        }
 
-	.table-modern {
-	border-collapse: separate;
-	border-spacing: 0 8px;
-	}
+        .table-modern {
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
 
-	.table-modern thead th {
-	border: none;
-	color: #64748b;
-	font-weight: 600;
-	text-transform: uppercase;
-	font-size: 0.75rem;
-	letter-spacing: 0.5px;
-	padding: 12px 20px;
-	}
+        .table-modern thead th {
+            border: none;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            padding: 12px 20px;
+        }
 
-	.table-modern tbody tr {
-	background: #ffffff;
-	box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-	border-radius: 12px;
-	transition: all 0.2s ease;
-	}
+        .table-modern tbody tr {
+            background: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
 
-	.table-modern tbody tr:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 5px 15px rgba(14,165,233,0.1);
-	}
+        .table-modern tbody tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(14,165,233,0.1);
+        }
 
-	.table-modern tbody td {
-	border: none;
-	padding: 16px 20px;
-	vertical-align: middle;
-	}
+        .table-modern tbody td {
+            border: none;
+            padding: 16px 20px;
+            vertical-align: middle;
+        }
 
-	.table-modern tbody td:first-child {
-	border-top-left-radius: 12px;
-	border-bottom-left-radius: 12px;
-	}
+        .table-modern tbody td:first-child {
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+        }
 
-	.table-modern tbody td:last-child {
-	border-top-right-radius: 12px;
-	border-bottom-right-radius: 12px;
-	}
+        .table-modern tbody td:last-child {
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
 
-	.badge-soft-primary {
-	background: #e0f2fe;
-	color: #0369a1;
-	}
+        .badge-soft-primary { background: #e0f2fe; color: #0369a1; }
+        .badge-soft-danger { background: #fee2e2; color: #b91c1c; }
+        .badge-soft-warning { background: #fef3c7; color: #b45309; }
 
-	.badge-soft-danger {
-	background: #fee2e2;
-	color: #b91c1c;
-	}
+        .btn-add-record {
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+            transition: all 0.3s;
+        }
 
-	.badge-soft-warning {
-	background: #fef3c7;
-	color: #b45309;
-	}
-
-	.btn-add-record {
-	background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
-	border: none;
-	color: white;
-	box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
-	transition: all 0.3s;
-	}
-
-	.btn-add-record:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
-	color: white;
-	}
-
-	/* Modal Styles */
-	.modal-detail-group {
-	background: #f8fafc;
-	border: 1px solid #e2e8f0;
-	border-radius: 12px;
-	padding: 16px;
-	height: 100%;
-	}
-
-	.modal-detail-title {
-	font-size: 0.85rem;
-	font-weight: 700;
-	color: #475569;
-	margin-bottom: 12px;
-	text-transform: uppercase;
-	letter-spacing: 0.5px;
-	}
-</style>
+        .btn-add-record:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+            color: white;
+        }
+        
+        .modal-detail-group {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            height: 100%;
+        }
+        
+        .modal-detail-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
 }
 
 <div class="container pt-5 mt-4 pb-5">
@@ -108,19 +96,18 @@
 		<div>
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb mb-1">
-					@if (User.IsInRole("Doctor"))
+					@if (User.IsInRole("1"))
 					{
 						<li class="breadcrumb-item">
 							<a asp-controller="DoctorDashboard" asp-action="Index" class="text-decoration-none text-muted">Danh sách Bệnh nhân</a>
 						</li>
-						<li class="breadcrumb-item active fw-medium text-primary" aria-current="page">Lịch sử Y khoa</li>
 					}
 				</ol>
 			</nav>
 			<h2 class="h3 mb-0 fw-bold text-dark">Hồ sơ Bệnh án</h2>
 		</div>
 		<div>
-			@if (User.IsInRole("Doctor"))
+			@if (User.IsInRole("1"))
 			{
 				<a asp-controller="ClinicalExam"
 				   asp-action="Create"
@@ -129,219 +116,247 @@
 					Thêm mới Hồ sơ
 				</a>
 
-				<a asp-controller="ClinicalExam"
-				   asp-action="SettingPatientThreshold"
-				   asp-route-patientId="@Model.PatientId"
-				   class="btn btn-warning">
-					Cấu hình ngưỡng
-				</a>
+                <a asp-controller="ClinicalExam"
+                   asp-action="SettingPatientThreshold"
+                   asp-route-patientId="@Model.PatientId"
+                   class="btn btn-warning">
+                    Cấu hình ngưỡng
+                </a>
 			}
 		</div>
 	</div>
 
-	@if (TempData["Success"] != null)
-	{
-		<div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm" role="alert">
-			<i class="fas fa-check-circle me-2"></i> @TempData["Success"]
-			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-		</div>
-	}
-	@if (TempData["Error"] != null)
-	{
-		<div class="alert alert-danger rounded-4 border-0 shadow-sm">
-			<i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]
-		</div>
-	}
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger rounded-4 border-0 shadow-sm">
+            <i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]
+        </div>
+    }
 
-	<div class="card border-0 shadow-sm rounded-4 mb-4 patient-card">
-		<div class="card-body p-4 d-flex align-items-center gap-4">
-			<div class="bg-white rounded-circle d-flex justify-content-center align-items-center shadow-sm flex-shrink-0" style="width: 70px; height: 70px;">
-				<i class="fas fa-user-injured text-primary" style="font-size: 1.8rem;"></i>
-			</div>
-			<div>
-				<h4 class="mb-1 fw-bold text-dark">@Model.PatientName</h4>
-				<div class="d-flex flex-wrap gap-3 text-muted mt-2">
-					<span class="bg-white px-3 py-1 rounded-pill border small fw-medium shadow-sm">
-						<i class="fas fa-id-card text-secondary me-1"></i> ID: #@Model.PatientId.ToString("D5")
-					</span>
-					<span class="bg-white px-3 py-1 rounded-pill border small fw-medium shadow-sm">
-						<i class="fas fa-calendar-alt text-primary me-1"></i> @Model.Age tuổi
-					</span>
-					<span class="bg-white px-3 py-1 rounded-pill border small fw-medium shadow-sm">
-						@if (Model.SexDisplay == "Nam")
-						{
-							<i class="fas fa-mars text-info me-1"></i>
-						}
-						else
-						{
-							<i class="fas fa-venus text-danger me-1"></i>
-						}
-						@Model.SexDisplay
-					</span>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="card border-0 shadow-sm rounded-4 mb-4 patient-card">
+        <div class="card-body p-4 d-flex align-items-center gap-4">
+            <div class="bg-white rounded-circle d-flex justify-content-center align-items-center shadow-sm flex-shrink-0" style="width: 70px; height: 70px;">
+                <i class="fas fa-user-injured text-primary" style="font-size: 1.8rem;"></i>
+            </div>
+            <div>
+                <h4 class="mb-1 fw-bold text-dark">@Model.PatientName</h4>
+                <div class="d-flex flex-wrap gap-3 text-muted mt-2">
+                    <span class="bg-white px-3 py-1 rounded-pill border small fw-medium shadow-sm">
+                        <i class="fas fa-id-card text-secondary me-1"></i> ID: #@Model.PatientId.ToString("D5")
+                    </span>
+                    <span class="bg-white px-3 py-1 rounded-pill border small fw-medium shadow-sm">
+                        <i class="fas fa-calendar-alt text-primary me-1"></i> @Model.Age tuổi
+                    </span>
+                    <span class="bg-white px-3 py-1 rounded-pill border small fw-medium shadow-sm">
+                        @if (Model.SexDisplay == "Nam")
+                        {
+                            <i class="fas fa-mars text-info me-1"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-venus text-danger me-1"></i>
+                        }
+                        @Model.SexDisplay
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-	<div class="table-responsive pb-5">
-		<table class="table table-modern align-middle mb-0 text-nowrap">
-			<thead>
-				<tr>
-					<th class="ps-4">Ngày khám</th>
-					<th>Huyết áp</th>
-					<th>Cholesterol</th>
-					<th>Nhịp tim tối đa</th>
-					<th>Triệu chứng đau ngực</th>
-					<th class="text-end pe-4">Hành động</th>
-				</tr>
-			</thead>
-			<tbody>
-				@if (!Model.Records.Any())
-				{
-					<tr>
-						<td colspan="6" class="text-center py-5 bg-white rounded-4 shadow-sm border-0">
-							<div class="text-muted mb-3 mt-3">
-								<i class="fas fa-folder-open opacity-25" style="font-size: 3rem;"></i>
-							</div>
-							<h6 class="fw-bold text-dark">Chưa có dữ liệu</h6>
-							<p class="text-muted small mb-3">Bệnh nhân này chưa có hồ sơ khám bệnh nào được ghi nhận.</p>
-						</td>
-					</tr>
-				}
+    <div class="card border-0 shadow-sm bg-transparent">
+        <div class="table-responsive">
+            <table class="table table-modern align-middle mb-0 text-nowrap">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Ngày khám</th>
+                        <th>Huyết áp</th>
+                        <th>Cholesterol</th>
+                        <th>Nhịp tim tối đa</th>
+                        <th>Triệu chứng đau ngực</th>
+                        <th class="text-end pe-4">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Records.Items.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 bg-white rounded-4 shadow-sm border-0">
+                                <div class="text-muted mb-3 mt-3">
+                                    <i class="fas fa-folder-open opacity-25" style="font-size: 3rem;"></i>
+                                </div>
+                                <h6 class="fw-bold text-dark">Chưa có dữ liệu</h6>
+                                <p class="text-muted small mb-3">Bệnh nhân này chưa có hồ sơ khám bệnh nào được ghi nhận.</p>
+                            </td>
+                        </tr>
+                    }
+                    
+                    @foreach (var record in Model.Records.Items)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">@record.VisitDate.ToLocalTime().ToString("dd/MM/yyyy")</div>
+                                <div class="text-muted small"><i class="far fa-clock me-1"></i> @record.VisitDate.ToLocalTime().ToString("HH:mm")</div>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-dark">@record.RestingBP</span> <span class="text-muted small">mmHg</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-dark">@record.Cholesterol</span> <span class="text-muted small">mg/dl</span>
+                            </td>
+                            <td>
+                                @if(record.MaxHeartRate > 150)
+                                {
+                                    <span class="badge badge-soft-danger px-2 py-1 rounded-3 border border-danger border-opacity-25"><i class="fas fa-heartbeat me-1"></i> @record.MaxHeartRate bpm</span>
+                                }
+                                else
+                                {
+                                    <span class="fw-bold text-dark">@record.MaxHeartRate</span> <span class="text-muted small">bpm</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge badge-soft-primary px-3 py-2 rounded-pill border border-primary border-opacity-25">
+                                    @record.ChestPainTypeDisplay
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <button type="button" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3 shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#detailModal-@record.Id">
+                                    <i class="fas fa-eye me-1"></i> Chi tiết
+                                </button>
 
-				@foreach (var record in Model.Records)
-				{
-					<tr>
-						<td class="ps-4">
-							<div class="fw-bold text-dark">@record.VisitDate.ToLocalTime().ToString("dd/MM/yyyy")</div>
-							<div class="text-muted small"><i class="far fa-clock me-1"></i> @record.VisitDate.ToLocalTime().ToString("HH:mm")</div>
-						</td>
-						<td>
-							<span class="fw-bold text-dark">@record.RestingBP</span> <span class="text-muted small">mmHg</span>
-						</td>
-						<td>
-							<span class="fw-bold text-dark">@record.Cholesterol</span> <span class="text-muted small">mg/dl</span>
-						</td>
-						<td>
-							@if (record.MaxHeartRate > 150)
-							{
-								<span class="badge badge-soft-danger px-2 py-1 rounded-3 border border-danger border-opacity-25"><i class="fas fa-heartbeat me-1"></i> @record.MaxHeartRate bpm</span>
-							}
-							else
-							{
-								<span class="fw-bold text-dark">@record.MaxHeartRate</span> <span class="text-muted small">bpm</span>
-							}
-						</td>
-						<td>
-							<span class="badge badge-soft-primary px-3 py-2 rounded-pill border border-primary border-opacity-25">
-								@record.ChestPainTypeDisplay
-							</span>
-						</td>
-						<td class="text-end pe-4">
-							<button type="button" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3 shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#detailModal-@record.Id">
-								<i class="fas fa-eye me-1"></i> Chi tiết
-							</button>
-							@if (User.IsInRole("Doctor"))
-							{
-								<form asp-action="Delete" asp-route-id="@record.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn đánh dấu hồ sơ này là HỦY BỎ?');">
-									<button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0;" title="Hủy hồ sơ">
-										<i class="fas fa-trash-alt"></i>
-									</button>
-								</form>
-							}
-						</td>
-					</tr>
-				}
-			</tbody>
-		</table>
-	</div>
+                                <form asp-action="Delete" asp-route-id="@record.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn đánh dấu hồ sơ này là HỦY BỎ?');">
+                                    <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0;" title="Hủy hồ sơ">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.Records.TotalPages > 1)
+        {
+            <div class="card-footer bg-white border-0 shadow-sm rounded-4 p-4 mt-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
+                <span class="text-muted small">
+                    Hiển thị trang <strong>@Model.Records.Page</strong> / @Model.Records.TotalPages (Tổng số: <strong>@Model.Records.TotalCount</strong> hồ sơ)
+                </span>
+                
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(Model.Records.Page == 1 ? "disabled" : "")">
+                            <a class="page-link rounded-start-pill px-3" asp-action="Index" asp-route-id="@Model.PatientId" asp-route-page="@(Model.Records.Page - 1)">Trước</a>
+                        </li>
+
+                        @for (int i = 1; i <= Model.Records.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.Records.Page ? "active" : "")">
+                                <a class="page-link px-3" asp-action="Index" asp-route-id="@Model.PatientId" asp-route-page="@i">@i</a>
+                            </li>
+                        }
+
+                        <li class="page-item @(Model.Records.Page == Model.Records.TotalPages ? "disabled" : "")">
+                            <a class="page-link rounded-end-pill px-3" asp-action="Index" asp-route-id="@Model.PatientId" asp-route-page="@(Model.Records.Page + 1)">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
 </div>
-@foreach (var record in Model.Records)
+@foreach (var record in Model.Records.Items)
 {
-	<div class="modal fade text-start" id="detailModal-@record.Id" tabindex="-1" aria-hidden="true" aria-labelledby="modalLabel-@record.Id">
-		<div class="modal-dialog modal-dialog-centered modal-lg">
-			<div class="modal-content rounded-4 border-0 shadow-lg">
+    <div class="modal fade text-start" id="detailModal-@record.Id" tabindex="-1" aria-hidden="true" aria-labelledby="modalLabel-@record.Id">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                
+                <div class="modal-header border-bottom bg-light rounded-top-4 p-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-1" id="modalLabel-@record.Id">Chi tiết Hồ sơ Xét nghiệm</h5>
+                        <p class="text-muted small mb-0">
+                            <i class="far fa-calendar-alt me-1"></i> Khám ngày: @record.VisitDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="modal-detail-group">
+                                <div class="modal-detail-title text-danger"><i class="fas fa-heartbeat me-2"></i>Sinh hiệu & Triệu chứng</div>
+                                <ul class="list-unstyled mb-0 small">
+                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                        <span class="text-muted">Đau ngực:</span> <strong class="text-dark text-end">@record.ChestPainTypeDisplay</strong>
+                                    </li>
+                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                        <span class="text-muted">Huyết áp nghỉ:</span> <strong class="text-dark">@record.RestingBP mmHg</strong>
+                                    </li>
+                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                        <span class="text-muted">Nhịp tim MAX:</span> <strong class="text-danger">@record.MaxHeartRate bpm</strong>
+                                    </li>
+                                    <li class="d-flex justify-content-between">
+                                        <span class="text-muted">Đau ngực gắng sức:</span> <strong class="text-dark">@(record.ExerciseAngina == 1 ? "Có (Yes)" : "Không")</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="modal-detail-group">
+                                <div class="modal-detail-title text-info"><i class="fas fa-tint me-2"></i>Huyết học</div>
+                                <ul class="list-unstyled mb-0 small">
+                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                        <span class="text-muted">Cholesterol:</span> <strong class="text-dark">@record.Cholesterol mg/dl</strong>
+                                    </li>
+                                    <li class="d-flex justify-content-between">
+                                        <span class="text-muted">Đường huyết đói >120:</span> 
+                                        <strong class="@(record.FastingBS == 1 ? "text-danger" : "text-success")">
+                                            @(record.FastingBS == 1 ? "Cao" : "Bình thường")
+                                        </strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
 
-				<div class="modal-header border-bottom bg-light rounded-top-4 p-4">
-					<div>
-						<h5 class="modal-title fw-bold text-dark mb-1" id="modalLabel-@record.Id">Chi tiết Hồ sơ Xét nghiệm</h5>
-						<p class="text-muted small mb-0">
-							<i class="far fa-calendar-alt me-1"></i> Khám ngày: @record.VisitDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-						</p>
-					</div>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-
-				<div class="modal-body p-4">
-					<div class="row g-4">
-						<div class="col-md-4">
-							<div class="modal-detail-group">
-								<div class="modal-detail-title text-danger"><i class="fas fa-heartbeat me-2"></i>Sinh hiệu & Triệu chứng</div>
-								<ul class="list-unstyled mb-0 small">
-									<li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-										<span class="text-muted">Đau ngực:</span> <strong class="text-dark text-end">@record.ChestPainTypeDisplay</strong>
-									</li>
-									<li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-										<span class="text-muted">Huyết áp nghỉ:</span> <strong class="text-dark">@record.RestingBP mmHg</strong>
-									</li>
-									<li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-										<span class="text-muted">Nhịp tim MAX:</span> <strong class="text-danger">@record.MaxHeartRate bpm</strong>
-									</li>
-									<li class="d-flex justify-content-between">
-										<span class="text-muted">Đau ngực gắng sức:</span> <strong class="text-dark">@(record.ExerciseAngina == 1 ? "Có (Yes)" : "Không")</strong>
-									</li>
-								</ul>
-							</div>
-						</div>
-
-						<div class="col-md-4">
-							<div class="modal-detail-group">
-								<div class="modal-detail-title text-info"><i class="fas fa-tint me-2"></i>Huyết học</div>
-								<ul class="list-unstyled mb-0 small">
-									<li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-										<span class="text-muted">Cholesterol:</span> <strong class="text-dark">@record.Cholesterol mg/dl</strong>
-									</li>
-									<li class="d-flex justify-content-between">
-										<span class="text-muted">Đường huyết đói >120:</span>
-										<strong class="@(record.FastingBS == 1 ? "text-danger" : "text-success")">
-											@(record.FastingBS == 1 ? "Cao" : "Bình thường")
-										</strong>
-									</li>
-								</ul>
-							</div>
-						</div>
-
-						<div class="col-md-4">
-							<div class="modal-detail-group">
-								<div class="modal-detail-title text-primary"><i class="fas fa-wave-square me-2"></i>Điện tâm đồ & Mạch</div>
-								<ul class="list-unstyled mb-0 small">
-									<li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-										<span class="text-muted">ECG nghỉ:</span>
-										<strong class="text-dark text-end ms-2">@(record.RestECG == 0 ? "Normal" : record.RestECG == 1 ? "ST-T" : "LVH")</strong>
-									</li>
-									<li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-										<span class="text-muted">Độ dốc ST:</span> <strong class="text-dark text-end">@(record.STSlope == 0 ? "Upsloping" : record.STSlope == 1 ? "Flat" : "Downsloping")</strong>
-									</li>
-									<li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-										<span class="text-muted">OldPeak:</span> <strong class="text-dark">@record.OldPeak</strong>
-									</li>
-									<li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-										<span class="text-muted">Mạch vành (0-3):</span> <strong class="text-dark">@record.MajorVessels</strong>
-									</li>
-									<li class="d-flex justify-content-between">
-										<span class="text-muted">Thal:</span>
-										<strong class="text-dark text-end ms-2">@(record.ThalResult == 0 ? "Normal" : record.ThalResult == 1 ? "Fixed" : "Reversable")</strong>
-									</li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="modal-footer border-top-0 pt-0 pb-4 pe-4">
-					<button type="button" class="btn btn-secondary rounded-pill px-4 fw-medium" data-bs-dismiss="modal">Đóng lại</button>
-				</div>
-			</div>
-		</div>
-	</div>
+                        <div class="col-md-4">
+                            <div class="modal-detail-group">
+                                <div class="modal-detail-title text-primary"><i class="fas fa-wave-square me-2"></i>Điện tâm đồ & Mạch</div>
+                                <ul class="list-unstyled mb-0 small">
+                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                        <span class="text-muted">ECG nghỉ:</span> 
+                                        <strong class="text-dark text-end ms-2">@(record.RestECG == 0 ? "Normal" : record.RestECG == 1 ? "ST-T" : "LVH")</strong>
+                                    </li>
+                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                        <span class="text-muted">Độ dốc ST:</span> <strong class="text-dark text-end">@(record.STSlope == 0 ? "Upsloping" : record.STSlope == 1 ? "Flat" : "Downsloping")</strong>
+                                    </li>
+                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                        <span class="text-muted">OldPeak:</span> <strong class="text-dark">@record.OldPeak</strong>
+                                    </li>
+                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                        <span class="text-muted">Mạch vành (0-3):</span> <strong class="text-dark">@record.MajorVessels</strong>
+                                    </li>
+                                    <li class="d-flex justify-content-between">
+                                        <span class="text-muted">Thal:</span> 
+                                        <strong class="text-dark text-end ms-2">@(record.ThalResult == 0 ? "Normal" : record.ThalResult == 1 ? "Fixed" : "Reversable")</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-top-0 pt-0 pb-4 pe-4">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4 fw-medium" data-bs-dismiss="modal">Đóng lại</button>
+                </div>
+            </div>
+        </div>
+    </div>
 }

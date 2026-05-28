@@ -1,0 +1,51 @@
+﻿@model SmartHealthMonitoring.ViewModels.Admin.DoctorCreateViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Cấp tài khoản Bác sĩ";
+}
+
+<div class="mb-4">
+    <a asp-action="Index" class="text-decoration-none text-muted"><i class="fas fa-arrow-left me-2"></i>Quay lại danh sách</a>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white border-bottom p-4">
+                <h5 class="fw-bold mb-0">Tạo mới Bác sĩ</h5>
+                <p class="text-muted small mb-0 mt-1">Mật khẩu mặc định khi tạo sẽ là: <strong>123456</strong></p>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label fw-medium text-dark">Họ và tên <span class="text-danger">*</span></label>
+                        <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên bác sĩ..." />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-medium text-dark">Địa chỉ Email <span class="text-danger">*</span></label>
+                        <input asp-for="Email" type="email" class="form-control" placeholder="name@hospital.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Specialty" class="form-label fw-medium text-dark">Chuyên khoa khám <span class="text-danger">*</span></label>
+                        <input asp-for="Specialty" class="form-control" placeholder="Ví dụ: Tim mạch, Nội tiết..." value="Tim mạch" />
+                        <span asp-validation-for="Specialty" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-medium shadow-sm">Xác nhận & Cấp tài khoản</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

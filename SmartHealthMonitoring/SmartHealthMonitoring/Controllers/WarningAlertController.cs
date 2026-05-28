@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "Doctor")]
+    [Authorize(Roles = "1")]
     public class WarningAlertController : Controller
     {
         private readonly IWarningAlertService _warningAlertService;
