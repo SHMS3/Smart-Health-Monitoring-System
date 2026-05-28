@@ -1,3 +1,4 @@
+
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,6 @@ using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;
-using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
 namespace SmartHealthMonitoring.Controllers
@@ -131,6 +131,141 @@ namespace SmartHealthMonitoring.Controllers
                 TempData["Error"] = $"Lỗi hệ thống: {dbError}";
                 return View(model);
             }
+        }
+
+        // =============================================
+        // FEATURE: CẤU HÌNH NGƯỠNG CHO BỆNH NHÂN
+        // =============================================
+
+        [HttpGet]
+        public async Task<IActionResult> SettingPatientThreshold(int patientId)
+        {
+            var patient = await _context.Patients
+                .Include(p => p.User)
+                .Include(p => p.PatientThreshold)
+                    .ThenInclude(t => t!.UpdatedByDoctor)
+                        .ThenInclude(d => d!.User)
+                .FirstOrDefaultAsync(p => p.Id == patientId && !p.IsDeleted);
+
+            if (patient == null)
+            {
+                TempData["Error"] = "Không tìm thấy bệnh nhân.";
+                return RedirectToAction("Index", "DoctorDashboard");
+            }
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            int age = today.Year - patient.DateOfBirth.Year
+                      - (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
+
+            var existing = patient.PatientThreshold;
+
+            var vm = new PatientThresholdViewModel
+            {
+                PatientId       = patient.Id,
+                PatientName     = patient.User.FullName,
+                Age             = age,
+                SexDisplay      = patient.Sex == 1 ? "Nam" : "Nữ",
+                IsConfigured    = existing != null,
+                ThresholdId     = existing?.Id,
+                LastUpdatedAt   = existing?.UpdatedAt,
+                LastUpdatedByDoctorId      = existing?.UpdatedByDoctorId,
+                LastUpdatedByDoctor        = existing?.UpdatedByDoctor?.User?.FullName,
+                LastUpdatedByDoctorSpecialty = existing?.UpdatedByDoctor?.Specialty,
+
+                // Dùng giá trị đã cấu hình, nếu chưa có thì lấy default từ model
+                SystolicBpWarning  = existing?.SystolicBpWarning  ?? 130,
+                SystolicBpDanger   = existing?.SystolicBpDanger   ?? 140,
+                DiastolicBpWarning = existing?.DiastolicBpWarning ?? 80,
+                DiastolicBpDanger  = existing?.DiastolicBpDanger  ?? 90,
+                HeartRateWarningMin = existing?.HeartRateWarningMin ?? 60,
+                HeartRateDangerMin  = existing?.HeartRateDangerMin  ?? 50,
+                HeartRateWarningMax = existing?.HeartRateWarningMax ?? 100,
+                HeartRateDangerMax  = existing?.HeartRateDangerMax  ?? 120,
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SettingPatientThreshold(PatientThresholdViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Validate logic: Warning phải nhỏ hơn Danger
+            if (model.SystolicBpWarning >= model.SystolicBpDanger)
+            {
+                ModelState.AddModelError("", "Ngưỡng Cảnh báo Huyết áp TT phải nhỏ hơn ngưỡng Nguy hiểm.");
+                return View(model);
+            }
+            if (model.DiastolicBpWarning >= model.DiastolicBpDanger)
+            {
+                ModelState.AddModelError("", "Ngưỡng Cảnh báo Huyết áp TR phải nhỏ hơn ngưỡng Nguy hiểm.");
+                return View(model);
+            }
+            if (model.HeartRateDangerMin >= model.HeartRateWarningMin)
+            {
+                ModelState.AddModelError("", "Ngưỡng Nguy hiểm Nhịp tim thấp phải nhỏ hơn ngưỡng Cảnh báo.");
+                return View(model);
+            }
+            if (model.HeartRateWarningMax >= model.HeartRateDangerMax)
+            {
+                ModelState.AddModelError("", "Ngưỡng Cảnh báo Nhịp tim cao phải nhỏ hơn ngưỡng Nguy hiểm.");
+                return View(model);
+            }
+
+            // Lấy doctorId từ claim
+            int? doctorId = null;
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+                doctorId = doctor?.Id;
+            }
+
+            // UPSERT: Nếu đã có thì cập nhật, chưa có thì tạo mới
+            var existing = await _context.PatientThresholds
+                .FirstOrDefaultAsync(t => t.PatientId == model.PatientId);
+
+            if (existing == null)
+            {
+                var newThreshold = new PatientThreshold
+                {
+                    PatientId          = model.PatientId,
+                    SystolicBpWarning  = model.SystolicBpWarning,
+                    SystolicBpDanger   = model.SystolicBpDanger,
+                    DiastolicBpWarning = model.DiastolicBpWarning,
+                    DiastolicBpDanger  = model.DiastolicBpDanger,
+                    HeartRateWarningMin = model.HeartRateWarningMin,
+                    HeartRateDangerMin  = model.HeartRateDangerMin,
+                    HeartRateWarningMax = model.HeartRateWarningMax,
+                    HeartRateDangerMax  = model.HeartRateDangerMax,
+                    UpdatedAt          = DateTime.Now,
+                    UpdatedByDoctorId  = doctorId
+                };
+                _context.PatientThresholds.Add(newThreshold);
+            }
+            else
+            {
+                existing.SystolicBpWarning  = model.SystolicBpWarning;
+                existing.SystolicBpDanger   = model.SystolicBpDanger;
+                existing.DiastolicBpWarning = model.DiastolicBpWarning;
+                existing.DiastolicBpDanger  = model.DiastolicBpDanger;
+                existing.HeartRateWarningMin = model.HeartRateWarningMin;
+                existing.HeartRateDangerMin  = model.HeartRateDangerMin;
+                existing.HeartRateWarningMax = model.HeartRateWarningMax;
+                existing.HeartRateDangerMax  = model.HeartRateDangerMax;
+                existing.UpdatedAt          = DateTime.Now;
+                existing.UpdatedByDoctorId  = doctorId;
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Đã lưu cấu hình ngưỡng cho bệnh nhân thành công!";
+            return RedirectToAction("Index", "ClinicalRecord", new { id = model.PatientId });
         }
     }
 }

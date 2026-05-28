@@ -82,5 +82,14 @@ namespace SmartHealthMonitoring.Repositories
 
             await _context.SaveChangesAsync();
         }
+
+        //cấu hình ngưỡng cho bệnh nhân
+        public async Task<PatientThreshold?> GetPatientThresholdAsync(int patientId)
+        {
+            // Lấy cấu hình bác sĩ đã set, dùng AsNoTracking vì chỉ cần đọc
+            return await _context.PatientThresholds
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.PatientId == patientId);
+        }
     }
 }
