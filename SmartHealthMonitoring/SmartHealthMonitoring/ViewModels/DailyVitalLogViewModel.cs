@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels
@@ -31,26 +31,18 @@ namespace SmartHealthMonitoring.ViewModels
         public bool IsUpdateLocked { get; set; }
 
         // Trả về danh sách các lý do vi phạm chỉ số an toàn
-        public string AlertLevel
-        {
-            get
-            {
-                // 1. CẤP ĐỘ ĐỎ: NGUY HIỂM (Chỉ số vượt ngưỡng quá cao hoặc có triệu chứng lâm sàng nặng)
-                if (SystolicBp >= 140 || DiastolicBp >= 90 || HeartRate < 50 || HeartRate > 120 || ChestPainLevel >= 2 || HasExerciseAngina)
-                {
-                    return "Danger"; // Đỏ
-                }
+        public string AlertLevel { get; set; } = "Normal";
 
-                // 2. CẤP ĐỘ VÀNG: CẦN THEO DÕI (Chỉ số chớm cao hoặc triệu chứng nhẹ)
-                if ((SystolicBp >= 130 && SystolicBp < 140) || (DiastolicBp >= 80 && DiastolicBp < 90) || (HeartRate >= 101 && HeartRate <= 120) || (HeartRate >= 50 && HeartRate <= 59) || ChestPainLevel == 1)
-                {
-                    return "Warning"; // Vàng
-                }
-
-                // 3. CẤP ĐỘ XANH: BÌNH THƯỜNG
-                return "Normal"; // Xanh
-            }
-        }
+        // Ngưỡng đã được bác sĩ cấu hình (dùng để hiển thị trong Details)
+        // Giá trị mặc định khớp với PatientThreshold defaults
+        public short SystolicBpWarning { get; set; } = 130;
+        public short SystolicBpDanger { get; set; } = 140;
+        public short DiastolicBpWarning { get; set; } = 80;
+        public short DiastolicBpDanger { get; set; } = 90;
+        public short HeartRateWarningMin { get; set; } = 60;
+        public short HeartRateDangerMin { get; set; } = 50;
+        public short HeartRateWarningMax { get; set; } = 100;
+        public short HeartRateDangerMax { get; set; } = 120;
 
         public string AlertText => AlertLevel switch
         {

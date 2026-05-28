@@ -20,7 +20,7 @@ namespace SmartHealthMonitoring.Controllers
         public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, int page = 1)
         {
             int patientId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            
+
             var todayLogs = (await _dailyVitalLogService
                 .GetLogsByDateAsync(patientId, DateTime.Today))
                 .OrderByDescending(x => x.LoggedAt)
@@ -34,14 +34,14 @@ namespace SmartHealthMonitoring.Controllers
             DateTime? nextLogTime = null;
             int remainingSeconds = 0;
 
-            if (todayLogs.Count >= 4)
+            if (todayLogs.Count >= 10)
             {
                 canLog = false;
-                logMessage = "Đã đạt giới hạn 4 lần/ngày";
+                logMessage = "Đã đạt giới hạn 10 lần/ngày";
             }
             else if (lastLog != null)
             {
-                nextLogTime = lastLog.LoggedAt.AddHours(4);
+                nextLogTime = lastLog.LoggedAt.AddHours(1);
 
                 if (DateTime.Now < nextLogTime)
                 {

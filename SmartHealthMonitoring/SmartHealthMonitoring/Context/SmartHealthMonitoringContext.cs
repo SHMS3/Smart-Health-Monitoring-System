@@ -35,6 +35,7 @@ public partial class SmartHealthMonitoringContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<WarningAlert> WarningAlerts { get; set; }
+    public virtual DbSet<PatientThreshold> PatientThresholds { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -231,6 +232,29 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .HasConstraintName("FK__WarningAl__Predi__6EF57B66");
         });
 
+        modelBuilder.Entity<PatientThreshold>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__PatientThresholds");
+
+            entity.ToTable("PatientThresholds");
+
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
+
+            // Quan hệ 1-1 với Patient
+            entity.HasOne(d => d.Patient)
+                .WithOne(p => p.PatientThreshold)
+                .HasForeignKey<PatientThreshold>(d => d.PatientId)
+                .OnDelete(DeleteBehavior.Cascade) // Nếu xóa bệnh nhân thì xóa luôn ngưỡng
+                .HasConstraintName("FK__PatientTh__Patie");
+
+            // Quan hệ N-1 với Doctor (Lưu vết bác sĩ cấu hình)
+            entity.HasOne(d => d.UpdatedByDoctor)
+                .WithMany() // Không cần khai báo Collection ở Doctor cho gọn
+                .HasForeignKey(d => d.UpdatedByDoctorId)
+                .OnDelete(DeleteBehavior.SetNull) // Nếu bác sĩ bị xóa, giữ lại ngưỡng nhưng set null
+                .HasConstraintName("FK__PatientTh__Docto");
+        });
+
         // ==========================================
         // DATA SEEDING (CHUẨN KHỚP 100% VỚI DATABASE V4)
         // ==========================================
@@ -386,6 +410,28 @@ public partial class SmartHealthMonitoringContext : DbContext
             new EmailNotification { Id = 9, AlertId = 9, PatientId = 9, ToEmail = "patient.phong@gmail.com", Subject = "Kiểm tra định kỳ", Body = "Vui lòng nhập sinh hiệu", IsSent = true, Status = 1, SentAt = baseDate.AddHours(9).AddMinutes(7), CreatedAt = baseDate.AddHours(9).AddMinutes(7) },
             new EmailNotification { Id = 10, AlertId = 10, PatientId = 10, ToEmail = "patient.mai@gmail.com", Subject = "CẢNH BÁO: Huyết áp tâm thu cao", Body = "Bác sĩ An đã tiếp nhận", IsSent = true, Status = 1, SentAt = baseDate.AddHours(10).AddMinutes(7), CreatedAt = baseDate.AddHours(10).AddMinutes(7) }
         );
+
+        // 11. PatientThresholds (Ngưỡng mặc định cho các bệnh nhân)
+        var defaultThresholds = new List<PatientThreshold>();
+        for (int i = 1; i <= 10; i++)
+        {
+            defaultThresholds.Add(new PatientThreshold
+            {
+                Id = i,
+                PatientId = i,
+                SystolicBpWarning = 130,
+                SystolicBpDanger = 140,
+                DiastolicBpWarning = 80,
+                DiastolicBpDanger = 90,
+                HeartRateWarningMin = 60,
+                HeartRateDangerMin = 50,
+                HeartRateWarningMax = 100,
+                HeartRateDangerMax = 120,
+                UpdatedAt = baseDate,
+                UpdatedByDoctorId = 1 // Giả sử Bác sĩ An (Id = 1) là người cấu hình mặc định
+            });
+        }
+        modelBuilder.Entity<PatientThreshold>().HasData(defaultThresholds);
 
         // bật RowVersion để tránh 2 người sửa cùng lúc
         modelBuilder.Entity<WarningAlert>()

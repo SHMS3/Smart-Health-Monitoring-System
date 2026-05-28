@@ -1,4 +1,4 @@
-﻿using SmartHealthMonitoring.Common;
+using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.Repositories;
 using SmartHealthMonitoring.ViewModels;
@@ -35,17 +35,27 @@ namespace SmartHealthMonitoring.Services
                 throw new ArgumentException("Không thể tìm kiếm dữ liệu ở tương lai.");
             }
 
+            var threshold = await _repository.GetPatientThresholdAsync(patient.Id);
+
             var pagedEntity = await _repository.GetAllDailyLogByPatientIdAsync(patient.Id, fromDate, toDate, pageIndex, pageSize);
 
-            var viewModels = pagedEntity.Items.Select(entity => new DailyVitalLogViewModel
+            var viewModels = pagedEntity.Items.Select(entity =>
             {
-                Id = entity.Id,
-                LoggedAt = entity.LoggedAt,
-                SystolicBp = entity.SystolicBp,
-                DiastolicBp = entity.DiastolicBp,
-                HeartRate = entity.HeartRate,
-                ChestPainLevel = entity.ChestPainLevel,
-                HasExerciseAngina = entity.HasExerciseAngina
+                var vm = new DailyVitalLogViewModel
+                {
+                    Id = entity.Id,
+                    LoggedAt = entity.LoggedAt,
+                    SystolicBp = entity.SystolicBp,
+                    DiastolicBp = entity.DiastolicBp,
+                    HeartRate = entity.HeartRate,
+                    ChestPainLevel = entity.ChestPainLevel,
+                    HasExerciseAngina = entity.HasExerciseAngina
+                };
+
+                // GÁN MÀU SẮC ĐỘNG THEO CẤU HÌNH
+                vm.AlertLevel = EvaluateAlertLevel(vm, threshold);
+                return vm;
+
             }).ToList();
 
             return new PagedResult<DailyVitalLogViewModel>
@@ -65,6 +75,12 @@ namespace SmartHealthMonitoring.Services
                 throw new Exception("Không tìm thấy hồ sơ bệnh nhân");
 
             await _repository.LockPreviousLogsAsync(patient.Id);
+
+            // 1. Lấy ngưỡng hiện tại của bệnh nhân
+            var threshold = await _repository.GetPatientThresholdAsync(patient.Id);
+
+            // 2. Tự động tính toán mức độ nguy hiểm dựa trên ngưỡng vừa lấy
+            model.AlertLevel = EvaluateAlertLevel(model, threshold);
 
             var entity = new DailyVitalLog
             {
@@ -90,7 +106,10 @@ namespace SmartHealthMonitoring.Services
             var entity = await _repository.GetDailyLogByIdAsync(id);
             if (entity == null) return null;
 
-            return new DailyVitalLogViewModel
+            // Load ngưỡng riêng của bệnh nhân để tính màu sắc đúng
+            var threshold = await _repository.GetPatientThresholdAsync(entity.PatientId);
+
+            var vm = new DailyVitalLogViewModel
             {
                 Id = entity.Id,
                 LoggedAt = entity.LoggedAt,
@@ -102,7 +121,22 @@ namespace SmartHealthMonitoring.Services
                 UpdateCount = entity.UpdateCount,
                 IsUpdateLocked = entity.IsUpdateLocked,
                 CanUpdate = !entity.IsUpdateLocked && entity.UpdateCount < 2,
+
+                // Gán ngưỡng vào VM để View hiển thị đúng
+                SystolicBpWarning  = threshold?.SystolicBpWarning  ?? 130,
+                SystolicBpDanger   = threshold?.SystolicBpDanger   ?? 140,
+                DiastolicBpWarning = threshold?.DiastolicBpWarning ?? 80,
+                DiastolicBpDanger  = threshold?.DiastolicBpDanger  ?? 90,
+                HeartRateWarningMin = threshold?.HeartRateWarningMin ?? 60,
+                HeartRateDangerMin  = threshold?.HeartRateDangerMin  ?? 50,
+                HeartRateWarningMax = threshold?.HeartRateWarningMax ?? 100,
+                HeartRateDangerMax  = threshold?.HeartRateDangerMax  ?? 120,
             };
+
+            // Tính AlertLevel theo ngưỡng của bệnh nhân (có fallback về default nếu chưa cài)
+            vm.AlertLevel = EvaluateAlertLevel(vm, threshold);
+
+            return vm;
         }
 
         public async Task<DailyVitalLogViewModel?> GetLogForUpdateAsync(int id)
@@ -150,12 +184,50 @@ namespace SmartHealthMonitoring.Services
             return true;
         }
 
-        public async Task<IEnumerable<DailyVitalLog>> GetLogsByDateAsync(int patientId, DateTime date)
+        public async Task<IEnumerable<DailyVitalLog>> GetLogsByDateAsync(int userId, DateTime date)
         {
-            // Lấy log của đúng ngày đó
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+
+            if (patient == null)
+                throw new Exception("Không tìm thấy hồ sơ bệnh nhân");
+
             var result = await _repository.GetAllDailyLogByPatientIdAsync(
-                patientId, date, date, 1, 100); // Lấy nhiều hơn 4 để chắc chắn kiểm tra đủ
+                patient.Id, date, date, 1, 100);
+
             return result.Items;
+        }
+
+        private string EvaluateAlertLevel(DailyVitalLogViewModel model, PatientThreshold? threshold)
+        {
+            // Nếu bác sĩ chưa cấu hình, dùng một instance mới (nó sẽ tự lấy giá trị mặc định đã set trong Model)
+            if (threshold == null)
+            {
+                threshold = new PatientThreshold();
+            }
+
+            // 1. CẤP ĐỘ ĐỎ (Danger)
+            if (model.SystolicBp >= threshold.SystolicBpDanger ||
+                model.DiastolicBp >= threshold.DiastolicBpDanger ||
+                model.HeartRate <= threshold.HeartRateDangerMin ||
+                model.HeartRate >= threshold.HeartRateDangerMax ||
+                model.ChestPainLevel >= 2 ||
+                model.HasExerciseAngina)
+            {
+                return "Danger";
+            }
+
+            // 2. CẤP ĐỘ VÀNG (Warning)
+            if (model.SystolicBp >= threshold.SystolicBpWarning ||
+                model.DiastolicBp >= threshold.DiastolicBpWarning ||
+                model.HeartRate <= threshold.HeartRateWarningMin ||
+                model.HeartRate >= threshold.HeartRateWarningMax ||
+                model.ChestPainLevel == 1)
+            {
+                return "Warning";
+            }
+
+            // 3. CẤP ĐỘ XANH (Normal)
+            return "Normal";
         }
     }
 }
