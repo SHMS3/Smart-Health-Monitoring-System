@@ -49,9 +49,9 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            // 1. Tìm user theo email
+            // 1. Tìm user theo email (BỎ ĐIỀU KIỆN !u.IsDeleted ĐỂ LẤY CẢ TÀI KHOẢN BỊ KHÓA)
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == model.Email && !u.IsDeleted);
+                .FirstOrDefaultAsync(u => u.Email == model.Email);
 
             if (user == null)
             {
@@ -59,7 +59,7 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            // 2. Kiểm tra mật khẩu bằng BCrypt (Hỗ trợ dữ liệu seed chưa hash)
+            // 2. Kiểm tra mật khẩu bằng BCrypt
             bool isPasswordValid = false;
             if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
             {
@@ -77,7 +77,18 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            // 3. Tạo Claims cho cookie (ĐÃ FIX: Dùng user.Role.ToString() để map với Authorize(Roles="..."))
+            // 3. KIỂM TRA TRẠNG THÁI KHÓA (Kiểm tra sau khi đã nhập đúng mật khẩu)
+            if (user.IsDeleted)
+            {
+                string reason = string.IsNullOrWhiteSpace(user.LockReason)
+                    ? "Vui lòng liên hệ Admin để biết thêm chi tiết."
+                    : user.LockReason;
+
+                ModelState.AddModelError(string.Empty, $"Tài khoản của bạn đã bị khóa! Lý do: {reason}");
+                return View(model);
+            }
+
+            // 4. Tạo Claims cho cookie
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -93,16 +104,16 @@ namespace SmartHealthMonitoring.Controllers
                 IsPersistent = model.RememberMe,
                 ExpiresUtc = model.RememberMe
                     ? DateTimeOffset.UtcNow.AddDays(30)
-                    : DateTimeOffset.UtcNow.AddMinutes(60) // Tăng từ 1 phút lên 60 phút để không bị văng sớm
+                    : DateTimeOffset.UtcNow.AddMinutes(60)
             };
 
-            // 4. Đăng nhập (ghi cookie)
+            // 5. Đăng nhập (ghi cookie)
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
 
-            // 5. Redirect
+            // 6. Redirect
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl != "/")
             {
                 return Redirect(returnUrl);
