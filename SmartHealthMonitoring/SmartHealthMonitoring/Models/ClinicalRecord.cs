@@ -36,6 +36,7 @@ public partial class ClinicalRecord
     public byte ThalResult { get; set; }
 
     public bool IsDeleted { get; set; }
+    public bool IsViewForPatient { get; set; } = true;
 
     public virtual ICollection<AiriskPrediction> AiriskPredictions { get; set; } = new List<AiriskPrediction>();
 

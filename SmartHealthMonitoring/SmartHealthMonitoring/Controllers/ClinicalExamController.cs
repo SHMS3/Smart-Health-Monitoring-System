@@ -81,7 +81,8 @@ namespace SmartHealthMonitoring.Controllers
                     Stslope = model.STSlope,
                     MajorVessels = model.MajorVessels,
                     ThalResult = model.ThalResult,
-                    IsDeleted = false
+                    IsDeleted = false,
+                    IsViewForPatient = model.IsViewForPatient
                 };
 
                 _context.ClinicalRecords.Add(record);
