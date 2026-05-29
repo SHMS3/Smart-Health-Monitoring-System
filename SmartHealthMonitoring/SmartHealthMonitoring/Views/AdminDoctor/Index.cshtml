@@ -36,49 +36,79 @@
                                 @if (doc.IsDeleted)
                                 {
                                     <span class="badge bg-danger rounded-pill px-3">Đã khóa</span>
+                                    @if (!string.IsNullOrEmpty(doc.LockReason))
+                                    {
+                                        <div class="text-danger mt-1 small" style="font-size: 0.75rem;">
+                                            <i class="fas fa-info-circle me-1"></i>@doc.LockReason
+                                        </div>
+                                    }
                                 }
                                 else
                                 {
-
                                     <span class="badge bg-success rounded-pill px-3">Hoạt động</span>
                                 }
                             </td>
                             <td class="text-end pe-4">
-                                <form asp-action="ToggleLock" asp-route-userId="@doc.UserId" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm @(doc.IsDeleted ? "btn-outline-success" : "btn-outline-danger") rounded-pill fw-medium" onclick="return confirm('Xác nhận thay đổi trạng thái?');">
-                                        <i class="fas @(doc.IsDeleted ? "fa-unlock" : "fa-lock") me-1"></i> @(doc.IsDeleted ? "Mở khóa" : "Khóa")
+                                @if (doc.IsDeleted)
+                                {
+                                    <form asp-action="ToggleLock" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@doc.UserId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success rounded-pill fw-medium" onclick="return confirm('Xác nhận mở khóa tài khoản bác sĩ này?');">
+                                            <i class="fas fa-unlock me-1"></i> Mở khóa
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill fw-medium" data-bs-toggle="modal" data-bs-target="#lockModal-doc-@doc.UserId">
+                                        <i class="fas fa-lock me-1"></i> Khóa
                                     </button>
-                                </form>
+                                }
                             </td>
                         </tr>
+
+                        <div class="modal fade" id="lockModal-doc-@doc.UserId" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content rounded-4 border-0 shadow">
+                                    <form asp-action="ToggleLock" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <div class="modal-header border-bottom-0 p-4 pb-2">
+                                            <h5 class="modal-title fw-bold text-dark">Lý do khóa tài khoản</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body p-4 pt-0">
+                                            <p class="text-muted small mb-3">Vui lòng nhập lý do khóa tài khoản của bác sĩ <strong>@doc.FullName</strong>.</p>
+                                            <input type="hidden" name="userId" value="@doc.UserId" />
+                                            <div class="mb-3">
+                                                <textarea name="lockReason" class="form-control rounded-3" rows="3" placeholder="Ví dụ: Nghỉ việc, Vi phạm quy chế bệnh viện, Spam dữ liệu..." required></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top-0 p-4 pt-0">
+                                            <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-danger rounded-pill px-4 fw-medium">Xác nhận Khóa</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     }
                 </tbody>
             </table>
         </div>
     </div>
-
     @if (Model.TotalPages > 1)
     {
         <div class="card-footer bg-white border-top-0 p-4 d-flex justify-content-between align-items-center">
-            <span class="text-muted small">
-                Hiển thị trang @Model.Page / @Model.TotalPages (Tổng số: @Model.TotalCount bác sĩ)
-            </span>
-            <nav aria-label="Page navigation">
+            <span class="text-muted small">Hiển thị trang @Model.Page / @Model.TotalPages</span>
+            <nav>
                 <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
-                        <a class="page-link rounded-start-pill px-3" asp-action="Index" asp-route-page="@(Model.Page - 1)">Trước</a>
-                    </li>
-
+                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)">Trước</a></li>
                     @for (int i = 1; i <= Model.TotalPages; i++)
                     {
-                        <li class="page-item @(i == Model.Page ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
-                        </li>
+                        <li class="page-item @(i == Model.Page ? "active" : "")"><a class="page-link" asp-action="Index" asp-route-page="@i">@i</a></li>
                     }
-
-                    <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link rounded-end-pill px-3" asp-action="Index" asp-route-page="@(Model.Page + 1)">Sau</a>
-                    </li>
+                    <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)">Sau</a></li>
                 </ul>
             </nav>
         </div>
