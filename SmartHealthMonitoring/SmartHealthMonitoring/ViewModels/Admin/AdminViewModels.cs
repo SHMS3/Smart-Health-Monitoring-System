@@ -29,7 +29,8 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         public string Email { get; set; } = null!;
         public string Specialty { get; set; } = null!;
         public bool IsOnShift { get; set; }
-        public bool IsDeleted { get; set; }
+        public bool IsDeleted { get; set; } 
+        public string? LockReason { get; set; }
     }
 
     public class DoctorCreateViewModel
@@ -56,5 +57,6 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         public DateOnly DateOfBirth { get; set; }
         public byte Sex { get; set; }
         public bool IsDeleted { get; set; }
+        public string? LockReason { get; set; }
     }
 }

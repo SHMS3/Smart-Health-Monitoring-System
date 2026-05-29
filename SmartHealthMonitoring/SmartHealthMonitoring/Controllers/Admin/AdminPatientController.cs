@@ -12,11 +12,11 @@ namespace SmartHealthMonitoring.Controllers.Admin
     public class AdminPatientController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
+
         public AdminPatientController(SmartHealthMonitoringContext context) => _context = context;
 
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
-            // 1. Dựng Query (Chưa gọi Database vội)
             var query = from u in _context.Users
                         join p in _context.Patients on u.Id equals p.UserId
                         where u.Role == 0
@@ -30,19 +30,13 @@ namespace SmartHealthMonitoring.Controllers.Admin
                             Phone = p.Phone,
                             DateOfBirth = p.DateOfBirth,
                             Sex = p.Sex,
-                            IsDeleted = u.IsDeleted
+                            IsDeleted = u.IsDeleted,
+                            LockReason = u.LockReason // Lấy từ Migration mới
                         };
 
-            // 2. Đếm tổng số bản ghi (Hit DB lần 1)
             int totalRecords = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            // 3. Cắt trang bằng Skip và Take (Hit DB lần 2 - Rất nhẹ vì chỉ lấy 10 dòng)
-            var items = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            // 4. Gói vào PagedResult của bạn
             var result = new PagedResult<AdminPatientListViewModel>
             {
                 Items = items,
@@ -56,14 +50,22 @@ namespace SmartHealthMonitoring.Controllers.Admin
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ToggleLock(int userId)
+        public async Task<IActionResult> ToggleLock(int userId, string? lockReason)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user != null)
             {
                 user.IsDeleted = !user.IsDeleted;
+                if (user.IsDeleted)
+                {
+                    user.LockReason = string.IsNullOrWhiteSpace(lockReason) ? "Không có lý do cụ thể" : lockReason;
+                }
+                else
+                {
+                    user.LockReason = null;
+                }
                 await _context.SaveChangesAsync();
-                TempData["Success"] = user.IsDeleted ? "Đã khóa bệnh nhân." : "Đã mở khóa bệnh nhân.";
+                TempData["Success"] = user.IsDeleted ? "Đã khóa tài khoản bệnh nhân." : "Đã mở khóa tài khoản bệnh nhân.";
             }
             return RedirectToAction(nameof(Index));
         }

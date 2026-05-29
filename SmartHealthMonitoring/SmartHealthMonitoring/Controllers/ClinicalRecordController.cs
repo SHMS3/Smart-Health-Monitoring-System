@@ -84,15 +84,15 @@ namespace SmartHealthMonitoring.Controllers
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
                 var age = today.Year - patient.DateOfBirth.Year - (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
 
-                // 1. Dựng Query danh sách hồ sơ
+                // ========================================================
+                // TAB 1: Dựng Query và Phân trang danh sách Cận lâm sàng
+                // ========================================================
                 var query = _context.ClinicalRecords
                     .Where(r => r.PatientId == id && !r.IsDeleted)
                     .OrderByDescending(r => r.VisitDate);
 
-                // 2. Đếm tổng số bản ghi
                 int totalRecords = await query.CountAsync();
 
-                // 3. Phân trang bằng Skip & Take
                 var items = await query
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
@@ -115,7 +115,29 @@ namespace SmartHealthMonitoring.Controllers
                     })
                     .ToListAsync();
 
-                // 4. Gói dữ liệu vào ViewModel
+                // ========================================================
+                // TAB 2: Lấy danh sách Sổ tay tại nhà của bệnh nhân
+                // ========================================================
+                var dailyLogs = await _context.DailyVitalLogs
+                    .Where(d => d.PatientId == id && !d.IsDeleted)
+                    .OrderByDescending(d => d.LoggedAt)
+                    .Take(30) // Lấy 30 bản ghi gần nhất để giao diện load mượt
+                    .Select(d => new DailyVitalLogViewModel
+                    {
+                        Id = d.Id,
+                        LoggedAt = d.LoggedAt,
+                        SystolicBp = d.SystolicBp,
+                        DiastolicBp = d.DiastolicBp,
+                        HeartRate = d.HeartRate,
+                        ChestPainLevel = d.ChestPainLevel,
+                        HasExerciseAngina = d.HasExerciseAngina,
+                        UpdateCount = d.UpdateCount
+                    })
+                    .ToListAsync();
+
+                // ========================================================
+                // Gói toàn bộ dữ liệu vào ViewModel chung
+                // ========================================================
                 var viewModel = new PatientRecordIndexViewModel
                 {
                     PatientId = patient.Id,
@@ -129,7 +151,9 @@ namespace SmartHealthMonitoring.Controllers
                         TotalCount = totalRecords,
                         Page = page,
                         PageSize = pageSize
-                    }
+                    },
+
+                    DailyLogs = dailyLogs // Truyền dữ liệu sổ tay sang View
                 };
 
                 return View(viewModel);
