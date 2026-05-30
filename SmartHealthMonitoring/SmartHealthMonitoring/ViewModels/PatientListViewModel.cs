@@ -14,13 +14,30 @@ namespace SmartHealthMonitoring.ViewModels
     }
 
     // Screen 2: Danh sách hồ sơ của 1 bệnh nhân
+    //public class DailyVitalLogViewModel
+    //{
+    //    public int Id { get; set; }
+    //    public DateTime LoggedAt { get; set; }
+    //    public short SystolicBp { get; set; }
+    //    public short DiastolicBp { get; set; }
+    //    public short HeartRate { get; set; }
+    //    public byte ChestPainLevel { get; set; }
+    //    public bool HasExerciseAngina { get; set; }
+    //    public byte UpdateCount { get; set; }
+    //}
+
     public class PatientRecordIndexViewModel
     {
         public int PatientId { get; set; }
         public string PatientName { get; set; } = null!;
         public int Age { get; set; }
         public string SexDisplay { get; set; } = null!;
+
+        // Tab 1: Cận lâm sàng (Từ máy/Bác sĩ)
         public PagedResult<ClinicalRecordSummaryViewModel> Records { get; set; } = new();
+
+        // Tab 2: Sổ tay hằng ngày (Bệnh nhân tự nhập) - THÊM DÒNG NÀY
+        public List<DailyVitalLogViewModel> DailyLogs { get; set; } = new();
     }
 
     public class ClinicalRecordSummaryViewModel

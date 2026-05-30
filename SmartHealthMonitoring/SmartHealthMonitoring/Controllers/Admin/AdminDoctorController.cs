@@ -11,17 +11,13 @@ namespace SmartHealthMonitoring.Controllers.Admin
     [Authorize(Roles = "2")]
     public class AdminDoctorController : Controller
     {
-        private readonly SmartHealthMonitoringContext _context;
+        private readonly SmartHealthMonitoringContext _context; 
 
-        public AdminDoctorController(SmartHealthMonitoringContext context)
-        {
-            _context = context;
-        }
+        public AdminDoctorController(SmartHealthMonitoringContext context) => _context = context;
 
         [HttpGet]
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
-            // 1. Dựng Query
             var query = from u in _context.Users
                         join d in _context.Doctors on u.Id equals d.UserId
                         where u.Role == 1
@@ -34,19 +30,13 @@ namespace SmartHealthMonitoring.Controllers.Admin
                             Email = u.Email,
                             Specialty = d.Specialty,
                             IsOnShift = d.IsOnShift,
-                            IsDeleted = u.IsDeleted
+                            IsDeleted = u.IsDeleted,
+                            LockReason = u.LockReason // Lấy từ Migration mới
                         };
 
-            // 2. Đếm tổng số bản ghi
             int totalRecords = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            // 3. Phân trang bằng Skip & Take
-            var items = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            // 4. Gói vào PagedResult
             var result = new PagedResult<DoctorListViewModel>
             {
                 Items = items,
@@ -59,10 +49,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
         }
 
         [HttpGet]
-        public IActionResult Create()
-        {
-            return View(new DoctorCreateViewModel());
-        }
+        public IActionResult Create() => View(new DoctorCreateViewModel());
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -88,7 +75,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
                     CreatedAt = DateTime.Now,
                     IsDeleted = false
                 };
-
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
@@ -99,12 +85,10 @@ namespace SmartHealthMonitoring.Controllers.Admin
                     IsOnShift = true,
                     IsDeleted = false
                 };
-
                 _context.Doctors.Add(doctor);
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
-
                 TempData["Success"] = "Đã cấp tài khoản Bác sĩ thành công. Mật khẩu: 123456";
                 return RedirectToAction(nameof(Index));
             }
@@ -118,14 +102,22 @@ namespace SmartHealthMonitoring.Controllers.Admin
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ToggleLock(int userId)
+        public async Task<IActionResult> ToggleLock(int userId, string? lockReason)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user != null)
             {
                 user.IsDeleted = !user.IsDeleted;
+                if (user.IsDeleted)
+                {
+                    user.LockReason = string.IsNullOrWhiteSpace(lockReason) ? "Không có lý do cụ thể" : lockReason;
+                }
+                else
+                {
+                    user.LockReason = null; // Mở khóa thì xóa lý do
+                }
                 await _context.SaveChangesAsync();
-                TempData["Success"] = user.IsDeleted ? "Đã khóa bác sĩ." : "Đã mở khóa bác sĩ.";
+                TempData["Success"] = user.IsDeleted ? "Đã khóa tài khoản bác sĩ." : "Đã mở khóa tài khoản bác sĩ.";
             }
             return RedirectToAction(nameof(Index));
         }

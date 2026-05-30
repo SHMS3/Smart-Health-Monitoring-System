@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartHealthMonitoring.Context;
 
@@ -11,9 +12,11 @@ using SmartHealthMonitoring.Context;
 namespace SmartHealthMonitoring.Migrations
 {
     [DbContext(typeof(SmartHealthMonitoringContext))]
-    partial class SmartHealthMonitoringContextModelSnapshot : ModelSnapshot
+    [Migration("20260529034037_AddLockReasonToUser")]
+    partial class AddLockReasonToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -427,9 +430,6 @@ namespace SmartHealthMonitoring.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsViewForPatient")
-                        .HasColumnType("bit");
-
                     b.Property<byte>("MajorVessels")
                         .HasColumnType("tinyint");
 
@@ -481,7 +481,6 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)1,
                             IsDeleted = false,
-                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)150,
                             OldPeak = 2.3m,
@@ -501,7 +500,6 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)0,
                             IsDeleted = false,
-                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)187,
                             OldPeak = 3.5m,
@@ -521,7 +519,6 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)0,
                             IsDeleted = false,
-                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)172,
                             OldPeak = 1.4m,
@@ -541,7 +538,6 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)1,
                             FastingBs = (byte)0,
                             IsDeleted = false,
-                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)163,
                             OldPeak = 0.6m,
@@ -561,7 +557,6 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)1,
                             FastingBs = (byte)1,
                             IsDeleted = false,
-                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)155,
                             OldPeak = 3.1m,
@@ -581,7 +576,6 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)1,
                             IsDeleted = false,
-                            IsViewForPatient = true,
                             MajorVessels = (byte)3,
                             MaxHeartRate = (short)106,
                             OldPeak = 1.9m,
@@ -601,7 +595,6 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)1,
                             FastingBs = (byte)1,
                             IsDeleted = false,
-                            IsViewForPatient = true,
                             MajorVessels = (byte)2,
                             MaxHeartRate = (short)133,
                             OldPeak = 4.0m,
@@ -621,7 +614,6 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)0,
                             IsDeleted = false,
-                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)180,
                             OldPeak = 0.0m,
@@ -641,7 +633,6 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)0,
                             IsDeleted = false,
-                            IsViewForPatient = true,
                             MajorVessels = (byte)1,
                             MaxHeartRate = (short)160,
                             OldPeak = 1.2m,
@@ -661,7 +652,6 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)1,
                             FastingBs = (byte)1,
                             IsDeleted = false,
-                            IsViewForPatient = true,
                             MajorVessels = (byte)2,
                             MaxHeartRate = (short)140,
                             OldPeak = 2.5m,

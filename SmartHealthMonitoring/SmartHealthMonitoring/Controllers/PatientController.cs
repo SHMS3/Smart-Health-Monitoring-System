@@ -41,8 +41,8 @@ namespace SmartHealthMonitoring.Controllers
             }
             else if (lastLog != null)
             {
-                nextLogTime = lastLog.LoggedAt.AddHours(1);
-
+               // nextLogTime = lastLog.LoggedAt.AddHours(1);
+                nextLogTime = lastLog.LoggedAt.AddSeconds(10);
                 if (DateTime.Now < nextLogTime)
                 {
                     canLog = false;
@@ -62,7 +62,27 @@ namespace SmartHealthMonitoring.Controllers
 
             try
             {
-                var result = await _dailyVitalLogService.GetPatientVitalsHistoryAsync(patientId, fromDate, toDate, page, pageSize: 5);
+                PagedResult<DailyVitalLogViewModel> result;
+
+                if (!fromDate.HasValue && !toDate.HasValue)
+                {
+                    result = await _dailyVitalLogService.GetPatientVitalsHistoryAsync(
+                        patientId,
+                        DateTime.Today,
+                        DateTime.Today,
+                        page,
+                        5);
+                }
+                else
+                {
+                    result = await _dailyVitalLogService.GetPatientVitalsHistoryAsync(
+                        patientId,
+                        fromDate,
+                        toDate,
+                        page,
+                        5);
+                }
+
                 return View(result);
             }
             catch (ArgumentException ex)
