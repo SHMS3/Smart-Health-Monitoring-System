@@ -88,7 +88,8 @@ namespace SmartHealthMonitoring.Controllers
                 // TAB 1: Dựng Query và Phân trang danh sách Cận lâm sàng
                 // ========================================================
                 var query = _context.ClinicalRecords
-                    .Where(r => r.PatientId == id && !r.IsDeleted)
+                    .Where(r => r.PatientId == id && !r.IsDeleted
+                        && (User.IsInRole("1") || r.IsViewForPatient)) // Patient chỉ thấy hồ sơ được phép xem
                     .OrderByDescending(r => r.VisitDate);
 
                 int totalRecords = await query.CountAsync();
@@ -111,7 +112,8 @@ namespace SmartHealthMonitoring.Controllers
                         OldPeak = r.OldPeak,
                         STSlope = r.Stslope,
                         MajorVessels = r.MajorVessels,
-                        ThalResult = r.ThalResult
+                        ThalResult = r.ThalResult,
+                        IsViewForPatient = r.IsViewForPatient
                     })
                     .ToListAsync();
 
@@ -203,6 +205,39 @@ namespace SmartHealthMonitoring.Controllers
             catch (Exception)
             {
                 TempData["Error"] = "Lỗi hệ thống khi hủy hồ sơ.";
+                return RedirectToAction("Index", "DoctorDashboard");
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "1")] // Chỉ Bác sĩ mới được cập nhật quyền xem
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleViewForPatient(int id)
+        {
+            try
+            {
+                var record = await _context.ClinicalRecords.FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted);
+
+                if (record == null)
+                {
+                    TempData["Error"] = "Không tìm thấy hồ sơ.";
+                    return RedirectToAction("Index", "DoctorDashboard");
+                }
+
+                // Đảo trạng thái IsViewForPatient
+                record.IsViewForPatient = !record.IsViewForPatient;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = record.IsViewForPatient
+                    ? "Đã cho phép bệnh nhân xem hồ sơ này."
+                    : "Đã ẩn hồ sơ này với bệnh nhân.";
+
+                return RedirectToAction(nameof(Index), new { id = record.PatientId });
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = "Lỗi hệ thống khi cập nhật quyền xem.";
                 return RedirectToAction("Index", "DoctorDashboard");
             }
         }

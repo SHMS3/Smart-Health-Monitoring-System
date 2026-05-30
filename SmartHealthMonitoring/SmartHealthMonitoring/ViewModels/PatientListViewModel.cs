@@ -1,4 +1,4 @@
-﻿using SmartHealthMonitoring.Common;
+using SmartHealthMonitoring.Common;
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels
@@ -55,6 +55,7 @@ namespace SmartHealthMonitoring.ViewModels
         public byte STSlope { get; set; }
         public byte MajorVessels { get; set; }
         public byte ThalResult { get; set; }
+        public bool IsViewForPatient { get; set; }
     }
 
     // Feature: Form Thêm/Sửa Hồ sơ
