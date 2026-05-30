@@ -293,15 +293,6 @@
 
                                         @if (User.IsInRole("1"))
                                         {
-                                            <form asp-action="Delete" asp-route-id="@record.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn đánh dấu hồ sơ này là HỦY BỎ?');">
-                                                <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0;" title="Hủy hồ sơ">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-                                        }
-
-                                        @if (User.IsInRole("1"))
-                                        {
                                             <button type="button"
                                                     class="btn btn-eye-toggle @(record.IsViewForPatient ? "visible" : "hidden") shadow-sm me-2"
                                                     data-bs-toggle="modal"
