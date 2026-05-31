@@ -1,5 +1,4 @@
-
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -33,20 +32,27 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpPost]
-        //[ValidateAntiForgeryToken]
-        
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ClinicalExamFormViewModel model)
         {
-
+            // 1. Kiểm tra Lớp 1 (Các ngưỡng Range từ ViewModel)
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại các trường.";
+                TempData["Error"] = "Hệ thống phát hiện dữ liệu máy đo bất thường. Vui lòng rà soát lại các ô báo đỏ!";
+                return View(model);
+            }
+
+            // 2. Kiểm tra Lớp 2 (Nghiệp vụ Y khoa chéo)
+            // Ví dụ: Bắt ngoại lệ nếu Huyết áp tâm thu < Nhịp tim (Dấu hiệu máy đo hỏng nặng)
+            if (model.RestingBP < model.MaxHeartRate && model.RestingBP < 80)
+            {
+                ModelState.AddModelError("RestingBP", "Ngoại lệ lâm sàng: Huyết áp không thể thấp hơn Nhịp tim tối đa trong trường hợp này. Yêu cầu đo lại!");
+                TempData["Error"] = "Cảnh báo: Phát hiện sự bất hợp lý giữa các chỉ số Sinh hiệu!";
                 return View(model);
             }
 
             try
             {
-                // 1. Lấy UserId từ Cookie Đăng nhập (Claims)
                 var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 {
@@ -54,9 +60,7 @@ namespace SmartHealthMonitoring.Controllers
                     return RedirectToAction("Login", "Auth");
                 }
 
-                // 2. Tìm DoctorId tương ứng với UserId trong bảng Doctors
-                var doctor = await _context.Doctors
-                    .FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
 
                 if (doctor == null)
                 {
@@ -64,11 +68,10 @@ namespace SmartHealthMonitoring.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                // 3. Khởi tạo bản ghi và gán DoctorId linh động
                 var record = new ClinicalRecord
                 {
                     PatientId = model.PatientId,
-                    DoctorId = doctor.Id, // ĐÃ FIX: Lấy linh động từ Database
+                    DoctorId = doctor.Id,
                     VisitDate = DateTime.Now,
                     ChestPainType = model.ChestPainType,
                     RestingBp = model.RestingBP,
@@ -81,6 +84,7 @@ namespace SmartHealthMonitoring.Controllers
                     Stslope = model.STSlope,
                     MajorVessels = model.MajorVessels,
                     ThalResult = model.ThalResult,
+                    EcgImageUrl = model.EcgImageUrl,
                     IsDeleted = false,
                     IsViewForPatient = model.IsViewForPatient
                 };
@@ -88,7 +92,6 @@ namespace SmartHealthMonitoring.Controllers
                 _context.ClinicalRecords.Add(record);
                 await _context.SaveChangesAsync();
 
-                // 4. DỌN DẸP CACHE SAU KHI LƯU DB THÀNH CÔNG
                 _cache.Remove($"LabResult_{model.PatientId}");
 
                 // GỬI EMAIL TỰ ĐỘNG
@@ -104,7 +107,7 @@ namespace SmartHealthMonitoring.Controllers
                         {
                             { "{{PatientName}}", patient.User.FullName },
                             { "{{RecordDate}}", record.VisitDate.ToString("dd/MM/yyyy HH:mm") },
-                            { "{{Diagnosis}}", "Kết quả khám lâm sàng" }, 
+                            { "{{Diagnosis}}", "Kết quả khám lâm sàng" },
                             { "{{Severity}}", "Bình thường" },
                             { "{{VitalSigns}}", $"Nhịp tim Max: {record.MaxHeartRate} bpm | Huyết áp tĩnh: {record.RestingBp} mm/Hg" },
                             { "{{DoctorAdvice}}", "Các chỉ số hiện tại đã được ghi nhận. Vui lòng theo dõi hoặc liên hệ trực tiếp bác sĩ nếu có dấu hiệu mệt mỏi, khó thở bất thường." }
@@ -119,7 +122,6 @@ namespace SmartHealthMonitoring.Controllers
                 }
                 catch (Exception emailEx)
                 {
-                    // Catch và bỏ qua để lỗi gửi mail không làm crash luồng lưu dữ liệu y tế
                     Console.WriteLine($"Lỗi khi gửi email sau khi lưu: {emailEx.Message}");
                 }
 
@@ -135,9 +137,8 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         // =============================================
-        // FEATURE: CẤU HÌNH NGƯỠNG CHO BỆNH NHÂN
+        // FEATURE: CẤU HÌNH NGƯỠNG CHO BỆNH NHÂN (Giữ nguyên)
         // =============================================
-
         [HttpGet]
         public async Task<IActionResult> SettingPatientThreshold(int patientId)
         {
@@ -155,34 +156,32 @@ namespace SmartHealthMonitoring.Controllers
             }
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            int age = today.Year - patient.DateOfBirth.Year
-                      - (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
+            int age = today.Year - patient.DateOfBirth.Year - (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
 
             var existing = patient.PatientThreshold;
 
             var vm = new PatientThresholdViewModel
             {
-                PatientId       = patient.Id,
-                PatientName     = patient.User.FullName,
-                Age             = age,
-                Sex             = patient.Sex,
-                SexDisplay      = patient.Sex == 1 ? "Nam" : "Nữ",
-                IsConfigured    = existing != null,
-                ThresholdId     = existing?.Id,
-                LastUpdatedAt   = existing?.UpdatedAt,
-                LastUpdatedByDoctorId      = existing?.UpdatedByDoctorId,
-                LastUpdatedByDoctor        = existing?.UpdatedByDoctor?.User?.FullName,
+
+                PatientId = patient.Id,
+                PatientName = patient.User.FullName,
+                Age = age,
+                SexDisplay = patient.Sex == 1 ? "Nam" : "Nữ",
+                IsConfigured = existing != null,
+                ThresholdId = existing?.Id,
+                LastUpdatedAt = existing?.UpdatedAt,
+                LastUpdatedByDoctorId = existing?.UpdatedByDoctorId,
+                LastUpdatedByDoctor = existing?.UpdatedByDoctor?.User?.FullName,
                 LastUpdatedByDoctorSpecialty = existing?.UpdatedByDoctor?.Specialty,
 
-                // Dùng giá trị đã cấu hình, nếu chưa có thì lấy default từ model
-                SystolicBpWarning  = existing?.SystolicBpWarning  ?? 130,
-                SystolicBpDanger   = existing?.SystolicBpDanger   ?? 140,
+                SystolicBpWarning = existing?.SystolicBpWarning ?? 130,
+                SystolicBpDanger = existing?.SystolicBpDanger ?? 140,
                 DiastolicBpWarning = existing?.DiastolicBpWarning ?? 80,
-                DiastolicBpDanger  = existing?.DiastolicBpDanger  ?? 90,
+                DiastolicBpDanger = existing?.DiastolicBpDanger ?? 90,
                 HeartRateWarningMin = existing?.HeartRateWarningMin ?? 60,
-                HeartRateDangerMin  = existing?.HeartRateDangerMin  ?? 50,
+                HeartRateDangerMin = existing?.HeartRateDangerMin ?? 50,
                 HeartRateWarningMax = existing?.HeartRateWarningMax ?? 100,
-                HeartRateDangerMax  = existing?.HeartRateDangerMax  ?? 120,
+                HeartRateDangerMax = existing?.HeartRateDangerMax ?? 120,
             };
 
             return View(vm);
@@ -193,11 +192,8 @@ namespace SmartHealthMonitoring.Controllers
         public async Task<IActionResult> SettingPatientThreshold(PatientThresholdViewModel model)
         {
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
 
-            // Validate logic: Warning phải nhỏ hơn Danger
             if (model.SystolicBpWarning >= model.SystolicBpDanger)
             {
                 ModelState.AddModelError("", "Ngưỡng Cảnh báo Huyết áp TT phải nhỏ hơn ngưỡng Nguy hiểm.");
@@ -219,7 +215,6 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            // Lấy doctorId từ claim
             int? doctorId = null;
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out int userId))
@@ -228,44 +223,41 @@ namespace SmartHealthMonitoring.Controllers
                 doctorId = doctor?.Id;
             }
 
-            // UPSERT: Nếu đã có thì cập nhật, chưa có thì tạo mới
-            var existing = await _context.PatientThresholds
-                .FirstOrDefaultAsync(t => t.PatientId == model.PatientId);
+            var existing = await _context.PatientThresholds.FirstOrDefaultAsync(t => t.PatientId == model.PatientId);
 
             if (existing == null)
             {
                 var newThreshold = new PatientThreshold
                 {
-                    PatientId          = model.PatientId,
-                    SystolicBpWarning  = model.SystolicBpWarning,
-                    SystolicBpDanger   = model.SystolicBpDanger,
+                    PatientId = model.PatientId,
+                    SystolicBpWarning = model.SystolicBpWarning,
+                    SystolicBpDanger = model.SystolicBpDanger,
                     DiastolicBpWarning = model.DiastolicBpWarning,
-                    DiastolicBpDanger  = model.DiastolicBpDanger,
+                    DiastolicBpDanger = model.DiastolicBpDanger,
                     HeartRateWarningMin = model.HeartRateWarningMin,
-                    HeartRateDangerMin  = model.HeartRateDangerMin,
+                    HeartRateDangerMin = model.HeartRateDangerMin,
                     HeartRateWarningMax = model.HeartRateWarningMax,
-                    HeartRateDangerMax  = model.HeartRateDangerMax,
-                    UpdatedAt          = DateTime.Now,
-                    UpdatedByDoctorId  = doctorId
+                    HeartRateDangerMax = model.HeartRateDangerMax,
+                    UpdatedAt = DateTime.Now,
+                    UpdatedByDoctorId = doctorId
                 };
                 _context.PatientThresholds.Add(newThreshold);
             }
             else
             {
-                existing.SystolicBpWarning  = model.SystolicBpWarning;
-                existing.SystolicBpDanger   = model.SystolicBpDanger;
+                existing.SystolicBpWarning = model.SystolicBpWarning;
+                existing.SystolicBpDanger = model.SystolicBpDanger;
                 existing.DiastolicBpWarning = model.DiastolicBpWarning;
-                existing.DiastolicBpDanger  = model.DiastolicBpDanger;
+                existing.DiastolicBpDanger = model.DiastolicBpDanger;
                 existing.HeartRateWarningMin = model.HeartRateWarningMin;
-                existing.HeartRateDangerMin  = model.HeartRateDangerMin;
+                existing.HeartRateDangerMin = model.HeartRateDangerMin;
                 existing.HeartRateWarningMax = model.HeartRateWarningMax;
-                existing.HeartRateDangerMax  = model.HeartRateDangerMax;
-                existing.UpdatedAt          = DateTime.Now;
-                existing.UpdatedByDoctorId  = doctorId;
+                existing.HeartRateDangerMax = model.HeartRateDangerMax;
+                existing.UpdatedAt = DateTime.Now;
+                existing.UpdatedByDoctorId = doctorId;
             }
 
             await _context.SaveChangesAsync();
-
             TempData["Success"] = $"Đã lưu cấu hình ngưỡng cho bệnh nhân thành công!";
             return RedirectToAction("Index", "ClinicalRecord", new { id = model.PatientId });
         }

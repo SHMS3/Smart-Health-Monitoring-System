@@ -388,8 +388,7 @@ public partial class SmartHealthMonitoringContext : DbContext
             new User { Id = 17, Email = "patient.hai@gmail.com", PasswordHash = "hash123", FullName = "Đặng Quang Hải", Role = 0, CreatedAt = baseDate },
             new User { Id = 18, Email = "patient.yen@gmail.com", PasswordHash = "hash123", FullName = "Võ Hoàng Yến", Role = 0, CreatedAt = baseDate },
             new User { Id = 19, Email = "patient.phong@gmail.com", PasswordHash = "hash123", FullName = "Ngô Đình Phong", Role = 0, CreatedAt = baseDate },
-            new User { Id = 20, Email = "patient.mai@gmail.com", PasswordHash = "hash123", FullName = "Đoàn Ngọc Mai", Role = 0, CreatedAt = baseDate },
-
+            new User { Id = 20, Email = "patient.mai@gmail.com", PasswordHash = "hash123", FullName = "Đoàn Ngọc Mai", Role = 0, CreatedAt = baseDate }
         );
 
         // 2. Doctors 

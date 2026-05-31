@@ -50,14 +50,10 @@ namespace SmartHealthMonitoring.Controllers
                 if (User.IsInRole("0"))
                 {
                     var email = User.Identity?.Name;
-
                     var currentPatient = await _context.Patients
                         .Include(p => p.User)
-                        .FirstOrDefaultAsync(p =>
-                            p.User.Email == email &&
-                            !p.IsDeleted);
+                        .FirstOrDefaultAsync(p => p.User.Email == email && !p.IsDeleted);
 
-                    // Patient cố xem hồ sơ người khác
                     if (currentPatient == null || currentPatient.Id != id)
                     {
                         return Forbid();
@@ -72,13 +68,7 @@ namespace SmartHealthMonitoring.Controllers
                 if (patient == null)
                 {
                     TempData["Error"] = "Không tìm thấy bệnh nhân.";
-
-                    if (User.IsInRole("1"))
-                    {
-                        return RedirectToAction("Index", "DoctorDashboard");
-                    }
-
-                    return RedirectToAction("Index", "Home");
+                    return User.IsInRole("1") ? RedirectToAction("Index", "DoctorDashboard") : RedirectToAction("Index", "Home");
                 }
 
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -87,14 +77,20 @@ namespace SmartHealthMonitoring.Controllers
                 // ========================================================
                 // TAB 1: Dựng Query và Phân trang danh sách Cận lâm sàng
                 // ========================================================
-                var query = _context.ClinicalRecords
-                    .Where(r => r.PatientId == id && !r.IsDeleted
-                        && (User.IsInRole("1") || r.IsViewForPatient)) // Patient chỉ thấy hồ sơ được phép xem
-                    .OrderByDescending(r => r.VisitDate);
+                var baseQuery = _context.ClinicalRecords
+                    .Where(r => r.PatientId == id && !r.IsDeleted);
 
-                int totalRecords = await query.CountAsync();
+                // Nếu là bệnh nhân (role 0) thì chỉ lấy hồ sơ được cho phép xem
+                if (User.IsInRole("0"))
+                {
+                    baseQuery = baseQuery.Where(r => r.IsViewForPatient);
+                }
 
-                var items = await query
+                var clinicalQuery = baseQuery.OrderByDescending(r => r.VisitDate);
+
+                int totalRecords = await clinicalQuery.CountAsync();
+
+                var clinicalItems = await clinicalQuery
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .Select(r => new ClinicalRecordSummaryViewModel
@@ -104,7 +100,11 @@ namespace SmartHealthMonitoring.Controllers
                         RestingBP = r.RestingBp,
                         Cholesterol = r.Cholesterol,
                         MaxHeartRate = r.MaxHeartRate,
-                        ChestPainTypeDisplay = GetChestPainDisplay(r.ChestPainType),
+
+                        // ĐÃ FIX: Dùng toán tử 3 ngôi để EF Core có thể dịch sang SQL (CASE WHEN)
+                        ChestPainTypeDisplay = r.ChestPainType == 0 ? "Typical Angina (TA)" :
+                                               r.ChestPainType == 1 ? "Atypical Angina (ATA)" :
+                                               r.ChestPainType == 2 ? "Non-Anginal Pain (NAP)" : "Asymptomatic (ASY)",
 
                         FastingBS = r.FastingBs,
                         RestECG = r.RestEcg,
@@ -113,6 +113,7 @@ namespace SmartHealthMonitoring.Controllers
                         STSlope = r.Stslope,
                         MajorVessels = r.MajorVessels,
                         ThalResult = r.ThalResult,
+                        EcgImageUrl = r.EcgImageUrl,
                         IsViewForPatient = r.IsViewForPatient
                     })
                     .ToListAsync();
@@ -149,20 +150,21 @@ namespace SmartHealthMonitoring.Controllers
 
                     Records = new PagedResult<ClinicalRecordSummaryViewModel>
                     {
-                        Items = items,
+                        Items = clinicalItems,
                         TotalCount = totalRecords,
                         Page = page,
                         PageSize = pageSize
                     },
 
-                    DailyLogs = dailyLogs // Truyền dữ liệu sổ tay sang View
+                    DailyLogs = dailyLogs
                 };
 
                 return View(viewModel);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                TempData["Error"] = "Lỗi khi tải hồ sơ y tế.";
+                // Thêm ex.Message để sau này nếu có lỗi thì nó hiện rõ nguyên nhân, dễ debug hơn
+                TempData["Error"] = "Lỗi khi tải hồ sơ y tế: " + ex.Message;
 
                 if (User.IsInRole("1"))
                 {
