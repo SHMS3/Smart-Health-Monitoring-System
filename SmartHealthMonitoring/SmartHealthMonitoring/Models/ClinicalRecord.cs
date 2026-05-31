@@ -36,7 +36,10 @@ public partial class ClinicalRecord
     public byte ThalResult { get; set; }
 
     public bool IsDeleted { get; set; }
+
     public bool IsViewForPatient { get; set; } = true;
+
+    public string? EcgImageUrl { get; set; }
 
     public virtual ICollection<AiriskPrediction> AiriskPredictions { get; set; } = new List<AiriskPrediction>();
 
