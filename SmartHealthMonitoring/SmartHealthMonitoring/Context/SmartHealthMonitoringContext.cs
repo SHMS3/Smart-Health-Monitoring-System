@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Models;
@@ -36,6 +36,8 @@ public partial class SmartHealthMonitoringContext : DbContext
 
     public virtual DbSet<WarningAlert> WarningAlerts { get; set; }
     public virtual DbSet<PatientThreshold> PatientThresholds { get; set; }
+
+    public virtual DbSet<StandardThreshold> StandardThresholds { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -255,6 +257,110 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .HasConstraintName("FK__PatientTh__Docto");
         });
 
+        modelBuilder.Entity<StandardThreshold>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__StandardThresholds");
+
+            entity.ToTable("StandardThresholds");
+
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+        });
+
+        // ==========================================
+        // SEED: Ngưỡng chuẩn mặc định (WHO / JNC8)
+        // ==========================================
+        DateTime stdDate = new DateTime(2026, 5, 31, 0, 0, 0, DateTimeKind.Utc);
+        modelBuilder.Entity<StandardThreshold>().HasData(
+            // Trẻ em & thanh thiếu niên (chung)
+            new StandardThreshold
+            {
+                Id = 1, Name = "Trẻ em & Thanh thiếu niên (≤ 17 tuổi)",
+                Description = "Áp dụng cho cả nam và nữ từ 0–17 tuổi theo khuyến nghị AAP/WHO",
+                Sex = 2, AgeMin = 0, AgeMax = 17,
+                SystolicBpWarning = 120, SystolicBpDanger = 130,
+                DiastolicBpWarning = 75, DiastolicBpDanger = 85,
+                HeartRateWarningMin = 65, HeartRateDangerMin = 55,
+                HeartRateWarningMax = 100, HeartRateDangerMax = 120,
+                IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
+            },
+            // Nam 18–40
+            new StandardThreshold
+            {
+                Id = 2, Name = "Nam 18–40 tuổi",
+                Description = "Ngưỡng chuẩn cho nam giới trưởng thành theo JNC8/WHO",
+                Sex = 1, AgeMin = 18, AgeMax = 40,
+                SystolicBpWarning = 130, SystolicBpDanger = 140,
+                DiastolicBpWarning = 80, DiastolicBpDanger = 90,
+                HeartRateWarningMin = 60, HeartRateDangerMin = 50,
+                HeartRateWarningMax = 100, HeartRateDangerMax = 120,
+                IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
+            },
+            // Nữ 18–40
+            new StandardThreshold
+            {
+                Id = 3, Name = "Nữ 18–40 tuổi",
+                Description = "Ngưỡng chuẩn cho nữ giới trưởng thành theo JNC8/WHO",
+                Sex = 0, AgeMin = 18, AgeMax = 40,
+                SystolicBpWarning = 130, SystolicBpDanger = 140,
+                DiastolicBpWarning = 80, DiastolicBpDanger = 90,
+                HeartRateWarningMin = 60, HeartRateDangerMin = 50,
+                HeartRateWarningMax = 100, HeartRateDangerMax = 120,
+                IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
+            },
+            // Nam 41–60
+            new StandardThreshold
+            {
+                Id = 4, Name = "Nam 41–60 tuổi",
+                Description = "Ngưỡng chuẩn cho nam giới trung niên, nguy cơ tim mạch tăng",
+                Sex = 1, AgeMin = 41, AgeMax = 60,
+                SystolicBpWarning = 130, SystolicBpDanger = 140,
+                DiastolicBpWarning = 80, DiastolicBpDanger = 90,
+                HeartRateWarningMin = 60, HeartRateDangerMin = 50,
+                HeartRateWarningMax = 100, HeartRateDangerMax = 120,
+                IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
+            },
+            // Nữ 41–60
+            new StandardThreshold
+            {
+                Id = 5, Name = "Nữ 41–60 tuổi",
+                Description = "Ngưỡng chuẩn cho nữ giới trung niên (giai đoạn tiền mãn kinh)",
+                Sex = 0, AgeMin = 41, AgeMax = 60,
+                SystolicBpWarning = 130, SystolicBpDanger = 140,
+                DiastolicBpWarning = 80, DiastolicBpDanger = 90,
+                HeartRateWarningMin = 60, HeartRateDangerMin = 50,
+                HeartRateWarningMax = 100, HeartRateDangerMax = 120,
+                IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
+            },
+            // Nam > 60
+            new StandardThreshold
+            {
+                Id = 6, Name = "Nam trên 60 tuổi",
+                Description = "Ngưỡng điều chỉnh cho nam cao tuổi (huyết áp mục tiêu cao hơn theo ESC 2023)",
+                Sex = 1, AgeMin = 61, AgeMax = 120,
+                SystolicBpWarning = 140, SystolicBpDanger = 150,
+                DiastolicBpWarning = 85, DiastolicBpDanger = 90,
+                HeartRateWarningMin = 55, HeartRateDangerMin = 45,
+                HeartRateWarningMax = 95, HeartRateDangerMax = 110,
+                IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
+            },
+            // Nữ > 60
+            new StandardThreshold
+            {
+                Id = 7, Name = "Nữ trên 60 tuổi",
+                Description = "Ngưỡng điều chỉnh cho nữ cao tuổi (huyết áp mục tiêu cao hơn theo ESC 2023)",
+                Sex = 0, AgeMin = 61, AgeMax = 120,
+                SystolicBpWarning = 140, SystolicBpDanger = 150,
+                DiastolicBpWarning = 85, DiastolicBpDanger = 90,
+                HeartRateWarningMin = 55, HeartRateDangerMin = 45,
+                HeartRateWarningMax = 95, HeartRateDangerMax = 110,
+                IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
+            }
+        );
+
         // ==========================================
         // DATA SEEDING (CHUẨN KHỚP 100% VỚI DATABASE V4)
         // ==========================================
@@ -282,7 +388,8 @@ public partial class SmartHealthMonitoringContext : DbContext
             new User { Id = 17, Email = "patient.hai@gmail.com", PasswordHash = "hash123", FullName = "Đặng Quang Hải", Role = 0, CreatedAt = baseDate },
             new User { Id = 18, Email = "patient.yen@gmail.com", PasswordHash = "hash123", FullName = "Võ Hoàng Yến", Role = 0, CreatedAt = baseDate },
             new User { Id = 19, Email = "patient.phong@gmail.com", PasswordHash = "hash123", FullName = "Ngô Đình Phong", Role = 0, CreatedAt = baseDate },
-            new User { Id = 20, Email = "patient.mai@gmail.com", PasswordHash = "hash123", FullName = "Đoàn Ngọc Mai", Role = 0, CreatedAt = baseDate }
+            new User { Id = 20, Email = "patient.mai@gmail.com", PasswordHash = "hash123", FullName = "Đoàn Ngọc Mai", Role = 0, CreatedAt = baseDate },
+
         );
 
         // 2. Doctors 

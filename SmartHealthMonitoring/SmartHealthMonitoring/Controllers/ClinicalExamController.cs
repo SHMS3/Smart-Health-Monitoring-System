@@ -165,6 +165,7 @@ namespace SmartHealthMonitoring.Controllers
                 PatientId       = patient.Id,
                 PatientName     = patient.User.FullName,
                 Age             = age,
+                Sex             = patient.Sex,
                 SexDisplay      = patient.Sex == 1 ? "Nam" : "Nữ",
                 IsConfigured    = existing != null,
                 ThresholdId     = existing?.Id,
@@ -267,6 +268,79 @@ namespace SmartHealthMonitoring.Controllers
 
             TempData["Success"] = $"Đã lưu cấu hình ngưỡng cho bệnh nhân thành công!";
             return RedirectToAction("Index", "ClinicalRecord", new { id = model.PatientId });
+        }
+
+        // =============================================
+        // API: GỢI Ý NGƯỠNG CHUẨN CHO BÁC SĨ
+        // =============================================
+
+        /// <summary>
+        /// Trả về ngưỡng chuẩn phù hợp nhất theo giới tính và độ tuổi.
+        /// GET /ClinicalExam/GetSuggestedThreshold?sex=1&age=45
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetSuggestedThreshold(byte sex, int age)
+        {
+            // Ưu tiên: khớp đúng giới tính + tuổi nằm trong khoảng → nếu không có thì lấy template "Chung"
+            var templates = await _context.StandardThresholds
+                .Where(t => t.IsActive && age >= t.AgeMin && age <= t.AgeMax)
+                .ToListAsync();
+
+            // Tìm template khớp giới tính chính xác trước
+            var matched = templates.FirstOrDefault(t => t.Sex == sex)
+                       ?? templates.FirstOrDefault(t => t.Sex == 2); // fallback: chung
+
+            if (matched == null)
+                return Json(new { success = false, message = "Không tìm thấy ngưỡng chuẩn phù hợp." });
+
+            return Json(new
+            {
+                success = true,
+                templateId   = matched.Id,
+                templateName = matched.Name,
+                description  = matched.Description,
+                systolicBpWarning   = matched.SystolicBpWarning,
+                systolicBpDanger    = matched.SystolicBpDanger,
+                diastolicBpWarning  = matched.DiastolicBpWarning,
+                diastolicBpDanger   = matched.DiastolicBpDanger,
+                heartRateWarningMin = matched.HeartRateWarningMin,
+                heartRateDangerMin  = matched.HeartRateDangerMin,
+                heartRateWarningMax = matched.HeartRateWarningMax,
+                heartRateDangerMax  = matched.HeartRateDangerMax,
+            });
+        }
+
+        /// <summary>
+        /// Trả về tất cả ngưỡng chuẩn đang active để bác sĩ chọn từ dropdown.
+        /// GET /ClinicalExam/GetAllStandardThresholds
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAllStandardThresholds()
+        {
+            var list = await _context.StandardThresholds
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.Sex)
+                .ThenBy(t => t.AgeMin)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Name,
+                    t.Description,
+                    t.Sex,
+                    t.AgeMin,
+                    t.AgeMax,
+                    t.SystolicBpWarning,
+                    t.SystolicBpDanger,
+                    t.DiastolicBpWarning,
+                    t.DiastolicBpDanger,
+                    t.HeartRateWarningMin,
+                    t.HeartRateDangerMin,
+                    t.HeartRateWarningMax,
+                    t.HeartRateDangerMax,
+                })
+                .ToListAsync();
+
+            return Json(list);
         }
     }
 }
