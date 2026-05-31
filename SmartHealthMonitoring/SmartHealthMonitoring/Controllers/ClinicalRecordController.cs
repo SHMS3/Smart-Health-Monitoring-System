@@ -77,9 +77,16 @@ namespace SmartHealthMonitoring.Controllers
                 // ========================================================
                 // TAB 1: Dựng Query và Phân trang danh sách Cận lâm sàng
                 // ========================================================
-                var clinicalQuery = _context.ClinicalRecords
-                    .Where(r => r.PatientId == id && !r.IsDeleted)
-                    .OrderByDescending(r => r.VisitDate);
+                var baseQuery = _context.ClinicalRecords
+                    .Where(r => r.PatientId == id && !r.IsDeleted);
+
+                // Nếu là bệnh nhân (role 0) thì chỉ lấy hồ sơ được cho phép xem
+                if (User.IsInRole("0"))
+                {
+                    baseQuery = baseQuery.Where(r => r.IsViewForPatient);
+                }
+
+                var clinicalQuery = baseQuery.OrderByDescending(r => r.VisitDate);
 
                 int totalRecords = await clinicalQuery.CountAsync();
 
@@ -106,7 +113,8 @@ namespace SmartHealthMonitoring.Controllers
                         STSlope = r.Stslope,
                         MajorVessels = r.MajorVessels,
                         ThalResult = r.ThalResult,
-                        EcgImageUrl = r.EcgImageUrl
+                        EcgImageUrl = r.EcgImageUrl,
+                        IsViewForPatient = r.IsViewForPatient
                     })
                     .ToListAsync();
 

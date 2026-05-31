@@ -1,0 +1,285 @@
+@model IEnumerable<SmartHealthMonitoring.Models.StandardThreshold>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý Ngưỡng Chuẩn";
+    string SexLabel(byte sex) => sex == 1 ? "Nam" : sex == 0 ? "Nữ" : "Chung";
+    string SexBadge(byte sex) => sex == 1
+        ? "<span class='badge sex-badge-male'><i class='fa-solid fa-mars me-1'></i>Nam</span>"
+        : sex == 0
+            ? "<span class='badge sex-badge-female'><i class='fa-solid fa-venus me-1'></i>Nữ</span>"
+            : "<span class='badge sex-badge-all'><i class='fa-solid fa-venus-mars me-1'></i>Chung</span>";
+}
+
+@section Styles {
+<style>
+    .std-page { background: #f0f4f8; min-height: calc(100vh - 70px); padding-top: 90px; padding-bottom: 60px; }
+
+    .page-hero {
+        background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%);
+        border-radius: 20px; padding: 30px 36px; color: white; margin-bottom: 28px;
+        position: relative; overflow: hidden;
+    }
+    .page-hero::before {
+        content: ''; position: absolute; top: -50px; right: -50px;
+        width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.06);
+    }
+    .page-hero::after {
+        content: ''; position: absolute; bottom: -30px; right: 120px;
+        width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.04);
+    }
+
+    .card-std {
+        background: white; border-radius: 16px;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.07); overflow: hidden;
+    }
+
+    .card-std .table thead th {
+        background: #f8fafc; font-size: 0.78rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.4px; color: #64748b;
+        border-bottom: 2px solid #e2e8f0; padding: 12px 16px;
+    }
+    .card-std .table tbody td { padding: 13px 16px; vertical-align: middle; font-size: 0.875rem; }
+    .card-std .table tbody tr:hover { background: #f8fafc; }
+
+    .sex-badge-male   { background: #dbeafe; color: #1d4ed8; font-size: 0.78rem; }
+    .sex-badge-female { background: #fce7f3; color: #be185d; font-size: 0.78rem; }
+    .sex-badge-all    { background: #ede9fe; color: #6d28d9; font-size: 0.78rem; }
+
+    .age-range { font-size: 0.82rem; color: #475569; }
+    .threshold-mini { font-size: 0.78rem; color: #64748b; }
+    .threshold-mini strong { color: #1e293b; }
+
+    .btn-add { background: linear-gradient(135deg, #7c3aed, #4f46e5); border: none; color: white;
+        padding: 10px 22px; border-radius: 10px; font-weight: 700; font-size: 0.88rem;
+        box-shadow: 0 4px 12px rgba(124,58,237,0.3); transition: all 0.2s; }
+    .btn-add:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(124,58,237,0.4); color: white; }
+
+    .action-btn { width: 34px; height: 34px; border-radius: 8px; border: none;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 0.82rem; transition: all 0.15s; cursor: pointer; }
+    .action-btn:hover { transform: scale(1.1); }
+    .btn-edit-row { background: #eff6ff; color: #2563eb; }
+    .btn-toggle-row { background: #f0fdf4; color: #16a34a; }
+    .btn-toggle-row.inactive { background: #fef9c3; color: #ca8a04; }
+    .btn-delete-row { background: #fef2f2; color: #dc2626; }
+
+    .status-active   { background: #dcfce7; color: #166534; border-radius: 6px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700; }
+    .status-inactive { background: #fef3c7; color: #92400e; border-radius: 6px; padding: 3px 10px; font-size: 0.75rem; font-weight: 700; }
+
+    .filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-tab { padding: 6px 16px; border-radius: 20px; border: 2px solid transparent;
+        font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.15s; background: white; }
+    .filter-tab.active, .filter-tab:hover { border-color: #7c3aed; color: #7c3aed; }
+    .filter-tab.active { background: #ede9fe; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+</style>
+}
+
+<div class="std-page">
+    <div class="container" style="max-width: 1100px;">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4">
+                <i class="fa-solid fa-circle-check me-2"></i>@TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4">
+                <i class="fa-solid fa-circle-xmark me-2"></i>@TempData["Error"]
+            </div>
+        }
+
+        <!-- Hero -->
+        <div class="page-hero">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div style="width:50px;height:50px;border-radius:14px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                            <i class="fa-solid fa-sliders fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">Ngưỡng Chuẩn Y Tế</h4>
+                            <div style="font-size:0.88rem;opacity:0.85;">Quản lý template ngưỡng theo giới tính & độ tuổi</div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 flex-wrap" style="font-size:0.84rem;opacity:0.9;">
+                        <span><i class="fa-solid fa-database me-1 opacity-75"></i>@Model.Count() template</span>
+                        <span><i class="fa-solid fa-circle-check me-1 opacity-75"></i>@Model.Count(t => t.IsActive) đang hoạt động</span>
+                        <span><i class="fa-solid fa-book-medical me-1 opacity-75"></i>Chuẩn WHO / JNC8 / ESC 2023</span>
+                    </div>
+                </div>
+                <a asp-action="Create" class="btn-add">
+                    <i class="fa-solid fa-plus me-2"></i>Tạo ngưỡng chuẩn mới
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter tabs -->
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <div class="filter-tabs" id="filterTabs">
+                <button class="filter-tab active" data-filter="all">Tất cả</button>
+                <button class="filter-tab" data-filter="1"><i class="fa-solid fa-mars me-1"></i>Nam</button>
+                <button class="filter-tab" data-filter="0"><i class="fa-solid fa-venus me-1"></i>Nữ</button>
+                <button class="filter-tab" data-filter="2"><i class="fa-solid fa-venus-mars me-1"></i>Chung</button>
+                <button class="filter-tab" data-filter="active">Đang hoạt động</button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card-std">
+            <div class="table-responsive">
+                <table class="table mb-0" id="thresholdTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Tên Template</th>
+                            <th>Giới tính</th>
+                            <th>Độ tuổi</th>
+                            <th>HA Tâm Thu (W/D)</th>
+                            <th>HA Tâm Trương (W/D)</th>
+                            <th>Nhịp tim Min (W/D)</th>
+                            <th>Nhịp tim Max (W/D)</th>
+                            <th>Trạng thái</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="10">
+                                    <div class="empty-state">
+                                        <i class="fa-solid fa-inbox fs-1 mb-3 d-block"></i>
+                                        Chưa có ngưỡng chuẩn nào. <a asp-action="Create">Tạo ngay</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var t in Model)
+                        {
+                            <tr data-sex="@t.Sex" data-active="@(t.IsActive ? "1" : "0")">
+                                <td class="text-muted fw-semibold" style="width:40px;">@t.Id</td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@t.Name</div>
+                                    @if (!string.IsNullOrEmpty(t.Description))
+                                    {
+                                        <div class="text-muted" style="font-size:0.78rem;max-width:220px;" title="@t.Description">
+                                            @(t.Description.Length > 60 ? t.Description[..60] + "…" : t.Description)
+                                        </div>
+                                    }
+                                </td>
+                                <td>@Html.Raw(SexBadge(t.Sex))</td>
+                                <td>
+                                    <span class="age-range">
+                                        @(t.AgeMin == 0 && t.AgeMax == 120 ? "Mọi độ tuổi"
+                                          : t.AgeMax == 120 ? $"≥ {t.AgeMin} tuổi"
+                                          : $"{t.AgeMin}–{t.AgeMax} tuổi")
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="threshold-mini">
+                                        <span class="text-warning fw-bold">@t.SystolicBpWarning</span>
+                                        <span class="text-muted mx-1">/</span>
+                                        <span class="text-danger fw-bold">@t.SystolicBpDanger</span>
+                                        <span class="text-muted"> mmHg</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="threshold-mini">
+                                        <span class="text-warning fw-bold">@t.DiastolicBpWarning</span>
+                                        <span class="text-muted mx-1">/</span>
+                                        <span class="text-danger fw-bold">@t.DiastolicBpDanger</span>
+                                        <span class="text-muted"> mmHg</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="threshold-mini">
+                                        <span class="text-warning fw-bold">@t.HeartRateWarningMin</span>
+                                        <span class="text-muted mx-1">/</span>
+                                        <span class="text-danger fw-bold">@t.HeartRateDangerMin</span>
+                                        <span class="text-muted"> bpm</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="threshold-mini">
+                                        <span class="text-warning fw-bold">@t.HeartRateWarningMax</span>
+                                        <span class="text-muted mx-1">/</span>
+                                        <span class="text-danger fw-bold">@t.HeartRateDangerMax</span>
+                                        <span class="text-muted"> bpm</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (t.IsActive)
+                                    {
+                                        <span class="status-active"><i class="fa-solid fa-circle-dot me-1"></i>Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-inactive"><i class="fa-solid fa-pause me-1"></i>Tạm dừng</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <a asp-action="Edit" asp-route-id="@t.Id"
+                                           class="action-btn btn-edit-row" title="Chỉnh sửa">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+
+                                        <form asp-action="ToggleActive" asp-route-id="@t.Id"
+                                              method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit"
+                                                    class="action-btn btn-toggle-row @(!t.IsActive ? "inactive" : "")"
+                                                    title="@(t.IsActive ? "Vô hiệu hóa" : "Kích hoạt lại")">
+                                                <i class="fa-solid @(t.IsActive ? "fa-toggle-on" : "fa-toggle-off")"></i>
+                                            </button>
+                                        </form>
+
+                                        <form asp-action="Delete" asp-route-id="@t.Id"
+                                              method="post" style="display:inline;"
+                                              onsubmit="return confirm('Xác nhận xóa ngưỡng chuẩn \'@t.Name\'?')">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="action-btn btn-delete-row" title="Xóa">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-3 text-muted" style="font-size: 0.8rem;">
+            <i class="fa-solid fa-circle-info me-1"></i>
+            <strong>W</strong> = Cảnh báo (Warning) &nbsp;|&nbsp; <strong>D</strong> = Nguy hiểm (Danger)
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const filter = tab.dataset.filter;
+            document.querySelectorAll('#thresholdTable tbody tr[data-sex]').forEach(row => {
+                if (filter === 'all') {
+                    row.style.display = '';
+                } else if (filter === 'active') {
+                    row.style.display = row.dataset.active === '1' ? '' : 'none';
+                } else {
+                    row.style.display = row.dataset.sex === filter ? '' : 'none';
+                }
+            });
+        });
+    });
+</script>
+}

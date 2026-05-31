@@ -8,6 +8,8 @@ namespace SmartHealthMonitoring.ViewModels
         public string PatientName { get; set; } = string.Empty;
         public int Age { get; set; }
         public string SexDisplay { get; set; } = string.Empty;
+        /// <summary>Giới tính thô: 0=Nữ, 1=Nam (dùng cho API gợi ý template)</summary>
+        public byte Sex { get; set; } = 1;
 
         // --- Huyết áp Tâm Thu (Systolic BP) ---
         [Required(ErrorMessage = "Bắt buộc nhập")]

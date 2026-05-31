@@ -1,0 +1,318 @@
+@model SmartHealthMonitoring.ViewModels.Admin.StandardThresholdViewModel
+@{
+    Layout = "_AdminLayout";
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? $"Sửa: {Model.Name}" : "Tạo Ngưỡng Chuẩn Mới";
+}
+
+@section Styles {
+<style>
+    .form-page { background: #f0f4f8; min-height: calc(100vh - 70px); padding-top: 90px; padding-bottom: 60px; }
+
+    .page-hero {
+        background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 60%, #2563eb 100%);
+        border-radius: 18px; padding: 26px 32px; color: white; margin-bottom: 28px;
+    }
+
+    .form-card { background: white; border-radius: 16px; box-shadow: 0 2px 14px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 22px; }
+    .form-card-header {
+        padding: 18px 26px 16px; border-bottom: 1px solid #f1f5f9;
+        display: flex; align-items: center; gap: 12px;
+    }
+    .form-card-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;
+    }
+    .form-card-body { padding: 22px 26px; }
+
+    .form-label-sm { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: #475569; margin-bottom: 6px; }
+    .form-control, .form-select { border-radius: 10px; border: 2px solid #e2e8f0; font-size: 0.9rem; padding: 9px 14px; transition: border-color 0.2s; }
+    .form-control:focus, .form-select:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,0.12); outline: none; }
+
+    .threshold-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .level-label {
+        display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
+        border-radius: 5px; font-size: 0.75rem; font-weight: 700; margin-bottom: 8px;
+    }
+    .level-label.warning { background: #fef3c7; color: #92400e; }
+    .level-label.danger  { background: #fee2e2; color: #991b1b; }
+
+    .input-with-unit { position: relative; }
+    .input-with-unit input { padding-right: 54px; }
+    .input-unit {
+        position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+        font-size: 0.72rem; font-weight: 700; color: #94a3b8; pointer-events: none;
+    }
+
+    .btn-save { background: linear-gradient(135deg, #7c3aed, #4f46e5); border: none; color: white;
+        padding: 13px 32px; border-radius: 12px; font-size: 0.95rem; font-weight: 700;
+        box-shadow: 0 4px 14px rgba(124,58,237,0.35); transition: all 0.25s; }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(124,58,237,0.45); color: white; }
+
+    .metric-sep { border: 0; border-top: 2px dashed #f1f5f9; margin: 22px 0; }
+
+    @@media (max-width: 576px) { .threshold-grid { grid-template-columns: 1fr; } }
+</style>
+}
+
+<div class="form-page">
+    <div class="container" style="max-width: 820px;">
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Index" class="text-decoration-none text-muted">Ngưỡng Chuẩn</a>
+                </li>
+                <li class="breadcrumb-item active fw-semibold text-primary">
+                    @(isEdit ? "Chỉnh sửa" : "Tạo mới")
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Hero -->
+        <div class="page-hero">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                    <i class="fa-solid @(isEdit ? "fa-pen-to-square" : "fa-plus") fs-5"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0">@(isEdit ? "Chỉnh sửa Ngưỡng Chuẩn" : "Tạo Ngưỡng Chuẩn Mới")</h5>
+                    <div style="font-size:0.85rem;opacity:0.85;">Template sẽ được bác sĩ áp dụng theo giới tính & độ tuổi</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validation errors -->
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger rounded-3 border-0 shadow-sm mb-4">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                <strong>Vui lòng kiểm tra lại:</strong>
+                <ul class="mb-0 mt-1">
+                    @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@err.ErrorMessage</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <form asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post" id="stdThresholdForm">
+            @Html.AntiForgeryToken()
+
+            <!-- ==== THÔNG TIN CHUNG ==== -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-icon" style="background:#ede9fe;color:#7c3aed;">
+                        <i class="fa-solid fa-tag"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark" style="font-size:0.95rem;">Thông tin Template</div>
+                        <small class="text-muted">Xác định tên, giới tính và khoảng tuổi áp dụng</small>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="mb-4">
+                        <label class="form-label-sm">Tên ngưỡng chuẩn *</label>
+                        <input asp-for="Name" class="form-control" placeholder="VD: Nam 41–60 tuổi" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label-sm">Mô tả (tuỳ chọn)</label>
+                        <textarea asp-for="Description" class="form-control" rows="2"
+                                  placeholder="Ghi chú về cơ sở y học, nguồn tham khảo..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label-sm">Giới tính áp dụng *</label>
+                            <select asp-for="Sex" class="form-select">
+                                <option value="2">Chung (cả hai)</option>
+                                <option value="1">Nam</option>
+                                <option value="0">Nữ</option>
+                            </select>
+                            <span asp-validation-for="Sex" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-sm">Tuổi tối thiểu *</label>
+                            <input asp-for="AgeMin" type="number" min="0" max="120" class="form-control" />
+                            <span asp-validation-for="AgeMin" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label-sm">Tuổi tối đa *</label>
+                            <input asp-for="AgeMax" type="number" min="0" max="120" class="form-control"
+                                   placeholder="120 = không giới hạn" />
+                            <span asp-validation-for="AgeMax" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    @if (isEdit)
+                    {
+                        <div class="mt-3 d-flex align-items-center gap-2">
+                            <input asp-for="IsActive" type="checkbox" class="form-check-input" id="isActiveCheck" style="width:18px;height:18px;" />
+                            <label class="form-check-label fw-semibold" for="isActiveCheck">Đang hoạt động (bác sĩ có thể chọn template này)</label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- ==== HUYẾT ÁP TÂM THU ==== -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-icon" style="background:#fef2f2;color:#dc2626;">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark" style="font-size:0.95rem;">Huyết áp Tâm Thu (Systolic BP)</div>
+                        <small class="text-muted">Áp lực khi tim co bóp — đơn vị mmHg</small>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="threshold-grid">
+                        <div>
+                            <div class="level-label warning"><i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo</div>
+                            <label class="form-label-sm">Từ giá trị này → Cảnh báo</label>
+                            <div class="input-with-unit">
+                                <input asp-for="SystolicBpWarning" type="number" min="80" max="250" class="form-control" id="sysBpW" />
+                                <span class="input-unit">mmHg</span>
+                            </div>
+                            <span asp-validation-for="SystolicBpWarning" class="text-danger small"></span>
+                        </div>
+                        <div>
+                            <div class="level-label danger"><i class="fa-solid fa-circle-exclamation"></i> Nguy hiểm</div>
+                            <label class="form-label-sm">Từ giá trị này → Nguy hiểm</label>
+                            <div class="input-with-unit">
+                                <input asp-for="SystolicBpDanger" type="number" min="80" max="250" class="form-control" id="sysBpD" />
+                                <span class="input-unit">mmHg</span>
+                            </div>
+                            <span asp-validation-for="SystolicBpDanger" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==== HUYẾT ÁP TÂM TRƯƠNG ==== -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-icon" style="background:#fff7ed;color:#ea580c;">
+                        <i class="fa-solid fa-gauge"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark" style="font-size:0.95rem;">Huyết áp Tâm Trương (Diastolic BP)</div>
+                        <small class="text-muted">Áp lực khi tim nghỉ — đơn vị mmHg</small>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="threshold-grid">
+                        <div>
+                            <div class="level-label warning"><i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo</div>
+                            <label class="form-label-sm">Từ giá trị này → Cảnh báo</label>
+                            <div class="input-with-unit">
+                                <input asp-for="DiastolicBpWarning" type="number" min="40" max="180" class="form-control" id="diaBpW" />
+                                <span class="input-unit">mmHg</span>
+                            </div>
+                            <span asp-validation-for="DiastolicBpWarning" class="text-danger small"></span>
+                        </div>
+                        <div>
+                            <div class="level-label danger"><i class="fa-solid fa-circle-exclamation"></i> Nguy hiểm</div>
+                            <label class="form-label-sm">Từ giá trị này → Nguy hiểm</label>
+                            <div class="input-with-unit">
+                                <input asp-for="DiastolicBpDanger" type="number" min="40" max="180" class="form-control" id="diaBpD" />
+                                <span class="input-unit">mmHg</span>
+                            </div>
+                            <span asp-validation-for="DiastolicBpDanger" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==== NHỊP TIM ==== -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-icon" style="background:#ecfdf5;color:#059669;">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark" style="font-size:0.95rem;">Nhịp Tim (Heart Rate)</div>
+                        <small class="text-muted">Cấu hình cả ngưỡng thấp (nhịp chậm) và ngưỡng cao (nhịp nhanh)</small>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge bg-info text-dark px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-arrow-down me-1"></i> Nhịp tim QUÁ THẤP
+                        </span>
+                        <small class="text-muted">— Bradycardia</small>
+                    </div>
+                    <div class="threshold-grid mb-3">
+                        <div>
+                            <div class="level-label warning"><i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo</div>
+                            <label class="form-label-sm">Dưới giá trị này → Cảnh báo</label>
+                            <div class="input-with-unit">
+                                <input asp-for="HeartRateWarningMin" type="number" min="20" max="100" class="form-control" />
+                                <span class="input-unit">bpm</span>
+                            </div>
+                            <span asp-validation-for="HeartRateWarningMin" class="text-danger small"></span>
+                        </div>
+                        <div>
+                            <div class="level-label danger"><i class="fa-solid fa-circle-exclamation"></i> Nguy hiểm</div>
+                            <label class="form-label-sm">Dưới giá trị này → Nguy hiểm</label>
+                            <div class="input-with-unit">
+                                <input asp-for="HeartRateDangerMin" type="number" min="20" max="100" class="form-control" />
+                                <span class="input-unit">bpm</span>
+                            </div>
+                            <span asp-validation-for="HeartRateDangerMin" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="alert alert-light border rounded-3 py-2 px-3 mb-3" style="font-size:0.82rem;">
+                        <i class="fa-solid fa-circle-info text-info me-1"></i>
+                        Ngưỡng Nguy hiểm phải <strong>nhỏ hơn</strong> Ngưỡng Cảnh báo cho nhịp tim thấp.
+                    </div>
+                    <hr class="metric-sep">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge bg-danger px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-arrow-up me-1"></i> Nhịp tim QUÁ CAO
+                        </span>
+                        <small class="text-muted">— Tachycardia</small>
+                    </div>
+                    <div class="threshold-grid">
+                        <div>
+                            <div class="level-label warning"><i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo</div>
+                            <label class="form-label-sm">Trên giá trị này → Cảnh báo</label>
+                            <div class="input-with-unit">
+                                <input asp-for="HeartRateWarningMax" type="number" min="80" max="250" class="form-control" />
+                                <span class="input-unit">bpm</span>
+                            </div>
+                            <span asp-validation-for="HeartRateWarningMax" class="text-danger small"></span>
+                        </div>
+                        <div>
+                            <div class="level-label danger"><i class="fa-solid fa-circle-exclamation"></i> Nguy hiểm</div>
+                            <label class="form-label-sm">Trên giá trị này → Nguy hiểm</label>
+                            <div class="input-with-unit">
+                                <input asp-for="HeartRateDangerMax" type="number" min="80" max="250" class="form-control" />
+                                <span class="input-unit">bpm</span>
+                            </div>
+                            <span asp-validation-for="HeartRateDangerMax" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex gap-3">
+                <a asp-action="Index" class="btn btn-outline-secondary px-4 py-3 fw-semibold rounded-3 flex-shrink-0">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Hủy
+                </a>
+                <button type="submit" class="btn-save flex-fill">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>
+                    @(isEdit ? "Cập nhật ngưỡng chuẩn" : "Lưu ngưỡng chuẩn mới")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
