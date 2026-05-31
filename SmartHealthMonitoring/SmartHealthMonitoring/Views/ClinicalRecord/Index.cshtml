@@ -309,6 +309,12 @@
                                                     title="@(record.IsViewForPatient ? "Đang cho bệnh nhân xem - Click để ẩn" : "Đang ẩn với bệnh nhân - Click để cho phép xem")">
                                                 <i class="fas @(record.IsViewForPatient ? "fa-eye" : "fa-eye-slash")"></i>
                                             </button>
+
+                                            <form asp-action="Delete" asp-route-id="@record.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn đánh dấu hồ sơ này là HỦY BỎ?');">
+                                                <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0;" title="Hủy hồ sơ">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
                                         }
                                     </td>
                                 </tr>
