@@ -45,20 +45,17 @@
         }
 
         @@keyframes pulse {
-            0%
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            }
 
-        {
-            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
-        }
+            70% {
+                box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+            }
 
-        70% {
-            box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
-        }
-
-        100% {
-            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-        }
-
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            }
         }
 
         .btn-lis-fetch {
@@ -118,7 +115,6 @@
             color: #8b5cf6;
         }
 
-        /* Custom Input styling cho form đang khóa */
         .form-control:read-only, .form-select:disabled {
             background-color: #f1f5f9;
             border-color: #cbd5e1;
@@ -156,12 +152,10 @@
 
         <div class="card-body p-4 p-md-5">
             <form id="clinicalForm" asp-action="Create" method="post">
-                <input type="hidden"
-id="patientIdHidden"
-name="PatientId"
-value="@Model.PatientId" />
+                <input type="hidden" id="patientIdHidden" name="PatientId" value="@Model.PatientId" />
+                <input type="hidden" id="ecgImageUrlHidden" asp-for="EcgImageUrl" />
 
-                <div class="row g-4 mb-5">
+                <div class="row g-4 mb-4">
                     <div class="col-lg-4">
                         <div class="form-section">
                             <div class="section-title">
@@ -178,6 +172,7 @@ value="@Model.PatientId" />
                                     <option value="2">Non-Anginal Pain (NAP)</option>
                                     <option value="3">Asymptomatic (ASY)</option>
                                 </select>
+                                <span asp-validation-for="ChestPainType" class="text-danger small fw-medium mt-1 d-block"></span>
                             </div>
 
                             <div class="mb-3">
@@ -187,16 +182,19 @@ value="@Model.PatientId" />
                                     <option value="0">Không (No)</option>
                                     <option value="1">Có (Yes)</option>
                                 </select>
+                                <span asp-validation-for="ExerciseAngina" class="text-danger small fw-medium mt-1 d-block"></span>
                             </div>
 
                             <div class="mb-3">
                                 <label asp-for="RestingBP" class="custom-label">Huyết áp nghỉ (Resting BP - mmHg)</label>
                                 <input asp-for="RestingBP" type="number" class="form-control shadow-sm auto-field" placeholder="Chờ đồng bộ..." readonly />
+                                <span asp-validation-for="RestingBP" class="text-danger small fw-medium mt-1 d-block"></span>
                             </div>
 
                             <div class="mb-0">
                                 <label asp-for="MaxHeartRate" class="custom-label">Nhịp tim tối đa (Max Heart Rate)</label>
                                 <input asp-for="MaxHeartRate" type="number" class="form-control shadow-sm auto-field" placeholder="Chờ đồng bộ..." readonly />
+                                <span asp-validation-for="MaxHeartRate" class="text-danger small fw-medium mt-1 d-block"></span>
                             </div>
                         </div>
                     </div>
@@ -211,6 +209,7 @@ value="@Model.PatientId" />
                             <div class="mb-3">
                                 <label asp-for="Cholesterol" class="custom-label">Cholesterol (mg/dl)</label>
                                 <input asp-for="Cholesterol" type="number" class="form-control shadow-sm auto-field" placeholder="Chờ đồng bộ..." readonly />
+                                <span asp-validation-for="Cholesterol" class="text-danger small fw-medium mt-1 d-block"></span>
                             </div>
 
                             <div class="mb-0">
@@ -220,6 +219,7 @@ value="@Model.PatientId" />
                                     <option value="0">Bình thường (False)</option>
                                     <option value="1">Cao (True)</option>
                                 </select>
+                                <span asp-validation-for="FastingBS" class="text-danger small fw-medium mt-1 d-block"></span>
                             </div>
                         </div>
                     </div>
@@ -239,6 +239,7 @@ value="@Model.PatientId" />
                                     <option value="1">ST-T Abnormality</option>
                                     <option value="2">Left Ventricular Hypertrophy (LVH)</option>
                                 </select>
+                                <span asp-validation-for="RestECG" class="text-danger small fw-medium mt-1 d-block"></span>
                             </div>
 
                             <div class="row">
@@ -250,10 +251,12 @@ value="@Model.PatientId" />
                                         <option value="1">Flat</option>
                                         <option value="2">Downsloping</option>
                                     </select>
+                                    <span asp-validation-for="STSlope" class="text-danger small fw-medium mt-1 d-block"></span>
                                 </div>
                                 <div class="col-6 mb-3">
                                     <label asp-for="OldPeak" class="custom-label">Oldpeak</label>
                                     <input asp-for="OldPeak" type="number" step="0.1" class="form-control shadow-sm auto-field" placeholder="..." readonly />
+                                    <span asp-validation-for="OldPeak" class="text-danger small fw-medium mt-1 d-block"></span>
                                 </div>
                             </div>
 
@@ -267,6 +270,7 @@ value="@Model.PatientId" />
                                         <option value="2">2</option>
                                         <option value="3">3</option>
                                     </select>
+                                    <span asp-validation-for="MajorVessels" class="text-danger small fw-medium mt-1 d-block"></span>
                                 </div>
                                 <div class="col-6 mb-0">
                                     <label asp-for="ThalResult" class="custom-label">Khuyết tật Thal</label>
@@ -276,39 +280,62 @@ value="@Model.PatientId" />
                                         <option value="1">Fixed Defect</option>
                                         <option value="2">Reversable</option>
                                     </select>
+                                    <span asp-validation-for="ThalResult" class="text-danger small fw-medium mt-1 d-block"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center bg-light p-4 rounded-4 border">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="form-check form-switch mb-0" style="padding-left: 3rem;">
+                <div id="ecgPreviewContainer" class="row mb-5" style="display: none;">
+                    <div class="col-12">
+                        <div class="card card-body bg-light border border-secondary border-opacity-25 rounded-4 shadow-sm">
+                            <h6 class="fw-bold text-dark mb-3">
+                                <i class="fas fa-file-medical-alt text-primary me-2"></i>Biểu đồ Điện tâm đồ (ECG/EKG) thu nhận từ hệ thống LIS
+                            </h6>
+                            <img id="ecgPreviewImage" src="" alt="Biểu đồ ECG" class="img-fluid rounded border border-secondary border-opacity-25 shadow-sm" style="max-height: 400px; object-fit: contain; width: 100%; background: #fff;" />
+                            <div class="text-end mt-2">
+                                <a id="ecgPreviewLink" href="#" target="_blank" class="btn btn-sm btn-link text-decoration-none fw-bold">
+                                    Mở ảnh trong tab mới <i class="fas fa-external-link-alt ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger rounded-4 border-0 shadow-sm mb-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Máy xét nghiệm đẩy về dữ liệu không hợp lệ. Vui lòng Bác sĩ kiểm tra lại các ô bị đánh dấu đỏ!
+                        <div asp-validation-summary="ModelOnly" class="mt-2 mb-0 fw-medium"></div>
+                    </div>
+                }
+
+                <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center bg-light p-4 rounded-4 border gap-4">
+
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="form-check form-switch mb-0 d-flex align-items-center" style="padding-left: 0;">
                             <input type="hidden" name="IsViewForPatient" value="false" />
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   name="IsViewForPatient"
-                                   id="IsViewForPatient"
-                                   value="true"
-                                   checked
-                                   style="width: 3rem; height: 1.5rem; cursor: pointer;" />
-                            <label class="form-check-label fw-semibold ms-2" for="IsViewForPatient"
-                                   style="font-size: 0.95rem; line-height: 1.5rem;">
+                            <input class="form-check-input m-0 flex-shrink-0" type="checkbox" name="IsViewForPatient" id="IsViewForPatient" value="true" checked style="width: 3rem; height: 1.5rem; cursor: pointer;" />
+                            <label class="form-check-label fw-semibold ms-2 text-nowrap" for="IsViewForPatient" style="font-size: 0.95rem;">
                                 Cho phép bệnh nhân xem hồ sơ này
                             </label>
                         </div>
-                        <span id="viewStatusBadge" class="badge bg-success px-3 py-2 rounded-pill" style="font-size: 0.8rem;">
+                        <span id="viewStatusBadge" class="badge bg-success px-3 py-2 rounded-pill text-nowrap" style="font-size: 0.8rem;">
                             <i class="fas fa-eye me-1"></i> Bệnh nhân có thể xem
                         </span>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fas fa-info-circle text-primary"></i>
-                        <span class="small text-muted">Bác sĩ vui lòng rà soát lại dữ liệu sau khi đồng bộ trước khi lưu vào hồ sơ bệnh án.</span>
+
+                    <div class="d-flex flex-wrap align-items-center justify-content-xl-end gap-3">
+                        <div class="d-flex align-items-center gap-2 text-muted small">
+                            <i class="fas fa-info-circle text-primary flex-shrink-0"></i>
+                            <span>Bác sĩ vui lòng rà soát lại dữ liệu trước khi lưu.</span>
+                        </div>
+                        <button type="submit" id="btnSubmitForm" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm fw-bold text-nowrap" disabled>
+                            Xác nhận & Lưu Hồ Sơ <i class="fas fa-check-circle ms-2"></i>
+                        </button>
                     </div>
-                    <button type="submit" id="btnSubmitForm" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm fw-bold" disabled>
-                        Xác nhận & Lưu Hồ Sơ <i class="fas fa-check-circle ms-2"></i>
-                    </button>
+
                 </div>
             </form>
         </div>
@@ -316,16 +343,44 @@ value="@Model.PatientId" />
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const btnFetch = document.getElementById('btnFetchWebhook');
             const btnSubmit = document.getElementById('btnSubmitForm');
             const patientId = document.getElementById('patientIdHidden').value;
             const form = document.getElementById('clinicalForm');
-
             const badge = document.getElementById('lisStatusBadge');
             const badgeText = document.getElementById('lisStatusText');
 
+            const ecgPreviewContainer = document.getElementById('ecgPreviewContainer');
+            const ecgPreviewImage = document.getElementById('ecgPreviewImage');
+            const ecgPreviewLink = document.getElementById('ecgPreviewLink');
+            const ecgImageUrlHidden = document.getElementById('ecgImageUrlHidden');
+
+            // --- THÊM LOGIC: Tự động giữ nguyên form & ảnh nếu bị lỗi Validation ---
+            const hasValidationErrors = @((!ViewData.ModelState.IsValid).ToString().ToLower());
+
+            if (hasValidationErrors) {
+                document.querySelectorAll('.auto-field').forEach(el => {
+                    el.removeAttribute('readonly');
+                    el.removeAttribute('disabled');
+                });
+                btnSubmit.removeAttribute('disabled');
+                badge.classList.add('success');
+                badgeText.textContent = 'Bác sĩ đang chỉnh sửa dữ liệu';
+                btnFetch.innerHTML = '<i class="fas fa-edit me-2"></i> Chỉnh sửa thủ công';
+                btnFetch.classList.replace('btn-lis-fetch', 'btn-warning');
+
+                // Nếu trong Hidden input có sẵn URL (do lần Post trước gửi lên), hiển thị lại ảnh
+                if (ecgImageUrlHidden.value) {
+                    ecgPreviewImage.src = ecgImageUrlHidden.value;
+                    ecgPreviewLink.href = ecgImageUrlHidden.value;
+                    ecgPreviewContainer.style.display = 'block';
+                }
+            }
+
+            // Kéo dữ liệu từ Webhook
             btnFetch.addEventListener('click', function () {
                 const originalHtml = btnFetch.innerHTML;
                 btnFetch.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang kết nối...';
@@ -333,12 +388,8 @@ value="@Model.PatientId" />
 
                 fetch(`/api/LabWebhook/CheckResult/${patientId}`)
                     .then(response => {
-                        if (response.status === 404) {
-                            throw new Error('404_NOT_FOUND');
-                        }
-                        if (!response.ok) {
-                            throw new Error('SERVER_ERROR');
-                        }
+                        if (response.status === 404) throw new Error('404_NOT_FOUND');
+                        if (!response.ok) throw new Error('SERVER_ERROR');
                         return response.json();
                     })
                     .then(data => {
@@ -355,6 +406,18 @@ value="@Model.PatientId" />
                         document.getElementById('MajorVessels').value = data.majorVessels;
                         document.getElementById('ThalResult').value = data.thalResult;
 
+                        // Gán link ảnh vào thẻ input ẩn và lập tức HIỂN THỊ PREVIEW
+                        if (data.ecgImageUrl) {
+                            ecgImageUrlHidden.value = data.ecgImageUrl;
+
+                            // Gắn source vào thẻ img và a
+                            ecgPreviewImage.src = data.ecgImageUrl;
+                            ecgPreviewLink.href = data.ecgImageUrl;
+
+                            // Hiện container chứa ảnh lên
+                            ecgPreviewContainer.style.display = 'block';
+                        }
+
                         // Unlock form fields
                         document.querySelectorAll('.auto-field').forEach(el => {
                             el.removeAttribute('readonly');
@@ -366,8 +429,6 @@ value="@Model.PatientId" />
                         // Update UI Status
                         btnFetch.innerHTML = '<i class="fas fa-check-double me-2"></i> Đã đồng bộ thành công';
                         btnFetch.classList.replace('btn-lis-fetch', 'btn-success');
-
-                        // Update Badge
                         badge.classList.add('success');
                         badgeText.textContent = 'Dữ liệu đã được đồng bộ';
                     })
@@ -375,14 +436,14 @@ value="@Model.PatientId" />
                         if (error.message === '404_NOT_FOUND') {
                             alert("Chưa có kết quả từ máy xét nghiệm. Vui lòng gửi dữ liệu từ Postman trước khi bấm đồng bộ.");
                         } else {
-                            alert("Có lỗi xảy ra khi kết nối đến hệ thống nội bộ.");
+                            alert("Có lỗi xảy ra khi kết nối đến hệ thống nội bộ LIS.");
                         }
                         btnFetch.innerHTML = originalHtml;
                         btnFetch.disabled = false;
                     });
             });
 
-            // Toggle badge khi bác sĩ bật/tắt quyền xem
+            // Toggle trạng thái con mắt
             const toggleView = document.getElementById('IsViewForPatient');
             const viewBadge  = document.getElementById('viewStatusBadge');
 
@@ -397,7 +458,7 @@ value="@Model.PatientId" />
             }
             toggleView.addEventListener('change', updateViewBadge);
 
-            // Unlock before submitting
+            // Mở khóa disable trước khi submit để C# nhận được data
             form.addEventListener('submit', function() {
                 document.querySelectorAll('.auto-field').forEach(el => {
                     el.removeAttribute('disabled');

@@ -309,12 +309,6 @@
                                                     title="@(record.IsViewForPatient ? "Đang cho bệnh nhân xem - Click để ẩn" : "Đang ẩn với bệnh nhân - Click để cho phép xem")">
                                                 <i class="fas @(record.IsViewForPatient ? "fa-eye" : "fa-eye-slash")"></i>
                                             </button>
-
-                                            <form asp-action="Delete" asp-route-id="@record.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn đánh dấu hồ sơ này là HỦY BỎ?');">
-                                                <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0;" title="Hủy hồ sơ">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
                                         }
                                     </td>
                                 </tr>
@@ -488,7 +482,7 @@
                         <div class="col-md-4">
                             <div class="modal-detail-group">
                                 <div class="modal-detail-title text-primary"><i class="fas fa-wave-square me-2"></i>Điện tâm đồ & Mạch</div>
-                                <ul class="list-unstyled mb-0 small">
+                                <ul class="list-unstyled mb-3 small">
                                     <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
                                         <span class="text-muted">ECG nghỉ:</span> 
                                         <strong class="text-dark text-end ms-2">@(record.RestECG == 0 ? "Normal" : record.RestECG == 1 ? "ST-T" : "LVH")</strong>
@@ -507,9 +501,33 @@
                                         <strong class="text-dark text-end ms-2">@(record.ThalResult == 0 ? "Normal" : record.ThalResult == 1 ? "Fixed" : "Reversable")</strong>
                                     </li>
                                 </ul>
+
+                                @if (!string.IsNullOrEmpty(record.EcgImageUrl))
+                                {
+                                    <button class="btn btn-sm btn-outline-primary w-100 fw-bold mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#ecgImage-@record.Id">
+                                        <i class="fas fa-image me-2"></i> Xem biểu đồ ECG gốc
+                                    </button>
+                                }
                             </div>
                         </div>
                     </div>
+
+                    @if (!string.IsNullOrEmpty(record.EcgImageUrl))
+                    {
+                        <div class="collapse mt-4" id="ecgImage-@record.Id">
+                            <div class="card card-body bg-light border-0 rounded-4">
+                                <h6 class="fw-bold text-dark mb-3"><i class="fas fa-file-medical-alt text-primary me-2"></i>Biểu đồ Điện tâm đồ (ECG/EKG)</h6>
+                                
+                                <img src="@record.EcgImageUrl" alt="Biểu đồ ECG" class="img-fluid rounded border shadow-sm" style="max-height: 400px; object-fit: contain; width: 100%; background: #fff;" />
+                                
+                                <div class="text-end mt-2">
+                                    <a href="@record.EcgImageUrl" target="_blank" class="btn btn-sm btn-link text-decoration-none">
+                                        Mở ảnh phóng to <i class="fas fa-external-link-alt ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
                 
                 <div class="modal-footer border-top-0 pt-0 pb-4 pe-4">
