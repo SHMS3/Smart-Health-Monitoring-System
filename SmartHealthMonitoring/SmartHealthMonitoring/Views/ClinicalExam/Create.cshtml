@@ -151,7 +151,7 @@
         </div>
 
         <div class="card-body p-4 p-md-5">
-            <form id="clinicalForm" asp-action="Create" method="post">
+            <form id="clinicalForm" asp-action="Create" method="post" enctype="multipart/form-data">
                 <input type="hidden" id="patientIdHidden" name="PatientId" value="@Model.PatientId" />
                 <input type="hidden" id="ecgImageUrlHidden" asp-for="EcgImageUrl" />
 
@@ -287,7 +287,7 @@
                     </div>
                 </div>
 
-                <div id="ecgPreviewContainer" class="row mb-5" style="display: none;">
+                <div id="ecgPreviewContainer" class="row mb-4" style="display: none;">
                     <div class="col-12">
                         <div class="card card-body bg-light border border-secondary border-opacity-25 rounded-4 shadow-sm">
                             <h6 class="fw-bold text-dark mb-3">
@@ -299,6 +299,26 @@
                                     Mở ảnh trong tab mới <i class="fas fa-external-link-alt ms-1"></i>
                                 </a>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <div class="form-section bg-white border rounded-4 p-4 shadow-sm">
+                            <div class="section-title mb-3">
+                                <div class="section-icon bg-info bg-opacity-10 text-info"><i class="fas fa-paperclip"></i></div>
+                                Hình ảnh biến chứng & Tài liệu đính kèm (Bác sĩ upload thủ công)
+                            </div>
+                            <p class="text-muted small mb-3">Bác sĩ có thể upload hình ảnh biến chứng lâm sàng phát hiện được (biến chứng mắt, loét, hình ảnh chụp chiếu ngoài danh mục máy LIS) để lưu trữ vào hồ sơ gốc.</p>
+
+                            <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+                                <div class="flex-grow-1 w-100">
+                                    <input type="file" asp-for="AttachmentFile" class="form-control rounded-3 shadow-sm auto-field" accept="image/*,application/pdf" style="padding: 0.6rem 1rem;" disabled />
+                                </div>
+                                <span class="text-muted small flex-shrink-0"><i class="fas fa-info-circle me-1"></i>Hỗ trợ: Ảnh (.jpg, .png) hoặc File PDF</span>
+                            </div>
+                            <span asp-validation-for="AttachmentFile" class="text-danger small fw-medium mt-1 d-block"></span>
                         </div>
                     </div>
                 </div>
@@ -418,7 +438,7 @@
                             ecgPreviewContainer.style.display = 'block';
                         }
 
-                        // Unlock form fields
+                        // Unlock form fields (Bao gồm cả thẻ input file)
                         document.querySelectorAll('.auto-field').forEach(el => {
                             el.removeAttribute('readonly');
                             el.removeAttribute('disabled');
