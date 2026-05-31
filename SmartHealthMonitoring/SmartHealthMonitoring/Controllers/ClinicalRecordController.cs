@@ -106,7 +106,8 @@ namespace SmartHealthMonitoring.Controllers
                         STSlope = r.Stslope,
                         MajorVessels = r.MajorVessels,
                         ThalResult = r.ThalResult,
-                        EcgImageUrl = r.EcgImageUrl
+                        EcgImageUrl = r.EcgImageUrl,
+                        AttachmentUrl = r.AttachmentUrl
                     })
                     .ToListAsync();
 
