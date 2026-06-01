@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "1")] // Chỉ cho phép Bác sĩ (Role = 1) truy cập
+    [Authorize(Roles = "1")]
     public class DoctorDashboardController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
@@ -25,7 +25,7 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(int page = 1, int pageSize = 10) // Thêm tham số phân trang
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
             try
             {

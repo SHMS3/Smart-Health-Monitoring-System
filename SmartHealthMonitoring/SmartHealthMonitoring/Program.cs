@@ -36,11 +36,24 @@ namespace SmartHealthMonitoring
             builder.Services.Configure<SmartHealthMonitoring.Models.Configurations.EmailSettings>(
                 builder.Configuration.GetSection("EmailSettings"));
 
+            // 4b. HttpClient cho EsmsSmsService
+            builder.Services.AddHttpClient();
+
             // ====================================================================
             // 5. GỌI HÀM QUÉT TỰ ĐỘNG TỪ THƯ MỤC DI
             // ====================================================================
             builder.Services.AddApplicationServices();
             // ====================================================================
+
+            // 6.5. Session (dùng để lưu OTP xác thực số điện thoại)
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(20);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+
 
             // 6. Cookie Authentication
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -82,6 +95,7 @@ namespace SmartHealthMonitoring
 
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseSession();
 
             app.MapControllerRoute(
                  name: "areas",

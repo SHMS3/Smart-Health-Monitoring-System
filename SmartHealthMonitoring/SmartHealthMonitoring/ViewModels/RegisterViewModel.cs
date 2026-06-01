@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels
 {
@@ -29,8 +29,7 @@ namespace SmartHealthMonitoring.ViewModels
         [Required(ErrorMessage = "Vui lòng chọn giới tính.")]
         public byte Sex { get; set; } // 0 = Nữ, 1 = Nam
 
-        [Phone(ErrorMessage = "Số điện thoại không hợp lệ.")]
-        [MaxLength(15, ErrorMessage = "Số điện thoại không được vượt quá 15 ký tự.")]
+        [RegularExpression(@"^0\d{9}$", ErrorMessage = "Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số.")]
         public string? Phone { get; set; }
     }
 }

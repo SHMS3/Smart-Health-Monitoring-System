@@ -1,0 +1,1311 @@
+@model SmartHealthMonitoring.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+    var initials = string.Join("", (Model.FullName ?? "U").Split(' ').TakeLast(2).Select(w => w.FirstOrDefault().ToString().ToUpper()));
+}
+
+@section Styles {
+<style>
+    /* ══════════════════════════════════════════
+       PROFILE PAGE — lấy cảm hứng Patient Access
+       nhưng được nâng cấp thành phong cách
+       SmartHealth premium
+    ══════════════════════════════════════════ */
+
+    .profile-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 20px 60px;
+    }
+
+    /* ── Header card ── */
+    .profile-hero {
+        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+        border-radius: 20px;
+        padding: 36px 40px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        margin-bottom: 28px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-hero::before {
+        content: '';
+        position: absolute;
+        top: -60px; right: -60px;
+        width: 220px; height: 220px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.08);
+        pointer-events: none;
+    }
+
+    .profile-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -40px; left: 180px;
+        width: 140px; height: 140px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.06);
+        pointer-events: none;
+    }
+
+    .avatar-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.2);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #fff;
+        flex-shrink: 0;
+        border: 3px solid rgba(255,255,255,.35);
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-info {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-info h1 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 4px;
+    }
+
+    .hero-info .hero-sub {
+        color: rgba(255,255,255,.8);
+        font-size: .9rem;
+        margin-bottom: 14px;
+    }
+
+    .hero-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(255,255,255,.18);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255,255,255,.25);
+        border-radius: 50px;
+        padding: 4px 12px;
+        font-size: .75rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .hero-badge.google {
+        background: rgba(255,255,255,.22);
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .stat-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 20px 22px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: box-shadow .2s, transform .2s;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 8px 24px rgba(14,165,233,.10);
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .stat-icon.blue   { background: rgba(14,165,233,.12);  color: #0ea5e9; }
+    .stat-icon.indigo { background: rgba(99,102,241,.12);  color: #6366f1; }
+    .stat-icon.amber  { background: rgba(245,158,11,.12);  color: #f59e0b; }
+    .stat-icon.green  { background: rgba(16,185,129,.12);  color: #10b981; }
+    .stat-icon.red    { background: rgba(239,68,68,.12);   color: #ef4444; }
+
+    .stat-body .stat-num {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+    }
+
+    .stat-body .stat-lbl {
+        font-size: .78rem;
+        color: #94a3b8;
+        margin-top: 3px;
+    }
+
+    /* ── Tab navigation (lấy cảm hứng Patient Access) ── */
+    .profile-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 28px;
+    }
+
+    .profile-tab {
+        padding: 10px 20px;
+        font-size: .875rem;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all .2s;
+        background: none;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        white-space: nowrap;
+    }
+
+    .profile-tab:hover {
+        color: #0ea5e9;
+    }
+
+    .profile-tab.active {
+        color: #0ea5e9;
+        border-bottom-color: #0ea5e9;
+    }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Section card ── */
+    .section-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .section-header {
+        padding: 20px 28px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .section-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .section-body {
+        padding: 20px 28px;
+    }
+
+    /* ── Info row (giống Patient Access layout) ── */
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+    }
+
+    .info-row {
+        padding: 14px 0;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .info-row:last-child { border-bottom: none; }
+
+    .info-label {
+        font-size: .75rem;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+    }
+
+    .info-value {
+        font-size: .9rem;
+        font-weight: 600;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-value.muted { color: #94a3b8; font-weight: 400; font-style: italic; }
+
+    .badge-verified {
+        font-size: .65rem;
+        font-weight: 700;
+        background: rgba(16,185,129,.12);
+        color: #10b981;
+        border: 1px solid rgba(16,185,129,.25);
+        border-radius: 50px;
+        padding: 2px 8px;
+    }
+
+    /* ── Form khi edit ── */
+    .form-group-p {
+        margin-bottom: 18px;
+    }
+
+    .form-group-p label {
+        display: block;
+        font-size: .78rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+        margin-bottom: 6px;
+    }
+
+    .form-input-p {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: .9rem;
+        font-family: 'Inter', sans-serif;
+        color: #0f172a;
+        background: #f8fafc;
+        transition: all .2s;
+        outline: none;
+    }
+
+    .form-input-p:focus {
+        border-color: #0ea5e9;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(14,165,233,.12);
+    }
+
+    .form-input-p.input-validation-error {
+        border-color: #ef4444;
+    }
+
+    .form-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    /* ── Buttons ── */
+    .btn-save {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: linear-gradient(135deg, #0ea5e9, #6366f1);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-size: .875rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .2s;
+        box-shadow: 0 4px 12px rgba(14,165,233,.28);
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(14,165,233,.4);
+    }
+
+    .btn-link-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #0ea5e9;
+        font-size: .875rem;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 6px 0;
+        transition: color .2s;
+        cursor: pointer;
+        background: none;
+        border: none;
+    }
+
+    .btn-link-action:hover { color: #0284c7; }
+
+    /* ── Alert toast ── */
+    .alert-success-custom {
+        background: rgba(16,185,129,.08);
+        border: 1px solid rgba(16,185,129,.3);
+        border-radius: 12px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        color: #065f46;
+        font-size: .875rem;
+        font-weight: 500;
+    }
+
+    .alert-error-custom {
+        background: rgba(239,68,68,.07);
+        border: 1px solid rgba(239,68,68,.25);
+        border-radius: 12px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        color: #991b1b;
+        font-size: .875rem;
+        font-weight: 500;
+    }
+
+    .field-validation-error {
+        display: block;
+        font-size: .75rem;
+        color: #ef4444;
+        margin-top: 4px;
+    }
+
+    /* ── Security section ── */
+    .security-item {
+        padding: 18px 0;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .security-item:last-child { border-bottom: none; }
+
+    .security-item-info h4 {
+        font-size: .9rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 4px;
+    }
+
+    .security-item-info p {
+        font-size: .82rem;
+        color: #64748b;
+        line-height: 1.5;
+    }
+
+    .security-item-action {
+        flex-shrink: 0;
+    }
+
+    /* ── Quick links ── */
+    .quick-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid #f1f5f9;
+        text-decoration: none;
+        color: #0f172a;
+        transition: background .15s;
+    }
+
+    .quick-link:last-child { border-bottom: none; }
+
+    .quick-link:hover { color: #0ea5e9; }
+
+    .quick-link-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .9rem;
+        flex-shrink: 0;
+    }
+
+    .quick-link-text {
+        flex: 1;
+        font-size: .875rem;
+        font-weight: 600;
+    }
+
+    .quick-link-desc {
+        font-size: .75rem;
+        color: #94a3b8;
+        margin-top: 1px;
+        font-weight: 400;
+    }
+
+    @@media (max-width: 768px) {
+        .profile-hero { flex-direction: column; text-align: center; padding: 28px 24px; }
+        .hero-badges { justify-content: center; }
+        .stats-row { grid-template-columns: 1fr 1fr; }
+        .info-grid { grid-template-columns: 1fr; }
+        .form-grid-2 { grid-template-columns: 1fr; }
+    }
+</style>
+}
+
+<div class="profile-wrapper">
+
+    @* ══════════════════════════════
+       TOAST MESSAGES
+    ══════════════════════════════ *@
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert-success-custom">
+            <i class="fas fa-check-circle fa-lg"></i>
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert-error-custom">
+            <i class="fas fa-exclamation-circle fa-lg"></i>
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @* ══════════════════════════════
+       HERO HEADER
+    ══════════════════════════════ *@
+    <div class="profile-hero">
+        <div class="avatar-circle">@initials</div>
+        <div class="hero-info">
+            <h1>@Model.FullName</h1>
+            <p class="hero-sub">@Model.Email</p>
+            <div class="hero-badges">
+                <span class="hero-badge">
+                    @if (Model.Role == 1)
+                    {
+                        <i class="fas fa-user-md"></i> <text>Bác sĩ</text>
+                    }
+                    else if (Model.Role == 2)
+                    {
+                        <i class="fas fa-user-shield"></i> <text>Quản trị viên</text>
+                    }
+                    else
+                    {
+                        <i class="fas fa-user-injured"></i> <text>Bệnh nhân</text>
+                    }
+                </span>
+                @if (Model.IsGoogleAccount)
+                {
+                    <span class="hero-badge google">
+                        <i class="fab fa-google"></i> Tài khoản Google
+                    </span>
+                }
+                else
+                {
+                    <span class="hero-badge">
+                        <i class="fas fa-shield-alt"></i> Tài khoản email
+                    </span>
+                }
+                <span class="hero-badge">
+                    <i class="fas fa-calendar-alt"></i> Tham gia @Model.CreatedAt.ToString("MM/yyyy")
+                </span>
+            </div>
+        </div>
+    </div>
+
+    @* ══════════════════════════════
+       STATS ROW
+    ══════════════════════════════ *@
+    @if (Model.Role == 0)
+    {
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-heartbeat"></i></div>
+                <div class="stat-body">
+                    <div class="stat-num">@Model.TotalVitalLogs</div>
+                    <div class="stat-lbl">Lần ghi chỉ số</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon indigo"><i class="fas fa-file-medical"></i></div>
+                <div class="stat-body">
+                    <div class="stat-num">@Model.TotalClinicalRecords</div>
+                    <div class="stat-lbl">Hồ sơ bệnh án</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon amber"><i class="fas fa-bell"></i></div>
+                <div class="stat-body">
+                    <div class="stat-num">@Model.TotalWarningAlerts</div>
+                    <div class="stat-lbl">Cảnh báo AI</div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ══════════════════════════════
+       TABS — Lấy ý tưởng từ Patient Access
+    ══════════════════════════════ *@
+    <div class="profile-tabs" id="profileTabs">
+        <button class="profile-tab active" data-tab="info">Thông tin cá nhân</button>
+        <button class="profile-tab" data-tab="account">Chi tiết tài khoản</button>
+        <button class="profile-tab" data-tab="security">Bảo mật</button>
+        <button class="profile-tab" data-tab="quick">Truy cập nhanh</button>
+    </div>
+
+    @* ══════════════════════
+       TAB 1: Thông tin cá nhân
+    ══════════════════════ *@
+    <div class="tab-panel active" id="tab-info">
+
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title"><i class="fas fa-id-card me-2 text-primary"></i>Thông tin cơ bản</span>
+                <button class="btn-link-action" id="btnToggleEdit" onclick="toggleEditForm()">
+                    <i class="fas fa-pen"></i> Chỉnh sửa
+                </button>
+            </div>
+            <div class="section-body" id="viewMode">
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Họ và tên</span>
+                        <span class="info-value">@Model.FullName</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ngày sinh</span>
+                        <span class="info-value @(Model.DateOfBirth.HasValue ? "" : "muted")">
+                            @(Model.DateOfBirth.HasValue ? Model.DateOfBirth.Value.ToString("dd/MM/yyyy") : "Chưa cập nhật")
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Giới tính</span>
+                        <span class="info-value @(Model.Sex.HasValue ? "" : "muted")">
+                            @if (Model.Sex.HasValue)
+                            {
+                                if (Model.Sex == 1)
+                                {
+                                    <i class="fas fa-mars text-primary me-1"></i><span>Nam</span>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-venus text-danger me-1"></i><span>Nữ</span>
+                                }
+                            }
+                            else
+                            {
+                                <span>Chưa cập nhật</span>
+                            }
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Tuổi</span>
+                        <span class="info-value @(Model.Age.HasValue ? "" : "muted")">
+                            @(Model.Age.HasValue ? $"{Model.Age} tuổi" : "—")
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Số điện thoại</span>
+                        <span class="info-value @(string.IsNullOrEmpty(Model.Phone) ? "muted" : "")">
+                            @if (!string.IsNullOrEmpty(Model.Phone))
+                            {
+                                @Model.Phone
+                                if (Model.IsPhoneVerified)
+                                {
+                                    <span class="badge-verified"><i class="fas fa-check-circle"></i> Đã xác thực</span>
+                                }
+                                else
+                                {
+                                    <span style="font-size:.65rem;font-weight:700;background:rgba(245,158,11,.12);color:#d97706;border:1px solid rgba(245,158,11,.3);border-radius:50px;padding:2px 8px;">
+                                        <i class="fas fa-exclamation-triangle"></i> Chưa xác thực
+                                    </span>
+                                }
+                            }
+                            else
+                            {
+                                <span>Chưa cập nhật</span>
+                            }
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Lần ghi cuối</span>
+                        <span class="info-value @(Model.LastLogAt.HasValue ? "" : "muted")">
+                            @(Model.LastLogAt.HasValue ? Model.LastLogAt.Value.ToString("HH:mm dd/MM/yyyy") : "Chưa có")
+                        </span>
+                    </div>
+                    <div class="info-row" style="grid-column: 1 / -1;">
+                        <span class="info-label">Nhà / Địa chỉ</span>
+                        <span class="info-value @(string.IsNullOrEmpty(Model.Address) ? "muted" : "")">
+                            @if (!string.IsNullOrEmpty(Model.Address))
+                            {
+                                <i class="fas fa-map-marker-alt text-primary"></i> @Model.Address
+                            }
+                            else { <span>Chưa cập nhật</span> }
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            @* Edit form *@
+            <div class="section-body" id="editMode" style="display:none; border-top: 1px solid #f1f5f9;">
+                <form asp-controller="Home" asp-action="UpdateProfile" method="post" id="editProfileForm">
+                    @Html.AntiForgeryToken()
+                    <div class="form-grid-2">
+                        <div class="form-group-p">
+                            <label>Họ và tên</label>
+                            <input name="FullName" value="@Model.FullName" class="form-input-p" placeholder="Nhập họ và tên" required />
+                            <span class="field-validation-error" data-valmsg-for="FullName"></span>
+                        </div>
+                        <div class="form-group-p">
+                            <label>Ngày sinh</label>
+                            <input name="DateOfBirth" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" type="date" class="form-input-p" required />
+                        </div>
+                        <div class="form-group-p">
+                            <label>Giới tính</label>
+                            <select name="Sex" class="form-input-p">
+                                @if (Model.Sex == 1)
+                                {
+                                    <option value="1" selected>Nam</option>
+                                    <option value="0">Nữ</option>
+                                }
+                                else
+                                {
+                                    <option value="1">Nam</option>
+                                    <option value="0" selected>Nữ</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group-p">
+                            <label>Số điện thoại</label>
+                            <div style="display:flex; gap:8px; align-items:flex-start;">
+                                <div style="flex:1;">
+                                    <input name="Phone" id="phoneInput" value="@Model.Phone" type="tel" class="form-input-p"
+                                           placeholder="VD: 0912345678" oninput="onPhoneChange()" />
+                                    <span class="field-validation-error" data-valmsg-for="Phone"></span>
+                                </div>
+                                <button type="button" id="btnSendOtp" onclick="sendOtp()"
+                                        style="white-space:nowrap;padding:10px 14px;background:#eff6ff;border:1.5px solid #bfdbfe;
+                                               border-radius:10px;font-size:.82rem;font-weight:600;color:#0ea5e9;cursor:pointer;transition:all .2s;">
+                                    <i class="fas fa-paper-plane"></i> Gửi OTP
+                                </button>
+                            </div>
+                            @* Msg luôn hiển thị dù thành công hay lỗi *@
+                            <div id="otpMsg" style="font-size:.82rem; margin-top:8px; min-height:20px;"></div>
+                            <div id="otpRow" style="display:none; margin-top:8px;">
+                                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+                                    <input type="text" id="otpInput" maxlength="6" class="form-input-p"
+                                           placeholder="Nhập mã 6 chữ số"
+                                           style="max-width:180px;letter-spacing:6px;font-weight:700;font-size:1.1rem;" />
+                                    <button type="button" onclick="verifyOtp()"
+                                            style="white-space:nowrap;padding:10px 14px;background:linear-gradient(135deg,#10b981,#0ea5e9);
+                                                   border:none;border-radius:10px;font-size:.82rem;font-weight:600;color:#fff;cursor:pointer;">
+                                        <i class="fas fa-check"></i> Xác nhận
+                                    </button>
+                                </div>
+                                <div id="otpCountdown" style="font-size:.75rem; color:#94a3b8;"></div>
+                            </div>
+                        </div>
+                        <div class="form-group-p" style="grid-column: 1 / -1;">
+                            <label>Nhà / Địa chỉ</label>
+                            <input name="Address" value="@Model.Address" class="form-input-p"
+                                   placeholder="VD: 123 Đường ABC, Quận 1, TP.HCM" />
+                            <span class="field-validation-error" data-valmsg-for="Address"></span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 mt-2">
+                        <button type="submit" class="btn-save" id="btnSaveProfile">
+                            <i class="fas fa-check"></i> Lưu thay đổi
+                        </button>
+                        <button type="button" class="btn-link-action" onclick="toggleEditForm()">
+                            Hủy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    @* ══════════════════════
+       TAB 2: Chi tiết tài khoản (giống Patient Access - Account details)
+    ══════════════════════ *@
+    <div class="tab-panel" id="tab-account">
+
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title"><i class="fas fa-sign-in-alt me-2 text-primary"></i>Thông tin đăng nhập</span>
+            </div>
+            <div class="section-body">
+                <p style="font-size:.84rem; color:#64748b; margin-bottom:20px;">
+                    Đảm bảo tài khoản SmartHealth của bạn có email và số điện thoại hợp lệ. Thông tin này cần thiết để khôi phục tài khoản khi cần.
+                </p>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">
+                            @Model.Email
+                            <span class="badge-verified">Đã xác minh</span>
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Số điện thoại</span>
+                        <span class="info-value @(string.IsNullOrEmpty(Model.Phone) ? "muted" : "")">
+                            @if (!string.IsNullOrEmpty(Model.Phone))
+                            {
+                                @Model.Phone
+                                if (Model.IsPhoneVerified)
+                                {
+                                    <span class="badge-verified"><i class="fas fa-check-circle"></i> Đã xác thực</span>
+                                }
+                                else
+                                {
+                                    <span style="font-size:.65rem;font-weight:700;background:rgba(245,158,11,.12);color:#d97706;border:1px solid rgba(245,158,11,.3);border-radius:50px;padding:2px 8px;">
+                                        <i class="fas fa-exclamation-triangle"></i> Chưa xác thực
+                                    </span>
+                                }
+                            }
+                            else
+                            {
+                                <span>Chưa cập nhật</span>
+                            }
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Phương thức đăng nhập</span>
+                        <span class="info-value">
+                            @if (Model.IsGoogleAccount)
+                            {
+                                <i class="fab fa-google" style="color:#ea4335"></i> <span>Google OAuth</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-envelope text-primary"></i> <span>Email & Mật khẩu</span>
+                            }
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ngày tạo tài khoản</span>
+                        <span class="info-value">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Role == 0)
+        {
+            <div class="section-card">
+                <div class="section-header">
+                    <span class="section-title"><i class="fas fa-chart-bar me-2 text-indigo" style="color:#6366f1"></i>Tổng quan hoạt động</span>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <span class="info-label">Tổng lần ghi chỉ số</span>
+                            <span class="info-value">@Model.TotalVitalLogs lần</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Tổng hồ sơ bệnh án</span>
+                            <span class="info-value">@Model.TotalClinicalRecords hồ sơ</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Cảnh báo AI nhận được</span>
+                            <span class="info-value">@Model.TotalWarningAlerts cảnh báo</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Lần ghi chỉ số gần nhất</span>
+                            <span class="info-value @(Model.LastLogAt.HasValue ? "" : "muted")">
+                                @(Model.LastLogAt.HasValue ? Model.LastLogAt.Value.ToString("HH:mm — dd/MM/yyyy") : "Chưa có")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+    @* ══════════════════════
+       TAB 3: Bảo mật (giống Security tab của Patient Access)
+    ══════════════════════ *@
+    <div class="tab-panel" id="tab-security">
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title"><i class="fas fa-lock me-2 text-primary"></i>Bảo mật tài khoản</span>
+            </div>
+            <div class="section-body">
+
+                @if (!Model.IsGoogleAccount)
+                {
+                    <div class="security-item">
+                        <div class="security-item-info" style="flex:1;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+                                <h4>Mật khẩu</h4>
+                                <button class="btn-link-action" id="btnTogglePwd" onclick="togglePwdForm()">
+                                    <i class="fas fa-key"></i> Đổi mật khẩu
+                                </button>
+                            </div>
+                            <p>Mật khẩu phải có ít nhất 6 ký tự và không được dùng lại mật khẩu cũ.</p>
+
+                            @* Toast lỗi / thành công cho đổi mật khẩu *@
+                            @if (TempData["PwdError"] != null)
+                            {
+                                <div class="alert-error-custom mt-2" id="pwdErrToast">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    @TempData["PwdError"]
+                                </div>
+                            }
+                            @if (TempData["PwdSuccess"] != null)
+                            {
+                                <div class="alert-success-custom mt-2" id="pwdOkToast">
+                                    <i class="fas fa-check-circle"></i>
+                                    @TempData["PwdSuccess"]
+                                </div>
+                            }
+
+                            @* Form đổi mật khẩu — ẩn mặc định *@
+                            <div id="pwdForm" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid #f1f5f9;">
+                                <form asp-controller="Home" asp-action="ChangePassword" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <div class="form-grid-2">
+                                        <div class="form-group-p" style="grid-column: 1 / -1;">
+                                            <label>Mật khẩu hiện tại</label>
+                                            <div style="position:relative;">
+                                                <input name="CurrentPassword" type="password" id="currentPwd"
+                                                       class="form-input-p" placeholder="Nhập mật khẩu hiện tại" required />
+                                                <button type="button" onclick="toggleEye('currentPwd','eyeCurrent')"
+                                                        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;">
+                                                    <i class="fas fa-eye" id="eyeCurrent"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group-p">
+                                            <label>Mật khẩu mới</label>
+                                            <div style="position:relative;">
+                                                <input name="NewPassword" type="password" id="newPwd"
+                                                       class="form-input-p" placeholder="Ít nhất 6 ký tự" required
+                                                       oninput="checkPwdMatch()" />
+                                                <button type="button" onclick="toggleEye('newPwd','eyeNew')"
+                                                        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;">
+                                                    <i class="fas fa-eye" id="eyeNew"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group-p">
+                                            <label>Xác nhận mật khẩu mới</label>
+                                            <div style="position:relative;">
+                                                <input name="ConfirmNewPassword" type="password" id="confirmPwd"
+                                                       class="form-input-p" placeholder="Nhập lại mật khẩu mới" required
+                                                       oninput="checkPwdMatch()" />
+                                                <button type="button" onclick="toggleEye('confirmPwd','eyeConfirm')"
+                                                        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;">
+                                                    <i class="fas fa-eye" id="eyeConfirm"></i>
+                                                </button>
+                                            </div>
+                                            <span id="matchHint" style="font-size:.75rem; margin-top:4px; display:none;"></span>
+                                        </div>
+                                    </div>
+
+                                    @* Thanh độ mạnh mật khẩu *@
+                                    <div style="margin-bottom:16px;">
+                                        <div style="display:flex; justify-content:space-between; font-size:.72rem; color:#94a3b8; margin-bottom:4px;">
+                                            <span>Độ mạnh mật khẩu</span>
+                                            <span id="strengthLabel">—</span>
+                                        </div>
+                                        <div style="height:4px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                                            <div id="strengthBar" style="height:100%; width:0%; border-radius:4px; transition:all .3s;"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex gap-3 align-items-center">
+                                        <button type="submit" class="btn-save">
+                                            <i class="fas fa-check"></i> Lưu mật khẩu
+                                        </button>
+                                        <button type="button" class="btn-link-action" onclick="togglePwdForm()">
+                                            Hủy
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="security-item">
+                        <div class="security-item-info">
+                            <h4><i class="fab fa-google me-1" style="color:#ea4335"></i> Đăng nhập Google</h4>
+                            <p>Tài khoản này sử dụng Google để xác thực. Bảo mật được quản lý bởi Google.</p>
+                        </div>
+                        <div class="security-item-action">
+                            <span class="hero-badge" style="background: rgba(16,185,129,.12); color:#10b981; border-color: rgba(16,185,129,.3); font-size:.75rem; padding: 5px 12px;">
+                                <i class="fas fa-check-circle"></i> Bảo mật
+                            </span>
+                        </div>
+                    </div>
+                }
+
+                <div class="security-item">
+                    <div class="security-item-info">
+                        <h4>Xác thực 2 lớp (2FA)</h4>
+                        <p>Thêm lớp bảo mật khi đăng nhập — yêu cầu mã xác minh mỗi lần đăng nhập.</p>
+                    </div>
+                    <div class="security-item-action">
+                        <a href="#" class="btn-link-action" style="color:#94a3b8; cursor:not-allowed;">
+                            <i class="fas fa-plus"></i> Sắp ra mắt
+                        </a>
+                    </div>
+                </div>
+
+                <div class="security-item">
+                    <div class="security-item-info">
+                        <h4>Quản lý phiên đăng nhập</h4>
+                        <p>Đăng xuất khỏi tất cả thiết bị nếu bạn lo ngại tài khoản bị truy cập trái phép.</p>
+                    </div>
+                    <div class="security-item-action">
+                        <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-link-action" style="color: #ef4444;">
+                                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    @* ══════════════════════
+       TAB 4: Truy cập nhanh
+    ══════════════════════ *@
+    <div class="tab-panel" id="tab-quick">
+        <div class="section-card">
+            <div class="section-header">
+                <span class="section-title"><i class="fas fa-rocket me-2 text-primary"></i>Truy cập nhanh</span>
+            </div>
+            <div class="section-body">
+
+                @if (Model.Role == 0)
+                {
+                    <a asp-controller="Patient" asp-action="Index" class="quick-link">
+                        <div class="stat-icon blue quick-link-icon"><i class="fas fa-heartbeat"></i></div>
+                        <div>
+                            <div class="quick-link-text">Sổ tay sức khỏe hằng ngày</div>
+                            <div class="quick-link-desc">Ghi và xem lịch sử chỉ số sinh hiệu</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#cbd5e1; font-size:.8rem;"></i>
+                    </a>
+
+                    <a asp-controller="ClinicalRecord" asp-action="MyRecords" class="quick-link">
+                        <div class="stat-icon indigo quick-link-icon"><i class="fas fa-file-medical-alt"></i></div>
+                        <div>
+                            <div class="quick-link-text">Hồ sơ bệnh án</div>
+                            <div class="quick-link-desc">Xem các lần khám lâm sàng và kết quả AI</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#cbd5e1; font-size:.8rem;"></i>
+                    </a>
+                }
+                else if (Model.Role == 1)
+                {
+                    <a asp-controller="DoctorDashboard" asp-action="Index" class="quick-link">
+                        <div class="stat-icon blue quick-link-icon"><i class="fas fa-stethoscope"></i></div>
+                        <div>
+                            <div class="quick-link-text">Bảng điều khiển Bác sĩ</div>
+                            <div class="quick-link-desc">Theo dõi bệnh nhân và cảnh báo</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#cbd5e1; font-size:.8rem;"></i>
+                    </a>
+                }
+                else if (Model.Role == 2)
+                {
+                    <a asp-area="Admin" asp-controller="User" asp-action="Index" class="quick-link">
+                        <div class="stat-icon indigo quick-link-icon"><i class="fas fa-users-cog"></i></div>
+                        <div>
+                            <div class="quick-link-text">Quản lý người dùng</div>
+                            <div class="quick-link-desc">Trang quản trị hệ thống</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#cbd5e1; font-size:.8rem;"></i>
+                    </a>
+                }
+
+                <a asp-controller="Home" asp-action="Contact" class="quick-link">
+                    <div class="stat-icon green quick-link-icon"><i class="fas fa-headset"></i></div>
+                    <div>
+                        <div class="quick-link-text">Liên hệ hỗ trợ</div>
+                        <div class="quick-link-desc">Gửi câu hỏi hoặc phản hồi đến đội ngũ</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:#cbd5e1; font-size:.8rem;"></i>
+                </a>
+
+                <div class="quick-link" style="cursor:not-allowed; opacity:.5;">
+                    <div class="stat-icon amber quick-link-icon"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <div class="quick-link-text">Chatbot AI sức khỏe</div>
+                        <div class="quick-link-desc">Tư vấn sức khỏe 24/7 — Sắp ra mắt</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:#cbd5e1; font-size:.8rem;"></i>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+<script>
+    // ── Tab switching ──
+    document.querySelectorAll('.profile-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // ── Toggle edit form ──
+    function toggleEditForm() {
+        const view = document.getElementById('viewMode');
+        const edit = document.getElementById('editMode');
+        const btn  = document.getElementById('btnToggleEdit');
+        if (edit.style.display === 'none') {
+            edit.style.display = 'block';
+            view.style.display = 'none';
+            btn.innerHTML = '<i class="fas fa-times"></i> Hủy';
+        } else {
+            edit.style.display = 'none';
+            view.style.display = 'block';
+            btn.innerHTML = '<i class="fas fa-pen"></i> Chỉnh sửa';
+        }
+    }
+
+    // ── Toggle password form ──
+    function togglePwdForm() {
+        const form = document.getElementById('pwdForm');
+        const btn  = document.getElementById('btnTogglePwd');
+        if (!btn) return;
+        if (form.style.display === 'none' || form.style.display === '') {
+            form.style.display = 'block';
+            btn.innerHTML = '<i class="fas fa-times"></i> Hủy';
+        } else {
+            form.style.display = 'none';
+            btn.innerHTML = '<i class="fas fa-key"></i> Đổi mật khẩu';
+        }
+    }
+
+    // ── Toggle show/hide password ──
+    function toggleEye(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon  = document.getElementById(iconId);
+        if (!input || !icon) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+
+    // ── Kiểm tra mật khẩu xác nhận khớp ──
+    function checkPwdMatch() {
+        const newPwd     = document.getElementById('newPwd');
+        const confirmPwd = document.getElementById('confirmPwd');
+        const hint       = document.getElementById('matchHint');
+        if (!newPwd || !confirmPwd || !hint) return;
+
+        if (confirmPwd.value.length === 0) {
+            hint.style.display = 'none';
+            return;
+        }
+        hint.style.display = 'block';
+        if (newPwd.value === confirmPwd.value) {
+            hint.textContent = '✓ Mật khẩu khớp';
+            hint.style.color = '#10b981';
+            confirmPwd.style.borderColor = '#10b981';
+        } else {
+            hint.textContent = '✗ Mật khẩu không khớp';
+            hint.style.color = '#ef4444';
+            confirmPwd.style.borderColor = '#ef4444';
+        }
+
+        // Cũng tính độ mạnh khi đang nhập
+        calcStrength(newPwd.value);
+    }
+
+    // ── Thanh độ mạnh mật khẩu ──
+    document.getElementById('newPwd')?.addEventListener('input', function() {
+        calcStrength(this.value);
+    });
+
+    function calcStrength(pwd) {
+        const bar   = document.getElementById('strengthBar');
+        const label = document.getElementById('strengthLabel');
+        if (!bar || !label) return;
+
+        let score = 0;
+        if (pwd.length >= 6)  score++;
+        if (pwd.length >= 10) score++;
+        if (/[A-Z]/.test(pwd)) score++;
+        if (/[0-9]/.test(pwd)) score++;
+        if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+        const levels = [
+            { w: '0%',   color: '#e2e8f0', lbl: '—' },
+            { w: '25%',  color: '#ef4444', lbl: 'Rất yếu' },
+            { w: '45%',  color: '#f59e0b', lbl: 'Yếu' },
+            { w: '65%',  color: '#0ea5e9', lbl: 'Trung bình' },
+            { w: '85%',  color: '#10b981', lbl: 'Mạnh' },
+            { w: '100%', color: '#6366f1', lbl: 'Rất mạnh' },
+        ];
+        const lvl = levels[Math.min(score, 5)];
+        bar.style.width = lvl.w;
+        bar.style.background = lvl.color;
+        label.textContent = lvl.lbl;
+        label.style.color = lvl.color;
+    }
+
+    // ── Nếu có lỗi mật khẩu → tự động mở form và chuyển sang tab Bảo mật ──
+    @if (TempData.Peek("PwdError") != null || TempData.Peek("PwdSuccess") != null)
+    {
+        <text>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kích hoạt tab Bảo mật
+            document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            const secTab = document.querySelector('[data-tab="security"]');
+            if (secTab) secTab.classList.add('active');
+            const secPanel = document.getElementById('tab-security');
+            if (secPanel) secPanel.classList.add('active');
+
+            @if (TempData.Peek("PwdError") != null)
+            {
+                <text>
+                // Mở form khi có lỗi để user thấy và sửa luôn
+                const pwdForm = document.getElementById('pwdForm');
+                const btnPwd  = document.getElementById('btnTogglePwd');
+                if (pwdForm) pwdForm.style.display = 'block';
+                if (btnPwd)  btnPwd.innerHTML = '<i class="fas fa-times"></i> Hủy';
+                </text>
+            }
+        });
+        </text>
+    }
+    // ── OTP xác thực SĐT ──
+    const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+    function onPhoneChange() {
+        // Khi user sửa SĐT, reset OTP panel
+        document.getElementById('otpRow').style.display = 'none';
+        document.getElementById('otpInput') && (document.getElementById('otpInput').value = '');
+        clearInterval(window._otpTimer);
+    }
+
+    let otpCountdownSecs = 0;
+
+    async function sendOtp() {
+        const phone = document.getElementById('phoneInput')?.value?.trim();
+        if (!phone) { alert('Vui lòng nhập số điện thoại trước.'); return; }
+
+        const btn = document.getElementById('btnSendOtp');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+
+        const formData = new FormData();
+        formData.append('phone', phone);
+        formData.append('__RequestVerificationToken', antiForgeryToken);
+
+        try {
+            const res = await fetch('/Home/SendPhoneOtp', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('otpRow').style.display = 'block';
+                setOtpMsg(data.message, 'success');
+                startCountdown(600);
+            } else {
+                setOtpMsg(data.message, 'error');
+            }
+        } catch(e) {
+            setOtpMsg('Lỗi kết nối. Vui lòng thử lại.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi lại';
+        }
+    }
+
+    async function verifyOtp() {
+        const otp = document.getElementById('otpInput')?.value?.trim();
+        if (!otp || otp.length !== 6) { setOtpMsg('Vui lòng nhập đủ 6 chữ số.', 'error'); return; }
+
+        const formData = new FormData();
+        formData.append('otp', otp);
+        formData.append('__RequestVerificationToken', antiForgeryToken);
+
+        try {
+            const res = await fetch('/Home/VerifyPhoneOtp', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                setOtpMsg(data.message, 'success');
+                clearInterval(window._otpTimer);
+                // Tải lại trang để hiện badge đã xác thực
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                setOtpMsg(data.message, 'error');
+            }
+        } catch(e) {
+            setOtpMsg('Lỗi kết nối. Vui lòng thử lại.', 'error');
+        }
+    }
+
+    function setOtpMsg(msg, type) {
+        const el = document.getElementById('otpMsg');
+        el.textContent = msg;
+        el.style.color = type === 'success' ? '#10b981' : '#ef4444';
+    }
+
+    function startCountdown(secs) {
+        clearInterval(window._otpTimer);
+        let remaining = secs;
+        const el = document.getElementById('otpCountdown');
+        const update = () => {
+            const m = Math.floor(remaining / 60).toString().padStart(2,'0');
+            const s = (remaining % 60).toString().padStart(2,'0');
+            el.textContent = `Mã còn hiệu lực: ${m}:${s}`;
+            if (remaining-- <= 0) {
+                clearInterval(window._otpTimer);
+                el.textContent = 'Mã đã hết hiệu lực. Vui lòng gửi lại.';
+                el.style.color = '#ef4444';
+            }
+        };
+        update();
+        window._otpTimer = setInterval(update, 1000);
+    }
+</script>
+}
