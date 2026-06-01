@@ -1,0 +1,176 @@
+@model SmartHealthMonitoring.ViewModels.CompleteProfileViewModel
+@{
+    ViewData["Title"] = "Cập nhật thông tin";
+}
+
+@section Styles {
+    <style>
+        .auth-wrapper {
+            margin-top: 70px;
+            min-height: calc(100vh - 70px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 50%, #f0fdf4 100%);
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .auth-wrapper::before {
+                content: '';
+                position: absolute;
+                top: -200px;
+                right: -200px;
+                width: 500px;
+                height: 500px;
+                background: radial-gradient(circle, rgba(14,165,233,.12) 0%, transparent 70%);
+                pointer-events: none;
+            }
+
+            .auth-wrapper::after {
+                content: '';
+                position: absolute;
+                bottom: -200px;
+                left: -200px;
+                width: 500px;
+                height: 500px;
+                background: radial-gradient(circle, rgba(99,102,241,.1) 0%, transparent 70%);
+                pointer-events: none;
+            }
+
+        .auth-container {
+            max-width: 600px;
+            width: 100%;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 25px 60px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04);
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-form-panel {
+            padding: 48px 40px;
+        }
+
+        .auth-form-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .auth-form-subtitle {
+            color: #64748b;
+            font-size: .9rem;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+            .form-group label {
+                display: block;
+                font-size: .82rem;
+                font-weight: 600;
+                color: #334155;
+                margin-bottom: 6px;
+            }
+
+                .form-group label i {
+                    margin-right: 6px;
+                    color: #94a3b8;
+                }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: .9rem;
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            background: #f8fafc;
+            transition: all .2s;
+            outline: none;
+        }
+
+            .form-input:focus {
+                border-color: #0ea5e9;
+                background: #fff;
+                box-shadow: 0 0 0 3px rgba(14,165,233,.12);
+            }
+
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            color: #fff;
+            font-size: .95rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all .3s;
+            box-shadow: 0 4px 14px rgba(14,165,233,.3);
+            margin-top: 10px;
+        }
+
+            .btn-submit:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(14,165,233,.4);
+            }
+
+        .field-validation-error {
+            display: block;
+            font-size: .78rem;
+            color: #ef4444;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+    </style>
+}
+
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="auth-form-panel">
+            <h1 class="auth-form-title">Cập nhật thông tin</h1>
+            <p class="auth-form-subtitle">Để hệ thống AI có thể chẩn đoán và theo dõi sức khỏe chính xác nhất, vui lòng cung cấp thêm các thông tin dưới đây.</p>
+
+            <form asp-action="CompleteProfile" asp-controller="Auth" method="post">
+                <div class="form-group">
+                    <label for="DateOfBirth"><i class="fas fa-calendar-alt"></i>Ngày sinh</label>
+                    <input asp-for="DateOfBirth" type="date" class="form-input" id="DateOfBirth" />
+                    <span asp-validation-for="DateOfBirth" class="field-validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="Sex"><i class="fas fa-venus-mars"></i>Giới tính</label>
+                    <select asp-for="Sex" class="form-input" id="Sex">
+                        <option value="1">Nam</option>
+                        <option value="0">Nữ</option>
+                    </select>
+                    <span asp-validation-for="Sex" class="field-validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="Phone"><i class="fas fa-phone"></i>Số điện thoại</label>
+                    <input asp-for="Phone" type="tel" class="form-input" id="Phone" placeholder="Nhập số điện thoại của bạn" />
+                    <span asp-validation-for="Phone" class="field-validation-error"></span>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check-circle me-2"></i>Lưu thông tin
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

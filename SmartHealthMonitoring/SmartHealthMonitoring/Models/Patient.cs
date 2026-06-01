@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SmartHealthMonitoring.Models;
@@ -14,6 +14,10 @@ public partial class Patient
     public byte Sex { get; set; }
 
     public string? Phone { get; set; }
+
+    public bool IsPhoneVerified { get; set; }
+
+    public string? Address { get; set; }
 
     public bool IsDeleted { get; set; }
 
