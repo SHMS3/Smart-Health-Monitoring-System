@@ -403,6 +403,23 @@
 			display: flex;
 			gap: 20px;
 		}
+
+		.ai-floating-btn {
+			position: fixed;
+			bottom: 25px;
+			right: 25px;
+			width: 65px;
+			height: 65px;
+			border-radius: 50%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			background: linear-gradient( 135deg, #0ea5e9, #6366f1 );
+			color: white;
+			font-size: 26px;
+			z-index: 99999;
+			box-shadow: 0 8px 25px rgba(0,0,0,.25);
+		}
 	</style>
 
 	@await RenderSectionAsync("Styles", required: false)
@@ -467,6 +484,9 @@
 						<li>
 							<a asp-controller="Patient" asp-action="DoctorAlert">Cảnh báo hằng ngày</a>
 						</li>
+						<li>
+							<a asp-controller="Chatbot" asp-action="History"> Lịch sử Chat AI </a>
+						</li>					
 					}
 					else
 					{
@@ -478,6 +498,9 @@
 						</li>
 						<li>
 							<a asp-controller="Auth" asp-action="Login">Cảnh báo hằng ngày</a>
+						</li>
+						<li>
+							<a asp-controller="Auth" asp-action="Login">Lịch sử chatAI</a>
 						</li>
 					}
 				}
@@ -614,6 +637,16 @@
 		}
 	</script>
 	@await RenderSectionAsync("Scripts", required: false)
+	@if (User.Identity?.IsAuthenticated == true
+			&& User.IsInRole("0"))
+	{
+		<a asp-controller="Chatbot"
+		   asp-action="Index"
+		   class="ai-floating-btn">
 
+			<i class="fas fa-robot"></i>
+		</a>
+	}
 </body>
+
 </html>
