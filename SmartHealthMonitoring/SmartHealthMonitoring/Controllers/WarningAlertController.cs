@@ -21,22 +21,30 @@ namespace SmartHealthMonitoring.Controllers
             _doctorService = doctorService;
         }
 
-        public async Task<IActionResult> Dashboard(byte? status)
+        public async Task<IActionResult> Dashboard(byte? status,string? keyword,int page = 1)
         {
+            int pageSize = 10;
+
             var alerts = await _warningAlertService
-                .GetAlertsAsync(status);
+                .GetAlertsAsync(
+                    status,
+                    keyword,
+                    page,
+                    pageSize);
 
-            // Truyền doctorId để UI chỉ hiển thị Resolution note cho đúng bác sĩ đã claim
-            int? doctorId = null;
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out var userId))
-            {
-                var doctor = await _doctorService.GetDoctorByUserIdAsync(userId);
-                doctorId = doctor?.Id;
-            }
+            var totalRecords =
+                await _warningAlertService
+                    .GetTotalAlertsAsync(
+                        status,
+                        keyword);
 
-            ViewData["DoctorId"] = doctorId;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages =
+                (int)Math.Ceiling(
+                    (double)totalRecords / pageSize);
 
+            ViewBag.Keyword = keyword;
+            ViewBag.Status = status;
 
             return View(alerts);
         }
