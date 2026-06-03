@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Minio;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.DI; // Gọi namespace DI của bạn
+using SmartHealthMonitoring.Hubs;
 using System;
 
 namespace SmartHealthMonitoring
@@ -31,6 +32,9 @@ namespace SmartHealthMonitoring
 
             // 3. MVC & Razor
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
+            // 3b. SignalR cho Telemedicine Chat
+            builder.Services.AddSignalR();
 
             // 4. Configure Email Settings
             builder.Services.Configure<SmartHealthMonitoring.Models.Configurations.EmailSettings>(
@@ -104,6 +108,9 @@ namespace SmartHealthMonitoring
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            // SignalR Hub endpoint cho Telemedicine Chat
+            app.MapHub<ChatHub>("/chatHub");
 
             app.Run();
         }
