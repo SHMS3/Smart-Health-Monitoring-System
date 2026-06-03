@@ -49,26 +49,61 @@ namespace SmartHealthMonitoring.Services
 
         }
 
-        public async Task<List<WarningAlert>> GetAlertsAsync(byte? status)
+        public async Task<List<WarningAlert>> GetAlertsAsync(byte? status,string? keyword,int page,int pageSize)
         {
             var query = _context.WarningAlerts
                 .Where(x => !x.IsDeleted)
-                
                 .Include(x => x.Patient)
-                .ThenInclude(p => p.User)
+                    .ThenInclude(p => p.User)
                 .Include(x => x.ClaimedByDoctor)
-                .ThenInclude(d => d.User)
+                    .ThenInclude(d => d.User)
                 .Include(x => x.Prediction)
                 .AsQueryable();
 
+            // Filter Status
             if (status.HasValue)
             {
-                query = query.Where(x => x.Status == status.Value);
+                query = query.Where(x =>
+                    x.Status == status.Value);
+            }
+
+            // Search Patient Name
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                query = query.Where(x =>
+                    x.Patient.User.FullName
+                        .Contains(keyword));
             }
 
             return await query
                 .OrderByDescending(x => x.FlaggedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+        }
+
+        public async Task<int> GetTotalAlertsAsync(byte? status,string? keyword)
+        {
+            var query = _context.WarningAlerts
+                .Where(x => !x.IsDeleted)
+                .Include(x => x.Patient)
+                    .ThenInclude(p => p.User)
+                .AsQueryable();
+
+            if (status.HasValue)
+            {
+                query = query.Where(x =>
+                    x.Status == status.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                query = query.Where(x =>
+                    x.Patient.User.FullName
+                        .Contains(keyword));
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<bool> ResolveAlertAsync(int alertId,int doctorId,string resolutionNote)

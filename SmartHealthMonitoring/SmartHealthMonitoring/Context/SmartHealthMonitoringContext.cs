@@ -473,6 +473,7 @@ public partial class SmartHealthMonitoringContext : DbContext
             new WarningAlert { Id = 8, PredictionId = 8, PatientId = 8, Status = 2, ClaimedByDoctorId = 4, ResolutionNote = "Cảnh báo nhầm.", FlaggedAt = baseDate.AddHours(8).AddMinutes(6) },
             new WarningAlert { Id = 9, PredictionId = 9, PatientId = 9, Status = 0, FlaggedAt = baseDate.AddHours(9).AddMinutes(6) },
             new WarningAlert { Id = 10, PredictionId = 10, PatientId = 10, Status = 1, ClaimedByDoctorId = 1, FlaggedAt = baseDate.AddHours(10).AddMinutes(6) }
+            
         );
 
         // 8. ChatbotSessions

@@ -374,6 +374,26 @@
                 </div>
 
             </div>
+            <form asp-action="Dashboard"
+                  method="get"
+                  class="mb-3">
+
+                <div class="input-group">
+
+                    <input type="text"
+                           name="keyword"
+                           value="@ViewBag.Keyword"
+                           class="form-control"
+                           placeholder="Tìm theo tên bệnh nhân..." />
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Tìm kiếm
+                    </button>
+
+                </div>
+
+            </form>
 
             <div class="alert-table-wrap">
 
@@ -577,6 +597,31 @@
                     </tbody>
 
                 </table>
+                
+                
+                    <nav>
+                        <ul class="pagination">
+
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+
+                                    <a class="page-link"
+                                       asp-action="Dashboard"
+                                       asp-route-page="@i"
+                                       asp-route-status="@ViewBag.Status"
+                                       asp-route-keyword="@ViewBag.Keyword">
+
+                                        @i
+
+                                    </a>
+
+                                </li>
+                            }
+
+                        </ul>
+                    </nav>
+                
 
             </div>
 

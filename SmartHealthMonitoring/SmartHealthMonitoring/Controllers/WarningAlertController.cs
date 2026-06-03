@@ -29,8 +29,31 @@ namespace SmartHealthMonitoring.Controllers
             _emailService = emailService;
         }
 
-        public async Task<IActionResult> Dashboard(byte? status)
+        public async Task<IActionResult> Dashboard(byte? status,string? keyword,int page = 1)
         {
+            int pageSize = 10;
+
+            var alerts = await _warningAlertService
+                .GetAlertsAsync(
+                    status,
+                    keyword,
+                    page,
+                    pageSize);
+
+            var totalRecords =
+                await _warningAlertService
+                    .GetTotalAlertsAsync(
+                        status,
+                        keyword);
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages =
+                (int)Math.Ceiling(
+                    (double)totalRecords / pageSize);
+
+            ViewBag.Keyword = keyword;
+            ViewBag.Status = status;
+
             var alerts = await _warningAlertService.GetAlertsAsync(status);
 
             // Truyền doctorId để UI chỉ hiển thị Resolution note cho đúng bác sĩ đã claim
