@@ -1,0 +1,130 @@
+﻿@model SmartHealthMonitoring.Common.PagedResult<SmartHealthMonitoring.ViewModels.Admin.AdminPatientListViewModel>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý Bệnh nhân";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Quản lý Bệnh nhân</h3>
+        <p class="text-muted small">Danh sách toàn bộ bệnh nhân đã đăng ký</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle text-nowrap mb-0">
+                <thead class="table-light text-muted small">
+                    <tr>
+                        <th class="ps-4">Họ và tên</th>
+                        <th>Thông tin liên hệ</th>
+                        <th>Ngày sinh</th>
+                        <th>Giới tính</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end pe-4">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pat in Model.Items)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">@pat.FullName</td>
+                            <td>
+                                <div><i class="fas fa-envelope text-muted me-2 small"></i>@pat.Email</div>
+                                <div><i class="fas fa-phone text-muted me-2 small"></i>@(pat.Phone ?? "Chưa cập nhật")</div>
+                            </td>
+                            <td>@pat.DateOfBirth.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (pat.Sex == 1)
+                                {
+                                    <span class="text-info"><i class="fas fa-mars me-1"></i>Nam</span>
+                                }
+                                else
+                                {
+
+                                    <span class="text-danger"><i class="fas fa-venus me-1"></i>Nữ</span>
+                                }
+                            </td>
+                            <td>
+                                @if (pat.IsDeleted)
+                                {
+                                    <span class="badge bg-danger rounded-pill px-3">Bị khóa</span>
+                                    @if (!string.IsNullOrEmpty(pat.LockReason))
+                                    {
+                                        <div class="text-danger mt-1 small" style="font-size: 0.75rem;">
+                                            <i class="fas fa-info-circle me-1"></i>@pat.LockReason
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success rounded-pill px-3">Bình thường</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                @if (pat.IsDeleted)
+                                {
+                                    <form asp-action="ToggleLock" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@pat.UserId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success rounded-pill fw-medium" onclick="return confirm('Xác nhận mở khóa tài khoản bệnh nhân này?');">
+                                            <i class="fas fa-unlock me-1"></i> Mở khóa
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill fw-medium" data-bs-toggle="modal" data-bs-target="#lockModal-pat-@pat.UserId">
+                                        <i class="fas fa-lock me-1"></i> Khóa
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="lockModal-pat-@pat.UserId" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content rounded-4 border-0 shadow">
+                                    <form asp-action="ToggleLock" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <div class="modal-header border-bottom-0 p-4 pb-2">
+                                            <h5 class="modal-title fw-bold text-dark">Lý do khóa tài khoản</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body p-4 pt-0">
+                                            <p class="text-muted small mb-3">Vui lòng nhập lý do khóa tài khoản của bệnh nhân <strong>@pat.FullName</strong>.</p>
+                                            <input type="hidden" name="userId" value="@pat.UserId" />
+                                            <div class="mb-3">
+                                                <textarea name="lockReason" class="form-control rounded-3" rows="3" placeholder="Ví dụ: Tài khoản giả mạo, Phát tán nội dung sai lệch, Spam chỉ số ảo..." required></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top-0 p-4 pt-0">
+                                            <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-danger rounded-pill px-4 fw-medium">Xác nhận Khóa</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white border-top-0 p-4 d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Hiển thị trang @Model.Page / @Model.TotalPages</span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)">Trước</a></li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")"><a class="page-link" asp-action="Index" asp-route-page="@i">@i</a></li>
+                    }
+                    <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")"><a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)">Sau</a></li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

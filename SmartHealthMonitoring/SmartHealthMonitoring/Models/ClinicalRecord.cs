@@ -37,6 +37,12 @@ public partial class ClinicalRecord
 
     public bool IsDeleted { get; set; }
 
+    public bool IsViewForPatient { get; set; } = true;
+
+    public string? EcgImageUrl { get; set; }
+
+    public string? AttachmentUrl { get; set; }
+
     public virtual ICollection<AiriskPrediction> AiriskPredictions { get; set; } = new List<AiriskPrediction>();
 
     public virtual Doctor Doctor { get; set; } = null!;

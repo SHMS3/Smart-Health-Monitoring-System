@@ -1,4 +1,4 @@
-﻿@model SmartHealthMonitoring.ViewModels.DailyVitalLogViewModel
+@model SmartHealthMonitoring.ViewModels.DailyVitalLogViewModel
 
 @{
 	ViewData["Title"] = "Chi tiết hồ sơ #" + Model.Id;
@@ -81,8 +81,19 @@
 				<div class="vital-card p-4 rounded-4 bg-light">
 					<span class="text-muted fw-semibold fs-7 text-uppercase">Huyết áp tâm thu</span>
 					<h2 class="display-6 fw-bold my-2 text-dark">@Model.SystolicBp <span class="fs-6 text-muted font-normal">mmHg</span></h2>
-					<span class="fs-7 @(Model.SystolicBp >= 130 ? "text-danger fw-medium" : "text-success")">
-						@(Model.SystolicBp >= 130 ? "⚠️ Cao hơn mức tiêu chuẩn (<120)" : "✓ Bình thường")
+					<span class="fs-7 @(Model.SystolicBp >= Model.SystolicBpDanger ? "text-danger fw-medium" : Model.SystolicBp >= Model.SystolicBpWarning ? "text-warning fw-medium" : "text-success")">
+						@if (Model.SystolicBp >= Model.SystolicBpDanger)
+						{
+							<span>&#9888;&#65039; Nguy hiểm (&ge;@Model.SystolicBpDanger)</span>
+						}
+						else if (Model.SystolicBp >= Model.SystolicBpWarning)
+						{
+							<span>&#9888; Cảnh báo (&ge;@Model.SystolicBpWarning)</span>
+						}
+						else
+						{
+							<span>&#10003; Bình thường (&lt;@Model.SystolicBpWarning)</span>
+						}
 					</span>
 				</div>
 			</div>
@@ -91,8 +102,19 @@
 				<div class="vital-card p-4 rounded-4 bg-light">
 					<span class="text-muted fw-semibold fs-7 text-uppercase">Huyết áp tâm trương</span>
 					<h2 class="display-6 fw-bold my-2 text-dark">@Model.DiastolicBp <span class="fs-6 text-muted font-normal">mmHg</span></h2>
-					<span class="fs-7 @(Model.DiastolicBp >= 80 ? "text-danger fw-medium" : "text-success")">
-						@(Model.DiastolicBp >= 80 ? "⚠️ Cao hơn mức tiêu chuẩn (<80)" : "✓ Bình thường")
+					<span class="fs-7 @(Model.DiastolicBp >= Model.DiastolicBpDanger ? "text-danger fw-medium" : Model.DiastolicBp >= Model.DiastolicBpWarning ? "text-warning fw-medium" : "text-success")">
+						@if (Model.DiastolicBp >= Model.DiastolicBpDanger)
+						{
+							<span>&#9888;&#65039; Nguy hiểm (&ge;@Model.DiastolicBpDanger)</span>
+						}
+						else if (Model.DiastolicBp >= Model.DiastolicBpWarning)
+						{
+							<span>&#9888; Cảnh báo (&ge;@Model.DiastolicBpWarning)</span>
+						}
+						else
+						{
+							<span>&#10003; Bình thường (&lt;@Model.DiastolicBpWarning)</span>
+						}
 					</span>
 				</div>
 			</div>
@@ -101,8 +123,19 @@
 				<div class="vital-card p-4 rounded-4 bg-light">
 					<span class="text-muted fw-semibold fs-7 text-uppercase">Nhịp tim</span>
 					<h2 class="display-6 fw-bold my-2 text-dark">@Model.HeartRate <span class="fs-6 text-muted font-normal">bpm</span></h2>
-					<span class="fs-7 @(Model.IsAbnormalHeartRate ? "text-danger fw-medium" : "text-success")">
-						@(Model.IsAbnormalHeartRate ? "⚠️ Nằm ngoài khoảng an toàn (60-100)" : "✓ Bình thường")
+					<span class="fs-7 @(Model.HeartRate <= Model.HeartRateDangerMin || Model.HeartRate >= Model.HeartRateDangerMax ? "text-danger fw-medium" : Model.HeartRate <= Model.HeartRateWarningMin || Model.HeartRate >= Model.HeartRateWarningMax ? "text-warning fw-medium" : "text-success")">
+						@if (Model.HeartRate <= Model.HeartRateDangerMin || Model.HeartRate >= Model.HeartRateDangerMax)
+						{
+							<span>&#9888;&#65039; Nguy hiểm (an toàn: @Model.HeartRateDangerMin–@Model.HeartRateDangerMax)</span>
+						}
+						else if (Model.HeartRate <= Model.HeartRateWarningMin || Model.HeartRate >= Model.HeartRateWarningMax)
+						{
+							<span>&#9888; Cảnh báo (tốt nhất: @Model.HeartRateWarningMin–@Model.HeartRateWarningMax)</span>
+						}
+						else
+						{
+							<span>&#10003; Bình thường (@Model.HeartRateWarningMin–@Model.HeartRateWarningMax)</span>
+						}
 					</span>
 				</div>
 			</div>

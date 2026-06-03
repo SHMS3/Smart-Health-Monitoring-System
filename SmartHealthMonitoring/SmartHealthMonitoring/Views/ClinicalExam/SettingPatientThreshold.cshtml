@@ -1,0 +1,830 @@
+@model SmartHealthMonitoring.ViewModels.PatientThresholdViewModel
+@{
+    ViewData["Title"] = "Cấu hình Ngưỡng - " + Model.PatientName;
+}
+
+@section Styles {
+<style>
+    .threshold-page {
+        background: #f0f4f8;
+        min-height: calc(100vh - 70px);
+        padding-top: 100px;
+        padding-bottom: 60px;
+    }
+
+    .patient-hero {
+        background: linear-gradient(135deg, #1e40af 0%, #0ea5e9 100%);
+        border-radius: 16px;
+        padding: 28px 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 28px;
+    }
+
+    .patient-hero::before {
+        content: '';
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.07);
+    }
+
+    .patient-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -40px;
+        right: 80px;
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .section-header {
+        padding: 20px 28px 18px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .section-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .section-body {
+        padding: 24px 28px;
+    }
+
+    /* Threshold input group */
+    .threshold-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .threshold-input-block {
+        position: relative;
+    }
+
+    .threshold-input-block label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .input-with-badge {
+        position: relative;
+    }
+
+    .input-with-badge input {
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        padding: 10px 52px 10px 16px;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: border-color 0.2s;
+        width: 100%;
+    }
+
+    .input-with-badge input:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(14,165,233,0.15);
+    }
+
+    .input-unit {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #94a3b8;
+        pointer-events: none;
+    }
+
+    .level-warning .threshold-input-block label { color: #d97706; }
+    .level-warning input { border-color: #fcd34d !important; }
+    .level-warning input:focus { box-shadow: 0 0 0 3px rgba(251,191,36,0.2) !important; }
+
+    .level-danger .threshold-input-block label { color: #dc2626; }
+    .level-danger input { border-color: #fca5a5 !important; }
+    .level-danger input:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.2) !important; }
+
+    .level-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        margin-bottom: 12px;
+    }
+
+    .level-label.warning { background: #fef3c7; color: #92400e; }
+    .level-label.danger  { background: #fee2e2; color: #991b1b; }
+
+    .metric-divider {
+        border: 0;
+        border-top: 2px dashed #f1f5f9;
+        margin: 28px 0;
+    }
+
+    .helper-text {
+        font-size: 0.78rem;
+        color: #94a3b8;
+        margin-top: 6px;
+    }
+
+    .config-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    .btn-save-threshold {
+        background: linear-gradient(135deg, #0ea5e9, #1e40af);
+        border: none;
+        color: white;
+        padding: 14px 36px;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        box-shadow: 0 4px 15px rgba(14,165,233,0.35);
+        transition: all 0.25s;
+        width: 100%;
+    }
+
+    .btn-save-threshold:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(14,165,233,0.45);
+        color: white;
+    }
+
+    .btn-save-threshold:active {
+        transform: translateY(0);
+    }
+
+    .reference-table td, .reference-table th {
+        padding: 8px 12px;
+        font-size: 0.82rem;
+    }
+
+    .range-visual {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        font-size: 0.78rem;
+    }
+
+    .range-bar {
+        flex: 1;
+        height: 6px;
+        border-radius: 3px;
+        background: linear-gradient(to right, #22c55e 0%, #22c55e 40%, #fbbf24 40%, #fbbf24 70%, #ef4444 70%);
+    }
+
+    @@media (max-width: 576px) {
+        .threshold-row { grid-template-columns: 1fr; }
+        .section-body { padding: 18px; }
+    }
+</style>
+}
+
+<div class="threshold-page">
+    <div class="container" style="max-width: 860px;">
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="DoctorDashboard" asp-action="Index" class="text-decoration-none text-muted">
+                        Danh sách Bệnh nhân
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="ClinicalRecord" asp-action="Index" asp-route-id="@Model.PatientId"
+                       class="text-decoration-none text-muted">
+                        Hồ sơ @Model.PatientName
+                    </a>
+                </li>
+                <li class="breadcrumb-item active fw-semibold text-primary" aria-current="page">Cấu hình Ngưỡng</li>
+            </ol>
+        </nav>
+
+        <!-- Patient Hero -->
+        <div class="patient-hero">
+            <div class="d-flex align-items-center gap-4">
+                <div class="bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width: 70px; height: 70px;">
+                    <i class="fa-solid fa-user-doctor fs-2 text-white"></i>
+                </div>
+                <div class="flex-fill">
+                    <h4 class="fw-bold mb-1">@Model.PatientName</h4>
+                    <div class="d-flex flex-wrap gap-3" style="font-size: 0.9rem; opacity: 0.9;">
+                        <span><i class="fa-solid fa-cake-candles me-1 opacity-75"></i> @Model.Age tuổi</span>
+                        <span><i class="fa-solid fa-venus-mars me-1 opacity-75"></i> @Model.SexDisplay</span>
+                        <span>
+                            <i class="fa-solid fa-id-card me-1 opacity-75"></i>
+                            Bệnh nhân #@Model.PatientId.ToString("D5")
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    @if (Model.IsConfigured)
+                    {
+                        <span class="config-status-badge bg-white bg-opacity-20 text-white">
+                            <i class="fa-solid fa-circle-check"></i> Đã cấu hình
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="config-status-badge bg-white bg-opacity-20 text-white">
+                            <i class="fa-solid fa-circle-exclamation"></i> Chưa cấu hình
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Info Card -->
+        @if (Model.IsConfigured)
+        {
+            <div class="section-card mb-4" style="border-left: 4px solid #0ea5e9;">
+                <div class="section-body py-3">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <div class="section-icon" style="background: #eff6ff; color: #2563eb; width: 42px; height: 42px;">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">Thông tin cấu hình hiện tại</div>
+                            <div class="d-flex flex-wrap gap-3" style="font-size: 0.82rem; color: #64748b;">
+                                <span>
+                                    <i class="fa-solid fa-hashtag me-1 text-primary opacity-75"></i>
+                                    <strong class="text-dark">Threshold ID:</strong>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold ms-1">#@Model.ThresholdId</span>
+                                </span>
+                                <span>
+                                    <i class="fa-solid fa-user-tie me-1 text-success opacity-75"></i>
+                                    <strong class="text-dark">Bác sĩ:</strong>
+                                    @if (!string.IsNullOrEmpty(Model.LastUpdatedByDoctor))
+                                    {
+                                        <span class="ms-1">
+                                            BS. @Model.LastUpdatedByDoctor
+                                            @if (Model.LastUpdatedByDoctorId.HasValue)
+                                            {
+                                                <span class="text-muted">(ID: #@Model.LastUpdatedByDoctorId)</span>
+                                            }
+                                            @if (!string.IsNullOrEmpty(Model.LastUpdatedByDoctorSpecialty))
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success ms-1">@Model.LastUpdatedByDoctorSpecialty</span>
+                                            }
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted ms-1">Chưa rõ</span>
+                                    }
+                                </span>
+                                <span>
+                                    <i class="fa-solid fa-clock me-1 text-warning opacity-75"></i>
+                                    <strong class="text-dark">Cập nhật:</strong>
+                                    <span class="ms-1">@Model.LastUpdatedAt?.ToString("dd/MM/yyyy HH:mm")</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning border-0 rounded-3 shadow-sm mb-4" style="font-size: 0.88rem;">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                <strong>Chưa có cấu hình riêng.</strong> Hệ thống đang dùng ngưỡng mặc định (WHO) cho bệnh nhân này.
+                Hãy lưu cấu hình bên dưới để áp dụng ngưỡng phù hợp với tình trạng cụ thể.
+            </div>
+        }
+
+        <!-- ===== PANEL GỢI Ý NGƯỠNG CHUẨN ===== -->
+        <div class="section-card mb-4" id="templatePanel">
+            <div class="section-header" style="background: linear-gradient(135deg,#f5f3ff,#ede9fe); border-bottom:2px solid #ddd6fe;">
+                <div class="section-icon" style="background:#7c3aed;color:white;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div class="flex-fill">
+                    <h6 class="mb-0 fw-bold text-dark">Áp dụng Ngưỡng Chuẩn</h6>
+                    <small class="text-muted">Chọn template phù hợp → tự động điền các ô bên dưới. Bạn vẫn có thể chỉnh thêm trước khi lưu.</small>
+                </div>
+                <button type="button" class="btn btn-sm btn-link text-muted p-0" id="toggleTemplatePanel"
+                        title="Thu gọn / Mở rộng">
+                    <i class="fa-solid fa-chevron-up" id="toggleIcon"></i>
+                </button>
+            </div>
+            <div class="section-body" id="templatePanelBody">
+                <!-- Gợi ý tự động -->
+                <div id="autoSuggestBox" class="p-3 rounded-3 mb-3 d-none"
+                     style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="width:38px;height:38px;border-radius:10px;background:#16a34a;color:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="flex-fill">
+                            <div class="fw-bold text-success mb-1" style="font-size:0.9rem;">
+                                Gợi ý tự động — phù hợp với bệnh nhân này
+                            </div>
+                            <div class="fw-semibold text-dark mb-1" id="suggestName">—</div>
+                            <div class="text-muted" style="font-size:0.8rem;" id="suggestDesc"></div>
+                            <div class="mt-2 d-flex flex-wrap gap-2" id="suggestValues" style="font-size:0.78rem;"></div>
+                        </div>
+                        <button type="button" class="btn btn-success btn-sm px-3 py-2 fw-bold flex-shrink-0"
+                                id="btnApplySuggest" style="border-radius:8px;">
+                            <i class="fa-solid fa-bolt me-1"></i>Áp dụng ngay
+                        </button>
+                    </div>
+                </div>
+
+                <div id="noSuggestBox" class="alert alert-light border d-none" style="font-size:0.84rem;">
+                    <i class="fa-solid fa-circle-info text-muted me-2"></i>
+                    Không tìm thấy template phù hợp tự động. Vui lòng chọn thủ công bên dưới.
+                </div>
+
+                <!-- Chọn template khác -->
+                <div>
+                    <label class="fw-semibold text-dark d-block mb-2" style="font-size:0.85rem;">
+                        <i class="fa-solid fa-list me-2 text-violet-600" style="color:#7c3aed;"></i>
+                        Hoặc chọn template khác:
+                    </label>
+                    <div class="d-flex gap-2 align-items-start flex-wrap">
+                        <select id="templateSelect" class="form-select" style="max-width:420px;border-radius:10px;border:2px solid #e2e8f0;">
+                            <option value="">-- Chọn ngưỡng chuẩn --</option>
+                        </select>
+                        <button type="button" id="btnApplySelected"
+                                class="btn fw-bold px-4 py-2"
+                                style="border-radius:10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:white;border:none;box-shadow:0 3px 10px rgba(124,58,237,0.3);">
+                            <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>Áp dụng
+                        </button>
+                    </div>
+                    <div id="selectedTemplateInfo" class="mt-2 text-muted d-none" style="font-size:0.8rem;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validation errors -->
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger rounded-3 border-0 shadow-sm mb-4">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                <strong>Vui lòng kiểm tra lại:</strong>
+                <ul class="mb-0 mt-1">
+                    @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@err.ErrorMessage</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <form asp-action="SettingPatientThreshold" method="post" id="thresholdForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="PatientId" />
+            <input type="hidden" asp-for="PatientName" />
+            <input type="hidden" asp-for="Age" />
+            <input type="hidden" asp-for="SexDisplay" />
+
+            <!-- ===== HUYẾT ÁP TÂM THU ===== -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon" style="background: #fef2f2; color: #dc2626;">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold text-dark">Huyết áp Tâm Thu (Systolic BP)</h6>
+                        <small class="text-muted">Áp lực khi tim co bóp, đo bằng mmHg</small>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="row g-4">
+                        <div class="col-md-6 level-warning">
+                            <div class="level-label warning">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Mức Cảnh báo
+                            </div>
+                            <div class="threshold-input-block">
+                                <label asp-for="SystolicBpWarning">Từ giá trị này trở lên → Cảnh báo</label>
+                                <div class="input-with-badge">
+                                    <input asp-for="SystolicBpWarning" type="number" min="80" max="250"
+                                           class="form-control" />
+                                    <span class="input-unit">mmHg</span>
+                                </div>
+                                <span asp-validation-for="SystolicBpWarning" class="text-danger small"></span>
+                                <div class="helper-text">Khuyến nghị: 130 mmHg (Tăng huyết áp độ 1)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 level-danger">
+                            <div class="level-label danger">
+                                <i class="fa-solid fa-circle-exclamation"></i> Mức Nguy hiểm
+                            </div>
+                            <div class="threshold-input-block">
+                                <label asp-for="SystolicBpDanger">Từ giá trị này trở lên → Nguy hiểm</label>
+                                <div class="input-with-badge">
+                                    <input asp-for="SystolicBpDanger" type="number" min="80" max="250"
+                                           class="form-control" />
+                                    <span class="input-unit">mmHg</span>
+                                </div>
+                                <span asp-validation-for="SystolicBpDanger" class="text-danger small"></span>
+                                <div class="helper-text">Khuyến nghị: 140 mmHg (Tăng huyết áp độ 2)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== HUYẾT ÁP TÂM TRƯƠNG ===== -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon" style="background: #fff7ed; color: #ea580c;">
+                        <i class="fa-solid fa-gauge"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold text-dark">Huyết áp Tâm Trương (Diastolic BP)</h6>
+                        <small class="text-muted">Áp lực khi tim nghỉ giữa các nhịp, đo bằng mmHg</small>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="row g-4">
+                        <div class="col-md-6 level-warning">
+                            <div class="level-label warning">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Mức Cảnh báo
+                            </div>
+                            <div class="threshold-input-block">
+                                <label asp-for="DiastolicBpWarning">Từ giá trị này trở lên → Cảnh báo</label>
+                                <div class="input-with-badge">
+                                    <input asp-for="DiastolicBpWarning" type="number" min="40" max="180"
+                                           class="form-control" />
+                                    <span class="input-unit">mmHg</span>
+                                </div>
+                                <span asp-validation-for="DiastolicBpWarning" class="text-danger small"></span>
+                                <div class="helper-text">Khuyến nghị: 80 mmHg</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 level-danger">
+                            <div class="level-label danger">
+                                <i class="fa-solid fa-circle-exclamation"></i> Mức Nguy hiểm
+                            </div>
+                            <div class="threshold-input-block">
+                                <label asp-for="DiastolicBpDanger">Từ giá trị này trở lên → Nguy hiểm</label>
+                                <div class="input-with-badge">
+                                    <input asp-for="DiastolicBpDanger" type="number" min="40" max="180"
+                                           class="form-control" />
+                                    <span class="input-unit">mmHg</span>
+                                </div>
+                                <span asp-validation-for="DiastolicBpDanger" class="text-danger small"></span>
+                                <div class="helper-text">Khuyến nghị: 90 mmHg</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== NHỊP TIM ===== -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon" style="background: #ecfdf5; color: #059669;">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold text-dark">Nhịp Tim (Heart Rate)</h6>
+                        <small class="text-muted">Cần cấu hình cả ngưỡng thấp (quá chậm) và ngưỡng cao (quá nhanh)</small>
+                    </div>
+                </div>
+                <div class="section-body">
+
+                    <!-- Nhịp tim THẤP -->
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge bg-info text-dark px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-arrow-down me-1"></i> Nhịp tim QUÁ THẤP
+                        </span>
+                        <small class="text-muted">— Bradycardia (nhịp chậm)</small>
+                    </div>
+                    <div class="row g-4 mb-2">
+                        <div class="col-md-6 level-warning">
+                            <div class="level-label warning">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Mức Cảnh báo
+                            </div>
+                            <div class="threshold-input-block">
+                                <label asp-for="HeartRateWarningMin">Dưới giá trị này → Cảnh báo</label>
+                                <div class="input-with-badge">
+                                    <input asp-for="HeartRateWarningMin" type="number" min="20" max="100"
+                                           class="form-control" />
+                                    <span class="input-unit">bpm</span>
+                                </div>
+                                <span asp-validation-for="HeartRateWarningMin" class="text-danger small"></span>
+                                <div class="helper-text">Khuyến nghị: 60 bpm</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 level-danger">
+                            <div class="level-label danger">
+                                <i class="fa-solid fa-circle-exclamation"></i> Mức Nguy hiểm
+                            </div>
+                            <div class="threshold-input-block">
+                                <label asp-for="HeartRateDangerMin">Dưới giá trị này → Nguy hiểm</label>
+                                <div class="input-with-badge">
+                                    <input asp-for="HeartRateDangerMin" type="number" min="20" max="100"
+                                           class="form-control" />
+                                    <span class="input-unit">bpm</span>
+                                </div>
+                                <span asp-validation-for="HeartRateDangerMin" class="text-danger small"></span>
+                                <div class="helper-text">Khuyến nghị: 50 bpm</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border rounded-3 py-2 px-3 mb-4" style="font-size: 0.82rem;">
+                        <i class="fa-solid fa-circle-info text-info me-2"></i>
+                        <strong>Lưu ý:</strong> Ngưỡng Nguy hiểm phải <strong>nhỏ hơn</strong> Ngưỡng Cảnh báo cho trường hợp nhịp tim thấp.
+                    </div>
+
+                    <hr class="metric-divider">
+
+                    <!-- Nhịp tim CAO -->
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge bg-danger px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-arrow-up me-1"></i> Nhịp tim QUÁ CAO
+                        </span>
+                        <small class="text-muted">— Tachycardia (nhịp nhanh)</small>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6 level-warning">
+                            <div class="level-label warning">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Mức Cảnh báo
+                            </div>
+                            <div class="threshold-input-block">
+                                <label asp-for="HeartRateWarningMax">Trên giá trị này → Cảnh báo</label>
+                                <div class="input-with-badge">
+                                    <input asp-for="HeartRateWarningMax" type="number" min="80" max="250"
+                                           class="form-control" />
+                                    <span class="input-unit">bpm</span>
+                                </div>
+                                <span asp-validation-for="HeartRateWarningMax" class="text-danger small"></span>
+                                <div class="helper-text">Khuyến nghị: 100 bpm</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 level-danger">
+                            <div class="level-label danger">
+                                <i class="fa-solid fa-circle-exclamation"></i> Mức Nguy hiểm
+                            </div>
+                            <div class="threshold-input-block">
+                                <label asp-for="HeartRateDangerMax">Trên giá trị này → Nguy hiểm</label>
+                                <div class="input-with-badge">
+                                    <input asp-for="HeartRateDangerMax" type="number" min="80" max="250"
+                                           class="form-control" />
+                                    <span class="input-unit">bpm</span>
+                                </div>
+                                <span asp-validation-for="HeartRateDangerMax" class="text-danger small"></span>
+                                <div class="helper-text">Khuyến nghị: 120 bpm</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== THAM KHẢO ===== -->
+            <div class="section-card">
+                    <div class="mt-3 p-3 rounded-3" style="background: #fffbeb; border: 1px solid #fde68a; font-size: 0.82rem;">
+                        <i class="fa-solid fa-star text-warning me-2"></i>
+                        <strong>Ghi chú lâm sàng:</strong> Đối với bệnh nhân cao tuổi (> 65 tuổi), vận động viên, hoặc có bệnh lý nền,
+                        ngưỡng bình thường có thể khác biệt đáng kể. Bác sĩ cần điều chỉnh dựa trên tình trạng cụ thể.
+                    </div>
+            </div>
+
+            <!-- ===== ACTIONS ===== -->
+            <div class="d-flex gap-3">
+                <a asp-controller="ClinicalRecord" asp-action="Index" asp-route-id="@Model.PatientId"
+                   class="btn btn-outline-secondary px-4 py-3 fw-semibold rounded-3 flex-shrink-0">
+                    <i class="fa-solid fa-arrow-left me-2"></i> Hủy bỏ
+                </a>
+                <button type="submit" class="btn-save-threshold">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>
+                    @(Model.IsConfigured ? "Cập nhật cấu hình ngưỡng" : "Lưu cấu hình ngưỡng")
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // =====================================================
+        // PHẦN 1: LOGIC GỢI Ý NGƯỠNG CHUẨN
+        // =====================================================
+        const PATIENT_SEX = @Model.Sex;   // 0=Nữ, 1=Nam
+        const PATIENT_AGE = @Model.Age;
+
+        let allTemplates = [];
+        let suggestedTemplate = null;
+
+        // Lấy toàn bộ template đang active
+        fetch('/ClinicalExam/GetAllStandardThresholds')
+            .then(r => r.json())
+            .then(data => {
+                allTemplates = data;
+                buildDropdown(data);
+                autoSuggest();
+            })
+            .catch(() => console.warn('Không thể tải ngưỡng chuẩn.'));
+
+        // Tự động gợi ý template phù hợp nhất
+        function autoSuggest() {
+            fetch(`/ClinicalExam/GetSuggestedThreshold?sex=${PATIENT_SEX}&age=${PATIENT_AGE}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        suggestedTemplate = data;
+                        showAutoSuggest(data);
+                    } else {
+                        document.getElementById('noSuggestBox').classList.remove('d-none');
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('noSuggestBox').classList.remove('d-none');
+                });
+        }
+
+        function showAutoSuggest(t) {
+            document.getElementById('suggestName').textContent = t.templateName;
+            document.getElementById('suggestDesc').textContent = t.description || '';
+            document.getElementById('suggestValues').innerHTML = `
+                <span style="background:#dcfce7;color:#166534;border-radius:5px;padding:2px 8px;">
+                    HA TT: <strong>${t.systolicBpWarning}/${t.systolicBpDanger}</strong> mmHg
+                </span>
+                <span style="background:#fef9c3;color:#713f12;border-radius:5px;padding:2px 8px;">
+                    HA TR: <strong>${t.diastolicBpWarning}/${t.diastolicBpDanger}</strong> mmHg
+                </span>
+                <span style="background:#dbeafe;color:#1e3a8a;border-radius:5px;padding:2px 8px;">
+                    Nhịp tim: <strong>${t.heartRateDangerMin}–${t.heartRateWarningMin}</strong> / <strong>${t.heartRateWarningMax}–${t.heartRateDangerMax}</strong> bpm
+                </span>`;
+            document.getElementById('autoSuggestBox').classList.remove('d-none');
+
+            // Pre-select dropdown
+            const sel = document.getElementById('templateSelect');
+            for (let opt of sel.options) {
+                if (parseInt(opt.value) === t.templateId) { opt.selected = true; break; }
+            }
+        }
+
+        // Xây dựng dropdown từ toàn bộ template
+        function buildDropdown(templates) {
+            const sel = document.getElementById('templateSelect');
+            const sexLabel = s => s === 1 ? 'Nam' : s === 0 ? 'Nữ' : 'Chung';
+            templates.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                const ageRange = t.ageMax === 120 ? `≥ ${t.ageMin} tuổi`
+                    : `${t.ageMin}–${t.ageMax} tuổi`;
+                opt.textContent = `[${sexLabel(t.sex)}] ${t.name} (${ageRange})`;
+                sel.appendChild(opt);
+            });
+        }
+
+        // Áp dụng giá trị template vào form
+        function applyTemplate(t) {
+            if (!t) return;
+            document.getElementById('SystolicBpWarning').value  = t.systolicBpWarning  ?? t.SystolicBpWarning;
+            document.getElementById('SystolicBpDanger').value   = t.systolicBpDanger   ?? t.SystolicBpDanger;
+            document.getElementById('DiastolicBpWarning').value = t.diastolicBpWarning ?? t.DiastolicBpWarning;
+            document.getElementById('DiastolicBpDanger').value  = t.diastolicBpDanger  ?? t.DiastolicBpDanger;
+            document.getElementById('HeartRateWarningMin').value = t.heartRateWarningMin ?? t.HeartRateWarningMin;
+            document.getElementById('HeartRateDangerMin').value  = t.heartRateDangerMin  ?? t.HeartRateDangerMin;
+            document.getElementById('HeartRateWarningMax').value = t.heartRateWarningMax ?? t.HeartRateWarningMax;
+            document.getElementById('HeartRateDangerMax').value  = t.heartRateDangerMax  ?? t.HeartRateDangerMax;
+
+            // Flash animation
+            document.querySelectorAll('.input-with-badge input').forEach(inp => {
+                inp.style.transition = 'background 0.3s';
+                inp.style.background = '#f0fdf4';
+                setTimeout(() => inp.style.background = '', 800);
+            });
+
+            // Thông báo
+            showToast(`✅ Đã áp dụng: ${t.templateName ?? t.name}`);
+        }
+
+        // Nút "Áp dụng ngay" — dùng gợi ý tự động
+        document.getElementById('btnApplySuggest').addEventListener('click', () => {
+            if (suggestedTemplate) applyTemplate(suggestedTemplate);
+        });
+
+        // Nút "Áp dụng" — dùng template được chọn từ dropdown
+        document.getElementById('btnApplySelected').addEventListener('click', () => {
+            const sel = document.getElementById('templateSelect');
+            const id = parseInt(sel.value);
+            if (!id) { showToast('⚠️ Vui lòng chọn một ngưỡng chuẩn!', 'warning'); return; }
+            const t = allTemplates.find(x => x.id === id);
+            if (t) applyTemplate(t);
+        });
+
+        // Hiển thị thông tin template khi chọn từ dropdown
+        document.getElementById('templateSelect').addEventListener('change', function () {
+            const id = parseInt(this.value);
+            const infoBox = document.getElementById('selectedTemplateInfo');
+            if (!id) { infoBox.classList.add('d-none'); return; }
+            const t = allTemplates.find(x => x.id === id);
+            if (t) {
+                infoBox.classList.remove('d-none');
+                infoBox.innerHTML = t.description
+                    ? `<i class="fa-solid fa-circle-info me-1"></i>${t.description}`
+                    : '';
+            }
+        });
+
+        // Toggle panel ẩn/hiện
+        document.getElementById('toggleTemplatePanel').addEventListener('click', () => {
+            const body = document.getElementById('templatePanelBody');
+            const icon = document.getElementById('toggleIcon');
+            const hidden = body.style.display === 'none';
+            body.style.display = hidden ? '' : 'none';
+            icon.className = hidden ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
+        });
+
+        // Toast notification
+        function showToast(msg, type = 'success') {
+            const el = document.createElement('div');
+            el.style.cssText = `
+                position:fixed;bottom:24px;right:24px;z-index:9999;
+                background:${type === 'warning' ? '#fef3c7' : '#f0fdf4'};
+                color:${type === 'warning' ? '#92400e' : '#166534'};
+                border:1.5px solid ${type === 'warning' ? '#fcd34d' : '#86efac'};
+                border-radius:12px;padding:12px 20px;
+                font-weight:600;font-size:0.88rem;
+                box-shadow:0 6px 24px rgba(0,0,0,0.12);
+                animation:slideInRight 0.3s ease;
+            `;
+            el.textContent = msg;
+            document.body.appendChild(el);
+            setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.4s'; setTimeout(() => el.remove(), 400); }, 2500);
+        }
+
+        // =====================================================
+        // PHẦN 2: VALIDATION REAL-TIME
+        // =====================================================
+        function validateBpInputs(warningId, dangerId) {
+            const warning = document.getElementById(warningId);
+            const danger = document.getElementById(dangerId);
+            if (!warning || !danger) return;
+            function check() {
+                const invalid = parseInt(warning.value) >= parseInt(danger.value);
+                warning.style.borderColor = invalid ? '#ef4444' : '';
+                danger.style.borderColor  = invalid ? '#ef4444' : '';
+            }
+            warning.addEventListener('input', check);
+            danger.addEventListener('input', check);
+        }
+
+        validateBpInputs('SystolicBpWarning', 'SystolicBpDanger');
+
+        // Animate inputs on focus
+        document.querySelectorAll('.input-with-badge input').forEach(input => {
+            input.addEventListener('focus', () => input.closest('.threshold-input-block')?.classList.add('focused'));
+            input.addEventListener('blur',  () => input.closest('.threshold-input-block')?.classList.remove('focused'));
+        });
+    </script>
+    <style>
+        @@keyframes slideInRight {
+            from { transform: translateX(80px); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+    </style>
+}

@@ -424,7 +424,7 @@
 			<ul class="nav-links">
 				@{
 					var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-					bool isDoctor = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Doctor");
+					bool isDoctor = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("1");
 				}
 
 				<li>
@@ -441,78 +441,83 @@
 							Bệnh nhân
 						</a>
 					</li>
+					<li>
+						<a asp-controller="WarningAlert" asp-action="Dashboard"
+						   style="@(currentController == "WarningAlert" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+							Cảnh báo AI
+						</a>
+					</li>
+					<li>
+						<a asp-controller="EmailNotification" asp-action="Index"
+						   style="@(currentController == "EmailNotification" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+							Lịch sử Email
+						</a>
+					</li>
 				}
 				else
 				{
-					@if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Patient"))
+					@if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("0"))
 					{
 						<li>
-							<a asp-controller="Patient" asp-action="Index">
-								Sổ tay hằng ngày
-							</a>
+							<a asp-controller="Patient" asp-action="Index">Sổ tay hằng ngày</a>
 						</li>
-
 						<li>
-							<a asp-controller="Patient" asp-action="MedicalRecord">
-								Hồ sơ bệnh án
-							</a>
+							<a asp-controller="ClinicalRecord" asp-action="MyRecords">Hồ sơ bệnh án</a>
 						</li>
-
 						<li>
-							<a asp-controller="Patient" asp-action="DoctorAlert">
-								Cảnh báo hằng ngày
-							</a>
+							<a asp-controller="Patient" asp-action="DoctorAlert">Cảnh báo hằng ngày</a>
 						</li>
 					}
 					else
 					{
 						<li>
-							<a asp-controller="Auth" asp-action="Login">
-								Sổ tay hằng ngày
-							</a>
+							<a asp-controller="Auth" asp-action="Login">Sổ tay hằng ngày</a>
 						</li>
-
 						<li>
-							<a asp-controller="Auth" asp-action="Login">
-								Hồ sơ bệnh án
-							</a>
+							<a asp-controller="Auth" asp-action="Login">Hồ sơ bệnh án</a>
 						</li>
-
 						<li>
-							<a asp-controller="Auth" asp-action="Login">
-								Cảnh báo hằng ngày
-							</a>
+							<a asp-controller="Auth" asp-action="Login">Cảnh báo hằng ngày</a>
 						</li>
 					}
 				}
 				<li><a asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
 			</ul>
 
-			@if (User.Identity != null && User.Identity.IsAuthenticated)
-			{
-				<span class="text-nowrap fw-medium text-dark me-3">
-					Xin chào @User.FindFirst("FullName")?.Value
-				</span>
+			<div class="nav-actions">
+				@if (User.Identity != null && User.Identity.IsAuthenticated)
+				{
+					var fullName = User.FindFirst("FullName")?.Value ?? "";
+					var lastName = fullName.Split(' ').LastOrDefault() ?? "";
 
-				<form asp-controller="Auth" asp-action="Logout" method="post" class="m-0 d-flex align-items-center">
-					@Html.AntiForgeryToken()
+					<a asp-controller="Home" asp-action="Profile" class="d-flex align-items-center gap-2 text-decoration-none">
+						<div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex justify-content-center align-items-center"
+							 style="width: 36px; height: 36px;">
+							<i class="fas fa-user"></i>
+						</div>
+						<span class="text-nowrap fw-semibold text-dark">
+							@lastName
+						</span>
+					</a>
 
+					<form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
+						@Html.AntiForgeryToken()
+						<button type="submit" class="btn-ghost">
+							Đăng xuất
+						</button>
+					</form>
+				}
+				else
+				{
+					<a asp-controller="Auth" asp-action="Login" class="btn-ghost">
+						Đăng nhập
+					</a>
+					<a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">
+						Đăng ký
+					</a>
+				}
+			</div>
 
-					<button type="submit" class="btn-ghost">
-						Đăng xuất
-					</button>
-				</form>
-			}
-			else
-			{
-				<a asp-controller="Auth" asp-action="Login" class="btn-ghost">
-					Đăng nhập
-				</a>
-
-				<a asp-controller="Auth" asp-action="Register" class="btn-outline-primary-nav">
-					Đăng ký
-				</a>
-			}
 		</div>
 	</nav>
 
@@ -547,22 +552,9 @@
 					<h5>Dịch vụ</h5>
 					<ul>
 						<li><a href="#">Hồ sơ bệnh án</a></li>
-						<li><a href="#">Đặt lịch khám</a></li>
 						<li><a href="#">Theo dõi sức khỏe</a></li>
 						<li><a href="#">Cảnh báo bệnh sớm</a></li>
 						<li><a href="#">Phân tích AI</a></li>
-						<li><a href="#">Kê đơn thuốc</a></li>
-					</ul>
-				</div>
-
-				<div class="foot-col">
-					<h5>Hỗ trợ</h5>
-					<ul>
-						<li><a href="#">Trung tâm trợ giúp</a></li>
-						<li><a href="#">Hướng dẫn sử dụng</a></li>
-						<li><a href="#">Chính sách bảo mật</a></li>
-						<li><a href="#">Điều khoản dịch vụ</a></li>
-						<li><a href="#">Báo cáo sự cố</a></li>
 					</ul>
 				</div>
 
@@ -570,7 +562,7 @@
 					<h5>Liên hệ</h5>
 					<div class="foot-contact-item">
 						<div class="ic"><i class="fas fa-map-marker-alt"></i></div>
-						<span>123 Nguyễn Văn Linh,<br>TP. Hồ Chí Minh</span>
+						<span>Đại học FPT,<br>HOLA Nơi Tình Yêu Bắt Đầu</span>
 					</div>
 					<div class="foot-contact-item">
 						<div class="ic"><i class="fas fa-phone-alt"></i></div>
@@ -589,11 +581,6 @@
 
 			<div class="foot-bottom">
 				<p>© 2026 SmartHealth Monitoring System. Bảo lưu mọi quyền.</p>
-				<div class="foot-bottom-links">
-					<a href="#">Bảo mật</a>
-					<a href="#">Điều khoản</a>
-					<a href="#">Cookies</a>
-				</div>
 			</div>
 		</div>
 	</footer>

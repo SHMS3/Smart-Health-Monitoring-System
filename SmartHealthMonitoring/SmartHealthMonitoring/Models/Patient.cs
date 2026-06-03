@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SmartHealthMonitoring.Models;
@@ -15,6 +15,10 @@ public partial class Patient
 
     public string? Phone { get; set; }
 
+    public bool IsPhoneVerified { get; set; }
+
+    public string? Address { get; set; }
+
     public bool IsDeleted { get; set; }
 
     public virtual ICollection<AiriskPrediction> AiriskPredictions { get; set; } = new List<AiriskPrediction>();
@@ -30,4 +34,5 @@ public partial class Patient
     public virtual User User { get; set; } = null!;
 
     public virtual ICollection<WarningAlert> WarningAlerts { get; set; } = new List<WarningAlert>();
+    public virtual PatientThreshold? PatientThreshold { get; set; }
 }

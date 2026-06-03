@@ -19,13 +19,9 @@ namespace SmartHealthMonitoring.Controllers
             _context = context;
         }
 
-        // ==========================================
-        // GET: /Auth/Login
-        // ==========================================
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
-            // Nếu đã đăng nhập rồi thì redirect theo Role
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 return RedirectByRole();
@@ -35,9 +31,6 @@ namespace SmartHealthMonitoring.Controllers
             return View();
         }
 
-        // ==========================================
-        // POST: /Auth/Login
-        // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
@@ -48,18 +41,15 @@ namespace SmartHealthMonitoring.Controllers
             {
                 return View(model);
             }
-
-            // 1. Tìm user theo email
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == model.Email && !u.IsDeleted);
+                .FirstOrDefaultAsync(u => u.Email == model.Email);
 
             if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không chính xác.");
                 return View(model);
             }
-
-            // 2. Kiểm tra mật khẩu bằng BCrypt (Hỗ trợ dữ liệu seed chưa hash)
+            
             bool isPasswordValid = false;
             if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
             {
@@ -67,7 +57,6 @@ namespace SmartHealthMonitoring.Controllers
             }
             else
             {
-                // Fallback cho dữ liệu seed
                 isPasswordValid = (model.Password == user.PasswordHash);
             }
 
@@ -77,14 +66,25 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            // 3. Tạo Claims cho cookie
+            // 3. KIỂM TRA TRẠNG THÁI KHÓA (Kiểm tra sau khi đã nhập đúng mật khẩu)
+            if (user.IsDeleted)
+            {
+                string reason = string.IsNullOrWhiteSpace(user.LockReason)
+                    ? "Vui lòng liên hệ Admin để biết thêm chi tiết."
+                    : user.LockReason;
+
+                ModelState.AddModelError(string.Empty, $"Tài khoản của bạn đã bị khóa! Lý do: {reason}");
+                return View(model);
+            }
+
+            // 4. Tạo Claims cho cookie
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Email),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim("FullName", user.FullName),
-                new Claim(ClaimTypes.Role, user.Role == 1 ? "Doctor" : "Patient")
+                new Claim(ClaimTypes.Role, user.Role.ToString())
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -93,16 +93,15 @@ namespace SmartHealthMonitoring.Controllers
                 IsPersistent = model.RememberMe,
                 ExpiresUtc = model.RememberMe
                     ? DateTimeOffset.UtcNow.AddDays(30)
-                    : DateTimeOffset.UtcNow.AddMinutes(30)
+                    : DateTimeOffset.UtcNow.AddMinutes(60)
             };
 
-            // 4. Đăng nhập (ghi cookie)
+            // 5. Đăng nhập (ghi cookie)
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
-
-            // 5. Redirect
+            // 6. Redirect
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl != "/")
             {
                 return Redirect(returnUrl);
@@ -111,9 +110,7 @@ namespace SmartHealthMonitoring.Controllers
             return RedirectByRole(user.Role);
         }
 
-        // ==========================================
-        // GET: /Auth/Register
-        // ==========================================
+
         [HttpGet]
         public IActionResult Register()
         {
@@ -125,9 +122,6 @@ namespace SmartHealthMonitoring.Controllers
             return View();
         }
 
-        // ==========================================
-        // POST: /Auth/Register
-        // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
@@ -137,7 +131,6 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            // 1. Kiểm tra email đã tồn tại chưa
             bool emailExists = await _context.Users
                 .AnyAsync(u => u.Email == model.Email && !u.IsDeleted);
 
@@ -147,10 +140,8 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            // 2. Hash mật khẩu
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
 
-            // 3. Tạo User + Patient trong transaction
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -181,14 +172,13 @@ namespace SmartHealthMonitoring.Controllers
 
                 await transaction.CommitAsync();
 
-                // 4. Tự động đăng nhập sau khi đăng ký
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Name, user.Email),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim("FullName", user.FullName),
-                    new Claim(ClaimTypes.Role, "Patient")
+                    new Claim(ClaimTypes.Role, "0")
                 };
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -197,7 +187,7 @@ namespace SmartHealthMonitoring.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24) });
 
-                return RedirectToAction("Index", "Patient");
+                return RedirectByRole(0);
             }
             catch
             {
@@ -207,42 +197,34 @@ namespace SmartHealthMonitoring.Controllers
             }
         }
 
-        // ==========================================
-        // GET: /Auth/GoogleLogin
-        // ==========================================
+
         [HttpGet]
         public IActionResult GoogleLogin(string? returnUrl = null)
         {
-            // Trỏ RedirectUri về GoogleResponse để tránh trùng lặp với CallbackPath của Google Middleware
             var redirectUrl = Url.Action(nameof(GoogleResponse), "Auth", new { returnUrl });
             var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
-        // ==========================================
-        // GET: /Auth/GoogleResponse
-        // ==========================================
+
         [HttpGet]
         public async Task<IActionResult> GoogleResponse(string? returnUrl = null)
         {
-            // 1. Đọc thông tin từ cookie do Google Middleware vừa tạo ra
             var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             if (!result.Succeeded)
                 return RedirectToAction(nameof(Login));
 
             var googleEmail = result.Principal?.FindFirstValue(ClaimTypes.Email);
-            var googleName  = result.Principal?.FindFirstValue(ClaimTypes.Name) ?? googleEmail ?? "Người dùng";
+            var googleName = result.Principal?.FindFirstValue(ClaimTypes.Name) ?? googleEmail ?? "Người dùng";
 
             if (string.IsNullOrEmpty(googleEmail))
                 return RedirectToAction(nameof(Login));
 
-            // 2. Tìm hoặc tạo user
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == googleEmail && !u.IsDeleted);
 
             if (user == null)
             {
-                // Tạo user mới (Patient)
                 using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
@@ -250,8 +232,8 @@ namespace SmartHealthMonitoring.Controllers
                     {
                         FullName = googleName,
                         Email = googleEmail,
-                        PasswordHash = string.Empty, // Không có mật khẩu vì login bằng Google
-                        Role = 0, // Patient
+                        PasswordHash = string.Empty,
+                        Role = 0,
                         IsDeleted = false,
                         CreatedAt = DateTime.UtcNow
                     };
@@ -261,7 +243,7 @@ namespace SmartHealthMonitoring.Controllers
                     var patient = new Patient
                     {
                         UserId = user.Id,
-                        DateOfBirth = new DateOnly(2000, 1, 1), // Mặc định, có thể cập nhật sau
+                        DateOfBirth = new DateOnly(2000, 1, 1),
                         Sex = 0,
                         IsDeleted = false
                     };
@@ -276,14 +258,13 @@ namespace SmartHealthMonitoring.Controllers
                 }
             }
 
-            // 3. Tạo cookie session
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Email),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim("FullName", user.FullName),
-                new Claim(ClaimTypes.Role, user.Role == 1 ? "Doctor" : "Patient")
+                new Claim(ClaimTypes.Role, user.Role.ToString())
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -292,16 +273,13 @@ namespace SmartHealthMonitoring.Controllers
                 new ClaimsPrincipal(claimsIdentity),
                 new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24) });
 
-            // 4. Redirect
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl != "/")
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 
             return RedirectByRole(user.Role);
         }
 
-        // ==========================================
-        // POST: /Auth/Logout
-        // ==========================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
@@ -310,30 +288,30 @@ namespace SmartHealthMonitoring.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // ==========================================
-        // GET: /Auth/AccessDenied
-        // ==========================================
         [HttpGet]
         public IActionResult AccessDenied()
         {
             return View();
         }
 
-        // ==========================================
-        // HELPER: Redirect theo Role
-        // ==========================================
+
         private IActionResult RedirectByRole(byte? role = null)
         {
-            if (role == 1 || (role == null && User.IsInRole("Doctor")))
+            if (role == null)
             {
-                return RedirectToAction("Index", "DoctorDashboard");
-            }
-            else if (role == 0 || (role == null && User.IsInRole("Patient")))
-            {
-                return RedirectToAction("Index", "Patient");
+                var roleClaim = User.FindFirstValue(ClaimTypes.Role);
+                if (byte.TryParse(roleClaim, out byte parsedRole))
+                {
+                    role = parsedRole;
+                }
             }
 
-            return RedirectToAction("Index", "Home");
+            return role switch
+            {
+                2 => RedirectToAction("Index", "AdminDashboard"),
+                1 => RedirectToAction("Index", "DoctorDashboard"), 
+                _ => RedirectToAction("Index", "Home") 
+            };
         }
-    } 
+    }
 }

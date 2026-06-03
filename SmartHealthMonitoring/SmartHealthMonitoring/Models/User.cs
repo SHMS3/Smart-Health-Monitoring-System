@@ -19,6 +19,8 @@ public partial class User
 
     public DateTime CreatedAt { get; set; }
 
+    public string? LockReason { get; set; }
+
     public virtual ICollection<Doctor> Doctors { get; set; } = new List<Doctor>();
 
     public virtual ICollection<Patient> Patients { get; set; } = new List<Patient>();

@@ -408,6 +408,9 @@ namespace SmartHealthMonitoring.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AttachmentUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<byte>("ChestPainType")
                         .HasColumnType("tinyint");
 
@@ -417,6 +420,9 @@ namespace SmartHealthMonitoring.Migrations
                     b.Property<int>("DoctorId")
                         .HasColumnType("int");
 
+                    b.Property<string>("EcgImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<byte>("ExerciseAngina")
                         .HasColumnType("tinyint");
 
@@ -425,6 +431,9 @@ namespace SmartHealthMonitoring.Migrations
                         .HasColumnName("FastingBS");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsViewForPatient")
                         .HasColumnType("bit");
 
                     b.Property<byte>("MajorVessels")
@@ -478,6 +487,7 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)1,
                             IsDeleted = false,
+                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)150,
                             OldPeak = 2.3m,
@@ -497,6 +507,7 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)0,
                             IsDeleted = false,
+                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)187,
                             OldPeak = 3.5m,
@@ -516,6 +527,7 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)0,
                             IsDeleted = false,
+                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)172,
                             OldPeak = 1.4m,
@@ -535,6 +547,7 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)1,
                             FastingBs = (byte)0,
                             IsDeleted = false,
+                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)163,
                             OldPeak = 0.6m,
@@ -554,6 +567,7 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)1,
                             FastingBs = (byte)1,
                             IsDeleted = false,
+                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)155,
                             OldPeak = 3.1m,
@@ -573,6 +587,7 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)1,
                             IsDeleted = false,
+                            IsViewForPatient = true,
                             MajorVessels = (byte)3,
                             MaxHeartRate = (short)106,
                             OldPeak = 1.9m,
@@ -592,6 +607,7 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)1,
                             FastingBs = (byte)1,
                             IsDeleted = false,
+                            IsViewForPatient = true,
                             MajorVessels = (byte)2,
                             MaxHeartRate = (short)133,
                             OldPeak = 4.0m,
@@ -611,6 +627,7 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)0,
                             IsDeleted = false,
+                            IsViewForPatient = true,
                             MajorVessels = (byte)0,
                             MaxHeartRate = (short)180,
                             OldPeak = 0.0m,
@@ -630,6 +647,7 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)0,
                             FastingBs = (byte)0,
                             IsDeleted = false,
+                            IsViewForPatient = true,
                             MajorVessels = (byte)1,
                             MaxHeartRate = (short)160,
                             OldPeak = 1.2m,
@@ -649,6 +667,7 @@ namespace SmartHealthMonitoring.Migrations
                             ExerciseAngina = (byte)1,
                             FastingBs = (byte)1,
                             IsDeleted = false,
+                            IsViewForPatient = true,
                             MajorVessels = (byte)2,
                             MaxHeartRate = (short)140,
                             OldPeak = 2.5m,
@@ -1176,10 +1195,16 @@ namespace SmartHealthMonitoring.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPhoneVerified")
                         .HasColumnType("bit");
 
                     b.Property<string>("Phone")
@@ -1206,6 +1231,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 1,
                             DateOfBirth = new DateOnly(1965, 4, 12),
                             IsDeleted = false,
+                            IsPhoneVerified = false,
                             Phone = "0912345671",
                             Sex = (byte)0,
                             UserId = 11
@@ -1215,6 +1241,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 2,
                             DateOfBirth = new DateOnly(1978, 8, 22),
                             IsDeleted = false,
+                            IsPhoneVerified = false,
                             Phone = "0912345672",
                             Sex = (byte)1,
                             UserId = 12
@@ -1224,6 +1251,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 3,
                             DateOfBirth = new DateOnly(1955, 11, 5),
                             IsDeleted = false,
+                            IsPhoneVerified = false,
                             Phone = "0912345673",
                             Sex = (byte)0,
                             UserId = 13
@@ -1233,6 +1261,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 4,
                             DateOfBirth = new DateOnly(1982, 2, 17),
                             IsDeleted = false,
+                            IsPhoneVerified = false,
                             Phone = "0912345674",
                             Sex = (byte)1,
                             UserId = 14
@@ -1242,6 +1271,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 5,
                             DateOfBirth = new DateOnly(1960, 7, 30),
                             IsDeleted = false,
+                            IsPhoneVerified = false,
                             Phone = "0912345675",
                             Sex = (byte)1,
                             UserId = 15
@@ -1251,6 +1281,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 6,
                             DateOfBirth = new DateOnly(1990, 9, 14),
                             IsDeleted = false,
+                            IsPhoneVerified = false,
                             Phone = "0912345676",
                             Sex = (byte)0,
                             UserId = 16
@@ -1260,6 +1291,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 7,
                             DateOfBirth = new DateOnly(1950, 3, 25),
                             IsDeleted = false,
+                            IsPhoneVerified = false,
                             Phone = "0912345677",
                             Sex = (byte)1,
                             UserId = 17
@@ -1269,6 +1301,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 8,
                             DateOfBirth = new DateOnly(1975, 1, 10),
                             IsDeleted = false,
+                            IsPhoneVerified = false,
                             Phone = "0912345678",
                             Sex = (byte)0,
                             UserId = 18
@@ -1278,6 +1311,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 9,
                             DateOfBirth = new DateOnly(1988, 6, 5),
                             IsDeleted = false,
+                            IsPhoneVerified = false,
                             Phone = "0912345679",
                             Sex = (byte)1,
                             UserId = 19
@@ -1287,9 +1321,429 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 10,
                             DateOfBirth = new DateOnly(1962, 12, 12),
                             IsDeleted = false,
+                            IsPhoneVerified = false,
                             Phone = "0912345680",
                             Sex = (byte)0,
                             UserId = 20
+                        });
+                });
+
+            modelBuilder.Entity("SmartHealthMonitoring.Models.PatientThreshold", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<short>("DiastolicBpDanger")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("DiastolicBpWarning")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("HeartRateDangerMax")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("HeartRateDangerMin")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("HeartRateWarningMax")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("HeartRateWarningMin")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
+                    b.Property<short>("SystolicBpDanger")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("SystolicBpWarning")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(sysutcdatetime())");
+
+                    b.Property<int?>("UpdatedByDoctorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id")
+                        .HasName("PK__PatientThresholds");
+
+                    b.HasIndex("PatientId")
+                        .IsUnique();
+
+                    b.HasIndex("UpdatedByDoctorId");
+
+                    b.ToTable("PatientThresholds", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            PatientId = 1,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedByDoctorId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            PatientId = 2,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedByDoctorId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            PatientId = 3,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedByDoctorId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            PatientId = 4,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedByDoctorId = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            PatientId = 5,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedByDoctorId = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            PatientId = 6,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedByDoctorId = 1
+                        },
+                        new
+                        {
+                            Id = 7,
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            PatientId = 7,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedByDoctorId = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            PatientId = 8,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedByDoctorId = 1
+                        },
+                        new
+                        {
+                            Id = 9,
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            PatientId = 9,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedByDoctorId = 1
+                        },
+                        new
+                        {
+                            Id = 10,
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            PatientId = 10,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UpdatedByDoctorId = 1
+                        });
+                });
+
+            modelBuilder.Entity("SmartHealthMonitoring.Models.StandardThreshold", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<byte>("AgeMax")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte>("AgeMin")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(sysutcdatetime())");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<short>("DiastolicBpDanger")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("DiastolicBpWarning")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("HeartRateDangerMax")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("HeartRateDangerMin")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("HeartRateWarningMax")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("HeartRateWarningMin")
+                        .HasColumnType("smallint");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte>("Sex")
+                        .HasColumnType("tinyint");
+
+                    b.Property<short>("SystolicBpDanger")
+                        .HasColumnType("smallint");
+
+                    b.Property<short>("SystolicBpWarning")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(sysutcdatetime())");
+
+                    b.HasKey("Id")
+                        .HasName("PK__StandardThresholds");
+
+                    b.ToTable("StandardThresholds", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AgeMax = (byte)17,
+                            AgeMin = (byte)0,
+                            CreatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Áp dụng cho cả nam và nữ từ 0–17 tuổi theo khuyến nghị AAP/WHO",
+                            DiastolicBpDanger = (short)85,
+                            DiastolicBpWarning = (short)75,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)55,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)65,
+                            IsActive = true,
+                            Name = "Trẻ em & Thanh thiếu niên (≤ 17 tuổi)",
+                            Sex = (byte)2,
+                            SystolicBpDanger = (short)130,
+                            SystolicBpWarning = (short)120,
+                            UpdatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 2,
+                            AgeMax = (byte)40,
+                            AgeMin = (byte)18,
+                            CreatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Ngưỡng chuẩn cho nam giới trưởng thành theo JNC8/WHO",
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            IsActive = true,
+                            Name = "Nam 18–40 tuổi",
+                            Sex = (byte)1,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 3,
+                            AgeMax = (byte)40,
+                            AgeMin = (byte)18,
+                            CreatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Ngưỡng chuẩn cho nữ giới trưởng thành theo JNC8/WHO",
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            IsActive = true,
+                            Name = "Nữ 18–40 tuổi",
+                            Sex = (byte)0,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 4,
+                            AgeMax = (byte)60,
+                            AgeMin = (byte)41,
+                            CreatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Ngưỡng chuẩn cho nam giới trung niên, nguy cơ tim mạch tăng",
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            IsActive = true,
+                            Name = "Nam 41–60 tuổi",
+                            Sex = (byte)1,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 5,
+                            AgeMax = (byte)60,
+                            AgeMin = (byte)41,
+                            CreatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Ngưỡng chuẩn cho nữ giới trung niên (giai đoạn tiền mãn kinh)",
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)80,
+                            HeartRateDangerMax = (short)120,
+                            HeartRateDangerMin = (short)50,
+                            HeartRateWarningMax = (short)100,
+                            HeartRateWarningMin = (short)60,
+                            IsActive = true,
+                            Name = "Nữ 41–60 tuổi",
+                            Sex = (byte)0,
+                            SystolicBpDanger = (short)140,
+                            SystolicBpWarning = (short)130,
+                            UpdatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 6,
+                            AgeMax = (byte)120,
+                            AgeMin = (byte)61,
+                            CreatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Ngưỡng điều chỉnh cho nam cao tuổi (huyết áp mục tiêu cao hơn theo ESC 2023)",
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)85,
+                            HeartRateDangerMax = (short)110,
+                            HeartRateDangerMin = (short)45,
+                            HeartRateWarningMax = (short)95,
+                            HeartRateWarningMin = (short)55,
+                            IsActive = true,
+                            Name = "Nam trên 60 tuổi",
+                            Sex = (byte)1,
+                            SystolicBpDanger = (short)150,
+                            SystolicBpWarning = (short)140,
+                            UpdatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = 7,
+                            AgeMax = (byte)120,
+                            AgeMin = (byte)61,
+                            CreatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Ngưỡng điều chỉnh cho nữ cao tuổi (huyết áp mục tiêu cao hơn theo ESC 2023)",
+                            DiastolicBpDanger = (short)90,
+                            DiastolicBpWarning = (short)85,
+                            HeartRateDangerMax = (short)110,
+                            HeartRateDangerMin = (short)45,
+                            HeartRateWarningMax = (short)95,
+                            HeartRateWarningMin = (short)55,
+                            IsActive = true,
+                            Name = "Nữ trên 60 tuổi",
+                            Sex = (byte)0,
+                            SystolicBpDanger = (short)150,
+                            SystolicBpWarning = (short)140,
+                            UpdatedAt = new DateTime(2026, 5, 31, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
@@ -1319,6 +1773,9 @@ namespace SmartHealthMonitoring.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("LockReason")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1815,6 +2272,26 @@ namespace SmartHealthMonitoring.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SmartHealthMonitoring.Models.PatientThreshold", b =>
+                {
+                    b.HasOne("SmartHealthMonitoring.Models.Patient", "Patient")
+                        .WithOne("PatientThreshold")
+                        .HasForeignKey("SmartHealthMonitoring.Models.PatientThreshold", "PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK__PatientTh__Patie");
+
+                    b.HasOne("SmartHealthMonitoring.Models.Doctor", "UpdatedByDoctor")
+                        .WithMany()
+                        .HasForeignKey("UpdatedByDoctorId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK__PatientTh__Docto");
+
+                    b.Navigation("Patient");
+
+                    b.Navigation("UpdatedByDoctor");
+                });
+
             modelBuilder.Entity("SmartHealthMonitoring.Models.WarningAlert", b =>
                 {
                     b.HasOne("SmartHealthMonitoring.Models.Doctor", "ClaimedByDoctor")
@@ -1879,6 +2356,8 @@ namespace SmartHealthMonitoring.Migrations
                     b.Navigation("DailyVitalLogs");
 
                     b.Navigation("EmailNotifications");
+
+                    b.Navigation("PatientThreshold");
 
                     b.Navigation("WarningAlerts");
                 });

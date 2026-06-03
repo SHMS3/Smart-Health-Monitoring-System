@@ -1,0 +1,74 @@
+@model SmartHealthMonitoring.ViewModels.ResolveWarningViewModel
+
+@{
+    ViewData["Title"] = "Xử lý Cảnh báo Sức khoẻ";
+}
+
+<div class="container my-4" style="max-width: 680px;">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Danh sách Cảnh báo</a></li>
+            <li class="breadcrumb-item active">Xử lý Cảnh báo</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0">
+                <i class="bi bi-shield-check me-2"></i>
+                Xử lý & Giải quyết Cảnh báo
+            </h5>
+        </div>
+        <div class="card-body p-4">
+
+            @if (!string.IsNullOrEmpty(Model.PatientName))
+            {
+                <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-person-circle fs-4 me-2"></i>
+                    <div>Đang xử lý cảnh báo của bệnh nhân: <strong>@Model.PatientName</strong></div>
+                </div>
+            }
+
+            <form asp-action="Resolve" method="post">
+                <input type="hidden" asp-for="WarningAlertId" />
+
+                <div class="mb-4">
+                    <label asp-for="ResolutionNote" class="form-label fw-semibold">
+                        Ghi chú / Quyết định xử lý <span class="text-danger">*</span>
+                    </label>
+                    <textarea asp-for="ResolutionNote"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Ví dụ: Cần đo Holter ECG gấp. Bệnh nhân cần nhập viện theo dõi 24h..."></textarea>
+                    <span asp-validation-for="ResolutionNote" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4 p-3 rounded border bg-light">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="SendEmailInvitation" id="sendEmailSwitch" />
+                        <label class="form-check-label fw-semibold" for="sendEmailSwitch">
+                            <i class="bi bi-envelope-fill text-primary me-1"></i>
+                            Gửi Email mời tái khám cho bệnh nhân
+                        </label>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        Nếu chọn, hệ thống sẽ tự động soạn và gửi email thông báo sử dụng nội dung ghi chú phía trên.
+                    </p>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-check-circle me-1"></i> Xác nhận Xử lý
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-arrow-left me-1"></i> Huỷ
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace SmartHealthMonitoring.DI
 {
     public static class DependencyInjectionSetup
@@ -11,8 +12,7 @@ namespace SmartHealthMonitoring.DI
 
                 // 2. Lọc ra các class có tên kết thúc bằng "Service" hoặc "Repository"
                 .AddClasses(classes => classes.Where(type =>
-                    type.Name.EndsWith("Service") ||
-                    type.Name.EndsWith("Repository")))
+                    type.Name.EndsWith("Service") || type.Name.EndsWith("Repository")))
 
                 // 3. Đăng ký cho class có Interface (VD: IEmailService -> EmailService)
                 .AsImplementedInterfaces()
@@ -22,6 +22,9 @@ namespace SmartHealthMonitoring.DI
 
                 // 5. Đặt vòng đời mặc định là Scoped (mỗi Request HTTP tạo ra 1 instance mới)
                 .WithScopedLifetime());
+
+            // TwilioVerifyService tự đăng ký qua Scrutor (ITwilioVerifyService)
+            // Không cần đăng ký thêm ISmsService vì HomeController dùng ITwilioVerifyService
 
             return services;
         }
