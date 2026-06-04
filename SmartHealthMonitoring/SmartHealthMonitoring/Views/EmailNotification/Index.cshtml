@@ -1,119 +1,345 @@
 @model SmartHealthMonitoring.ViewModels.EmailHistoryIndexViewModel
 @{
-    ViewData["Title"] = "Lịch sử Gửi Email";
+    ViewData["Title"] = "Lịch sử Email";
 }
 
-<div class="container mt-4" style="max-width: 1200px;">
-    <h2 class="mb-4 text-primary" style="font-weight: 700;">
-        <i class="bi bi-clock-history"></i> Lịch Sử Gửi Email
-    </h2>
+@section Styles {
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+                    "on-secondary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-background": "#1a1b22",
+                    "surface": "#fbf8ff",
+                    "on-error-container": "#93000a",
+                    "tertiary-container": "#6b4200",
+                    "primary-fixed": "#dde1ff",
+                    "outline": "#757684",
+                    "on-surface": "#1a1b22",
+                    "surface-variant": "#e3e1eb",
+                    "primary-container": "#1e40af",
+                    "on-secondary-fixed-variant": "#005236",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "inverse-surface": "#2f3037",
+                    "inverse-primary": "#b8c4ff",
+                    "surface-container-low": "#f4f2fc",
+                    "on-primary-container": "#a8b8ff",
+                    "on-tertiary-container": "#ffa929",
+                    "background": "#fbf8ff",
+                    "tertiary-fixed": "#ffddb8",
+                    "error-container": "#ffdad6",
+                    "error": "#ba1a1a",
+                    "surface-container-high": "#e8e7f1",
+                    "primary": "#3755c3",
+                    "inverse-on-surface": "#f1f0fa",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "primary-fixed-dim": "#b8c4ff",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#001453",
+                    "outline-variant": "#c4c5d5",
+                    "on-secondary-fixed": "#002113",
+                    "secondary": "#006c49",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-secondary-container": "#00714d",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed-variant": "#173bab",
+                    "on-tertiary-fixed": "#2a1700",
+                    "surface-tint": "#3755c3",
+                    "surface-dim": "#dad9e3",
+                    "tertiary": "#4c2e00",
+                    "surface-container": "#eeedf7",
+                    "secondary-container": "#6cf8bb",
+                    "on-surface-variant": "#444653",
+                    "surface-container-highest": "#e3e1eb",
+                    "surface-bright": "#fbf8ff",
+                    "secondary-fixed-dim": "#4edea3"
+            },
+            borderRadius: {
+                    DEFAULT: "0.25rem",
+                    lg: "0.5rem",
+                    xl: "0.75rem",
+                    "2xl": "1rem",
+                    full: "9999px"
+            },
+            spacing: {
+                    "2xl": "3rem",
+                    sm: "0.5rem",
+                    base: "4px",
+                    lg: "1.5rem",
+                    "margin-mobile": "1rem",
+                    xs: "0.25rem",
+                    "margin-desktop": "2.5rem",
+                    gutter: "1.5rem",
+                    md: "1rem",
+                    xl: "2rem"
+            },
+            fontFamily: {
+                    "headline-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "mono-stats": ["Inter"]
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .vitals-shadow {
+            box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.08); /* Softer shadow from ref */
+        }
+        .glass-effect {
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .ref-button-blue {
+            background: linear-gradient(180deg, #4299e1 0%, #3182ce 100%);
+            box-shadow: 0 2px 4px rgba(49, 130, 206, 0.2);
+        }
+    </style>
+}
 
-    <div class="card shadow-sm border-0 mb-4 rounded-3">
-        <div class="card-body bg-light rounded-3">
-            <form method="get" asp-action="Index" class="d-flex align-items-center gap-3 m-0">
-                <label for="status" class="fw-bold mb-0 text-secondary">Lọc trạng thái:</label>
-                <select name="status" asp-for="FilterStatus" asp-items="Model.StatusOptions" class="form-select w-auto shadow-sm">
-                </select>
-                <button type="submit" class="btn btn-primary px-4 shadow-sm" style="border-radius: 5px;">
-                    <i class="bi bi-funnel"></i> Áp dụng bộ lọc
-                </button>
-            </form>
+<main class="flex-1 flex flex-col min-w-0 bg-surface rounded-xl overflow-hidden" style="zoom: 0.85; margin: 20px;">
+    <!-- Top Navigation Bar -->
+    <header class="w-full top-0 sticky z-20 bg-surface/80 backdrop-blur-md px-lg py-md flex justify-between items-center max-w-[1440px] mx-auto border-b border-outline-variant/30">
+        <div class="flex flex-col">
+            <h2 class="font-headline-md text-headline-md font-bold text-on-surface" style="font-size: 35px;">Lịch sử Email</h2>
+            <p class="text-body-sm text-on-surface-variant">Theo dõi và quản lý các thông báo đã gửi tới bệnh nhân.</p>
         </div>
-    </div>
+    </header>
 
-    <div class="card shadow-sm border-0 overflow-hidden rounded-3">
-        <div class="card-body p-0 table-responsive">
-            <table class="table table-hover mb-0" style="vertical-align: middle;">
-                <thead class="table-primary opacity-75" style="border-bottom: 2px solid #b3d4fc;">
-                    <tr>
-                        <th class="ps-4 py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Thời gian tạo</th>
-                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Bệnh nhân</th>
-                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Email nhận</th>
-                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Tiêu đề</th>
-                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Trạng thái</th>
-                        <th class="py-3 text-secondary text-uppercase" style="font-size: 0.85rem;">Thời gian gửi</th>
-                        <th class="pe-4 py-3 text-secondary text-uppercase text-center" style="font-size: 0.85rem;">Chi tiết</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Emails.Any())
-                    {
-                        foreach (var item in Model.Emails)
+    <div class="p-lg space-y-lg max-w-[1440px] mx-auto w-full">
+        <!-- Quick Stats Overlay (Simplified for cleaner look) -->
+        <section class="flex gap-md overflow-x-auto pb-sm">
+            <button class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-md text-label-md shadow-lg shadow-primary/20">
+                Tất cả (@Model.Stats.TotalLast7Days)
+            </button>
+            <button class="bg-surface-container-lowest border border-outline-variant px-lg py-sm rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors">
+                Gửi thành công (@Model.Stats.Succeeded)
+            </button>
+            <a href="?status=2" class="text-decoration-none">
+                <button class="bg-surface-container-lowest border border-outline-variant px-lg py-sm rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors">
+                    Gửi thất bại (@Model.Stats.Failed)
+                </button>
+            </a>
+            <button class="bg-surface-container-lowest border border-outline-variant px-lg py-sm rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors">
+                AI Tự động (@Model.Stats.ByAI)
+            </button>
+            <div class="ml-auto self-center">
+                <span class="text-label-md text-on-surface-variant font-medium">Tổng số: <strong class="text-on-surface">@Model.Emails.Count</strong> hiển thị</span>
+            </div>
+        </section>
+
+        <!-- New Filters & Search Bar from Ref -->
+        <section class="bg-white rounded-2xl vitals-shadow border border-outline-variant/30 overflow-hidden">
+            <form method="get" asp-action="Index">
+                <div class="flex flex-col md:flex-row items-stretch border-b border-outline-variant/30">
+                    <div class="flex-1 relative">
+                        <input name="keyword" class="w-full px-lg py-4 bg-transparent border-none focus:ring-0 text-body-md placeholder:text-outline-variant" placeholder="Tìm theo tên bệnh nhân, ID hoặc email..." type="text" value="@Context.Request.Query["keyword"]"/>
+                    </div>
+                    <button type="submit" class="bg-[#3b82f6] text-white px-xl font-bold text-label-md hover:bg-blue-600 transition-colors uppercase tracking-wide">Tìm kiếm</button>
+                </div>
+                
+                <div class="p-sm flex flex-wrap gap-sm bg-surface-container-lowest align-items-center">
+                    <div class="flex items-center gap-xs px-md py-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
+                        <span class="material-symbols-outlined text-[18px] text-outline">calendar_today</span>
+                        <input type="date" name="fromDate" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 cursor-pointer font-medium text-on-surface-variant" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" title="Từ ngày"/>
+                        <span class="mx-1 text-on-surface-variant">-</span>
+                        <input type="date" name="toDate" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 cursor-pointer font-medium text-on-surface-variant" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" title="Đến ngày"/>
+                    </div>
+                    
+                    <div class="flex items-center gap-xs px-md py-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
+                        <span class="material-symbols-outlined text-[18px] text-outline">filter_list</span>
+                        <select name="status" asp-for="FilterStatus" asp-items="Model.StatusOptions" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 pr-lg cursor-pointer font-medium text-on-surface-variant"></select>
+                    </div>
+
+                    <div class="flex items-center gap-xs px-md py-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
+                        <span class="material-symbols-outlined text-[18px] text-outline">category</span>
+                        <select name="emailType" asp-for="FilterEmailType" asp-items="Model.EmailTypeOptions" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 pr-lg cursor-pointer font-medium text-on-surface-variant"></select>
+                    </div>
+
+                    <a href="@Url.Action("Index")" class="ml-2 text-on-surface-variant font-medium text-label-md hover:underline">
+                        Xóa lọc
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <!-- Email History Table (Redesigned) -->
+        <section class="bg-white rounded-2xl vitals-shadow border border-outline-variant/30 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-surface-container-lowest border-b border-outline-variant/30">
+                            <th class="px-lg py-lg font-bold text-[11px] text-on-surface-variant uppercase tracking-widest w-16">MÃ</th>
+                            <th class="px-lg py-lg font-bold text-[11px] text-on-surface-variant uppercase tracking-widest">BỆNH NHÂN</th>
+                            <th class="px-lg py-lg font-bold text-[11px] text-on-surface-variant uppercase tracking-widest">LOẠI EMAIL</th>
+                            <th class="px-lg py-lg font-bold text-[11px] text-on-surface-variant uppercase tracking-widest">TRẠNG THÁI</th>
+                            <th class="px-lg py-lg font-bold text-[11px] text-on-surface-variant uppercase tracking-widest">THỜI GIAN</th>
+                            <th class="px-lg py-lg font-bold text-[11px] text-on-surface-variant uppercase tracking-widest">NGƯỜI GỬI</th>
+                            <th class="px-lg py-lg font-bold text-[11px] text-on-surface-variant uppercase tracking-widest text-right">THAO TÁC</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/20">
+                        @if (Model.Emails.Any())
                         {
-                            <tr>
-                                <td class="ps-4 text-muted small">@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                                <td class="fw-bold text-dark">@item.PatientName</td>
-                                <td>@item.ToEmail</td>
-                                <td>
-                                    <span class="text-truncate d-inline-block" style="max-width: 250px;" title="@item.Subject">@item.Subject</span>
-                                </td>
-                                <td>
-                                    @if (item.Status == 1)
-                                    {
-                                        <span class="badge bg-success px-3 py-2 rounded-pill shadow-sm">@item.StatusDisplay</span>
-                                    }
-                                    else if (item.Status == 2)
-                                    {
-                                        <span class="badge bg-danger px-3 py-2 rounded-pill shadow-sm">@item.StatusDisplay</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">@item.StatusDisplay</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if(item.SentAt.HasValue)
-                                    {
-                                        <span class="text-muted small">@item.SentAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-                                <td class="pe-4 text-center">
-                                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#emailModal-@item.Id">
-                                        <i class="bi bi-eye"></i> Xem thư
-                                    </button>
+                            foreach (var item in Model.Emails)
+                            {
+                                <tr class="hover:bg-blue-50/30 transition-colors group">
+                                    <td class="px-lg py-lg">
+                                        <span class="font-bold text-[#3b82f6]">#@item.Id</span>
+                                    </td>
+                                    <td class="px-lg py-lg">
+                                        <span class="font-bold text-on-surface block">@item.PatientName</span>
+                                        <span class="text-xs text-on-surface-variant">@item.ToEmail</span>
+                                    </td>
+                                    <td class="px-lg py-lg">
+                                        @if (item.EmailType == "Mời tái khám")
+                                        {
+                                            <span class="px-4 py-1.5 bg-blue-100/50 text-[#1e40af] text-[12px] font-bold rounded-full">Tái khám</span>
+                                        }
+                                        else if (item.EmailType == "Cảnh báo sức khỏe")
+                                        {
+                                            <span class="px-4 py-1.5 bg-orange-100/50 text-orange-800 text-[12px] font-bold rounded-full">Cảnh báo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="px-4 py-1.5 bg-gray-100/50 text-gray-800 text-[12px] font-bold rounded-full">@item.EmailType</span>
+                                        }
+                                    </td>
+                                    <td class="px-lg py-lg">
+                                        @if (item.Status == 1)
+                                        {
+                                            <span class="inline-flex items-center px-4 py-1.5 bg-green-100/60 text-green-700 text-[12px] font-bold rounded-full border border-green-200">
+                                                @item.StatusDisplay
+                                            </span>
+                                        }
+                                        else if (item.Status == 2)
+                                        {
+                                            <span class="inline-flex items-center px-4 py-1.5 bg-red-100/60 text-red-700 text-[12px] font-bold rounded-full border border-red-200">
+                                                @item.StatusDisplay
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex items-center px-4 py-1.5 bg-yellow-100/60 text-yellow-800 text-[12px] font-bold rounded-full border border-yellow-200">
+                                                @item.StatusDisplay
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="px-lg py-lg">
+                                        <div class="flex flex-col text-on-surface-variant text-[13px]">
+                                            <span class="font-medium">@item.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                            <span class="opacity-70">@item.CreatedAt.ToString("HH:mm:ss")</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-lg py-lg">
+                                        <div class="flex items-center gap-xs text-on-surface-variant text-[13px]">
+                                            @if(item.SenderName == "Hệ thống tự động")
+                                            {
+                                                <span class="material-symbols-outlined text-[18px] text-primary">smart_toy</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="material-symbols-outlined text-[18px] text-on-surface">medical_services</span>
+                                            }
+                                            <span class="font-medium">@item.SenderName</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-lg py-lg text-right">
+                                        <div class="flex justify-end gap-sm">
+                                            @if (item.AlertId.HasValue)
+                                            {
+                                                <a href="@Url.Action("Dashboard", "WarningAlert")" class="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-lg text-[12px] font-bold hover:bg-outline-variant transition-all flex items-center justify-center" title="Xem Alert gốc" target="_blank">
+                                                    <span class="material-symbols-outlined" style="font-size: 16px;">notification_important</span>
+                                                </a>
+                                            }
+                                            <button type="button" class="bg-[#3b82f6] text-white px-6 py-2 rounded-lg text-label-md font-bold hover:bg-blue-600 transition-all shadow-md shadow-blue-500/20"
+                                                    data-bs-toggle="modal" data-bs-target="#emailModal-@item.Id">
+                                                Xem thư
+                                            </button>
+                                        </div>
 
-                                    <!-- Modal -->
-                                    <div class="modal fade" id="emailModal-@item.Id" tabindex="-1" aria-hidden="true" style="text-align: left;">
-                                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                                            <div class="modal-content border-0 shadow">
-                                                <div class="modal-header bg-primary text-white">
-                                                    <h5 class="modal-title"><i class="bi bi-envelope-open me-2"></i> Nội dung thư: @item.Subject</h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                                                </div>
-                                                <div class="modal-body p-4 bg-light">
-                                                    <div class="bg-white border rounded shadow-sm p-0 mb-3" style="overflow-x: auto; overflow-y: hidden;">
-                                                        <iframe srcdoc="@item.Body" style="width: 100%; height: 500px; border: none; display: block;"></iframe>
+                                        @* Modal implementation - Bootstrap classes *@
+                                        <div class="modal fade" id="emailModal-@item.Id" tabindex="-1" aria-hidden="true" style="text-align: left;">
+                                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                <div class="modal-content border-0 shadow-lg rounded-2xl overflow-hidden">
+                                                    <div class="modal-header @(item.EmailType == "Cảnh báo sức khỏe" ? "bg-red-500" : "bg-blue-500") text-white border-0 py-3">
+                                                        <h5 class="modal-title font-bold text-white mb-0" style="display: flex; align-items: center;">
+                                                            <span class="material-symbols-outlined mr-2">mail</span> @item.Subject
+                                                        </h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
                                                     </div>
-                                                    @if(item.Status == 2 && !string.IsNullOrEmpty(item.ErrorMessage))
-                                                    {
-                                                        <div class="alert alert-danger mt-3 mb-0">
-                                                            <strong><i class="bi bi-exclamation-triangle-fill"></i> Lỗi hệ thống:</strong> @item.ErrorMessage
+                                                    <div class="modal-body p-0 bg-surface-container-lowest">
+                                                        <div class="border-b border-outline-variant/30 p-4 bg-surface-container-lowest flex flex-col gap-2">
+                                                            <div class="text-sm"><span class="font-bold">Gửi đến:</span> @item.ToEmail (@item.PatientName)</div>
+                                                            <div class="text-sm"><span class="font-bold">Gửi vào lúc:</span> @(item.SentAt?.ToString("dd/MM/yyyy HH:mm:ss") ?? "Đang chờ")</div>
                                                         </div>
-                                                    }
+                                                        <div class="p-0" style="overflow-x: auto;">
+                                                            <iframe srcdoc="@item.Body" style="width: 100%; height: 450px; border: none; display: block; background: white;"></iframe>
+                                                        </div>
+                                                        @if (item.Status == 2 && !string.IsNullOrEmpty(item.ErrorMessage))
+                                                        {
+                                                            <div class="p-4 bg-red-50 border-t border-red-100">
+                                                                <div class="text-red-700 font-bold mb-1"><span class="material-symbols-outlined align-middle" style="font-size: 18px;">error</span> Lỗi hệ thống:</div>
+                                                                <div class="text-red-600 text-sm">@item.ErrorMessage</div>
+                                                            </div>
+                                                        }
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+                                        @* End Modal *@
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="px-lg py-20 text-center">
+                                    <div class="flex flex-col items-center justify-center text-on-surface-variant opacity-60">
+                                        <span class="material-symbols-outlined text-[48px] mb-4">inbox</span>
+                                        <p class="font-medium text-lg">Chưa có email nào</p>
+                                        <p class="text-sm mt-1">Không tìm thấy email nào phù hợp với bộ lọc hiện tại.</p>
                                     </div>
-                                    <!-- End Modal -->
                                 </td>
                             </tr>
                         }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
-                                <h1 class="display-4 text-secondary mb-3"><i class="bi bi-inbox-fill"></i></h1>
-                                <p class="fs-5 mb-0">Chưa có email nào trong hệ thống hoặc phù hợp với lựa chọn lọc.</p>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Refined Pagination (Static for now as requested by user template) -->
+            <div class="px-lg py-lg bg-surface-container-lowest border-t border-outline-variant/30 flex justify-between items-center">
+                <span class="text-[13px] font-medium text-on-surface-variant">Hiển thị <span class="text-on-surface">@Model.Emails.Count</span> trên tổng số <span class="text-on-surface">@Model.Emails.Count</span> kết quả</span>
+                <div class="flex gap-2">
+                    <button class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors disabled:opacity-30" disabled>
+                        <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                    </button>
+                    <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-[#3b82f6] text-white font-bold text-[13px] shadow-md shadow-blue-500/20">1</button>
+                    <button class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors disabled:opacity-30" disabled>
+                        <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+        </section>
     </div>
-</div>
+</main>
