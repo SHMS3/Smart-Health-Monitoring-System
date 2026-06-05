@@ -19,11 +19,17 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(byte? status, string? emailType, DateTime? fromDate, DateTime? toDate)
+        public async Task<IActionResult> Index(byte? status, string? emailType, DateTime? fromDate, DateTime? toDate, string? keyword)
         {
             var query = _context.EmailNotifications
                 .Include(e => e.Patient).ThenInclude(p => p.User)
                 .AsQueryable();
+
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                query = query.Where(e => (e.Patient != null && e.Patient.User != null && e.Patient.User.FullName.Contains(keyword)) ||
+                                         e.ToEmail.Contains(keyword));
+            }
 
             if (status.HasValue)
                 query = query.Where(e => e.Status == status.Value);

@@ -128,7 +128,7 @@
     <div class="p-lg space-y-lg max-w-[1440px] mx-auto w-full">
         <!-- Quick Stats Overlay (Simplified for cleaner look) -->
         <section class="flex gap-md overflow-x-auto pb-sm">
-            <button class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-md text-label-md shadow-lg shadow-primary/20">
+            <!-- <button class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-md text-label-md shadow-lg shadow-primary/20">
                 Tất cả (@Model.Stats.TotalLast7Days)
             </button>
             <button class="bg-surface-container-lowest border border-outline-variant px-lg py-sm rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors">
@@ -141,7 +141,7 @@
             </a>
             <button class="bg-surface-container-lowest border border-outline-variant px-lg py-sm rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low transition-colors">
                 AI Tự động (@Model.Stats.ByAI)
-            </button>
+            </button> -->
             <div class="ml-auto self-center">
                 <span class="text-label-md text-on-surface-variant font-medium">Tổng số: <strong class="text-on-surface">@Model.Emails.Count</strong> hiển thị</span>
             </div>
@@ -160,9 +160,9 @@
                 <div class="p-sm flex flex-wrap gap-sm bg-surface-container-lowest align-items-center">
                     <div class="flex items-center gap-xs px-md py-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
                         <span class="material-symbols-outlined text-[18px] text-outline">calendar_today</span>
-                        <input type="date" name="fromDate" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 cursor-pointer font-medium text-on-surface-variant" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" title="Từ ngày"/>
+                        <input type="date" name="fromDate" id="fromDate" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 cursor-pointer font-medium text-on-surface-variant" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" max="@DateTime.Now.ToString("yyyy-MM-dd")" title="Từ ngày"/>
                         <span class="mx-1 text-on-surface-variant">-</span>
-                        <input type="date" name="toDate" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 cursor-pointer font-medium text-on-surface-variant" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" title="Đến ngày"/>
+                        <input type="date" name="toDate" id="toDate" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 cursor-pointer font-medium text-on-surface-variant" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" max="@DateTime.Now.ToString("yyyy-MM-dd")" title="Đến ngày"/>
                     </div>
                     
                     <div class="flex items-center gap-xs px-md py-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
@@ -267,9 +267,9 @@
                                         <div class="flex justify-end gap-sm">
                                             @if (item.AlertId.HasValue)
                                             {
-                                                <a href="@Url.Action("Dashboard", "WarningAlert")" class="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-lg text-[12px] font-bold hover:bg-outline-variant transition-all flex items-center justify-center" title="Xem Alert gốc" target="_blank">
+                                                <!-- <a href="@Url.Action("Dashboard", "WarningAlert")" class="bg-surface-container-high text-on-surface-variant px-4 py-2 rounded-lg text-[12px] font-bold hover:bg-outline-variant transition-all flex items-center justify-center" title="Xem Alert gốc" target="_blank">
                                                     <span class="material-symbols-outlined" style="font-size: 16px;">notification_important</span>
-                                                </a>
+                                                </a> -->
                                             }
                                             <button type="button" class="bg-[#3b82f6] text-white px-6 py-2 rounded-lg text-label-md font-bold hover:bg-blue-600 transition-all shadow-md shadow-blue-500/20"
                                                     data-bs-toggle="modal" data-bs-target="#emailModal-@item.Id">
@@ -331,15 +331,49 @@
             <div class="px-lg py-lg bg-surface-container-lowest border-t border-outline-variant/30 flex justify-between items-center">
                 <span class="text-[13px] font-medium text-on-surface-variant">Hiển thị <span class="text-on-surface">@Model.Emails.Count</span> trên tổng số <span class="text-on-surface">@Model.Emails.Count</span> kết quả</span>
                 <div class="flex gap-2">
-                    <button class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors disabled:opacity-30" disabled>
+                    <!-- <button class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors disabled:opacity-30" disabled>
                         <span class="material-symbols-outlined text-[20px]">chevron_left</span>
                     </button>
                     <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-[#3b82f6] text-white font-bold text-[13px] shadow-md shadow-blue-500/20">1</button>
                     <button class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors disabled:opacity-30" disabled>
                         <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-                    </button>
+                    </button> -->
                 </div>
             </div>
         </section>
     </div>
 </main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fromDate = document.getElementById("fromDate");
+        const toDate = document.getElementById("toDate");
+        const todayUrl = '@DateTime.Now.ToString("yyyy-MM-dd")';
+
+        function validateDates() {
+            if (fromDate.value) {
+                toDate.min = fromDate.value;
+                if (toDate.value && toDate.value < fromDate.value) {
+                    toDate.value = fromDate.value;
+                }
+            } else {
+                toDate.min = "";
+            }
+
+            if (toDate.value) {
+                fromDate.max = toDate.value < todayUrl ? toDate.value : todayUrl;
+                if (fromDate.value && fromDate.value > toDate.value) {
+                    fromDate.value = toDate.value;
+                }
+            } else {
+                fromDate.max = todayUrl;
+            }
+        }
+
+        fromDate.addEventListener("change", validateDates);
+        toDate.addEventListener("change", validateDates);
+        
+        // Initial setup
+        validateDates();
+    });
+</script>
