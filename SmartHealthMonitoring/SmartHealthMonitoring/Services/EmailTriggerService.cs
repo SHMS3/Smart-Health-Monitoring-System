@@ -18,12 +18,13 @@ namespace SmartHealthMonitoring.Services
             _emailService = emailService;
         }
 
-        public async Task SendAppointmentInvitationAsync(int alertId, int sentByDoctorId)
+        public async Task SendAppointmentInvitationAsync(int alertId, int sentByDoctorId, DateTime? appointmentDate = null)
         {
             try
             {
                 var alert = await _context.WarningAlerts
                     .Include(a => a.Patient).ThenInclude(p => p.User)
+                    .Include(a => a.Prediction).ThenInclude(p => p.ClinicalRecord)
                     .FirstOrDefaultAsync(a => a.Id == alertId);
 
                 if (alert != null && alert.Patient?.User?.Email != null)
@@ -36,12 +37,16 @@ namespace SmartHealthMonitoring.Services
                     var patientName = alert.Patient.User.FullName ?? "Bệnh nhân";
                     string doctorName = doctor?.User?.FullName ?? "Bác sĩ Smart Health";
 
+                    string lastVisitDateDisplay = alert.Prediction?.ClinicalRecord?.VisitDate.ToString("dd/MM/yyyy") ?? alert.Prediction?.PredictedAt.ToString("dd/MM/yyyy HH:mm") ?? "Chưa ghi nhận";
+
                     var replacements = new Dictionary<string, string>
                     {
                         { "{{PatientName}}", patientName },
                         { "{{AppointmentMessage}}", alert.ResolutionNote ?? string.Empty },
                         { "{{DoctorName}}", doctorName },
-                        { "{{HospitalReplyContact}}", "smarthealth.support@gmail.com | 1900-9999" }
+                        { "{{HospitalReplyContact}}", "smarthealth.support@gmail.com | 1900-9999" },
+                        { "{{LastExamDate}}", lastVisitDateDisplay },
+                        { "{{AppointmentDate}}", appointmentDate.HasValue ? appointmentDate.Value.ToString("dd/MM/yyyy HH:mm") : "Sắp xếp cùng bác sĩ" }
                     };
 
                     string subject = "Thư Mời Tái Khám - Smart Health Monitoring";

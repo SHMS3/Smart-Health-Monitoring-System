@@ -103,7 +103,7 @@ namespace SmartHealthMonitoring.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Resolve(int id, string resolutionNote, bool sendEmailInvitation = false)
+        public async Task<IActionResult> Resolve(int id, string resolutionNote, bool sendEmailInvitation = false, DateTime? appointmentDate = null)
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -124,7 +124,7 @@ namespace SmartHealthMonitoring.Controllers
             {
                 if (sendEmailInvitation)
                 {
-                    await _emailTriggerService.SendAppointmentInvitationAsync(id, doctor.Id);
+                    await _emailTriggerService.SendAppointmentInvitationAsync(id, doctor.Id, appointmentDate);
                     TempData["Success"] = "Đã xử lý & gửi email thư mời tái khám thành công!";
                 }
                 else
