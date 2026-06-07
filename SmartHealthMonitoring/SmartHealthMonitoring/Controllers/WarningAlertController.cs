@@ -29,9 +29,18 @@ namespace SmartHealthMonitoring.Controllers
             _emailService = emailService;
         }
 
-        public async Task<IActionResult> Dashboard(byte? status)
+        public async Task<IActionResult> Dashboard(byte? status, int page = 1, int pageSize = 10)
         {
-            var alerts = await _warningAlertService.GetAlertsAsync(status);
+            var allAlerts = await _warningAlertService.GetAlertsAsync(status);
+
+            // Phân trang
+            int totalItems = allAlerts.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            page = Math.Max(1, Math.Min(page, Math.Max(1, totalPages)));
+            var pagedAlerts = allAlerts
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
             // Truyền doctorId để UI chỉ hiển thị Resolution note cho đúng bác sĩ đã claim
             int? doctorId = null;
@@ -43,8 +52,13 @@ namespace SmartHealthMonitoring.Controllers
             }
 
             ViewData["DoctorId"] = doctorId;
+            ViewData["CurrentPage"] = page;
+            ViewData["TotalPages"] = totalPages;
+            ViewData["TotalItems"] = totalItems;
+            ViewData["PageSize"] = pageSize;
+            ViewData["CurrentStatus"] = status?.ToString() ?? "";
 
-            return View(alerts);
+            return View(pagedAlerts);
         }
 
         [HttpPost]
