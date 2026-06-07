@@ -39,6 +39,10 @@ public partial class SmartHealthMonitoringContext : DbContext
 
     public virtual DbSet<StandardThreshold> StandardThresholds { get; set; }
 
+    public virtual DbSet<TelemedicineChatMessage> TelemedicineChatMessages { get; set; }
+
+    public virtual DbSet<TelemedicineChatSession> TelemedicineChatSessions { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         // Để trống hàm này, không hardcode chuỗi kết nối ở đây nữa
@@ -473,6 +477,7 @@ public partial class SmartHealthMonitoringContext : DbContext
             new WarningAlert { Id = 8, PredictionId = 8, PatientId = 8, Status = 2, ClaimedByDoctorId = 4, ResolutionNote = "Cảnh báo nhầm.", FlaggedAt = baseDate.AddHours(8).AddMinutes(6) },
             new WarningAlert { Id = 9, PredictionId = 9, PatientId = 9, Status = 0, FlaggedAt = baseDate.AddHours(9).AddMinutes(6) },
             new WarningAlert { Id = 10, PredictionId = 10, PatientId = 10, Status = 1, ClaimedByDoctorId = 1, FlaggedAt = baseDate.AddHours(10).AddMinutes(6) }
+            
         );
 
         // 8. ChatbotSessions
@@ -543,6 +548,88 @@ public partial class SmartHealthMonitoringContext : DbContext
         modelBuilder.Entity<WarningAlert>()
             .Property(x => x.RowVersion)
             .IsRowVersion();
+
+        // ── TelemedicineChatSession (Phiên chat hàng đợi) ──
+        modelBuilder.Entity<TelemedicineChatSession>(entity =>
+        {
+            entity.ToTable("TelemedicineChatSessions");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Status)
+                .HasDefaultValue((byte)0);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(sysutcdatetime())");
+
+            // FK → PatientUser (User)
+            entity.HasOne(e => e.PatientUser)
+                .WithMany()
+                .HasForeignKey(e => e.PatientUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TelemedicineSession_Patient");
+
+            // FK → DoctorUser (User) — nullable
+            entity.HasOne(e => e.DoctorUser)
+                .WithMany()
+                .HasForeignKey(e => e.DoctorUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TelemedicineSession_Doctor");
+
+            // Index: lọc nhanh theo Status (Waiting/Active)
+            entity.HasIndex(e => e.Status)
+                .HasDatabaseName("IX_TelemedicineSession_Status");
+
+            // Index: tìm session của bệnh nhân
+            entity.HasIndex(e => new { e.PatientUserId, e.Status })
+                .HasDatabaseName("IX_TelemedicineSession_Patient");
+
+            // Index: tìm session của bác sĩ
+            entity.HasIndex(e => new { e.DoctorUserId, e.Status })
+                .HasDatabaseName("IX_TelemedicineSession_Doctor");
+        });
+
+        // ── TelemedicineChatMessage (Chat 1-1 Bác sĩ ↔ Bệnh nhân) ──
+        modelBuilder.Entity<TelemedicineChatMessage>(entity =>
+        {
+            entity.ToTable("TelemedicineChatMessages");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.MessageContent)
+                .IsRequired();
+
+            entity.Property(e => e.SentAt)
+                .HasDefaultValueSql("(sysutcdatetime())");
+
+            entity.Property(e => e.IsRead)
+                .HasDefaultValue(false);
+
+            // FK → Session
+            entity.HasOne(e => e.Session)
+                .WithMany(s => s.Messages)
+                .HasForeignKey(e => e.SessionId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_TelemedicineChat_Session");
+
+            // FK → Sender (User)
+            entity.HasOne(e => e.Sender)
+                .WithMany()
+                .HasForeignKey(e => e.SenderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TelemedicineChat_Sender");
+
+            // FK → Receiver (User)
+            entity.HasOne(e => e.Receiver)
+                .WithMany()
+                .HasForeignKey(e => e.ReceiverId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_TelemedicineChat_Receiver");
+
+            // Index tối ưu truy vấn lịch sử chat theo session
+            entity.HasIndex(e => new { e.SessionId, e.SentAt })
+                .HasDatabaseName("IX_TelemedicineChat_Session_Time");
+        });
 
         OnModelCreatingPartial(modelBuilder);
     }

@@ -16,17 +16,20 @@ namespace SmartHealthMonitoring.Controllers
         private readonly SmartHealthMonitoringContext _context;
         private readonly IEmailService _emailService;
         private readonly IDoctorService _doctorService;
+        private readonly IEmailTriggerService _emailTriggerService;
 
         public WarningAlertController(
             IWarningAlertService warningAlertService,
             IDoctorService doctorService,
             SmartHealthMonitoringContext context,
-            IEmailService emailService)
+            IEmailService emailService,
+            IEmailTriggerService emailTriggerService)
         {
             _warningAlertService = warningAlertService;
             _doctorService = doctorService;
             _context = context;
             _emailService = emailService;
+            _emailTriggerService = emailTriggerService;
         }
 
         public async Task<IActionResult> Dashboard(byte? status, int page = 1, int pageSize = 10)
@@ -41,6 +44,27 @@ namespace SmartHealthMonitoring.Controllers
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
+
+            var alerts = await _warningAlertService
+                .GetAlertsAsync(
+                    status,
+                    keyword,
+                    page,
+                    pageSize);
+
+            var totalRecords =
+                await _warningAlertService
+                    .GetTotalAlertsAsync(
+                        status,
+                        keyword);
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages =
+                (int)Math.Ceiling(
+                    (double)totalRecords / pageSize);
+
+            ViewBag.Keyword = keyword;
+            ViewBag.Status = status;
 
             // Truyền doctorId để UI chỉ hiển thị Resolution note cho đúng bác sĩ đã claim
             int? doctorId = null;
@@ -93,7 +117,7 @@ namespace SmartHealthMonitoring.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Resolve(int id, string resolutionNote, bool sendEmailInvitation = false)
+        public async Task<IActionResult> Resolve(int id, string resolutionNote, bool sendEmailInvitation = false, DateTime? appointmentDate = null)
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -112,72 +136,15 @@ namespace SmartHealthMonitoring.Controllers
 
             if (success)
             {
-                // Thêm tính năng GỬI EMAIL của nhánh cũ vào đây!
                 if (sendEmailInvitation)
                 {
-                    try
-                    {
-                        var alert = await _context.WarningAlerts
-                            .Include(a => a.Patient).ThenInclude(p => p.User)
-                            .FirstOrDefaultAsync(a => a.Id == id);
-
-                        if (alert != null && alert.Patient?.User?.Email != null)
-                        {
-                            var patientEmail = alert.Patient.User.Email;
-                            var patientName = alert.Patient.User.FullName ?? "Bệnh nhân";
-                            string doctorName = doctor.User?.FullName ?? "Bác sĩ Smart Health";
-
-                            var replacements = new Dictionary<string, string>
-                            {
-                                { "{{PatientName}}", patientName },
-                                { "{{AppointmentMessage}}", resolutionNote },
-                                { "{{DoctorName}}", doctorName },
-                                { "{{HospitalReplyContact}}", "smarthealth.support@gmail.com | 1900-9999" }
-                            };
-
-                            string subject = "Thư Mời Tái Khám - Smart Health Monitoring";
-                            string htmlBody = _emailService.GetHtmlContentFromFile("AppointmentInvitationTemplate.html", replacements);
-
-                            var notification = new EmailNotification
-                            {
-                                AlertId = alert.Id,
-                                PatientId = alert.PatientId,
-                                ToEmail = patientEmail,
-                                Subject = subject,
-                                Body = htmlBody,
-                                Status = 0,
-                                IsSent = false,
-                                SentByDoctorId = doctor.Id,
-                                CreatedAt = DateTime.Now
-                            };
-                            _context.EmailNotifications.Add(notification);
-                            await _context.SaveChangesAsync();
-
-                            if (!string.IsNullOrEmpty(htmlBody))
-                            {
-                                await _emailService.SendEmailAsync(patientEmail, subject, htmlBody);
-                                notification.Status = 1;
-                                notification.IsSent = true;
-                                notification.SentAt = DateTime.Now;
-                            }
-                            else
-                            {
-                                notification.Status = 2;
-                                notification.ErrorMessage = "Template không tìm thấy.";
-                            }
-                            await _context.SaveChangesAsync();
-                            
-                            TempData["Success"] = "Đã xử lý & gửi email thư mời tái khám thành công!";
-                            return RedirectToAction("Dashboard");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[EmailError] {ex.Message}");
-                    }
+                    await _emailTriggerService.SendAppointmentInvitationAsync(id, doctor.Id, appointmentDate);
+                    TempData["Success"] = "Đã xử lý & gửi email thư mời tái khám thành công!";
                 }
-                
-                TempData["Success"] = "Đã xử lý xong cảnh báo.";
+                else
+                {
+                    TempData["Success"] = "Đã xử lý xong cảnh báo.";
+                }
             }
             else
             {
