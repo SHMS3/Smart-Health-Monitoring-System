@@ -32,37 +32,21 @@ namespace SmartHealthMonitoring.Controllers
             _emailTriggerService = emailTriggerService;
         }
 
-        public async Task<IActionResult> Dashboard(byte? status, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Dashboard(byte? status, string? keyword, int page = 1, int pageSize = 10)
         {
-            var allAlerts = await _warningAlertService.GetAlertsAsync(status);
+            var totalRecords = await _warningAlertService.GetTotalAlertsAsync(status, keyword);
+            int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            if (totalPages < 1) totalPages = 1;
+            page = Math.Max(1, Math.Min(page, totalPages));
 
-            // Phân trang
-            int totalItems = allAlerts.Count;
-            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-            page = Math.Max(1, Math.Min(page, Math.Max(1, totalPages)));
-            var pagedAlerts = allAlerts
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            var alerts = await _warningAlertService
-                .GetAlertsAsync(
-                    status,
-                    keyword,
-                    page,
-                    pageSize);
-
-            var totalRecords =
-                await _warningAlertService
-                    .GetTotalAlertsAsync(
-                        status,
-                        keyword);
+            var alerts = await _warningAlertService.GetAlertsAsync(
+                status,
+                keyword,
+                page,
+                pageSize);
 
             ViewBag.CurrentPage = page;
-            ViewBag.TotalPages =
-                (int)Math.Ceiling(
-                    (double)totalRecords / pageSize);
-
+            ViewBag.TotalPages = totalPages;
             ViewBag.Keyword = keyword;
             ViewBag.Status = status;
 
@@ -78,11 +62,11 @@ namespace SmartHealthMonitoring.Controllers
             ViewData["DoctorId"] = doctorId;
             ViewData["CurrentPage"] = page;
             ViewData["TotalPages"] = totalPages;
-            ViewData["TotalItems"] = totalItems;
+            ViewData["TotalItems"] = totalRecords;
             ViewData["PageSize"] = pageSize;
             ViewData["CurrentStatus"] = status?.ToString() ?? "";
 
-            return View(pagedAlerts);
+            return View(alerts);
         }
 
         [HttpPost]
