@@ -14,19 +14,47 @@ namespace SmartHealthMonitoring.ViewModels
         public DateTime? SentAt { get; set; }
         public string? ErrorMessage { get; set; }
         public string Body { get; set; } = string.Empty;
+
+        // --- Fields mới ---
+        /// <summary>"Mời tái khám" hoặc "Cảnh báo sức khỏe"</summary>
+        public string EmailType { get; set; } = string.Empty;
+        /// <summary>Tên bác sĩ gửi, hoặc "Hệ thống tự động" nếu SentByDoctorId = null</summary>
+        public string SenderName { get; set; } = "Hệ thống tự động";
+        /// <summary>Id của Alert gốc, dùng để hiển thị nút "Xem Alert"</summary>
+        public int? AlertId { get; set; }
+    }
+
+    public class EmailStats
+    {
+        public int TotalLast7Days { get; set; }
+        public int Succeeded { get; set; }
+        public int Failed { get; set; }
+        public int ByAI { get; set; }
+        public int ByDoctor { get; set; }
     }
 
     public class EmailHistoryIndexViewModel
     {
         public List<EmailHistoryDto> Emails { get; set; } = new List<EmailHistoryDto>();
         public byte? FilterStatus { get; set; }
-        
+        public string? FilterEmailType { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
+        public EmailStats Stats { get; set; } = new();
+
         public List<SelectListItem> StatusOptions { get; set; } = new List<SelectListItem>
         {
             new SelectListItem { Value = "", Text = "Tất cả" },
             new SelectListItem { Value = "0", Text = "Chờ gửi" },
             new SelectListItem { Value = "1", Text = "Thành công" },
             new SelectListItem { Value = "2", Text = "Thất bại" }
+        };
+
+        public List<SelectListItem> EmailTypeOptions { get; set; } = new List<SelectListItem>
+        {
+            new SelectListItem { Value = "", Text = "Tất cả loại" },
+            new SelectListItem { Value = "Mời tái khám", Text = "Mời tái khám" },
+            new SelectListItem { Value = "Cảnh báo sức khỏe", Text = "Cảnh báo sức khỏe" }
         };
     }
 }
