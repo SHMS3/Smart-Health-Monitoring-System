@@ -1,0 +1,310 @@
+@model SmartHealthMonitoring.ViewModels.PatientProfileViewModel
+@{
+    ViewData["Title"] = "Patient 360° Profile";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml"; // Giả sử dùng layout này
+
+    // Tính tuổi
+    int age = 0;
+    if (Model.Patient != null)
+    {
+        var today = DateTime.Today;
+        age = today.Year - Model.Patient.DateOfBirth.Year;
+        if (Model.Patient.DateOfBirth > DateOnly.FromDateTime(today.AddYears(-age))) age--;
+    }
+
+    var latestAi = Model.AiPredictions.Items.FirstOrDefault();
+    var latestClinical = Model.ClinicalRecords.FirstOrDefault();
+}
+
+<div class="container-fluid">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="mb-0">Hồ sơ 360° - @Model.Patient?.User?.FullName</h2>
+            <p class="text-muted mb-0">
+                Tuổi: @age | Giới tính: @(Model.Patient?.Sex == 1 ? "Nam" : "Nữ") | 
+                SĐT: @(Model.Patient?.Phone ?? "N/A")
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-controller="WarningAlert" asp-action="Dashboard" class="btn btn-outline-secondary">Quay lại danh sách</a>
+        </div>
+    </div>
+
+    @if (Model.WarningAlerts.Any(w => w.Status == 0))
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-danger shadow-sm mb-0">
+                    <strong><i class="bi bi-exclamation-triangle-fill"></i> CẢNH BÁO ĐANG CHỜ!</strong>
+                    <p class="mb-0 small">Bệnh nhân có @Model.WarningAlerts.Count(w => w.Status == 0) cảnh báo chưa được xử lý.</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-robot"></i> Trạng thái AI (Gần nhất)</h5>
+                </div>
+                <div class="card-body text-center d-flex flex-column justify-content-center">
+                    @if (latestAi != null)
+                    {
+                        <h2 class="display-4 fw-bold @(latestAi.RiskLevel >= 2 ? "text-danger" : "text-success")">
+                            @((latestAi.RiskScore * 100).ToString("0.##"))%
+                        </h2>
+                        <p class="mb-1">
+                            @if (latestAi.RiskLevel == 3) { <span class="badge bg-danger">Nguy kịch</span> }
+                            else if (latestAi.RiskLevel == 2) { <span class="badge bg-warning text-dark">Cao</span> }
+                            else if (latestAi.RiskLevel == 1) { <span class="badge bg-info text-dark">Trung bình</span> }
+                            else { <span class="badge bg-success">Thấp</span> }
+                        </p>
+                        <small class="text-muted">Phân tích lúc: @latestAi.PredictedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                    }
+                    else
+                    {
+                        <p class="text-muted my-3">Chưa có dữ liệu dự báo AI</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Xu hướng Huyết áp & Nhịp tim (30 ngày)</h5>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="vitalsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-hospital"></i> Khám lâm sàng gần nhất</h5>
+                </div>
+                <div class="card-body">
+                    @if (latestClinical != null)
+                    {
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Ngày khám:</strong> @latestClinical.VisitDate.ToString("dd/MM/yyyy")</p>
+                                <p class="mb-2"><strong>Huyết áp:</strong> @latestClinical.RestingBp mmHg</p>
+                                <p class="mb-2"><strong>Cholesterol:</strong> @latestClinical.Cholesterol mg/dl</p>
+                                <p class="mb-2"><strong>Đường huyết đói:</strong> @(latestClinical.FastingBs == 1 ? "> 120 mg/dl" : "< 120 mg/dl")</p>
+                                <p class="mb-2"><strong>Rest ECG:</strong> @latestClinical.RestEcg</p>
+                                <p class="mb-2"><strong>Nhịp tim tối đa:</strong> @latestClinical.MaxHeartRate bpm</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Loại đau ngực:</strong> @latestClinical.ChestPainType</p>
+                                <p class="mb-2"><strong>Đau ngực khi tập:</strong> @(latestClinical.ExerciseAngina == 1 ? "Có" : "Không")</p>
+                                <p class="mb-2"><strong>OldPeak:</strong> @latestClinical.OldPeak</p>
+                                <p class="mb-2"><strong>ST Slope:</strong> @latestClinical.Stslope</p>
+                                <p class="mb-2"><strong>Major Vessels:</strong> @latestClinical.MajorVessels</p>
+                                <p class="mb-2"><strong>Thal Result:</strong> @latestClinical.ThalResult</p>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(latestClinical.EcgImageUrl) || !string.IsNullOrEmpty(latestClinical.AttachmentUrl))
+                        {
+                            <hr />
+                            <div class="d-flex gap-2">
+                                @if (!string.IsNullOrEmpty(latestClinical.EcgImageUrl))
+                                {
+                                    <a href="@latestClinical.EcgImageUrl" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-image"></i> Xem ECG</a>
+                                }
+                                @if (!string.IsNullOrEmpty(latestClinical.AttachmentUrl))
+                                {
+                                    <a href="@latestClinical.AttachmentUrl" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-download"></i> Tải tài liệu</a>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <p class="text-muted mb-0">Chưa có dữ liệu khám lâm sàng.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-house-heart"></i> Chỉ số đo tại nhà (Gần đây)</h5>
+                </div>
+                <div class="card-body p-0 d-flex flex-column">
+                    <div class="list-group list-group-flush flex-grow-1" style="max-height: 400px; overflow-y: auto;">
+                        @foreach (var log in Model.DailyVitalLogs)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1 text-success">Ngày: @log.LoggedAt.ToString("dd/MM/yyyy HH:mm")</h6>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-6 small">
+                                        <p class="mb-1"><strong>Huyết áp:</strong> @log.SystolicBp / @log.DiastolicBp</p>
+                                        <p class="mb-1"><strong>Nhịp tim:</strong> @log.HeartRate bpm</p>
+                                    </div>
+                                    <div class="col-6 small">
+                                        <p class="mb-1"><strong>Đau ngực:</strong> Mức độ @log.ChestPainLevel</p>
+                                        <p class="mb-1"><strong>Đau khi tập:</strong> @(log.HasExerciseAngina ? "Có" : "Không")</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @if (!Model.DailyVitalLogs.Any())
+                        {
+                            <div class="p-4 text-center text-muted m-auto">
+                                Chưa có chỉ số đo tại nhà.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Lịch sử Dự báo AI</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Ngày phân tích</th>
+                                    <th>Mô hình</th>
+                                    <th>Điểm Risk</th>
+                                    <th>Mức độ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ai in Model.AiPredictions.Items)
+                                {
+                                    <tr>
+                                        <td class="ps-4">@ai.PredictedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@ai.ModelVersion</td>
+                                        <td>@((ai.RiskScore * 100).ToString("0.##"))%</td>
+                                        <td>
+                                            @if (ai.RiskLevel >= 2)
+                                            {
+                                                <span class="badge bg-danger">Cao</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">An toàn</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                @if (!Model.AiPredictions.Items.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">Không có dữ liệu lịch sử AI</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @if (Model.AiPredictions.TotalPages > 1)
+                {
+                    <div class="card-footer bg-white border-top">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item @(Model.AiPredictions.Page == 1 ? "disabled" : "")">
+                                    <a class="page-link" href="@Url.Action("PatientProfile", new { patientId = Model.Patient.Id, page = Model.AiPredictions.Page - 1 })">Trước</a>
+                                </li>
+                                @for (int i = 1; i <= Model.AiPredictions.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == Model.AiPredictions.Page ? "active" : "")">
+                                        <a class="page-link" href="@Url.Action("PatientProfile", new { patientId = Model.Patient.Id, page = i })">@i</a>
+                                    </li>
+                                }
+                                <li class="page-item @(Model.AiPredictions.Page == Model.AiPredictions.TotalPages ? "disabled" : "")">
+                                    <a class="page-link" href="@Url.Action("PatientProfile", new { patientId = Model.Patient.Id, page = Model.AiPredictions.Page + 1 })">Sau</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Chuẩn bị data cho Chart
+            // Lưu ý: Đảo ngược list để ngày cũ ở trước, ngày mới ở sau (tăng dần)
+            const vitalsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                Model.DailyVitalLogs.OrderBy(d => d.LoggedAt).Select(d => new {
+                    date = d.LoggedAt.ToString("dd/MM"),
+                    sys = d.SystolicBp,
+                    dia = d.DiastolicBp,
+                    hr = d.HeartRate
+                })
+            ));
+
+            const labels = vitalsData.map(d => d.date);
+            const sysData = vitalsData.map(d => d.sys);
+            const diaData = vitalsData.map(d => d.dia);
+            const hrData = vitalsData.map(d => d.hr);
+
+            const ctx = document.getElementById('vitalsChart').getContext('2d');
+            const myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Systolic BP',
+                            data: sysData,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Diastolic BP',
+                            data: diaData,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Heart Rate',
+                            data: hrData,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, /* SỬA TẠI ĐÂY: Cho phép biểu đồ co giãn theo chiều cao của div cha */
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}
