@@ -26,6 +26,9 @@ namespace SmartHealthMonitoring.DI
             // TwilioVerifyService tự đăng ký qua Scrutor (ITwilioVerifyService)
             // Không cần đăng ký thêm ISmsService vì HomeController dùng ITwilioVerifyService
 
+            // AI Services: ModelSessionRunner phải là Singleton để tái sử dụng ONNX Session
+            services.AddSingleton<Services.IAiModelSessionRunner, Services.AiModelSessionRunner>();
+
             return services;
         }
     }
