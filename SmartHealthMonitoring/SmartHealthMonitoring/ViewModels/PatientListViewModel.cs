@@ -56,6 +56,7 @@ namespace SmartHealthMonitoring.ViewModels
         public byte MajorVessels { get; set; }
         public byte ThalResult { get; set; }
         public string? EcgImageUrl { get; set; }
+        public string? AttachmentUrl { get; set; }
         public bool IsViewForPatient { get; set; }
     }
 

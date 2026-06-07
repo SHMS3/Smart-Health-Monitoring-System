@@ -31,7 +31,7 @@ namespace SmartHealthMonitoring.Repositories
         }
 
         public async Task<int>CreateSessionAsync(ChatbotSession session)
-        {
+        {   
             _context.ChatbotSessions.Add(session);
 
             await _context.SaveChangesAsync();
@@ -54,6 +54,12 @@ namespace SmartHealthMonitoring.Repositories
             return await _context.ChatbotSessions
                 .Include(x => x.ChatMessages)
                 .FirstOrDefaultAsync(x => x.Id == sessionId);
+        }
+
+        public async Task DeleteSessionAsync(ChatbotSession session)
+        {
+            _context.ChatbotSessions.Remove(session);
+            await _context.SaveChangesAsync();
         }
     }
 }

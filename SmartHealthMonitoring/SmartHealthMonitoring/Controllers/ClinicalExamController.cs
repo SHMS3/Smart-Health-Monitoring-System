@@ -16,12 +16,14 @@ namespace SmartHealthMonitoring.Controllers
         private readonly SmartHealthMonitoringContext _context;
         private readonly IMemoryCache _cache;
         private readonly IEmailService _emailService;
+        private readonly IMinioService _minioService;
 
-        public ClinicalExamController(SmartHealthMonitoringContext context, IMemoryCache cache, IEmailService emailService)
+        public ClinicalExamController(SmartHealthMonitoringContext context, IMemoryCache cache, IEmailService emailService, IMinioService minioService)
         {
             _context = context;
             _cache = cache;
             _emailService = emailService;
+            _minioService = minioService;
         }
 
         [HttpGet]
@@ -68,6 +70,23 @@ namespace SmartHealthMonitoring.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
+                if (model.AttachmentFile != null && model.AttachmentFile.Length > 0)
+                {
+                    using (var stream = model.AttachmentFile.OpenReadStream())
+                    {
+                        // Đặt tên file: attach_PatientId_Timestamp_TenFileGoc.ext
+                        string extension = Path.GetExtension(model.AttachmentFile.FileName);
+                        string objectName = $"attach_{model.PatientId}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}{extension}";
+                        string bucketName = "clinical-attachments";
+
+                        // Đẩy file lên MinIO
+                        await _minioService.UploadFileAsync(bucketName, objectName, stream, model.AttachmentFile.ContentType);
+
+                        // Sinh link bảo mật thời hạn 7 ngày
+                        model.AttachmentUrl = await _minioService.GetPresignedUrlAsync(bucketName, objectName, 10080);
+                    }
+                }
+
                 var record = new ClinicalRecord
                 {
                     PatientId = model.PatientId,
@@ -85,6 +104,7 @@ namespace SmartHealthMonitoring.Controllers
                     MajorVessels = model.MajorVessels,
                     ThalResult = model.ThalResult,
                     EcgImageUrl = model.EcgImageUrl,
+                    AttachmentUrl = model.AttachmentUrl,
                     IsDeleted = false,
                     IsViewForPatient = model.IsViewForPatient
                 };

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace SmartHealthMonitoring.ViewModels
 {
@@ -47,5 +48,9 @@ namespace SmartHealthMonitoring.ViewModels
         public bool IsViewForPatient { get; set; }
 
         public string? EcgImageUrl { get; set; }
+
+        public IFormFile? AttachmentFile { get; set; } // Dùng để hứng file từ thẻ <input type="file">
+
+        public string? AttachmentUrl { get; set; }    // Dùng để lưu link sau khi up lên MinIO
     }
 }
