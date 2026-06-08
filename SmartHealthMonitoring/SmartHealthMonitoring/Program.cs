@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Minio;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.DI; // Gọi namespace DI của bạn
+using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.Hubs;
 using System;
 
@@ -29,6 +30,8 @@ namespace SmartHealthMonitoring
                 .WithCredentials("admin", "admin123")
                 .WithSSL(false)
                 .Build());
+
+            builder.Services.AddHttpClient<GeminiService>();
 
             // 3. MVC & Razor
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();

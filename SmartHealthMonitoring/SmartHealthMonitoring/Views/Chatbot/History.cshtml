@@ -1,0 +1,312 @@
+@using SmartHealthMonitoring.Common
+@model PagedResult<SmartHealthMonitoring.Models.ChatbotSession>
+
+@{
+    ViewData["Title"] = "Lịch sử Chat AI";
+}
+
+<style>
+    :root {
+        --lux-primary: #A71D2A; /* Deep crimson for heart hospital */
+        --lux-secondary: #D4AF37; /* Subtle gold accent */
+        --lux-bg: #F4F6F8;
+        --lux-surface: #FFFFFF;
+        --lux-text: #2C3E50;
+        --lux-muted: #8395A7;
+        --lux-border: #E8ECEF;
+    }
+
+    body {
+        background-color: var(--lux-bg);
+    }
+
+    .history-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--lux-primary);
+    }
+
+    .page-header h2 {
+        color: var(--lux-primary);
+        font-weight: 700;
+        margin: 0;
+        font-size: 1.75rem;
+        letter-spacing: -0.5px;
+    }
+
+    .page-header i {
+        color: var(--lux-secondary);
+        margin-right: 12px;
+    }
+
+    /* Filter Toolbar */
+    .filter-card {
+        background: var(--lux-surface);
+        border-radius: 12px;
+        padding: 1.2rem 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--lux-border);
+    }
+
+    .filter-card .input-group-text {
+        background-color: transparent;
+        border-right: none;
+        color: var(--lux-muted);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .filter-card .form-control {
+        border-left: none;
+        box-shadow: none;
+        border-color: #ced4da;
+        font-size: 0.95rem;
+    }
+    
+    .filter-card .form-control:focus {
+        border-color: var(--lux-primary);
+    }
+
+    .filter-card .input-group {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .btn-lux-primary {
+        background: linear-gradient(135deg, #A71D2A 0%, #8E1622 100%);
+        color: white;
+        border: none;
+        font-weight: 500;
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-lux-primary:hover {
+        background: linear-gradient(135deg, #8E1622 0%, #75101A 100%);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(167, 29, 42, 0.3);
+    }
+
+    .btn-lux-outline {
+        border: 1px solid var(--lux-border);
+        color: var(--lux-text);
+        background: white;
+        font-weight: 500;
+        padding: 0.5rem 1.2rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-lux-outline:hover {
+        background: var(--lux-bg);
+        color: var(--lux-text);
+    }
+
+    /* History List */
+    .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .history-item {
+        background: var(--lux-surface);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        border: 1px solid var(--lux-border);
+        border-left: 4px solid var(--lux-primary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .history-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        border-color: #D1D9E0;
+    }
+
+    .history-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .history-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--lux-text);
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .history-title i {
+        color: var(--lux-primary);
+        font-size: 1.2rem;
+        margin-right: 10px;
+    }
+
+    .history-meta {
+        font-size: 0.85rem;
+        color: var(--lux-muted);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .msg-count {
+        background: rgba(167, 29, 42, 0.08);
+        color: var(--lux-primary);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .btn-delete {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .btn-delete:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+    /* Pagination */
+    .lux-pagination .page-link {
+        color: var(--lux-text);
+        border: none;
+        margin: 0 4px;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+    }
+
+    .lux-pagination .page-item.active .page-link {
+        background-color: var(--lux-primary);
+        color: white;
+    }
+
+    .lux-pagination .page-link:hover:not(.active) {
+        background-color: var(--lux-bg);
+    }
+</style>
+
+<div class="history-container">
+    <div class="page-header">
+        <h2><i class="fas fa-heartbeat"></i> Lịch sử trợ lý ảo</h2>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius: 12px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="filter-card">
+        <form method="get" asp-action="History" class="row g-3 align-items-center m-0">
+            <div class="col-md-4 col-sm-6 p-1">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="far fa-calendar-alt me-1"></i> Từ</span>
+                    <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 p-1">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="far fa-calendar-alt me-1"></i> Đến</span>
+                    <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-12 p-1 text-md-end text-center">
+                <button type="submit" class="btn btn-lux-primary me-2"><i class="fas fa-filter me-1"></i> Lọc</button>
+                <a asp-action="History" class="btn btn-lux-outline">Xóa lọc</a>
+            </div>
+        </form>
+    </div>
+
+    @if (Model == null || !Model.Items.Any())
+    {
+        <div class="alert alert-light text-center" style="border-radius: 12px; padding: 3rem; background: var(--lux-surface); border: 1px dashed var(--lux-border);">
+            <i class="fas fa-file-medical-alt fa-3x mb-3" style="color: var(--lux-muted); opacity: 0.5;"></i>
+            <h5 class="text-muted mb-0">Không tìm thấy cuộc hội thoại nào</h5>
+        </div>
+    }
+    else
+    {
+        <div class="history-list mb-4">
+            @foreach (var session in Model.Items)
+            {
+                <div class="history-item-wrapper" style="display: flex; align-items: center; gap: 10px;">
+                    <a href="@Url.Action("Details", "Chatbot", new { sessionId = session.Id })" class="history-item flex-grow-1">
+                        <div class="history-info">
+                            <h5 class="history-title">
+                                <i class="fas fa-comment-medical"></i>
+                                Tư vấn sức khỏe ngày @session.StartedAt.ToString("dd/MM/yyyy")
+                            </h5>
+                            <div class="history-meta">
+                                <span><i class="far fa-clock me-1"></i> @session.StartedAt.ToString("HH:mm")</span>
+                                <span class="msg-count">@(session.ChatMessages?.Count ?? 0) tin nhắn</span>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <i class="fas fa-chevron-right" style="color: var(--lux-border); font-size: 1.2rem;"></i>
+                        </div>
+                    </a>
+
+                    <form asp-action="Delete" asp-route-sessionId="@session.Id" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa lịch sử này?');" class="m-0">
+                        <button type="submit" class="btn-delete" title="Xóa">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation">
+                <ul class="pagination lux-pagination justify-content-center">
+                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("History", new { fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = Model.Page - 1 })"><i class="fas fa-angle-left"></i></a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("History", new { fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = i })">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("History", new { fromDate = ViewBag.FromDate, toDate = ViewBag.ToDate, page = Model.Page + 1 })"><i class="fas fa-angle-right"></i></a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+</div>
