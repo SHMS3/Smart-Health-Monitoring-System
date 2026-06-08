@@ -1,4 +1,4 @@
-﻿@model List<SmartHealthMonitoring.Models.WarningAlert>
+@model List<SmartHealthMonitoring.Models.WarningAlert>
 
 @{
     ViewData["Title"] = "Cảnh báo sức khỏe";
@@ -374,6 +374,26 @@
                 </div>
 
             </div>
+            <form asp-action="Dashboard"
+                  method="get"
+                  class="mb-3">
+
+                <div class="input-group">
+
+                    <input type="text"
+                           name="keyword"
+                           value="@ViewBag.Keyword"
+                           class="form-control"
+                           placeholder="Tìm theo tên bệnh nhân..." />
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Tìm kiếm
+                    </button>
+
+                </div>
+
+            </form>
 
             <div class="alert-table-wrap">
 
@@ -410,9 +430,10 @@
                                     </td>
 
                                     <td>
-                                        <span class="patient-name">
+                                        <a href="/DoctorDashboard/PatientProfile/@item.PatientId" class="patient-name text-decoration-none text-primary">
                                             @item.Patient.User.FullName
-                                        </span>
+                                            <i class="fas fa-external-link-alt ms-1" style="font-size: 0.75rem;"></i>
+                                        </a>
                                     </td>
 
                                     <td>
@@ -536,10 +557,15 @@
                                                 <textarea name="resolutionNote" class="resolve-input" placeholder="Nhập ghi chú xử lý..." required></textarea>
                                                 
                                                 <div class="form-check mt-1 mb-2 text-start">
-                                                    <input class="form-check-input" type="checkbox" name="sendEmailInvitation" value="true" id="sendEmail_@item.Id" checked>
+                                                    <input class="form-check-input" type="checkbox" name="sendEmailInvitation" value="true" id="sendEmail_@item.Id" checked onchange="document.getElementById('appointmentDateContainer_@item.Id').style.display = this.checked ? 'block' : 'none'">
                                                     <label class="form-check-label text-muted" style="font-size:.75rem;" for="sendEmail_@item.Id">
                                                         Gửi email mời tái khám
                                                     </label>
+                                                </div>
+                                                
+                                                <div id="appointmentDateContainer_@item.Id" class="mt-1 mb-2 text-start">
+                                                    <label class="form-label text-muted" style="font-size:.75rem; margin-bottom: 2px;">Ngày tái khám:</label>
+                                                    <input type="datetime-local" name="appointmentDate" class="form-control form-control-sm resolve-input" style="min-width: unset; width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: .82rem;" value="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
                                                 </div>
                                                 
                                                 <button type="submit" class="resolve-btn">Hoàn tất</button>
@@ -577,10 +603,91 @@
                     </tbody>
 
                 </table>
+                
+                
+                    <nav>
+                        <ul class="pagination">
+
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+
+                                    <a class="page-link"
+                                       asp-action="Dashboard"
+                                       asp-route-page="@i"
+                                       asp-route-status="@ViewBag.Status"
+                                       asp-route-keyword="@ViewBag.Keyword">
+
+                                        @i
+
+                                    </a>
+
+                                </li>
+                            }
+
+                        </ul>
+                    </nav>
+                
 
             </div>
 
         </div>
+
+        @{
+            int currentPage = (int)(ViewData["CurrentPage"] ?? 1);
+            int totalPages = (int)(ViewData["TotalPages"] ?? 1);
+            int totalItems = (int)(ViewData["TotalItems"] ?? 0);
+            string paginationStatus = ViewData["CurrentStatus"]?.ToString() ?? "";
+        }
+
+        @if (totalPages > 1)
+        {
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <div style="color:#64748b; font-size:.9rem;">
+                    Tổng cộng <strong>@totalItems</strong> cảnh báo &nbsp;·&nbsp; Trang <strong>@currentPage</strong> / <strong>@totalPages</strong>
+                </div>
+                <nav>
+                    <ul class="pagination mb-0" style="gap:6px;">
+                        @* Nút Prev *@
+                        @if (currentPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="@Url.Action("Dashboard", new { status = string.IsNullOrEmpty(paginationStatus) ? (object)null : paginationStatus, page = currentPage - 1 })"
+                                   style="border-radius:10px; border:1px solid #e2e8f0; color:#0ea5e9; font-weight:600;">
+                                    ‹
+                                </a>
+                            </li>
+                        }
+                        @* Số trang *@
+                        @for (int p = Math.Max(1, currentPage - 2); p <= Math.Min(totalPages, currentPage + 2); p++)
+                        {
+                            bool isActive = p == currentPage;
+                            <li class="page-item @(isActive ? "active" : "")">
+                                <a class="page-link"
+                                   href="@Url.Action("Dashboard", new { status = string.IsNullOrEmpty(paginationStatus) ? (object)null : paginationStatus, page = p })"
+                                   style="border-radius:10px; border:1px solid @(isActive ? "transparent" : "#e2e8f0");
+                                          background:@(isActive ? "linear-gradient(135deg,#0ea5e9,#6366f1)" : "white");
+                                          color:@(isActive ? "white" : "#475569"); font-weight:600;">
+                                    @p
+                                </a>
+                            </li>
+                        }
+                        @* Nút Next *@
+                        @if (currentPage < totalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="@Url.Action("Dashboard", new { status = string.IsNullOrEmpty(paginationStatus) ? (object)null : paginationStatus, page = currentPage + 1 })"
+                                   style="border-radius:10px; border:1px solid #e2e8f0; color:#0ea5e9; font-weight:600;">
+                                    ›
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
 
     </div>
 

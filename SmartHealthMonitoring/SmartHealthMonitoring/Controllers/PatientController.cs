@@ -41,8 +41,8 @@ namespace SmartHealthMonitoring.Controllers
             }
             else if (lastLog != null)
             {
-               // nextLogTime = lastLog.LoggedAt.AddHours(1);
-                nextLogTime = lastLog.LoggedAt.AddSeconds(10);
+               nextLogTime = lastLog.LoggedAt.AddHours(1);
+                //nextLogTime = lastLog.LoggedAt.AddSeconds(10);
                 if (DateTime.Now < nextLogTime)
                 {
                     canLog = false;

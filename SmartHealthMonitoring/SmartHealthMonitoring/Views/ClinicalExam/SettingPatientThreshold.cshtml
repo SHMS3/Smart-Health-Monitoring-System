@@ -644,6 +644,70 @@
     </div>
 </div>
 
+
+@* ===== MODAL XÁC NHẬN THAY ĐỔI NGƯỠNG ===== *@
+<div class="modal fade" id="confirmChangeModal" tabindex="-1" aria-labelledby="confirmChangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 560px;">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+
+            <div class="modal-header border-0 pb-0 p-4" style="background: linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:16px 16px 0 0;">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:50px;height:50px;border-radius:14px;background:#f59e0b;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fa-solid fa-triangle-exclamation text-white fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark" id="confirmChangeModalLabel">Xác nhận thay đổi ngưỡng?</h5>
+                        <p class="text-muted small mb-0 mt-1">Bác sĩ đã chỉnh sửa một số giá trị so với ngưỡng chuẩn đã chọn</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body px-4 pt-3 pb-2">
+                <div class="rounded-3 p-3 mb-3" style="background:#fffbeb;border:1.5px solid #fde68a;font-size:0.83rem;">
+                    <i class="fa-solid fa-circle-info text-warning me-2"></i>
+                    Các ô được tô vàng bên dưới là những giá trị <strong>bác sĩ đã thay đổi</strong> so với ngưỡng chuẩn.
+                    Vui lòng kiểm tra kỹ trước khi xác nhận lưu.
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0" id="diffTable" style="font-size:0.83rem;">
+                        <thead>
+                            <tr style="background:#f8fafc;">
+                                <th class="fw-semibold text-muted ps-3" style="width:42%">Chỉ số</th>
+                                <th class="fw-semibold text-center" style="color:#0369a1;width:29%">Ngưỡng chuẩn</th>
+                                <th class="fw-semibold text-center" style="color:#b45309;width:29%">Bác sĩ đã chỉnh</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diffTableBody">
+                            <!-- Filled dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-body px-4 py-3">
+                <div class="rounded-3 p-3" style="background:#f0fdf4;border:1.5px solid #86efac;font-size:0.83rem;">
+                    <i class="fa-solid fa-shield-halved text-success me-2"></i>
+                    Nếu đây là điều chỉnh <strong>có chủ ý</strong> cho phù hợp với tình trạng bệnh nhân,
+                    hãy nhấn <strong>"Xác nhận & Lưu"</strong> bên dưới.
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 px-4 pb-4 pt-0 gap-2">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-medium" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Quay lại chỉnh sửa
+                </button>
+                <button type="button" class="btn fw-bold rounded-pill px-4" id="btnConfirmSave"
+                        style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;box-shadow:0 4px 12px rgba(245,158,11,0.35);">
+                    <i class="fa-solid fa-floppy-disk me-2"></i> Xác nhận & Lưu
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
@@ -719,17 +783,34 @@
             });
         }
 
-        // Áp dụng giá trị template vào form
+        // Áp dụng giá trị template vào form & ghi snapshot để detect thay đổi
+        let appliedSnapshot = null; // null = chưa áp dụng template nào
+
         function applyTemplate(t) {
             if (!t) return;
-            document.getElementById('SystolicBpWarning').value  = t.systolicBpWarning  ?? t.SystolicBpWarning;
-            document.getElementById('SystolicBpDanger').value   = t.systolicBpDanger   ?? t.SystolicBpDanger;
-            document.getElementById('DiastolicBpWarning').value = t.diastolicBpWarning ?? t.DiastolicBpWarning;
-            document.getElementById('DiastolicBpDanger').value  = t.diastolicBpDanger  ?? t.DiastolicBpDanger;
-            document.getElementById('HeartRateWarningMin').value = t.heartRateWarningMin ?? t.HeartRateWarningMin;
-            document.getElementById('HeartRateDangerMin').value  = t.heartRateDangerMin  ?? t.HeartRateDangerMin;
-            document.getElementById('HeartRateWarningMax').value = t.heartRateWarningMax ?? t.HeartRateWarningMax;
-            document.getElementById('HeartRateDangerMax').value  = t.heartRateDangerMax  ?? t.HeartRateDangerMax;
+            const vals = {
+                systolicBpWarning:  parseInt(t.systolicBpWarning  ?? t.SystolicBpWarning),
+                systolicBpDanger:   parseInt(t.systolicBpDanger   ?? t.SystolicBpDanger),
+                diastolicBpWarning: parseInt(t.diastolicBpWarning ?? t.DiastolicBpWarning),
+                diastolicBpDanger:  parseInt(t.diastolicBpDanger  ?? t.DiastolicBpDanger),
+                heartRateWarningMin: parseInt(t.heartRateWarningMin ?? t.HeartRateWarningMin),
+                heartRateDangerMin:  parseInt(t.heartRateDangerMin  ?? t.HeartRateDangerMin),
+                heartRateWarningMax: parseInt(t.heartRateWarningMax ?? t.HeartRateWarningMax),
+                heartRateDangerMax:  parseInt(t.heartRateDangerMax  ?? t.HeartRateDangerMax),
+                templateName: t.templateName ?? t.name
+            };
+
+            document.getElementById('SystolicBpWarning').value   = vals.systolicBpWarning;
+            document.getElementById('SystolicBpDanger').value    = vals.systolicBpDanger;
+            document.getElementById('DiastolicBpWarning').value  = vals.diastolicBpWarning;
+            document.getElementById('DiastolicBpDanger').value   = vals.diastolicBpDanger;
+            document.getElementById('HeartRateWarningMin').value = vals.heartRateWarningMin;
+            document.getElementById('HeartRateDangerMin').value  = vals.heartRateDangerMin;
+            document.getElementById('HeartRateWarningMax').value = vals.heartRateWarningMax;
+            document.getElementById('HeartRateDangerMax').value  = vals.heartRateDangerMax;
+
+            // Ghi snapshot lại để detect thay đổi khi submit
+            appliedSnapshot = { ...vals };
 
             // Flash animation
             document.querySelectorAll('.input-with-badge input').forEach(inp => {
@@ -739,7 +820,7 @@
             });
 
             // Thông báo
-            showToast(`✅ Đã áp dụng: ${t.templateName ?? t.name}`);
+            showToast(`✅ Đã áp dụng: ${vals.templateName}`);
         }
 
         // Nút "Áp dụng ngay" — dùng gợi ý tự động
@@ -814,6 +895,95 @@
         }
 
         validateBpInputs('SystolicBpWarning', 'SystolicBpDanger');
+
+        // =====================================================
+        // PHẦN 3: INTERCEPT SUBMIT — KIỂM TRA THAY ĐỔI SO VỚI NGƯỠNG CHUẨN
+        // =====================================================
+        const FIELD_LABELS = {
+            systolicBpWarning:   { label: 'Huyết áp TT – Cảnh báo', unit: 'mmHg' },
+            systolicBpDanger:    { label: 'Huyết áp TT – Nguy hiểm', unit: 'mmHg' },
+            diastolicBpWarning:  { label: 'Huyết áp TR – Cảnh báo',  unit: 'mmHg' },
+            diastolicBpDanger:   { label: 'Huyết áp TR – Nguy hiểm', unit: 'mmHg' },
+            heartRateWarningMin: { label: 'Nhịp tim thấp – Cảnh báo', unit: 'bpm' },
+            heartRateDangerMin:  { label: 'Nhịp tim thấp – Nguy hiểm', unit: 'bpm' },
+            heartRateWarningMax: { label: 'Nhịp tim cao – Cảnh báo',  unit: 'bpm' },
+            heartRateDangerMax:  { label: 'Nhịp tim cao – Nguy hiểm', unit: 'bpm' },
+        };
+
+        const FIELD_IDS = {
+            systolicBpWarning:   'SystolicBpWarning',
+            systolicBpDanger:    'SystolicBpDanger',
+            diastolicBpWarning:  'DiastolicBpWarning',
+            diastolicBpDanger:   'DiastolicBpDanger',
+            heartRateWarningMin: 'HeartRateWarningMin',
+            heartRateDangerMin:  'HeartRateDangerMin',
+            heartRateWarningMax: 'HeartRateWarningMax',
+            heartRateDangerMax:  'HeartRateDangerMax',
+        };
+
+        let _formSubmitConfirmed = false;
+
+        document.getElementById('thresholdForm').addEventListener('submit', function (e) {
+            // Nếu đã xác nhận qua modal → submit thẳng
+            if (_formSubmitConfirmed) return;
+
+            // Nếu chưa áp dụng template nào → submit thẳng (không có gì để so sánh)
+            if (!appliedSnapshot) return;
+
+            // Đọc giá trị hiện tại từ form
+            const diffs = [];
+            for (const [key, meta] of Object.entries(FIELD_LABELS)) {
+                const currentVal = parseInt(document.getElementById(FIELD_IDS[key]).value);
+                const snapVal    = appliedSnapshot[key];
+                if (!isNaN(currentVal) && currentVal !== snapVal) {
+                    diffs.push({ label: meta.label, unit: meta.unit, standard: snapVal, current: currentVal });
+                }
+            }
+
+            // Không có thay đổi → submit thẳng
+            if (diffs.length === 0) return;
+
+            // Có thay đổi → chặn submit, hiện modal
+            e.preventDefault();
+
+            // Điền bảng diff
+            const tbody = document.getElementById('diffTableBody');
+            tbody.innerHTML = '';
+            diffs.forEach(d => {
+                const isHigher = d.current > d.standard;
+                const arrow = isHigher
+                    ? `<span style="color:#dc2626">▲</span>`
+                    : `<span style="color:#0369a1">▼</span>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="ps-3 py-2 fw-semibold text-dark">${d.label}</td>
+                        <td class="text-center py-2">
+                            <span style="background:#dbeafe;color:#1e40af;border-radius:6px;padding:2px 8px;font-weight:700;">
+                                ${d.standard} ${d.unit}
+                            </span>
+                        </td>
+                        <td class="text-center py-2">
+                            <span style="background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 8px;font-weight:700;">
+                                ${arrow} ${d.current} ${d.unit}
+                            </span>
+                        </td>
+                    </tr>`;
+            });
+
+            // Hiển thị modal
+            const modal = new bootstrap.Modal(document.getElementById('confirmChangeModal'));
+            modal.show();
+
+            // Nút Xác nhận & Lưu
+            document.getElementById('btnConfirmSave').onclick = function () {
+                _formSubmitConfirmed = true;
+                modal.hide();
+                // Đợi modal đóng xong rồi submit
+                document.getElementById('confirmChangeModal').addEventListener('hidden.bs.modal', function () {
+                    document.getElementById('thresholdForm').submit();
+                }, { once: true });
+            };
+        });
 
         // Animate inputs on focus
         document.querySelectorAll('.input-with-badge input').forEach(input => {
