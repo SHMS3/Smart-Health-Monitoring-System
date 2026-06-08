@@ -1,0 +1,258 @@
+@model SmartHealthMonitoring.Models.ChatbotSession
+
+@{
+    ViewData["Title"] = "Chi tiết cuộc trò chuyện";
+}
+
+<style>
+    :root {
+        --lux-primary: #A71D2A; /* Deep crimson */
+        --lux-primary-light: #C82A3A;
+        --lux-secondary: #D4AF37; /* Gold */
+        --lux-bg: #F4F6F8;
+        --lux-surface: #FFFFFF;
+        --lux-text: #2C3E50;
+        --lux-text-light: #F8F9FA;
+        --lux-muted: #8395A7;
+        --lux-border: #E8ECEF;
+    }
+
+    body {
+        background-color: var(--lux-bg);
+    }
+
+    .chat-detail-wrapper {
+        padding-bottom: 4rem;
+        max-width: 900px;
+        margin: 2rem auto;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Page Header */
+    .chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .chat-header-title {
+        color: var(--lux-primary);
+        font-weight: 700;
+        margin: 0;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .chat-header-title i {
+        color: var(--lux-secondary);
+        margin-right: 12px;
+    }
+
+    .btn-back {
+        background: var(--lux-surface);
+        border: 1px solid var(--lux-border);
+        color: var(--lux-text);
+        padding: 0.5rem 1.25rem;
+        border-radius: 20px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .btn-back:hover {
+        background: var(--lux-bg);
+        transform: translateX(-2px);
+        color: var(--lux-primary);
+    }
+
+    /* Chat Card */
+    .chat-card {
+        background: var(--lux-surface);
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+        border: 1px solid var(--lux-border);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Scroll Area */
+    .chat-scroll-area {
+        height: 65vh;
+        overflow-y: auto;
+        background-color: #FAFCFF;
+        padding: 24px;
+        display: block; /* Use block to prevent flex items from stretching */
+    }
+
+    /* Scrollbar styling */
+    .chat-scroll-area::-webkit-scrollbar {
+        width: 6px;
+    }
+    .chat-scroll-area::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .chat-scroll-area::-webkit-scrollbar-thumb {
+        background: #D1D9E0;
+        border-radius: 4px;
+    }
+
+    /* Message Row Container */
+    .message-row {
+        display: flex;
+        width: 100%;
+        margin-bottom: 24px; /* Space between bubbles */
+        align-items: flex-end; /* Align avatar and bubble at bottom */
+    }
+
+    .message-row.user {
+        justify-content: flex-end;
+    }
+
+    .message-row.ai {
+        justify-content: flex-start;
+    }
+
+    /* Bubble Styling */
+    .chat-bubble {
+        max-width: 75%;
+        padding: 12px 18px;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        position: relative;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        word-wrap: break-word;
+        white-space: pre-wrap;
+        height: max-content !important; /* Force to fit content only */
+        min-height: 0 !important;
+        display: inline-block; /* Prevent block level stretching */
+    }
+
+    .msg-content-text {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    /* User Bubble (Right) */
+    .chat-user {
+        background: linear-gradient(135deg, var(--lux-primary) 0%, var(--lux-primary-light) 100%);
+        color: var(--lux-text-light);
+        border-bottom-right-radius: 4px;
+        margin-left: 40px;
+    }
+
+    /* AI Bubble (Left) */
+    .chat-ai {
+        background: var(--lux-surface);
+        color: var(--lux-text);
+        border: 1px solid var(--lux-border);
+        border-bottom-left-radius: 4px;
+        margin-right: 40px;
+    }
+
+    /* AI Avatar */
+    .ai-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #F0F4F8 0%, #E1E8F0 100%);
+        color: var(--lux-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        margin-right: 12px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid white;
+    }
+
+    /* Time styling */
+    .chat-time {
+        font-size: 0.7rem;
+        display: block;
+        font-weight: 500;
+        line-height: 1;
+    }
+
+    .chat-time.user {
+        color: rgba(255, 255, 255, 0.75);
+        text-align: right;
+    }
+
+    .chat-time.ai {
+        color: var(--lux-muted);
+        text-align: left;
+    }
+
+    /* Empty State */
+    .empty-chat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--lux-muted);
+        opacity: 0.7;
+    }
+</style>
+
+<div class="container mt-4 chat-detail-wrapper">
+    <div class="chat-header">
+        <h4 class="chat-header-title">
+            <i class="fas fa-comment-medical"></i>
+            Tư vấn ngày @Model.StartedAt.ToString("dd/MM/yyyy")
+        </h4>
+        <a asp-action="History" class="btn-back">
+            <i class="fas fa-arrow-left me-2"></i> Quay lại
+        </a>
+    </div>
+
+    <div class="chat-card">
+        <div class="chat-scroll-area">
+            @if (Model.ChatMessages == null || !Model.ChatMessages.Any())
+            {
+                <div class="empty-chat">
+                    <i class="fas fa-comment-slash fa-3x mb-3" style="color: var(--lux-border);"></i>
+                    <p>Chưa có dữ liệu trò chuyện.</p>
+                </div>
+            }
+            else
+            {
+                foreach (var msg in Model.ChatMessages.OrderBy(m => m.SentAt))
+                {
+                    bool isUser = msg.SenderRole == 0;
+                    string content = msg.Content != null ? msg.Content.Trim() : "";
+
+                    if (isUser)
+                    {
+                        <div class="message-row user">
+                            <div class="chat-bubble chat-user">
+                                <span class="msg-content-text">@content</span>
+                                <span class="chat-time user">@msg.SentAt.ToString("HH:mm")</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="message-row ai">
+                            <div class="ai-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="chat-bubble chat-ai">
+                                <span class="msg-content-text">@content</span>
+                                <span class="chat-time ai">@msg.SentAt.ToString("HH:mm")</span>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+</div>
