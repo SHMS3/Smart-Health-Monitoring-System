@@ -28,7 +28,7 @@ namespace SmartHealthMonitoring.DI
 
 
             // AI Services: ModelSessionRunner phải là Singleton để tái sử dụng ONNX Session
-            services.AddSingleton<Services.IAiModelSessionRunner, Services.AiModelSessionRunner>();
+            services.AddSingleton<Services.AI.IAiModelSessionRunner, Services.AI.AiModelSessionRunner>();
 
             return services;
         }

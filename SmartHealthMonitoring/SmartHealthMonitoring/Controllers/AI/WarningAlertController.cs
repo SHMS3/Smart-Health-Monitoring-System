@@ -4,22 +4,23 @@ using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.Services;
+using SmartHealthMonitoring.Services.AI;
 using SmartHealthMonitoring.ViewModels;
 using System.Security.Claims;
 
-namespace SmartHealthMonitoring.Controllers
+namespace SmartHealthMonitoring.Controllers.AI
 {
     [Authorize(Roles = "1")]
     public class WarningAlertController : Controller
     {
-        private readonly IWarningAlertService _warningAlertService;
+        private readonly IAiWarningAlertService _warningAlertService;
         private readonly SmartHealthMonitoringContext _context;
         private readonly IEmailService _emailService;
         private readonly IDoctorService _doctorService;
         private readonly IEmailTriggerService _emailTriggerService;
 
         public WarningAlertController(
-            IWarningAlertService warningAlertService,
+            IAiWarningAlertService warningAlertService,
             IDoctorService doctorService,
             SmartHealthMonitoringContext context,
             IEmailService emailService,

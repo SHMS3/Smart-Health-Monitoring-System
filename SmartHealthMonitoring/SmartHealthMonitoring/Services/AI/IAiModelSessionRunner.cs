@@ -1,6 +1,6 @@
 using Microsoft.ML.OnnxRuntime;
 
-namespace SmartHealthMonitoring.Services;
+namespace SmartHealthMonitoring.Services.AI;
 
 /// <summary>
 /// Interface cho Singleton Service quản lý vòng đời của các ONNX InferenceSession

@@ -53,7 +53,7 @@ namespace SmartHealthMonitoring
             builder.Services.AddApplicationServices();
             
             // Đăng ký Background Worker quét hồ sơ lâm sàng mới (DA-1.3)
-            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AiPredictionWorker>();
+            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AI.AiPredictionWorker>();
             // ====================================================================
 
             // 6.5. Session (dùng để lưu OTP xác thực số điện thoại)

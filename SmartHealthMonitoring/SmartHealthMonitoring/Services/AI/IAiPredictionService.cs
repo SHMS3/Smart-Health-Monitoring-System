@@ -1,6 +1,6 @@
 using SmartHealthMonitoring.Models;
 
-namespace SmartHealthMonitoring.Services;
+namespace SmartHealthMonitoring.Services.AI;
 
 /// <summary>
 /// Interface cho Scoped Service đảm nhận logic map dữ liệu bệnh nhân sang Tensor và gọi mô hình ONNX để dự đoán.

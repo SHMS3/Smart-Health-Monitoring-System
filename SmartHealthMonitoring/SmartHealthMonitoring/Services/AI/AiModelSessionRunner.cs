@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.ML.OnnxRuntime;
 using System.Text.Json;
 
-namespace SmartHealthMonitoring.Services;
+namespace SmartHealthMonitoring.Services.AI;
 
 /// <summary>
 /// Singleton Service nạp và quản lý các ONNX InferenceSession cùng với Box-Cox lambdas.

@@ -1,14 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 
-namespace SmartHealthMonitoring.Services
+namespace SmartHealthMonitoring.Services.AI
 {
-    public class WarningAlertService : IWarningAlertService
+    /// <summary>
+    /// Scoped Service triển khai logic quản lý WarningAlert:
+    /// phân trang + tìm kiếm theo keyword, claim, resolve.
+    /// </summary>
+    public class AiWarningAlertService : IAiWarningAlertService
     {
         private readonly SmartHealthMonitoringContext _context;
 
-        public WarningAlertService (SmartHealthMonitoringContext context)
+        public AiWarningAlertService(SmartHealthMonitoringContext context)
         {
             _context = context;
         }
@@ -41,15 +45,15 @@ namespace SmartHealthMonitoring.Services
                 await _context.SaveChangesAsync();
                 return true;
 
-            }catch (DbUpdateConcurrencyException)
+            }
+            catch (DbUpdateConcurrencyException)
             {
                 // người khác claim trước
                 return false;
             }
-
         }
 
-        public async Task<List<WarningAlert>> GetAlertsAsync(byte? status,string? keyword,int page,int pageSize)
+        public async Task<List<WarningAlert>> GetAlertsAsync(byte? status, string? keyword, int page, int pageSize)
         {
             var query = _context.WarningAlerts
                 .Where(x => !x.IsDeleted)
@@ -82,7 +86,7 @@ namespace SmartHealthMonitoring.Services
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalAlertsAsync(byte? status,string? keyword)
+        public async Task<int> GetTotalAlertsAsync(byte? status, string? keyword)
         {
             var query = _context.WarningAlerts
                 .Where(x => !x.IsDeleted)
@@ -106,7 +110,7 @@ namespace SmartHealthMonitoring.Services
             return await query.CountAsync();
         }
 
-        public async Task<bool> ResolveAlertAsync(int alertId,int doctorId,string resolutionNote)
+        public async Task<bool> ResolveAlertAsync(int alertId, int doctorId, string resolutionNote)
         {
             var alert = await _context.WarningAlerts
                 .FirstOrDefaultAsync(x =>
