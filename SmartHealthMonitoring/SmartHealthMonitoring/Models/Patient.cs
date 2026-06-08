@@ -31,6 +31,8 @@ public partial class Patient
 
     public virtual ICollection<EmailNotification> EmailNotifications { get; set; } = new List<EmailNotification>();
 
+    public string? CitizenId { get; set; }
+
     public virtual User User { get; set; } = null!;
 
     public virtual ICollection<WarningAlert> WarningAlerts { get; set; } = new List<WarningAlert>();

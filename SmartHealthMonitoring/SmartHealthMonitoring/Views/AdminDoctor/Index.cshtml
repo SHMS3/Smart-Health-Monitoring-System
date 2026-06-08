@@ -1,4 +1,4 @@
-﻿@model SmartHealthMonitoring.Common.PagedResult<SmartHealthMonitoring.ViewModels.Admin.DoctorListViewModel>
+@model SmartHealthMonitoring.Common.PagedResult<SmartHealthMonitoring.ViewModels.Admin.DoctorListViewModel>
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý Bác sĩ";
@@ -49,6 +49,9 @@
                                 }
                             </td>
                             <td class="text-end pe-4">
+                                <a asp-action="Edit" asp-route-id="@doc.DoctorId" class="btn btn-sm btn-outline-primary rounded-pill fw-medium me-1">
+                                    <i class="fas fa-edit me-1"></i> Sửa
+                                </a>
                                 @if (doc.IsDeleted)
                                 {
                                     <form asp-action="ToggleLock" method="post" class="d-inline">

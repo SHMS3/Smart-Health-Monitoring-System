@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Common;
@@ -82,6 +82,10 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 {
                     UserId = user.Id,
                     Specialty = model.Specialty,
+                    CitizenId = model.CitizenId,
+                    PracticeLicense = model.PracticeLicense,
+                    DateOfBirth = model.DateOfBirth,
+                    Sex = model.Sex,
                     IsOnShift = true,
                     IsDeleted = false
                 };
@@ -90,6 +94,79 @@ namespace SmartHealthMonitoring.Controllers.Admin
 
                 await transaction.CommitAsync();
                 TempData["Success"] = "Đã cấp tài khoản Bác sĩ thành công. Mật khẩu: 123456";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                TempData["Error"] = "Lỗi hệ thống: " + ex.Message;
+                return View(model);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var doctor = await _context.Doctors
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.Id == id && !d.IsDeleted);
+
+            if (doctor == null) return NotFound();
+
+            var model = new DoctorEditViewModel
+            {
+                DoctorId = doctor.Id,
+                UserId = doctor.UserId,
+                FullName = doctor.User.FullName,
+                Email = doctor.User.Email,
+                Specialty = doctor.Specialty,
+                CitizenId = doctor.CitizenId,
+                PracticeLicense = doctor.PracticeLicense,
+                DateOfBirth = doctor.DateOfBirth,
+                Sex = doctor.Sex,
+                IsOnShift = doctor.IsOnShift
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(DoctorEditViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var doctor = await _context.Doctors
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.Id == model.DoctorId && !d.IsDeleted);
+
+            if (doctor == null) return NotFound();
+
+            if (await _context.Users.AnyAsync(u => u.Email == model.Email && u.Id != model.UserId))
+            {
+                ModelState.AddModelError("Email", "Email này đã được sử dụng bởi người dùng khác.");
+                return View(model);
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                doctor.User.FullName = model.FullName;
+                doctor.User.Email = model.Email;
+                _context.Users.Update(doctor.User);
+
+                doctor.Specialty = model.Specialty;
+                doctor.CitizenId = model.CitizenId;
+                doctor.PracticeLicense = model.PracticeLicense;
+                doctor.DateOfBirth = model.DateOfBirth;
+                doctor.Sex = model.Sex;
+                doctor.IsOnShift = model.IsOnShift;
+                _context.Doctors.Update(doctor);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["Success"] = "Cập nhật thông tin bác sĩ thành công.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)

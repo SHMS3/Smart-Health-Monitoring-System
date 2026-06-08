@@ -1,7 +1,7 @@
-@model SmartHealthMonitoring.ViewModels.Admin.DoctorCreateViewModel
+@model SmartHealthMonitoring.ViewModels.Admin.DoctorEditViewModel
 @{
     Layout = "_AdminLayout";
-    ViewData["Title"] = "Cấp tài khoản Bác sĩ";
+    ViewData["Title"] = "Chỉnh sửa thông tin Bác sĩ";
 }
 
 <div class="mb-4">
@@ -12,11 +12,14 @@
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-header bg-white border-bottom p-4">
-                <h5 class="fw-bold mb-0">Tạo mới Bác sĩ</h5>
-                <p class="text-muted small mb-0 mt-1">Mật khẩu mặc định khi tạo sẽ là: <strong>123456</strong></p>
+                <h5 class="fw-bold mb-0">Chỉnh sửa thông tin Bác sĩ</h5>
+                <p class="text-muted small mb-0 mt-1">Cập nhật thông tin tài khoản bác sĩ.</p>
             </div>
             <div class="card-body p-4">
-                <form asp-action="Create" method="post">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="DoctorId" />
+                    <input type="hidden" asp-for="UserId" />
+
                     <div class="mb-3">
                         <label asp-for="FullName" class="form-label fw-medium text-dark">Họ và tên <span class="text-danger">*</span></label>
                         <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên bác sĩ..." />
@@ -31,7 +34,7 @@
 
                     <div class="mb-3">
                         <label asp-for="DateOfBirth" class="form-label fw-medium text-dark">Ngày sinh</label>
-                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                        <input asp-for="DateOfBirth" type="date" class="form-control" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" />
                         <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
                     </div>
 
@@ -47,7 +50,7 @@
 
                     <div class="mb-3">
                         <label asp-for="Specialty" class="form-label fw-medium text-dark">Chuyên khoa khám <span class="text-danger">*</span></label>
-                        <input asp-for="Specialty" class="form-control" placeholder="Ví dụ: Tim mạch, Nội tiết..." value="Tim mạch" />
+                        <input asp-for="Specialty" class="form-control" placeholder="Ví dụ: Tim mạch, Nội tiết..." />
                         <span asp-validation-for="Specialty" class="text-danger small"></span>
                     </div>
 
@@ -57,14 +60,21 @@
                         <span asp-validation-for="CitizenId" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label asp-for="PracticeLicense" class="form-label fw-medium text-dark">Giấy phép hành nghề</label>
                         <input asp-for="PracticeLicense" class="form-control" placeholder="Nhập số giấy phép hành nghề..." />
                         <span asp-validation-for="PracticeLicense" class="text-danger small"></span>
                     </div>
 
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsOnShift" class="form-check-input" type="checkbox" role="switch" id="isOnShiftSwitch">
+                            <label class="form-check-label fw-medium text-dark" for="isOnShiftSwitch">Đang trong ca trực (On Shift)</label>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-medium shadow-sm">Xác nhận & Cấp tài khoản</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-medium shadow-sm">Lưu thay đổi</button>
                     </div>
                 </form>
             </div>

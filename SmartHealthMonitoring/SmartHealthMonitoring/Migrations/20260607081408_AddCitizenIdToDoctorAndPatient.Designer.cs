@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartHealthMonitoring.Context;
 
@@ -11,9 +12,11 @@ using SmartHealthMonitoring.Context;
 namespace SmartHealthMonitoring.Migrations
 {
     [DbContext(typeof(SmartHealthMonitoringContext))]
-    partial class SmartHealthMonitoringContextModelSnapshot : ModelSnapshot
+    [Migration("20260607081408_AddCitizenIdToDoctorAndPatient")]
+    partial class AddCitizenIdToDoctorAndPatient
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -880,16 +883,10 @@ namespace SmartHealthMonitoring.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CitizenId")
                         .HasMaxLength(12)
                         .IsUnicode(false)
                         .HasColumnType("varchar(12)");
-
-                    b.Property<DateOnly?>("DateOfBirth")
-                        .HasColumnType("date");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -897,20 +894,9 @@ namespace SmartHealthMonitoring.Migrations
                     b.Property<bool>("IsOnShift")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsPhoneVerified")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(15)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(15)");
-
                     b.Property<string>("PracticeLicense")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<byte?>("Sex")
-                        .HasColumnType("tinyint");
 
                     b.Property<string>("Specialty")
                         .IsRequired()
@@ -938,7 +924,6 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 1,
                             IsDeleted = false,
                             IsOnShift = true,
-                            IsPhoneVerified = false,
                             Specialty = "Tim mạch can thiệp",
                             UserId = 1
                         },
@@ -947,7 +932,6 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 2,
                             IsDeleted = false,
                             IsOnShift = false,
-                            IsPhoneVerified = false,
                             Specialty = "Nhịp học tim mạch",
                             UserId = 2
                         },
@@ -956,7 +940,6 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 3,
                             IsDeleted = false,
                             IsOnShift = true,
-                            IsPhoneVerified = false,
                             Specialty = "Nội tim mạch",
                             UserId = 3
                         },
@@ -965,7 +948,6 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 4,
                             IsDeleted = false,
                             IsOnShift = false,
-                            IsPhoneVerified = false,
                             Specialty = "Phẫu thuật tim",
                             UserId = 4
                         },
@@ -974,7 +956,6 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 5,
                             IsDeleted = false,
                             IsOnShift = true,
-                            IsPhoneVerified = false,
                             Specialty = "Nội tim mạch",
                             UserId = 5
                         },
@@ -983,7 +964,6 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 6,
                             IsDeleted = false,
                             IsOnShift = false,
-                            IsPhoneVerified = false,
                             Specialty = "Tim mạch nhi",
                             UserId = 6
                         },
@@ -992,7 +972,6 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 7,
                             IsDeleted = false,
                             IsOnShift = true,
-                            IsPhoneVerified = false,
                             Specialty = "Chẩn đoán hình ảnh",
                             UserId = 7
                         },
@@ -1001,7 +980,6 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 8,
                             IsDeleted = false,
                             IsOnShift = false,
-                            IsPhoneVerified = false,
                             Specialty = "Nội tim mạch",
                             UserId = 8
                         },
@@ -1010,7 +988,6 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 9,
                             IsDeleted = false,
                             IsOnShift = true,
-                            IsPhoneVerified = false,
                             Specialty = "Tim mạch can thiệp",
                             UserId = 9
                         },
@@ -1019,7 +996,6 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 10,
                             IsDeleted = false,
                             IsOnShift = false,
-                            IsPhoneVerified = false,
                             Specialty = "Nội tim mạch",
                             UserId = 10
                         });

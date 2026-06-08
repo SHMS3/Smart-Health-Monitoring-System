@@ -1,0 +1,249 @@
+@model IEnumerable<SmartHealthMonitoring.Models.HealthNewsArticle>
+@{
+    ViewData["Title"] = "Cẩm nang Sức khỏe";
+}
+
+@section Styles {
+    <style>
+        .handbook-hero {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .handbook-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .handbook-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--primary);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            border: 1px solid rgba(14, 165, 233, 0.15);
+        }
+
+        .handbook-card {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            background: #ffffff;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+            position: relative;
+        }
+
+        .handbook-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(14, 165, 233, 0.15) !important;
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
+        .handbook-img-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            overflow: hidden;
+            background-color: #f1f5f9;
+        }
+
+        .handbook-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .handbook-card:hover .handbook-img {
+            transform: scale(1.05);
+        }
+
+        .handbook-date-badge {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            color: #ffffff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            z-index: 2;
+        }
+
+        .handbook-card-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .handbook-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 12px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color 0.2s ease;
+        }
+
+        .handbook-card:hover .handbook-title {
+            color: var(--primary);
+        }
+
+        .handbook-description {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .handbook-card-footer {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+
+        .read-more-link {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: gap 0.2s ease;
+        }
+
+        .handbook-card:hover .read-more-link {
+            gap: 8px;
+        }
+
+        .source-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: #f8fafc;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+    </style>
+}
+
+<div class="container py-4">
+    <!-- Hero Section -->
+    <div class="handbook-hero">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="handbook-badge">
+                    <i class="fas fa-book-medical"></i>
+                    <span>Cẩm Nang Sức Khỏe</span>
+                </div>
+                <h1 class="display-5 fw-bold text-dark mb-3">Cẩm Nang Sức Khỏe Tự Động</h1>
+                <p class="lead text-secondary mb-0">
+                    Cập nhật tin tức y khoa và kiến thức bảo vệ sức khỏe chính thống, mới nhất hàng ngày từ chuyên mục Sức Khỏe của VNExpress.
+                </p>
+            </div>
+            <div class="col-lg-4 d-none d-lg-block text-end">
+                <img src="/images/default-health-news.jpg" alt="Handbook Hero" class="img-fluid rounded-3" style="max-height: 160px; object-fit: cover; border: 1px solid rgba(14, 165, 233, 0.2);" onerror="this.onerror=null; this.src='/images/logo.png';" />
+            </div>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-exclamation-circle text-warning display-4"></i>
+            </div>
+            <h4 class="text-dark">Không thể tải tin tức lúc này</h4>
+            <p class="text-muted">Đã xảy ra lỗi khi tải dữ liệu từ VNExpress hoặc không có kết nối internet. Vui lòng thử lại sau.</p>
+        </div>
+    }
+    else
+    {
+        <!-- Articles Grid -->
+        <div class="row g-4">
+            @foreach (var article in Model)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="handbook-card">
+                        <!-- Image Wrapper -->
+                        <div class="handbook-img-wrapper">
+                            @if (!string.IsNullOrEmpty(article.ImageUrl))
+                            {
+                                <img src="@article.ImageUrl" alt="@article.Title" class="handbook-img" onerror="this.onerror=null; this.src='/images/default-health-news.jpg';" />
+                            }
+                            else
+                            {
+                                <img src="/images/default-health-news.jpg" alt="Default Health Image" class="handbook-img" />
+                            }
+
+                            @if (article.PubDate.HasValue)
+                            {
+                                <span class="handbook-date-badge">
+                                    <i class="far fa-clock me-1"></i>
+                                    @article.PubDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+                            }
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="handbook-card-body">
+                            <h3 class="handbook-title">
+                                @article.Title
+                            </h3>
+                            <p class="handbook-description">
+                                @article.Description
+                            </p>
+
+                            <!-- Card Footer -->
+                            <div class="handbook-card-footer">
+                                <span class="source-badge">VNExpress</span>
+                                <a href="@article.Link" class="read-more-link stretched-link" target="_blank" rel="noopener noreferrer">
+                                    <span>Xem chi tiết</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

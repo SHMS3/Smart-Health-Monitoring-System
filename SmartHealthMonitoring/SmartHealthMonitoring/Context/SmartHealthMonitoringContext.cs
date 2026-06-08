@@ -147,6 +147,29 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .HasMaxLength(100)
                 .HasDefaultValue("Tim mạch");
 
+            entity.Property(e => e.CitizenId)
+                .HasMaxLength(12)
+                .IsUnicode(false);
+
+            entity.Property(e => e.PracticeLicense)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Phone)
+                .HasMaxLength(15)
+                .IsUnicode(false);
+
+            entity.Property(e => e.Address)
+                .HasColumnType("nvarchar(max)");
+
+            entity.Property(e => e.IsPhoneVerified)
+                .HasColumnType("bit");
+
+            entity.Property(e => e.DateOfBirth)
+                .HasColumnType("date");
+
+            entity.Property(e => e.Sex)
+                .HasColumnType("tinyint");
+
             entity.HasOne(d => d.User).WithMany(p => p.Doctors)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -183,6 +206,10 @@ public partial class SmartHealthMonitoringContext : DbContext
 
             entity.Property(e => e.Phone)
                 .HasMaxLength(15)
+                .IsUnicode(false);
+
+            entity.Property(e => e.CitizenId)
+                .HasMaxLength(12)
                 .IsUnicode(false);
 
             entity.HasOne(d => d.User).WithMany(p => p.Patients)

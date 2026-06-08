@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartHealthMonitoring.Context;
 
@@ -11,9 +12,11 @@ using SmartHealthMonitoring.Context;
 namespace SmartHealthMonitoring.Migrations
 {
     [DbContext(typeof(SmartHealthMonitoringContext))]
-    partial class SmartHealthMonitoringContextModelSnapshot : ModelSnapshot
+    [Migration("20260608083740_AddPhoneAddressToDoctor")]
+    partial class AddPhoneAddressToDoctor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -888,9 +891,6 @@ namespace SmartHealthMonitoring.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(12)");
 
-                    b.Property<DateOnly?>("DateOfBirth")
-                        .HasColumnType("date");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -908,9 +908,6 @@ namespace SmartHealthMonitoring.Migrations
                     b.Property<string>("PracticeLicense")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<byte?>("Sex")
-                        .HasColumnType("tinyint");
 
                     b.Property<string>("Specialty")
                         .IsRequired()
