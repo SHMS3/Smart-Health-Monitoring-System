@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels.Admin
 {
@@ -44,6 +44,44 @@ namespace SmartHealthMonitoring.ViewModels.Admin
 
         [Required(ErrorMessage = "Vui lòng nhập Chuyên khoa")]
         public string Specialty { get; set; } = null!;
+
+        [RegularExpression(@"^\d{12}$", ErrorMessage = "Căn cước công dân phải bao gồm đúng 12 chữ số.")]
+        public string? CitizenId { get; set; }
+
+        [MaxLength(100, ErrorMessage = "Giấy phép hành nghề không được vượt quá 100 ký tự.")]
+        public string? PracticeLicense { get; set; }
+
+        public DateOnly? DateOfBirth { get; set; }
+
+        public byte? Sex { get; set; }
+    }
+
+    public class DoctorEditViewModel
+    {
+        public int UserId { get; set; }
+        public int DoctorId { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng nhập họ tên")]
+        public string FullName { get; set; } = null!;
+
+        [Required(ErrorMessage = "Vui lòng nhập Email")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        public string Email { get; set; } = null!;
+
+        [Required(ErrorMessage = "Vui lòng nhập Chuyên khoa")]
+        public string Specialty { get; set; } = null!;
+
+        [RegularExpression(@"^\d{12}$", ErrorMessage = "Căn cước công dân phải bao gồm đúng 12 chữ số.")]
+        public string? CitizenId { get; set; }
+
+        [MaxLength(100, ErrorMessage = "Giấy phép hành nghề không được vượt quá 100 ký tự.")]
+        public string? PracticeLicense { get; set; }
+
+        public DateOnly? DateOfBirth { get; set; }
+
+        public byte? Sex { get; set; }
+
+        public bool IsOnShift { get; set; }
     }
 
     // 3. Quản lý Bệnh nhân ViewModels

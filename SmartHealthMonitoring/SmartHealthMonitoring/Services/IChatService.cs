@@ -37,6 +37,6 @@ public interface IChatService
     /// <summary>Lưu tin nhắn mới trong session.</summary>
     Task<TelemedicineChatMessage> SaveMessageAsync(int sessionId, int senderId, string content);
 
-    /// <summary>Đánh dấu tất cả tin nhắn nhận được trong session là đã đọc.</summary>
+    /// <summary>Đánh dấu tin nhắn đã đọc trong session.</summary>
     Task MarkMessagesAsReadAsync(int sessionId, int userId);
 }

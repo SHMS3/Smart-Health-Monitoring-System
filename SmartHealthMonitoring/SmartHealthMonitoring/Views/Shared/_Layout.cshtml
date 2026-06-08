@@ -623,6 +623,74 @@
 			100% { transform: scale(1.4); opacity: 0; }
 		}
 
+		/* RESPONSIVE NAVBAR MEDIA QUERIES */
+		@@media (max-width: 1200px) {
+			.nav-inner {
+				padding: 0 16px;
+			}
+			.nav-links {
+				gap: 12px;
+			}
+			.nav-links a {
+				padding: 6px 10px;
+				font-size: 0.825rem;
+			}
+			.nav-logo-name {
+				font-size: 1.05rem;
+			}
+			.btn-ghost, .btn-outline-primary-nav {
+				padding: 6px 12px;
+				font-size: 0.8rem;
+			}
+		}
+
+		@@media (max-width: 992px) {
+			.nav-links {
+				gap: 8px;
+			}
+			.nav-links a {
+				padding: 5px 8px;
+				font-size: 0.8rem;
+			}
+			.nav-logo-tag {
+				display: none;
+			}
+			.nav-actions {
+				gap: 8px;
+			}
+		}
+
+		@@media (max-width: 768px) {
+			.nav-inner {
+				flex-direction: column;
+				height: auto;
+				padding: 10px 16px;
+				gap: 10px;
+			}
+			.nav-logo {
+				flex: none;
+				width: 100%;
+				justify-content: center;
+			}
+			.nav-links {
+				width: 100%;
+				justify-content: center;
+				overflow-x: auto;
+				padding-bottom: 4px;
+				white-space: nowrap;
+				-webkit-overflow-scrolling: touch;
+			}
+			.nav-actions {
+				flex: none;
+				width: 100%;
+				justify-content: center;
+				margin-top: 5px;
+			}
+			.page-main {
+				padding-top: 150px;
+			}
+		}
+
 		@@media (max-width: 576px) {
 			.global-chat-box {
 				bottom: 0 !important;
@@ -719,6 +787,12 @@
 						</li>
 					}
 				}
+				<li>
+					<a asp-controller="Handbook" asp-action="Index"
+					   style="@(currentController == "Handbook" ? "color: var(--primary); font-weight: 600; background: rgba(14,165,233,.07);" : "")">
+						Cẩm nang
+					</a>
+				</li>
 				<li><a asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
 			</ul>
 

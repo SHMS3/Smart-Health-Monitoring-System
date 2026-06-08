@@ -43,6 +43,11 @@ namespace SmartHealthMonitoring
             // 4b. HttpClient cho EsmsSmsService
             builder.Services.AddHttpClient();
 
+            // 4c. Memory Cache & News Scraper Service
+            builder.Services.AddMemoryCache();
+            builder.Services.AddScoped<SmartHealthMonitoring.Services.INewsScraperService, SmartHealthMonitoring.Services.NewsScraperService>();
+
+
             // ====================================================================
             // 5. GỌI HÀM QUÉT TỰ ĐỘNG TỪ THƯ MỤC DI
             // ====================================================================
@@ -79,9 +84,8 @@ namespace SmartHealthMonitoring
                     options.CallbackPath = "/Auth/GoogleCallback";
                 });
 
-            var app = builder.Build();  
-            // Đăng ký Memory Cache cho Webhook
-            builder.Services.AddMemoryCache();
+            var app = builder.Build();
+
 
             using (var scope = app.Services.CreateScope())
             {
