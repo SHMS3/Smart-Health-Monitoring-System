@@ -2,7 +2,7 @@ using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using SmartHealthMonitoring.Models;
 
-namespace SmartHealthMonitoring.Services;
+namespace SmartHealthMonitoring.Services.AI;
 
 /// <summary>
 /// Scoped Service triển khai logic chuẩn bị dữ liệu (mapping + Box-Cox transform) và gọi ONNX inference.
@@ -95,7 +95,6 @@ public class AiPredictionService : IAiPredictionService
         float oldpeakT  = ApplyBoxCox(oldpeakRaw,   "oldpeak");
 
         // ── One-Hot Encoding ───────────────────────────────────────────────────
-        // ── One-Hot Encoding ───────────────────────────────────────────────────
         float cp_1 = cpRaw == 1 ? 1f : 0f;
         float cp_2 = cpRaw == 2 ? 1f : 0f;
         float cp_3 = cpRaw == 3 ? 1f : 0f;
@@ -107,8 +106,8 @@ public class AiPredictionService : IAiPredictionService
         float thal_2 = thalRaw == 2 ? 1f : 0f;
         float thal_3 = thalRaw == 3 ? 1f : 0f;
 
-        // ── DEBUG: in toàn bộ giá trị để chẩn đoán ────────────────────────────
-        _logger.LogWarning(
+        // ── DEBUG: in toàn bộ giá trị để chẩn đoán (chỉ hiện ở LogDebug) ─────
+        _logger.LogDebug(
             "[DEBUG] RAW INPUT (truoc Box-Cox):\n" +
             "  age={Age}, sex={Sex}, trestbps={Trestbps}, chol={Chol}\n" +
             "  fbs={Fbs}, thalach={Thalach}, exang={Exang}, oldpeak(+0.001)={Oldpeak}\n" +
@@ -116,7 +115,7 @@ public class AiPredictionService : IAiPredictionService
             age, sex, trestbps, chol, fbs, thalach, exang, oldpeakRaw,
             slope, ca, cpRaw, restecgRaw, thalRaw);
 
-        _logger.LogWarning(
+        _logger.LogDebug(
             "[DEBUG] FEATURE VECTOR (sau Box-Cox + One-Hot):\n" +
             "  [0]age_T={AgeT:F4}  [1]sex={Sex}  [2]trestbps_T={TrestbpsT:F4}  [3]chol_T={CholT:F4}\n" +
             "  [4]fbs={Fbs}  [5]thalach_T={ThalachT:F4}  [6]exang={Exang}  [7]oldpeak_T={OldpeakT:F4}\n" +
@@ -178,7 +177,7 @@ public class AiPredictionService : IAiPredictionService
             var probTensor = results.Skip(1).First().AsEnumerable<float>().ToArray();
             prob_disease = probTensor.Length >= 1 ? probTensor[0] : 0f; // class=0 = CÓ BỆNH
             prob_healthy = probTensor.Length >= 2 ? probTensor[1] : 1f; // class=1 = KHÔNG BỆNH
-            _logger.LogWarning("[DEBUG] Output float[]: prob_class0(CoBenh)={P0:F4}, prob_class1(KhongBenh)={P1:F4}",
+            _logger.LogDebug("[DEBUG] Output float[]: prob_class0(CoBenh)={P0:F4}, prob_class1(KhongBenh)={P1:F4}",
                 prob_disease, prob_healthy);
         }
         catch
@@ -188,13 +187,12 @@ public class AiPredictionService : IAiPredictionService
                 .AsEnumerable<IDictionary<long, float>>().ToArray();
             prob_disease = probMaps[0].TryGetValue(0L, out var p0) ? p0 : 0f;
             prob_healthy = probMaps[0].TryGetValue(1L, out var p1) ? p1 : 1f;
-            _logger.LogWarning("[DEBUG] Output Map: prob_class0(CoBenh)={P0:F4}, prob_class1(KhongBenh)={P1:F4}",
+            _logger.LogDebug("[DEBUG] Output Map: prob_class0(CoBenh)={P0:F4}, prob_class1(KhongBenh)={P1:F4}",
                 prob_disease, prob_healthy);
         }
 
         // RiskScore = xác suất CÓ BỆNH (class=0 trong UCI dataset này)
         float prob1 = prob_disease;
-
 
         long  predictedLabel = prob1 >= 0.5f ? 1L : 0L;
         decimal riskScore    = (decimal)prob1;

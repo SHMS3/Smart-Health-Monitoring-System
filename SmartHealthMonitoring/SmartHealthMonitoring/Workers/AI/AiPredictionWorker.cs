@@ -1,17 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
-using SmartHealthMonitoring.Services;
+using SmartHealthMonitoring.Services.AI;
 
-namespace SmartHealthMonitoring.Workers;
+namespace SmartHealthMonitoring.Workers.AI;
 
+/// <summary>
+/// Background Worker chạy định kỳ, quét DailyVitalLogs và ClinicalRecords chưa được dự đoán,
+/// gọi AI prediction service và tạo WarningAlert khi RiskLevel >= 2.
+/// </summary>
 public class AiPredictionWorker : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<AiPredictionWorker> _logger;
-    //private readonly TimeSpan _period = TimeSpan.FromMinutes(1); // Chu ky quet
-    private readonly TimeSpan _period = TimeSpan.FromSeconds(20);
-
+    //private readonly TimeSpan _period = TimeSpan.FromMinutes(1); // Chu kỳ quét production
+    private readonly TimeSpan _period = TimeSpan.FromSeconds(20); // Dev: 20s
 
     public AiPredictionWorker(IServiceProvider serviceProvider, ILogger<AiPredictionWorker> logger)
     {
@@ -45,7 +48,7 @@ public class AiPredictionWorker : BackgroundService
         var aiService = scope.ServiceProvider.GetRequiredService<IAiPredictionService>();
 
         int successCount = 0;
-        int alertCount = 0;
+        int alertCount   = 0;
 
         // ═══════════════════════════════════════════════════════════════════════
         // LUONG 1: Quet DailyVitalLogs chua co du bao
@@ -77,20 +80,22 @@ public class AiPredictionWorker : BackgroundService
                         var daysDiff = (log.LoggedAt - latestClinicalRecord.VisitDate).TotalDays;
                         if (daysDiff > 90)
                         {
-                            _logger.LogWarning("ClinicalRecord {RecordId} cua Patient {PatientId} da qua han ({Days} ngay). Bo qua ket hop.", latestClinicalRecord.Id, log.PatientId, Math.Round(daysDiff));
-                            latestClinicalRecord = null; 
+                            _logger.LogWarning(
+                                "ClinicalRecord {RecordId} cua Patient {PatientId} da qua han ({Days} ngay). Bo qua ket hop.",
+                                latestClinicalRecord.Id, log.PatientId, Math.Round(daysDiff));
+                            latestClinicalRecord = null;
                         }
                     }
 
                     var prediction = aiService.PredictCombined(log, latestClinicalRecord, log.Patient, "KNN");
 
-                    prediction.PatientId = log.PatientId;
-                    prediction.DailyLogId = log.Id;
-                    prediction.ClinicalRecordId = latestClinicalRecord?.Id;
+                    prediction.PatientId         = log.PatientId;
+                    prediction.DailyLogId        = log.Id;
+                    prediction.ClinicalRecordId  = latestClinicalRecord?.Id;
 
                     dbContext.AiriskPredictions.Add(prediction);
 
-                    // ── LOG KẾT QUẢ DỰ ĐOÁN (rõ ràng để debug) ──────────────
+                    // ── LOG KẾT QUẢ DỰ ĐOÁN ────────────────────────────────────
                     string diseaseStatus1 = prediction.PredictedTarget == 1 ? "CO BENH" : "KHONG BENH";
                     string riskLevelName1 = prediction.RiskLevel switch
                     {
@@ -99,7 +104,7 @@ public class AiPredictionWorker : BackgroundService
                         _ => "THAP (Low)"
                     };
 
-                    _logger.LogWarning(
+                    _logger.LogInformation(
                         "[LUONG 1] --- KET QUA DU BAO ---\n" +
                         "  BenhNhan       : {PatientId}\n" +
                         "  DailyLog       : {LogId}\n" +
@@ -123,18 +128,20 @@ public class AiPredictionWorker : BackgroundService
                         {
                             PatientId = log.PatientId,
                             Prediction = prediction,
-                            Status = 0,
-                            FlaggedAt = DateTime.Now,
-                            IsDeleted = false
+                            Status     = 0,
+                            FlaggedAt  = DateTime.Now,
+                            IsDeleted  = false
                         };
                         dbContext.WarningAlerts.Add(alert);
                         alertCount++;
-                        _logger.LogWarning("[LUONG 1] => TAO CANH BAO MOI (RiskLevel={Level}, RiskScore={Score:F4}) cho BenhNhan={PatientId}",
+                        _logger.LogWarning(
+                            "[LUONG 1] => TAO CANH BAO MOI (RiskLevel={Level}, RiskScore={Score:F4}) cho BenhNhan={PatientId}",
                             prediction.RiskLevel, (double)prediction.RiskScore, log.PatientId);
                     }
                     else
                     {
-                        _logger.LogWarning("[LUONG 1] => BO QUA: RiskLevel={Level} < 2 (RiskScore={Score:F4} < 40%), khong du nguong canh bao.",
+                        _logger.LogInformation(
+                            "[LUONG 1] => BO QUA: RiskLevel={Level} < 2 (RiskScore={Score:F4} < 40%), khong du nguong canh bao.",
                             prediction.RiskLevel, (double)prediction.RiskScore);
                     }
 
@@ -155,7 +162,7 @@ public class AiPredictionWorker : BackgroundService
         // LUONG 2: Quet ClinicalRecords chua co du bao
         // → Chi chay khi benh nhan KHONG co DailyLog nao
         // ═══════════════════════════════════════════════════════════════════════
-        _logger.LogInformation("========== [LUONG 2] Bat dau quet ClinicalRecords ==========" );
+        _logger.LogInformation("========== [LUONG 2] Bat dau quet ClinicalRecords ==========");
 
         var pendingClinicalRecords = await dbContext.ClinicalRecords
             .Include(c => c.Patient)
@@ -172,13 +179,13 @@ public class AiPredictionWorker : BackgroundService
                 {
                     var prediction = aiService.PredictHeartDiseaseRisk(record, "KNN");
 
-                    prediction.PatientId = record.PatientId;
+                    prediction.PatientId        = record.PatientId;
                     prediction.ClinicalRecordId = record.Id;
-                    prediction.DailyLogId = null;
+                    prediction.DailyLogId       = null;
 
                     dbContext.AiriskPredictions.Add(prediction);
 
-                    // ── LOG KẾT QUẢ DỰ ĐOÁN (rõ ràng để debug) ──────────────
+                    // ── LOG KẾT QUẢ DỰ ĐOÁN ────────────────────────────────────
                     string diseaseStatus2 = prediction.PredictedTarget == 1 ? "CO BENH" : "KHONG BENH";
                     string riskLevelName2 = prediction.RiskLevel switch
                     {
@@ -187,7 +194,7 @@ public class AiPredictionWorker : BackgroundService
                         _ => "THAP (Low)"
                     };
 
-                    _logger.LogWarning(
+                    _logger.LogInformation(
                         "[LUONG 2] --- KET QUA DU BAO ---\n" +
                         "  BenhNhan  : {PatientId}\n" +
                         "  Record    : {RecordId}\n" +
@@ -207,20 +214,22 @@ public class AiPredictionWorker : BackgroundService
                     {
                         var alert = new WarningAlert
                         {
-                            PatientId = record.PatientId,
+                            PatientId  = record.PatientId,
                             Prediction = prediction,
-                            Status = 0,
-                            FlaggedAt = DateTime.Now,
-                            IsDeleted = false
+                            Status     = 0,
+                            FlaggedAt  = DateTime.Now,
+                            IsDeleted  = false
                         };
                         dbContext.WarningAlerts.Add(alert);
                         alertCount++;
-                        _logger.LogWarning("[LUONG 2] => TAO CANH BAO MOI (RiskLevel={Level}, RiskScore={Score:F4}) cho BenhNhan={PatientId}",
+                        _logger.LogWarning(
+                            "[LUONG 2] => TAO CANH BAO MOI (RiskLevel={Level}, RiskScore={Score:F4}) cho BenhNhan={PatientId}",
                             prediction.RiskLevel, (double)prediction.RiskScore, record.PatientId);
                     }
                     else
                     {
-                        _logger.LogWarning("[LUONG 2] => BO QUA: RiskLevel={Level} < 2 (RiskScore={Score:F4} < 40%), khong du nguong canh bao.",
+                        _logger.LogInformation(
+                            "[LUONG 2] => BO QUA: RiskLevel={Level} < 2 (RiskScore={Score:F4} < 40%), khong du nguong canh bao.",
                             prediction.RiskLevel, (double)prediction.RiskScore);
                     }
 
