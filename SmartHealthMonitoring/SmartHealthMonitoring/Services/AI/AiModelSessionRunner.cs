@@ -13,6 +13,7 @@ public class AiModelSessionRunner : IAiModelSessionRunner
 {
     private readonly InferenceSession _knnSession;
     private readonly InferenceSession _svmSession;
+    private readonly InferenceSession? _anfisSession; // Nullable phòng trường hợp file chưa kịp chép vào
     private bool _disposed;
 
     /// <inheritdoc/>
@@ -25,6 +26,7 @@ public class AiModelSessionRunner : IAiModelSessionRunner
         // ── Nạp ONNX models ───────────────────────────────────────────────────
         var knnPath = Path.Combine(modelsPath, "heart_disease_KNN_model.onnx");
         var svmPath = Path.Combine(modelsPath, "heart_disease_SVM_model.onnx");
+        var anfisPath = Path.Combine(modelsPath, "heart_disease_ANFIS_model.onnx");
 
         if (!File.Exists(knnPath))
             throw new FileNotFoundException($"Không tìm thấy file mô hình KNN. Đường dẫn: {knnPath}");
@@ -34,6 +36,16 @@ public class AiModelSessionRunner : IAiModelSessionRunner
 
         _knnSession = new InferenceSession(knnPath);
         _svmSession = new InferenceSession(svmPath);
+        
+        if (File.Exists(anfisPath))
+        {
+            _anfisSession = new InferenceSession(anfisPath);
+        }
+        else
+        {
+            // Bỏ qua nếu chưa có file ANFIS, cho phép ứng dụng khởi động an toàn
+            _anfisSession = null; 
+        }
 
         // ── Nạp Box-Cox lambdas từ JSON ───────────────────────────────────────
         var lambdaPath = Path.Combine(modelsPath, "boxcox_lambdas.json");
@@ -62,6 +74,7 @@ public class AiModelSessionRunner : IAiModelSessionRunner
         {
             "KNN" => _knnSession,
             "SVM" => _svmSession,
+            "ANFIS" => _anfisSession ?? throw new InvalidOperationException("Mô hình ANFIS chưa được tải vì thiếu file."),
             _     => _knnSession
         };
     }
@@ -71,6 +84,7 @@ public class AiModelSessionRunner : IAiModelSessionRunner
         if (_disposed) return;
         _knnSession?.Dispose();
         _svmSession?.Dispose();
+        _anfisSession?.Dispose();
         _disposed = true;
     }
 }
