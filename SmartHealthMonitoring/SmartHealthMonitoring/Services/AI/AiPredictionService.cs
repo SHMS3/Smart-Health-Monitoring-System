@@ -94,10 +94,24 @@ public class AiPredictionService : IAiPredictionService
         // oldpeak đã được cộng +0.001 từ caller để tránh log(0)
         float oldpeakT  = ApplyBoxCox(oldpeakRaw,   "oldpeak");
 
-        // ── One-Hot Encoding ───────────────────────────────────────────────────
-        float cp_1 = cpRaw == 1 ? 1f : 0f;
-        float cp_2 = cpRaw == 2 ? 1f : 0f;
-        float cp_3 = cpRaw == 3 ? 1f : 0f;
+        // ── One-Hot Encoding cho Chest Pain ───────────────────────────────────
+        // ⚠️ QUAN TRỌNG - MAPPING NGƯỢC:
+        // App của chúng ta dùng: 0=Không đau, 1=Nhẹ, 2=Vừa, 3=Nặng
+        // UCI Dataset dùng:      0=Typical Angina (NGUY HIỂM NHẤT), 1=Atypical, 2=Non-anginal, 3=Asymptomatic (ít nguy hiểm nhất)
+        // => Cần đảo mapping: app_level=0 (không đau) → uci_cp=3 (Asymptomatic)
+        //                     app_level=3 (đau nặng)  → uci_cp=0 (Typical Angina)
+        byte uciCp = cpRaw switch
+        {
+            0 => 3, // Không đau → Asymptomatic (ít rủi ro nhất trong UCI)
+            1 => 2, // Đau nhẹ  → Non-anginal pain
+            2 => 1, // Đau vừa  → Atypical angina
+            3 => 0, // Đau nặng → Typical angina (nguy hiểm nhất)
+            _ => 3
+        };
+
+        float cp_1 = uciCp == 1 ? 1f : 0f;
+        float cp_2 = uciCp == 2 ? 1f : 0f;
+        float cp_3 = uciCp == 3 ? 1f : 0f;
 
         float restecg_1 = restecgRaw == 1 ? 1f : 0f;
         float restecg_2 = restecgRaw == 2 ? 1f : 0f;
@@ -161,34 +175,84 @@ public class AiPredictionService : IAiPredictionService
         // Dataset UCI Kaggle này dùng quy ước NGƯỢC:
         //   class 0 = CÓ BỆNH TIM (có tổn thương động mạch vành)
         //   class 1 = KHÔNG BỆNH (bình thường)
-        // Bằng chứng: Cell 48 notebook, bệnh nhân target=1 (khỏe mạnh theo dataset),
-        // SVM trả về label=0 với 87.99% → prob[0] là xác suất "khỏe mạnh trong dataset"
-        // Nhưng theo ngữ nghĩa y tế thực tế (và UI hiển thị):
-        //   target=1 trong dataset = bình thường = RiskScore THẤP
-        //   target=0 trong dataset = bệnh tim     = RiskScore CAO
         //
         // Cách đọc đúng: riskScore = probabilities[0] (xác suất class=0 = xác suất CÓ BỆNH)
+        //
+        // ĐỐI VỚI ANFIS (PyTorch export):
+        // - Output tensor cũng là float[2] = [prob_class0, prob_class1]
+        // - Quy ước nhãn GIỐNG hệt KNN/SVM vì train trên cùng dataset UCI
+        // - Nên vẫn lấy probabilities[0] = xác suất CÓ BỆNH
         // ═══════════════════════════════════════════════════════════════════════
         float prob_disease; // xác suất CÓ BỆNH TIM (class=0 trong dataset này)
         float prob_healthy; // xác suất KHÔNG BỆNH  (class=1 trong dataset này)
-        try
+
+        var resultList = results.ToList();
+
+        bool isAnfis = modelType.Equals("ANFIS", StringComparison.OrdinalIgnoreCase);
+
+        if (isAnfis)
         {
-            // zipmap=False → output là float tensor [1, 2]
-            var probTensor = results.Skip(1).First().AsEnumerable<float>().ToArray();
-            prob_disease = probTensor.Length >= 1 ? probTensor[0] : 0f; // class=0 = CÓ BỆNH
-            prob_healthy = probTensor.Length >= 2 ? probTensor[1] : 1f; // class=1 = KHÔNG BỆNH
-            _logger.LogDebug("[DEBUG] Output float[]: prob_class0(CoBenh)={P0:F4}, prob_class1(KhongBenh)={P1:F4}",
-                prob_disease, prob_healthy);
+            // ── ANFIS (PyTorch): Output[0] = label (int64), Output[1] = probabilities (float tensor) ──
+            // PyTorch model xuất float tensor trực tiếp (KHÔNG phải Sequence<Map>)
+            try
+            {
+                var probTensor = resultList.Count > 1
+                    ? resultList[1].AsEnumerable<float>().ToArray()
+                    : resultList[0].AsEnumerable<float>().ToArray();
+
+                prob_disease = probTensor.Length >= 1 ? probTensor[0] : 0f;
+                prob_healthy = probTensor.Length >= 2 ? probTensor[1] : 1f;
+
+                // PyTorch model (ANFIS) thường trả về Logits thay vì Probabilities.
+                // Áp dụng Softmax nếu thấy tổng không xấp xỉ 1, hoặc có giá trị nằm ngoài [0, 1]
+                if (prob_disease < 0f || prob_disease > 1f || prob_healthy < 0f || prob_healthy > 1f || Math.Abs(prob_disease + prob_healthy - 1f) > 0.01f)
+                {
+                    float maxLogit = Math.Max(prob_disease, prob_healthy);
+                    float exp0 = (float)Math.Exp(prob_disease - maxLogit);
+                    float exp1 = (float)Math.Exp(prob_healthy - maxLogit);
+                    float sumExp = exp0 + exp1;
+                    
+                    _logger.LogDebug("[ANFIS] Raw Logits: class0={L0:F4}, class1={L1:F4}", prob_disease, prob_healthy);
+                    
+                    prob_disease = exp0 / sumExp;
+                    prob_healthy = exp1 / sumExp;
+                }
+
+                _logger.LogDebug(
+                    "[ANFIS] Output Probabilities: prob_class0(CoBenh)={P0:F4}, prob_class1(KhongBenh)={P1:F4}",
+                    prob_disease, prob_healthy);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[ANFIS] Lỗi đọc output tensor, dùng fallback mặc định.");
+                prob_disease = 0f;
+                prob_healthy = 1f;
+            }
         }
-        catch
+        else
         {
-            // Fallback: Sequence<Map<int64, float>>
-            var probMaps = results.Skip(1).First()
-                .AsEnumerable<IDictionary<long, float>>().ToArray();
-            prob_disease = probMaps[0].TryGetValue(0L, out var p0) ? p0 : 0f;
-            prob_healthy = probMaps[0].TryGetValue(1L, out var p1) ? p1 : 1f;
-            _logger.LogDebug("[DEBUG] Output Map: prob_class0(CoBenh)={P0:F4}, prob_class1(KhongBenh)={P1:F4}",
-                prob_disease, prob_healthy);
+            // ── KNN/SVM (scikit-learn): Output[0] = label, Output[1] = probabilities ──
+            try
+            {
+                // zipmap=False → output là float tensor [1, 2]
+                var probTensor = resultList.Skip(1).First().AsEnumerable<float>().ToArray();
+                prob_disease = probTensor.Length >= 1 ? probTensor[0] : 0f;
+                prob_healthy = probTensor.Length >= 2 ? probTensor[1] : 1f;
+                _logger.LogDebug(
+                    "[{Model}] Output float[]: prob_class0(CoBenh)={P0:F4}, prob_class1(KhongBenh)={P1:F4}",
+                    modelType, prob_disease, prob_healthy);
+            }
+            catch
+            {
+                // Fallback: Sequence<Map<int64, float>>
+                var probMaps = resultList.Skip(1).First()
+                    .AsEnumerable<IDictionary<long, float>>().ToArray();
+                prob_disease = probMaps[0].TryGetValue(0L, out var p0) ? p0 : 0f;
+                prob_healthy = probMaps[0].TryGetValue(1L, out var p1) ? p1 : 1f;
+                _logger.LogDebug(
+                    "[{Model}] Output Map: prob_class0(CoBenh)={P0:F4}, prob_class1(KhongBenh)={P1:F4}",
+                    modelType, prob_disease, prob_healthy);
+            }
         }
 
         // RiskScore = xác suất CÓ BỆNH (class=0 trong UCI dataset này)
@@ -291,12 +355,13 @@ public class AiPredictionService : IAiPredictionService
                                   : 0f;
             float oldpeak   = clinicalRecord != null
                                   ? (float)clinicalRecord.OldPeak + 0.001f
-                                  : 1.04f + 0.001f; // mean oldpeak ≈ 1.04 trong dataset
+                                  : 0.001f; // Fallback = 0 (không có ST depression = bình thường)
             float slope     = clinicalRecord != null ? (float)clinicalRecord.Stslope     : 1f;  // 1=Flat (phổ biến nhất)
             float ca        = clinicalRecord != null ? (float)clinicalRecord.MajorVessels : 0f;
 
             byte restecgRaw = clinicalRecord != null ? clinicalRecord.RestEcg    : (byte)1; // 1=Normal (phổ biến nhất)
-            byte thalRaw    = clinicalRecord != null ? clinicalRecord.ThalResult  : (byte)2; // 2=Fixed defect (mode)
+            // ⚠️ FIX: Đổi fallback từ 2 (Fixed Defect - NGUY HIỂM) sang 1 (Normal - an toàn)
+            byte thalRaw    = clinicalRecord != null ? clinicalRecord.ThalResult  : (byte)1; // 1=Normal
 
             var featureValues = BuildFeatureVector(
                 age:        age,

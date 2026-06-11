@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartHealthMonitoring.Common;
@@ -34,23 +34,23 @@ namespace SmartHealthMonitoring.Controllers
             DateTime? nextLogTime = null;
             int remainingSeconds = 0;
 
-            if (todayLogs.Count >= 10)
-            {
-                canLog = false;
-                logMessage = "Đã đạt giới hạn 10 lần/ngày";
-            }
-            else if (lastLog != null)
-            {
-               nextLogTime = lastLog.LoggedAt.AddHours(1);
-                //nextLogTime = lastLog.LoggedAt.AddSeconds(10);
-                if (DateTime.Now < nextLogTime)
-                {
-                    canLog = false;
-                    logMessage = "Đang trong thời gian chờ";
+            // if (todayLogs.Count >= 10)
+            // {
+            //     canLog = false;
+            //     logMessage = "Đã đạt giới hạn 10 lần/ngày";
+            // }
+            // else if (lastLog != null)
+            // {
+            //    nextLogTime = lastLog.LoggedAt.AddHours(1);
+            //     //nextLogTime = lastLog.LoggedAt.AddSeconds(10);
+            //     if (DateTime.Now < nextLogTime)
+            //     {
+            //         canLog = false;
+            //         logMessage = "Đang trong thời gian chờ";
 
-                    remainingSeconds = (int)(nextLogTime.Value - DateTime.Now).TotalSeconds;
-                }
-            }
+            //         remainingSeconds = (int)(nextLogTime.Value - DateTime.Now).TotalSeconds;
+            //     }
+            // }
 
             ViewBag.CanLog = canLog;
             ViewBag.LogMessage = logMessage;

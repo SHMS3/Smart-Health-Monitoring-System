@@ -87,7 +87,51 @@ public class AiPredictionWorker : BackgroundService
                         }
                     }
 
-                    var prediction = aiService.PredictCombined(log, latestClinicalRecord, log.Patient, "KNN");
+                    var predKNN = aiService.PredictCombined(log, latestClinicalRecord, log.Patient, "KNN");
+                    var predSVM = aiService.PredictCombined(log, latestClinicalRecord, log.Patient, "SVM");
+                    AiriskPrediction? predANFIS = null;
+                    try
+                    {
+                        predANFIS = aiService.PredictCombined(log, latestClinicalRecord, log.Patient, "ANFIS");
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // File ANFIS chưa được thêm vào thư mục
+                    }
+
+                    var prediction = new AiriskPrediction
+                    {
+                        PredictedAt = DateTime.Now,
+                        IsDeleted = false
+                    };
+
+                    // ── ENSEMBLE: Tính trung bình RiskScore từ nhiều mô hình ──
+                    decimal avgScore;
+                    if (predANFIS != null)
+                    {
+                        avgScore = (predKNN.RiskScore + predSVM.RiskScore + predANFIS.RiskScore) / 3;
+                        prediction.ModelVersion = "ENS_KSA_1.0"; // KNN+SVM+ANFIS (max 20 chars)
+                        _logger.LogInformation(
+                            "[LUONG 1] Ensemble 3AI: KNN={KNN:F4}, SVM={SVM:F4}, ANFIS={ANFIS:F4} => AVG={AVG:F4}",
+                            (double)predKNN.RiskScore, (double)predSVM.RiskScore, (double)predANFIS.RiskScore, (double)avgScore);
+                    }
+                    else
+                    {
+                        avgScore = (predKNN.RiskScore + predSVM.RiskScore) / 2;
+                        prediction.ModelVersion = "ENS_KS_1.0"; // KNN+SVM only (max 20 chars)
+                        _logger.LogInformation(
+                            "[LUONG 1] Ensemble 2AI: KNN={KNN:F4}, SVM={SVM:F4} => AVG={AVG:F4}",
+                            (double)predKNN.RiskScore, (double)predSVM.RiskScore, (double)avgScore);
+                    }
+
+                    prediction.RiskScore = avgScore;
+                    prediction.PredictedTarget = (byte)(avgScore >= 0.5m ? 1 : 0);
+                    if (avgScore >= 0.8m)
+                        prediction.RiskLevel = 3;
+                    else if (avgScore >= 0.4m)
+                        prediction.RiskLevel = 2;
+                    else
+                        prediction.RiskLevel = 1;
 
                     prediction.PatientId         = log.PatientId;
                     prediction.DailyLogId        = log.Id;
@@ -177,7 +221,51 @@ public class AiPredictionWorker : BackgroundService
             {
                 try
                 {
-                    var prediction = aiService.PredictHeartDiseaseRisk(record, "KNN");
+                    var predKNN = aiService.PredictHeartDiseaseRisk(record, "KNN");
+                    var predSVM = aiService.PredictHeartDiseaseRisk(record, "SVM");
+                    AiriskPrediction? predANFIS = null;
+                    try
+                    {
+                        predANFIS = aiService.PredictHeartDiseaseRisk(record, "ANFIS");
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // File ANFIS chưa được thêm vào thư mục
+                    }
+
+                    var prediction = new AiriskPrediction
+                    {
+                        PredictedAt = DateTime.Now,
+                        IsDeleted = false
+                    };
+
+                    // ── ENSEMBLE: Tính trung bình RiskScore từ nhiều mô hình ──
+                    decimal avgScore;
+                    if (predANFIS != null)
+                    {
+                        avgScore = (predKNN.RiskScore + predSVM.RiskScore + predANFIS.RiskScore) / 3;
+                        prediction.ModelVersion = "ENS_KSA_1.0"; // KNN+SVM+ANFIS (max 20 chars)
+                        _logger.LogInformation(
+                            "[LUONG 2] Ensemble 3AI: KNN={KNN:F4}, SVM={SVM:F4}, ANFIS={ANFIS:F4} => AVG={AVG:F4}",
+                            (double)predKNN.RiskScore, (double)predSVM.RiskScore, (double)predANFIS.RiskScore, (double)avgScore);
+                    }
+                    else
+                    {
+                        avgScore = (predKNN.RiskScore + predSVM.RiskScore) / 2;
+                        prediction.ModelVersion = "ENS_KS_1.0"; // KNN+SVM only (max 20 chars)
+                        _logger.LogInformation(
+                            "[LUONG 2] Ensemble 2AI: KNN={KNN:F4}, SVM={SVM:F4} => AVG={AVG:F4}",
+                            (double)predKNN.RiskScore, (double)predSVM.RiskScore, (double)avgScore);
+                    }
+
+                    prediction.RiskScore = avgScore;
+                    prediction.PredictedTarget = (byte)(avgScore >= 0.5m ? 1 : 0);
+                    if (avgScore >= 0.8m)
+                        prediction.RiskLevel = 3;
+                    else if (avgScore >= 0.4m)
+                        prediction.RiskLevel = 2;
+                    else
+                        prediction.RiskLevel = 1;
 
                     prediction.PatientId        = record.PatientId;
                     prediction.ClinicalRecordId = record.Id;
