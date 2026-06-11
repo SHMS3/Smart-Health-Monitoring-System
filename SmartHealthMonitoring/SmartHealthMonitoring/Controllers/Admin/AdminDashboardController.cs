@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
@@ -11,7 +11,13 @@ namespace SmartHealthMonitoring.Controllers.Admin
     public class AdminDashboardController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
-        public AdminDashboardController(SmartHealthMonitoringContext context) => _context = context;
+        private readonly SmartHealthMonitoring.Interfaces.IAdminStatisticsService _adminStatisticsService;
+
+        public AdminDashboardController(SmartHealthMonitoringContext context, SmartHealthMonitoring.Interfaces.IAdminStatisticsService adminStatisticsService)
+        {
+            _context = context;
+            _adminStatisticsService = adminStatisticsService;
+        }
 
         public async Task<IActionResult> Index()
         {
@@ -36,6 +42,13 @@ namespace SmartHealthMonitoring.Controllers.Admin
                                           FlaggedAt = wa.FlaggedAt
                                       }).Take(5).ToListAsync()
             };
+            return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PatientStatistics()
+        {
+            var vm = await _adminStatisticsService.GetDashboardStatisticsAsync();
             return View(vm);
         }
     }

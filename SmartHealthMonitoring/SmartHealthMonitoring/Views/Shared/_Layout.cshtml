@@ -545,22 +545,12 @@
                         <li class="nav-item"><a class="nav-link @(currentController == "WarningAlert" ? "active fw-semibold" : "")" asp-controller="WarningAlert" asp-action="Dashboard">Cảnh báo AI</a></li>
                         <li class="nav-item"><a class="nav-link @(currentController == "EmailNotification" ? "active fw-semibold" : "")" asp-controller="EmailNotification" asp-action="Index">Lịch sử Email</a></li>
                     }
-                    else
+                    else if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("0"))
                     {
-                        @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("0"))
-                        {
-                            <li class="nav-item"><a class="nav-link @(currentController == "Patient" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active fw-semibold" : "")" asp-controller="Patient" asp-action="Index">Sổ tay hằng ngày</a></li>
-                            <li class="nav-item"><a class="nav-link @(currentController == "ClinicalRecord" ? "active fw-semibold" : "")" asp-controller="ClinicalRecord" asp-action="MyRecords">Hồ sơ bệnh án</a></li>
-                            <li class="nav-item"><a class="nav-link @(currentController == "Patient" && ViewContext.RouteData.Values["action"]?.ToString() == "DoctorAlert" ? "active fw-semibold" : "")" asp-controller="Patient" asp-action="DoctorAlert">Cảnh báo</a></li>
-                            <li class="nav-item"><a class="nav-link @(currentController == "Chatbot" ? "active fw-semibold" : "")" asp-controller="Chatbot" asp-action="History">Lịch sử Chat</a></li>
-                        }
-                        else
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Auth" asp-action="Login">Sổ tay hằng ngày</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Auth" asp-action="Login">Hồ sơ bệnh án</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Auth" asp-action="Login">Cảnh báo</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Auth" asp-action="Login">Lịch sử Chat</a></li>
-                        }
+                        <li class="nav-item"><a class="nav-link @(currentController == "Patient" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active fw-semibold" : "")" asp-controller="Patient" asp-action="Index">Sổ tay hằng ngày</a></li>
+                        <li class="nav-item"><a class="nav-link @(currentController == "Patient" && ViewContext.RouteData.Values["action"]?.ToString() == "Tracker" ? "active fw-semibold" : "")" asp-controller="Patient" asp-action="Tracker">Biểu đồ Sức khỏe</a></li>
+                        <li class="nav-item"><a class="nav-link @(currentController == "ClinicalRecord" ? "active fw-semibold" : "")" asp-controller="ClinicalRecord" asp-action="MyRecords">Hồ sơ bệnh án</a></li>
+                        <li class="nav-item"><a class="nav-link @(currentController == "Chatbot" ? "active fw-semibold" : "")" asp-controller="Chatbot" asp-action="History">Lịch sử Chat</a></li>
                     }
                     <li class="nav-item">
                         <a class="nav-link @(currentController == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Contact" ? "active fw-semibold" : "")" asp-controller="Home" asp-action="Contact">Liên hệ</a>

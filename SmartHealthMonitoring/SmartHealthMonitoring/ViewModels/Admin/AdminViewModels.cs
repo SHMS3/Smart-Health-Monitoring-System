@@ -95,6 +95,29 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         public DateOnly DateOfBirth { get; set; }
         public byte Sex { get; set; }
         public bool IsDeleted { get; set; }
-        public string? LockReason { get; set; }
+        public string LockReason { get; set; }
+    }
+
+    // 4. Statistics ViewModels
+    public class PatientDemographicStatsViewModel
+    {
+        public List<string> AgeLabels { get; set; } = new();
+        public List<int> AgeValues { get; set; } = new();
+        public List<string> SexLabels { get; set; } = new();
+        public List<int> SexValues { get; set; } = new();
+    }
+
+    public class ClinicalSymptomsStatsViewModel
+    {
+        public List<string> ChestPainLabels { get; set; } = new();
+        public List<int> ChestPainValues { get; set; } = new();
+        public double AverageCholesterolAge40To50 { get; set; }
+        public double FastingBsHighRate { get; set; }
+    }
+
+    public class DashboardStatisticsViewModel
+    {
+        public PatientDemographicStatsViewModel Demographics { get; set; } = new();
+        public ClinicalSymptomsStatsViewModel Symptoms { get; set; } = new();
     }
 }

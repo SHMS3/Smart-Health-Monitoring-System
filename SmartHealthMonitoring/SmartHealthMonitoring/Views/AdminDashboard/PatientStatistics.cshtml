@@ -1,0 +1,165 @@
+@model SmartHealthMonitoring.ViewModels.Admin.DashboardStatisticsViewModel
+
+@{
+    ViewData["Title"] = "Thống kê Nhân khẩu học & Dịch tễ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml"; // Assuming standard admin layout name
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-primary"><i class="fas fa-chart-pie"></i> Thống kê Nhân khẩu học & Triệu chứng Lâm sàng</h2>
+            <p class="text-muted">Tổng quan về tệp bệnh nhân và các vấn đề sức khỏe phổ biến.</p>
+        </div>
+    </div>
+
+    <!-- Cảnh báo/Chỉ số nổi bật -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card bg-info text-white h-100 shadow-sm border-0">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <h5 class="card-title text-white"><i class="fas fa-heartbeat"></i> Cholesterol trung bình (Tuổi 40-50)</h5>
+                    <h2 class="display-4 fw-bold">@Model.Symptoms.AverageCholesterolAge40To50 <small class="fs-6">mg/dl</small></h2>
+                    <p class="card-text text-white-50 text-center">Chỉ số giúp định hướng chiến dịch tầm soát mỡ máu cho tuổi trung niên.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card bg-danger text-white h-100 shadow-sm border-0">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <h5 class="card-title text-white"><i class="fas fa-tint"></i> Tỷ lệ Đường huyết vượt mức (>120mg/dl)</h5>
+                    <h2 class="display-4 fw-bold">@Model.Symptoms.FastingBsHighRate <small class="fs-6">%</small></h2>
+                    <p class="card-text text-white-50 text-center">Tỷ lệ bệnh nhân nguy cơ cao mắc kèm đái tháo đường.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ -->
+    <div class="row">
+        <!-- Biểu đồ Giới tính -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="card-title text-center">Phân bố Giới tính</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="sexChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biểu đồ Tuổi -->
+        <div class="col-lg-8 col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="card-title text-center">Phân bố Độ tuổi</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="ageChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Biểu đồ Đau ngực -->
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="card-title text-center">Tỷ lệ các loại Đau ngực (Chest Pain Type)</h5>
+                </div>
+                <div class="card-body" style="position: relative; height:40vh; width:100%">
+                    <canvas id="chestPainChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Nhúng thư viện Chart.js qua CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            
+            // 1. Biểu đồ Giới tính (Pie Chart)
+            const sexLabels = @Html.Raw(Json.Serialize(Model.Demographics.SexLabels));
+            const sexValues = @Html.Raw(Json.Serialize(Model.Demographics.SexValues));
+            
+            new Chart(document.getElementById('sexChart'), {
+                type: 'pie',
+                data: {
+                    labels: sexLabels,
+                    datasets: [{
+                        data: sexValues,
+                        backgroundColor: ['#ff6384', '#36a2eb'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // 2. Biểu đồ Độ tuổi (Bar Chart)
+            const ageLabels = @Html.Raw(Json.Serialize(Model.Demographics.AgeLabels));
+            const ageValues = @Html.Raw(Json.Serialize(Model.Demographics.AgeValues));
+
+            new Chart(document.getElementById('ageChart'), {
+                type: 'bar',
+                data: {
+                    labels: ageLabels,
+                    datasets: [{
+                        label: 'Số lượng bệnh nhân',
+                        data: ageValues,
+                        backgroundColor: '#4bc0c0',
+                        borderColor: '#3da5a5',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // 3. Biểu đồ Đau ngực (Doughnut Chart)
+            const cpLabels = @Html.Raw(Json.Serialize(Model.Symptoms.ChestPainLabels));
+            const cpValues = @Html.Raw(Json.Serialize(Model.Symptoms.ChestPainValues));
+
+            new Chart(document.getElementById('chestPainChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: cpLabels,
+                    datasets: [{
+                        data: cpValues,
+                        backgroundColor: [
+                            '#ffce56', '#ff9f40', '#4bc0c0', '#9966ff', '#c9cbcf'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        });
+    </script>
+}

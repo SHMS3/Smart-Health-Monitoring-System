@@ -182,5 +182,21 @@ namespace SmartHealthMonitoring.Controllers
 
             return View(model);
         }
+
+        [HttpGet("tracker")]
+        public async Task<IActionResult> Tracker(int days = 1)
+        {
+            int patientId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            try
+            {
+                var vm = await _dailyVitalLogService.GetPatientHealthTrendsAsync(patientId, days);
+                return View(vm);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
     }
 }
