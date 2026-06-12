@@ -29,6 +29,42 @@ namespace SmartHealthMonitoring.Controllers.Admin
         {
             page = Math.Max(page, 1);
             pageSize = Math.Clamp(pageSize, 5, 100);
+            var normalizedFromDate = fromDate?.Date;
+            var normalizedToDate = toDate?.Date;
+            var today = DateTime.Today;
+
+            if (normalizedFromDate.HasValue &&
+                normalizedToDate.HasValue &&
+                normalizedFromDate.Value > normalizedToDate.Value)
+            {
+                ModelState.AddModelError(nameof(fromDate), "Từ ngày không được lớn hơn Đến ngày.");
+            }
+
+            if (normalizedToDate.HasValue && normalizedToDate.Value > today)
+            {
+                ModelState.AddModelError(nameof(toDate), "Đến ngày không được vượt quá ngày hiện tại.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var invalidModel = new AuditLogIndexViewModel
+                {
+                    ActionType = actionType,
+                    EntityName = entityName,
+                    Keyword = keyword,
+                    FromDate = fromDate,
+                    ToDate = toDate,
+                    Logs = new PagedResult<AuditLogListItemViewModel>
+                    {
+                        Items = new List<AuditLogListItemViewModel>(),
+                        TotalCount = 0,
+                        Page = page,
+                        PageSize = pageSize
+                    }
+                };
+
+                return View(invalidModel);
+            }
 
             var query = _context.AuditLogs.AsNoTracking();
 
@@ -42,14 +78,14 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 query = query.Where(x => x.EntityName == entityName);
             }
 
-            if (fromDate.HasValue)
+            if (normalizedFromDate.HasValue)
             {
-                query = query.Where(x => x.CreatedAt >= fromDate.Value.Date);
+                query = query.Where(x => x.CreatedAt >= normalizedFromDate.Value);
             }
 
-            if (toDate.HasValue)
+            if (normalizedToDate.HasValue)
             {
-                var nextDate = toDate.Value.Date.AddDays(1);
+                var nextDate = normalizedToDate.Value.AddDays(1);
                 query = query.Where(x => x.CreatedAt < nextDate);
             }
 

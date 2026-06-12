@@ -3,6 +3,8 @@
     Layout = "_AdminLayout";
     ViewData["Title"] = "Nhật ký hoạt động";
 
+    var todayValue = DateTime.Today.ToString("yyyy-MM-dd");
+
     string BadgeClass(string action) => action switch
     {
         "Create" => "bg-success",
@@ -113,9 +115,80 @@
     </div>
 </div>
 
+@section Scripts {
+    <script>
+        (() => {
+            const form = document.getElementById('auditLogFilterForm');
+            const fromDate = document.getElementById('auditFromDate');
+            const toDate = document.getElementById('auditToDate');
+
+            if (!form || !fromDate || !toDate) {
+                return;
+            }
+
+            const today = toDate.dataset.today;
+
+            const syncDateValidation = () => {
+                fromDate.setCustomValidity('');
+                toDate.setCustomValidity('');
+                toDate.max = today;
+
+                if (fromDate.value) {
+                    toDate.min = fromDate.value;
+                } else {
+                    toDate.removeAttribute('min');
+                }
+
+                if (toDate.value) {
+                    fromDate.max = toDate.value < today ? toDate.value : today;
+                } else {
+                    fromDate.removeAttribute('max');
+                }
+
+                if (toDate.value && toDate.value > today) {
+                    toDate.setCustomValidity('Đến ngày không được vượt quá ngày hiện tại.');
+                    return;
+                }
+
+                if (fromDate.value && toDate.value && fromDate.value > toDate.value) {
+                    fromDate.setCustomValidity('Từ ngày không được lớn hơn Đến ngày.');
+                }
+            };
+
+            fromDate.addEventListener('change', syncDateValidation);
+            toDate.addEventListener('change', syncDateValidation);
+            form.addEventListener('submit', (event) => {
+                syncDateValidation();
+
+                if (!form.reportValidity()) {
+                    event.preventDefault();
+                }
+            });
+
+            syncDateValidation();
+        })();
+    </script>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger border-0 shadow-sm rounded-4">
+        <div class="fw-semibold mb-1">
+            <i class="fas fa-exclamation-triangle me-2"></i>Vui lòng kiểm tra lại bộ lọc thời gian.
+        </div>
+        @foreach (var state in ViewData.ModelState.Values)
+        {
+            foreach (var error in state.Errors)
+            {
+                <div class="small">@error.ErrorMessage</div>
+            }
+        }
+    </div>
+}
+
 <div class="card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body">
-        <form method="get" asp-action="Index" class="row g-3 align-items-end">
+        <form id="auditLogFilterForm" method="get" asp-action="Index" class="row g-3 align-items-end">
             <div class="col-lg-2 col-md-4">
                 <label class="form-label small text-muted fw-semibold">Hành động</label>
                 <select name="actionType" class="form-select rounded-3">
@@ -153,11 +226,11 @@
             </div>
             <div class="col-lg-2 col-md-4">
                 <label class="form-label small text-muted fw-semibold">Từ ngày</label>
-                <input type="date" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" class="form-control rounded-3" />
+                <input type="date" id="auditFromDate" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" class="form-control rounded-3" />
             </div>
             <div class="col-lg-2 col-md-4">
                 <label class="form-label small text-muted fw-semibold">Đến ngày</label>
-                <input type="date" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" class="form-control rounded-3" />
+                <input type="date" id="auditToDate" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" max="@todayValue" data-today="@todayValue" class="form-control rounded-3" />
             </div>
             <div class="col-lg-3 col-md-8">
                 <label class="form-label small text-muted fw-semibold">Tìm kiếm</label>
