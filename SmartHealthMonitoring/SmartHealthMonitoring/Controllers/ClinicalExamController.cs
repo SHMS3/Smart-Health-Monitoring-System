@@ -17,13 +17,20 @@ namespace SmartHealthMonitoring.Controllers
         private readonly IMemoryCache _cache;
         private readonly IEmailService _emailService;
         private readonly IMinioService _minioService;
+        private readonly IAuditLogService _auditLogService;
 
-        public ClinicalExamController(SmartHealthMonitoringContext context, IMemoryCache cache, IEmailService emailService, IMinioService minioService)
+        public ClinicalExamController(
+            SmartHealthMonitoringContext context,
+            IMemoryCache cache,
+            IEmailService emailService,
+            IMinioService minioService,
+            IAuditLogService auditLogService)
         {
             _context = context;
             _cache = cache;
             _emailService = emailService;
             _minioService = minioService;
+            _auditLogService = auditLogService;
         }
 
         [HttpGet]
@@ -114,13 +121,21 @@ namespace SmartHealthMonitoring.Controllers
 
                 _cache.Remove($"LabResult_{model.PatientId}");
 
+                var patient = await _context.Patients
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.Id == model.PatientId);
+
+                await _auditLogService.LogAsync(
+                    "Create",
+                    "ClinicalRecord",
+                    record.Id.ToString(),
+                    $"Tạo hồ sơ lâm sàng #{record.Id} cho bệnh nhân {patient?.User?.FullName ?? $"#{model.PatientId}"}; huyết áp {record.RestingBp}, cholesterol {record.Cholesterol}, nhịp tim tối đa {record.MaxHeartRate}.",
+                    patient?.UserId,
+                    patient?.User?.FullName);
+
                 // GỬI EMAIL TỰ ĐỘNG
                 try
                 {
-                    var patient = await _context.Patients
-                        .Include(p => p.User)
-                        .FirstOrDefaultAsync(p => p.Id == model.PatientId);
-
                     if (patient != null && patient.User != null && !string.IsNullOrEmpty(patient.User.Email))
                     {
                         var replacements = new Dictionary<string, string>
@@ -244,10 +259,12 @@ namespace SmartHealthMonitoring.Controllers
             }
 
             var existing = await _context.PatientThresholds.FirstOrDefaultAsync(t => t.PatientId == model.PatientId);
+            var isNewThreshold = existing == null;
+            PatientThreshold threshold;
 
             if (existing == null)
             {
-                var newThreshold = new PatientThreshold
+                threshold = new PatientThreshold
                 {
                     PatientId = model.PatientId,
                     SystolicBpWarning = model.SystolicBpWarning,
@@ -261,23 +278,37 @@ namespace SmartHealthMonitoring.Controllers
                     UpdatedAt = DateTime.Now,
                     UpdatedByDoctorId = doctorId
                 };
-                _context.PatientThresholds.Add(newThreshold);
+                _context.PatientThresholds.Add(threshold);
             }
             else
             {
-                existing.SystolicBpWarning = model.SystolicBpWarning;
-                existing.SystolicBpDanger = model.SystolicBpDanger;
-                existing.DiastolicBpWarning = model.DiastolicBpWarning;
-                existing.DiastolicBpDanger = model.DiastolicBpDanger;
-                existing.HeartRateWarningMin = model.HeartRateWarningMin;
-                existing.HeartRateDangerMin = model.HeartRateDangerMin;
-                existing.HeartRateWarningMax = model.HeartRateWarningMax;
-                existing.HeartRateDangerMax = model.HeartRateDangerMax;
-                existing.UpdatedAt = DateTime.Now;
-                existing.UpdatedByDoctorId = doctorId;
+                threshold = existing;
+                threshold.SystolicBpWarning = model.SystolicBpWarning;
+                threshold.SystolicBpDanger = model.SystolicBpDanger;
+                threshold.DiastolicBpWarning = model.DiastolicBpWarning;
+                threshold.DiastolicBpDanger = model.DiastolicBpDanger;
+                threshold.HeartRateWarningMin = model.HeartRateWarningMin;
+                threshold.HeartRateDangerMin = model.HeartRateDangerMin;
+                threshold.HeartRateWarningMax = model.HeartRateWarningMax;
+                threshold.HeartRateDangerMax = model.HeartRateDangerMax;
+                threshold.UpdatedAt = DateTime.Now;
+                threshold.UpdatedByDoctorId = doctorId;
             }
 
             await _context.SaveChangesAsync();
+
+            var patientForAudit = await _context.Patients
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.Id == model.PatientId);
+
+            await _auditLogService.LogAsync(
+                isNewThreshold ? "Create" : "Update",
+                "PatientThreshold",
+                threshold.Id.ToString(),
+                $"{(isNewThreshold ? "Tạo" : "Cập nhật")} ngưỡng riêng cho bệnh nhân {patientForAudit?.User?.FullName ?? $"#{model.PatientId}"}; huyết áp tâm thu {threshold.SystolicBpWarning}/{threshold.SystolicBpDanger}, nhịp tim {threshold.HeartRateWarningMin}-{threshold.HeartRateWarningMax}.",
+                patientForAudit?.UserId,
+                patientForAudit?.User?.FullName);
+
             TempData["Success"] = $"Đã lưu cấu hình ngưỡng cho bệnh nhân thành công!";
             return RedirectToAction("Index", "ClinicalRecord", new { id = model.PatientId });
         }

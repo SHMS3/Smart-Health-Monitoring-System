@@ -35,6 +35,7 @@ namespace SmartHealthMonitoring
 
             // 3. MVC & Razor
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+            builder.Services.AddHttpContextAccessor();
 
             // 3b. SignalR cho Telemedicine Chat
             builder.Services.AddSignalR();

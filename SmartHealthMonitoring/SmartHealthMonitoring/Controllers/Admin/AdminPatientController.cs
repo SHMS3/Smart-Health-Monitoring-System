@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;
 using SmartHealthMonitoring.ViewModels.Admin;
 
@@ -12,8 +13,15 @@ namespace SmartHealthMonitoring.Controllers.Admin
     public class AdminPatientController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
+        private readonly IAuditLogService _auditLogService;
 
-        public AdminPatientController(SmartHealthMonitoringContext context) => _context = context;
+        public AdminPatientController(
+            SmartHealthMonitoringContext context,
+            IAuditLogService auditLogService)
+        {
+            _context = context;
+            _auditLogService = auditLogService;
+        }
 
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
@@ -55,6 +63,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
             var user = await _context.Users.FindAsync(userId);
             if (user != null)
             {
+                var willLock = !user.IsDeleted;
                 user.IsDeleted = !user.IsDeleted;
                 if (user.IsDeleted)
                 {
@@ -65,6 +74,16 @@ namespace SmartHealthMonitoring.Controllers.Admin
                     user.LockReason = null;
                 }
                 await _context.SaveChangesAsync();
+                await _auditLogService.LogAsync(
+                    willLock ? "Lock" : "Unlock",
+                    "PatientAccount",
+                    user.Id.ToString(),
+                    willLock
+                        ? $"Khóa tài khoản bệnh nhân {user.FullName}. Lý do: {user.LockReason}"
+                        : $"Mở khóa tài khoản bệnh nhân {user.FullName}.",
+                    user.Id,
+                    user.FullName);
+
                 TempData["Success"] = user.IsDeleted ? "Đã khóa tài khoản bệnh nhân." : "Đã mở khóa tài khoản bệnh nhân.";
             }
             return RedirectToAction(nameof(Index));
