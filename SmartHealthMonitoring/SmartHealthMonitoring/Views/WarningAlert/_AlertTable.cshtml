@@ -1,0 +1,248 @@
+﻿@model List<SmartHealthMonitoring.Models.WarningAlert>
+
+<div class="alert-table-wrap">
+
+    <table class="alert-table">
+
+        <thead>
+            <tr>
+                <th>Mã</th>
+                <th>Bệnh nhân</th>
+                <th>Mức ưu tiên</th>
+                <th>Điểm rủi ro</th>
+                <th>Trạng thái</th>
+                <th>Thời gian gắn cờ</th>
+                <th>Bác sĩ tiếp nhận</th>
+                <th>Ghi chú xử lý</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @if (Model.Any())
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+
+                        <td>
+                            <span class="alert-id">#@item.Id</span>
+                        </td>
+
+                        <td>
+                            <span class="patient-name">
+                                @item.Patient.User.FullName
+                            </span>
+                        </td>
+
+                        <td>
+                            @if (item.Prediction.RiskLevel == 0)
+                            {
+                                <span class="priority-badge risk-low">
+                                    Thấp
+                                </span>
+                            }
+                            else if (item.Prediction.RiskLevel == 1)
+                            {
+                                <span class="priority-badge risk-medium">
+                                    Trung bình
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="priority-badge risk-high">
+                                    Cao
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+                            <span class="risk-score">
+                                @((item.Prediction.RiskScore * 100).ToString("0.00"))%
+                            </span>
+                        </td>
+
+                        <td>
+                            @if (item.Status == 0)
+                            {
+                                <span class="status-badge status-pending">
+                                    Chờ xử lý
+                                </span>
+                            }
+                            else if (item.Status == 1)
+                            {
+                                <span class="status-badge status-processing">
+                                    Đang xử lý
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-badge status-resolved">
+                                    Đã xử lý
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+                            <span class="flagged-time">
+                                @item.FlaggedAt
+                            </span>
+                        </td>
+
+                        <td>
+                            @if (item.ClaimedByDoctor?.User != null)
+                            {
+                                <span class="claimed-by">
+                                    @item.ClaimedByDoctor.User.FullName
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="cell-muted">—</span>
+                            }
+                        </td>
+
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(item.ResolutionNote))
+                            {
+                                <span class="note-cell"
+                                      title="@item.ResolutionNote">
+                                    @item.ResolutionNote
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="cell-muted">—</span>
+                            }
+                        </td>
+
+                        <td>
+
+                            @if (item.Status == 0)
+                            {
+                                <form class="claim-form">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@item.Id" />
+                                    <button type="submit"
+                                            class="claim-btn">
+
+                                        Tiếp nhận
+
+                                    </button>
+
+                                </form>
+                            }
+                            else if (item.Status == 1 &&
+                            item.ClaimedByDoctorId == (int?)ViewData["DoctorId"])
+                            {
+                                <form class="resolve-form">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@item.Id" />
+
+                                    <textarea name="resolutionNote"
+                                  class="resolve-input"
+                                  placeholder="Nhập ghi chú xử lý..."
+                                  required></textarea>
+
+                                    <div class="form-check mt-2 mb-2">
+
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="sendEmailInvitation"
+                                               value="true"
+                                               id="email_@item.Id"
+                                               checked />
+
+                                        <label class="form-check-label"
+                                               for="email_@item.Id">
+
+                                            Gửi email mời tái khám
+
+                                        </label>
+
+                                    </div>
+
+                                    <button type="submit"
+                                            class="resolve-btn">
+
+                                        Hoàn tất
+
+                                    </button>
+
+                                </form>
+                            }
+                            else if (item.Status == 1)
+                            {
+                                <span class="claimed-text">
+                                    Đang được bác sĩ khác xử lý
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-badge status-resolved">
+                                    Hoàn tất
+                                </span>
+                            }
+
+                        </td>
+
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="9">
+
+                        <div class="empty-state">
+
+                            <i class="fas fa-inbox"></i>
+
+                            <p>
+                                Không có cảnh báo nào phù hợp với bộ lọc hiện tại.
+                            </p>
+
+                        </div>
+
+                    </td>
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+
+                        <a href="#"
+                           class="page-link ajax-page"
+                           data-page="@i">
+
+                            @i
+
+                        </a>
+
+                    </li>
+                }
+
+            </ul>
+        </nav>
+    }
+
+</div>

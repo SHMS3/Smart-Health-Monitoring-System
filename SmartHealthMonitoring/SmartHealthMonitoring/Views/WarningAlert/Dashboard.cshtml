@@ -301,19 +301,7 @@
 
     <div class="alert-page-inner">
 
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["Success"]
-            </div>
-        }
-
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["Error"]
-            </div>
-        }
+        
 
         <div class="section-tag">
             <i class="fas fa-bell"></i>
@@ -330,298 +318,76 @@
 
         <div class="alert-card">
 
-            <div class="alert-card-toolbar">
+           <div class="alert-card-toolbar">
 
-                <div class="filter-group">
+    <div class="filter-group">
 
-                    <a asp-action="Dashboard"
-                       class="filter-pill @(IsActive(null) ? "active" : "")">
+        <a href="#"
+           class="filter-pill filter-btn active"
+           data-status="">
+            Tất cả
+        </a>
 
-                        Tất cả
+        <a href="#"
+           class="filter-pill filter-btn filter-pending"
+           data-status="0">
+            Chờ xử lý
+        </a>
 
-                    </a>
+        <a href="#"
+           class="filter-pill filter-btn filter-processing"
+           data-status="1">
+            Đang xử lý
+        </a>
 
-                    <a asp-action="Dashboard"
-                       asp-route-status="0"
-                       class="filter-pill filter-pending @(IsActive("0") ? "active" : "")">
+        <a href="#"
+           class="filter-pill filter-btn filter-resolved"
+           data-status="2">
+            Đã xử lý
+        </a>
 
-                        Chờ xử lý
+    </div>
 
-                    </a>
+    <div class="alert-count">
 
-                    <a asp-action="Dashboard"
-                       asp-route-status="1"
-                       class="filter-pill filter-processing @(IsActive("1") ? "active" : "")">
+        Tổng cộng:
+        <strong>@ViewBag.TotalRecords</strong>
+        cảnh báo
 
-                        Đang xử lý
+    </div>
 
-                    </a>
-
-                    <a asp-action="Dashboard"
-                       asp-route-status="2"
-                       class="filter-pill filter-resolved @(IsActive("2") ? "active" : "")">
-
-                        Đã xử lý
-
-                    </a>
-
-                </div>
-
-                <div class="alert-count">
-                    Tổng cộng:
-                    <strong>@Model.Count</strong>
-                    cảnh báo
-                </div>
-
-            </div>
-            <form asp-action="Dashboard"
-                  method="get"
+</div>
+            <form id="searchForm"
                   class="mb-3">
 
                 <div class="input-group">
 
                     <input type="text"
-                           name="keyword"
+                           id="keyword"
                            value="@ViewBag.Keyword"
                            class="form-control"
                            placeholder="Tìm theo tên bệnh nhân..." />
 
                     <button type="submit"
                             class="btn btn-primary">
+
                         Tìm kiếm
+
                     </button>
 
                 </div>
 
             </form>
 
-            <div class="alert-table-wrap">
+            <div id="alertContainer">
 
-                <table class="alert-table">
+                @await Html.PartialAsync(
+                "_AlertTable",
+                                Model)
 
-                    <thead>
-
-                        <tr>
-                            <th>Mã</th>
-                            <th>Bệnh nhân</th>
-                            <th>Mức ưu tiên</th>
-                            <th>Điểm rủi ro</th>
-                            <th>Trạng thái</th>
-                            <th>Thời gian gắn cờ</th>
-                            <th>Bác sĩ tiếp nhận</th>
-                            <th>Ghi chú xử lý</th>
-                            <th>Thao tác</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        @if (Model.Any())
-                        {
-                            @foreach (var item in Model)
-                            {
-                                <tr>
-
-                                    <td>
-                                        <span class="alert-id">
-                                            #@item.Id
-                                        </span>
-                                    </td>
-
-                                    <td>
-                                        <span class="patient-name">
-                                            @item.Patient.User.FullName
-                                        </span>
-                                    </td>
-
-                                    <td>
-
-                                        @switch (item.Prediction.RiskLevel)
-                                        {
-                                            case 0:
-
-                                                <span class="priority-badge risk-low">
-                                                    Thấp
-                                                </span>
-                                                break;
-
-                                            case 1:
-
-                                                <span class="priority-badge risk-medium">
-                                                    Trung bình
-                                                </span>
-                                                break;
-
-                                            case 2:
-
-                                                <span class="priority-badge risk-high">
-                                                    Cao
-                                                </span>
-                                                break;
-                                        }
-
-                                    </td>
-
-                                    <td>
-
-                                        <span class="risk-score">
-                                            @((item.Prediction.RiskScore * 100).ToString("0.00"))%
-                                        </span>
-
-                                    </td>
-
-                                    <td>
-
-                                        @switch (item.Status)
-                                        {
-                                            case 0:
-
-                                                <span class="status-badge status-pending">
-                                                    Chờ xử lý
-                                                </span>
-                                                break;
-
-                                            case 1:
-
-                                                <span class="status-badge status-processing">
-                                                    Đang xử lý
-                                                </span>
-                                                break;
-
-                                            case 2:
-
-                                                <span class="status-badge status-resolved">
-                                                    Đã xử lý
-                                                </span>
-                                                break;
-                                        }
-
-                                    </td>
-
-                                    <td>
-
-                                        <span class="flagged-time">
-                                            @item.FlaggedAt
-                                        </span>
-
-                                    </td>
-                                    <td>
-                                        @if (item.ClaimedByDoctor?.User?.FullName != null)
-                                        {
-                                            <span class="claimed-by">
-                                                <i class="fas fa-user-md me-1" style="color:#94a3b8;font-size:.8rem"></i>
-                                                @item.ClaimedByDoctor.User.FullName
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="cell-muted">—</span>
-                                        }
-                                    </td>
-
-                                    <td>
-                                        @if (item.Status == 2
-                                            && item.ClaimedByDoctorId == (ViewData["DoctorId"] as int?)
-                                            && !string.IsNullOrWhiteSpace(item.ResolutionNote))
-                                        {
-                                            <span class="note-cell" title="@item.ResolutionNote">
-                                                @item.ResolutionNote
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="cell-muted">—</span>
-                                        }
-                                    </td>
-
-                                    <td>
-                                        @if (item.Status == 0)
-                                        {
-                                            <form asp-action="Claim" method="post" style="display:inline;">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@item.Id" />
-                                                <button type="submit" class="claim-btn">
-                                                    Tiếp nhận
-                                                </button>
-                                            </form>
-                                        }
-                                        else if (item.Status == 1
-                                        && item.ClaimedByDoctorId == (ViewData["DoctorId"] as int?))
-                                        {
-                                            <form asp-action="Resolve" method="post" class="resolve-form">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@item.Id" />
-                                                
-                                                <textarea name="resolutionNote" class="resolve-input" placeholder="Nhập ghi chú xử lý..." required></textarea>
-                                                
-                                                <div class="form-check mt-1 mb-2 text-start">
-                                                    <input class="form-check-input" type="checkbox" name="sendEmailInvitation" value="true" id="sendEmail_@item.Id" checked>
-                                                    <label class="form-check-label text-muted" style="font-size:.75rem;" for="sendEmail_@item.Id">
-                                                        Gửi email mời tái khám
-                                                    </label>
-                                                </div>
-                                                
-                                                <button type="submit" class="resolve-btn">Hoàn tất</button>
-                                            </form>
-                                        }
-                                        else if (item.Status == 1)
-                                        {
-                                            <span class="claimed-text">
-                                                Đang được bác sĩ khác xử lý
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="status-badge status-resolved" style="font-size:.75rem;">
-                                                <i class="fas fa-check"></i> Hoàn tất
-                                            </span>
-                                        }
-                                    </td>   
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="9">
-                                    <div class="empty-state">
-                                        <i class="fas fa-inbox"></i>
-                                        <p>Không có cảnh báo nào phù hợp với bộ lọc hiện tại.</p>
-                                    </div>
-                                </td>
-
-                            </tr>
-                        }
-
-                    </tbody>
-
-                </table>
+            </div>
                 
-                
-                    <nav>
-                        <ul class="pagination">
-
-                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
-                            {
-                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-
-                                    <a class="page-link"
-                                       asp-action="Dashboard"
-                                       asp-route-page="@i"
-                                       asp-route-status="@ViewBag.Status"
-                                       asp-route-keyword="@ViewBag.Keyword">
-
-                                        @i
-
-                                    </a>
-
-                                </li>
-                            }
-
-                        </ul>
-                    </nav>
-                
+                    
 
             </div>
 
@@ -630,3 +396,199 @@
     </div>
 
 </section>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+
+    let currentStatus = '';
+    let currentPage = 1;
+
+    function loadAlerts(status = '', keyword = '', page = 1)
+    {
+        $.ajax({
+
+            url: '/WarningAlert/Filter',
+
+            type: 'GET',
+
+            data: {
+                status: status,
+                keyword: keyword,
+                page: page
+            },
+
+            success: function (response)
+            {
+                $('#alertContainer').html(response);
+
+                currentStatus = status;
+                currentPage = page;
+
+                $('.filter-btn').removeClass('active');
+
+                $('.filter-btn').each(function ()
+                {
+                    if ($(this).data('status') == status)
+                    {
+                        $(this).addClass('active');
+                    }
+
+                    if (status === '' &&
+                        $(this).data('status') === '')
+                    {
+                        $(this).addClass('active');
+                    }
+                });
+            },
+
+            error: function ()
+            {
+                alert('Load dữ liệu thất bại');
+            }
+
+        });
+    }
+
+    // Search
+
+    $('#searchForm').submit(function (e)
+    {
+        e.preventDefault();
+
+        loadAlerts(
+            currentStatus,
+            $('#keyword').val(),
+            1);
+    });
+
+    // Search realtime
+
+    let timer;
+
+    $('#keyword').on('keyup', function ()
+    {
+        clearTimeout(timer);
+
+        timer = setTimeout(function ()
+        {
+            loadAlerts(
+                currentStatus,
+                $('#keyword').val(),
+                1);
+
+        }, 500);
+    });
+
+    // Filter
+
+    $(document).on(
+        'click',
+        '.filter-btn',
+        function (e)
+    {
+        e.preventDefault();
+
+        let status = $(this).data('status');
+
+        loadAlerts(
+            status,
+            $('#keyword').val(),
+            1);
+    });
+
+    // Paging
+
+    $(document).on(
+        'click',
+        '.ajax-page',
+        function (e)
+    {
+        e.preventDefault();
+
+        let page = $(this).data('page');
+
+        loadAlerts(
+            currentStatus,
+            $('#keyword').val(),
+            page);
+    });
+    // Claim
+
+    $(document).on(
+    'submit',
+    '.claim-form',
+    function (e)
+{
+    e.preventDefault();
+
+    let form = $(this);
+
+    $.ajax({
+
+        url: '/WarningAlert/Claim',
+
+        type: 'POST',
+
+        data: form.serialize(),
+
+        success: function (res)
+        {
+            alert(res.message);
+
+            if(res.success)
+            {
+                loadAlerts(
+                    currentStatus,
+                    $('#keyword').val(),
+                    currentPage);
+            }
+        },
+
+        error: function ()
+        {
+            alert('Có lỗi xảy ra');
+        }
+    });
+
+});
+
+//Resolve
+
+$(document).on(
+    'submit',
+    '.resolve-form',
+    function (e)
+{
+    e.preventDefault();
+
+    let form = $(this);
+
+    $.ajax({
+
+        url: '/WarningAlert/Resolve',
+
+        type: 'POST',
+
+        data: form.serialize(),
+
+        success: function (res)
+        {
+            alert(res.message);
+
+            if(res.success)
+            {
+                loadAlerts(
+                    currentStatus,
+                    $('#keyword').val(),
+                    currentPage);
+            }
+        },
+
+        error: function ()
+        {
+            alert('Có lỗi xảy ra');
+        }
+    });
+
+});
+</script>   
