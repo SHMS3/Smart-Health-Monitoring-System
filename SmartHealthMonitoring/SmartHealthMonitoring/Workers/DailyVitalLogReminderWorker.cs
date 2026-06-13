@@ -19,7 +19,7 @@ namespace SmartHealthMonitoring.Workers
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DailyVitalLogReminderWorker> _logger;
-        private readonly TimeSpan _period = TimeSpan.FromMinutes(1); // Chạy quét định kỳ mỗi 1 phút
+        private readonly TimeSpan _period = TimeSpan.FromMinutes(1);
 
         public DailyVitalLogReminderWorker(IServiceProvider serviceProvider, ILogger<DailyVitalLogReminderWorker> logger)
         {
