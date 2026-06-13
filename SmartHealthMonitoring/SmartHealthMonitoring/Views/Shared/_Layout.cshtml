@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="SmartHealth - Hệ thống quản lý hồ sơ bệnh án và theo dõi sức khỏe thông minh, cảnh báo bệnh sớm bằng AI." />
-    <title>@ViewData["Title"] - SmartHealth</title>
+    <meta name="description" content="SmartHealth Tim mạch - Hệ thống theo dõi sức khỏe tim mạch thông minh, cảnh báo sớm bằng AI." />
+    <title>@ViewData["Title"] - SmartHealth Tim Mạch</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -13,500 +13,400 @@
 
     <style>
         :root {
-            --primary: #0ea5e9;
-            --primary-dark: #0284c7;
-            --secondary: #6366f1;
-            --grad: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
-            --bg-body: #f8fafc;
+            --cl-blue:      #1a73c8;
+            --cl-blue-dark: #135fa5;
+            --cl-blue-nav:  #1565c0;
+            --cl-red:       #e53935;
+            --cl-orange:    #f57c00;
+            --cl-bg:        #f4f7fb;
+            --cl-text:      #1a2340;
+            --cl-muted:     #607080;
         }
 
+        * { box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-body);
-            color: #1e293b;
+            background: var(--cl-bg);
+            color: var(--cl-text);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            padding-top: 76px; /* Khoảng trống cho fixed navbar */
+            margin: 0;
+            padding-top: 0;
         }
 
-        /* ── NAVBAR GLASSMORPHISM ── */
-        .navbar-glass {
-            background: rgba(255, 255, 255, 0.85) !important;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
+        /* ── TOP INFO BAR ── */
+        .top-infobar {
+            background: #f0f4f8;
+            border-bottom: 1px solid #dde3ea;
+            padding: 6px 0;
+            font-size: 0.8rem;
+            color: var(--cl-muted);
         }
+        .top-infobar a { color: var(--cl-muted); text-decoration: none; }
+        .top-infobar a:hover { color: var(--cl-blue); }
+        .top-infobar .divider { margin: 0 12px; opacity: 0.4; }
 
-            .navbar-glass.scrolled {
-                box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-                background: rgba(255, 255, 255, 0.95) !important;
-            }
-
-        /* Logo */
-        .brand-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--grad);
-            border-radius: 12px;
+        /* ── HEADER LOGO BAR ── */
+        .header-main {
+            background: #fff;
+            border-bottom: 1px solid #e0e8f0;
+            padding: 14px 0;
+        }
+        .brand-wrap {
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-        }
-
-        .brand-text {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 800;
-            background: var(--grad);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.1;
-        }
-
-        /* Nav Links */
-        .nav-link {
-            font-weight: 500;
-            color: #64748b;
-            padding: 0.5rem 1rem !important;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            margin: 0 4px;
-        }
-
-            .nav-link:hover, .nav-link.active {
-                color: var(--primary);
-                background: rgba(14, 165, 233, 0.08);
-            }
-
-        /* Buttons */
-        .btn-gradient {
-            background: var(--grad);
-            color: white;
-            border: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-            .btn-gradient:hover {
-                color: white;
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
-            }
-
-        .btn-outline-custom {
-            color: var(--primary);
-            border: 2px solid rgba(14, 165, 233, 0.2);
-            transition: all 0.2s;
-        }
-
-            .btn-outline-custom:hover {
-                background: var(--primary);
-                color: white;
-                border-color: var(--primary);
-            }
-
-        /* ── FOOTER MODERN ── */
-        .footer-modern {
-            background-color: #0f172a;
-            color: #94a3b8;
-            margin-top: auto;
-            position: relative;
-            overflow: hidden;
-        }
-
-            .footer-modern a {
-                color: #94a3b8;
-                text-decoration: none;
-                transition: color 0.2s;
-            }
-
-                .footer-modern a:hover {
-                    color: var(--primary);
-                }
-
-        .social-btn {
-            width: 36px;
-            height: 36px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            transition: all 0.2s;
-        }
-
-            .social-btn:hover {
-                background: var(--primary);
-                transform: translateY(-3px);
-            }
-
-        /* ── CHATBOT UI ── */
-        .chatbot-popup {
-            position: fixed;
-            bottom: 90px;
-            right: 25px;
-            width: 360px;
-            height: 500px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-            display: none;
-            flex-direction: column;
-            z-index: 99999;
-            overflow: hidden;
-            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @@keyframes slideUp {
-            from
-
-        {
-            opacity: 0;
-            transform: translateY(30px) scale(0.95);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-
-        }
-
-        .chatbot-header {
-            background: var(--grad);
-            padding: 16px 20px;
-            color: white;
-            font-weight: 600;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background-color: #f8fafc;
-        }
-
-        .chat-bubble {
-            max-width: 85%;
-            padding: 12px 16px;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-
-        .ai-bubble {
-            background: white;
-            color: #334155;
-            border-radius: 16px 16px 16px 4px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            align-self: flex-start;
-        }
-
-        .user-bubble {
-            background: var(--grad);
-            color: white;
-            border-radius: 16px 16px 4px 16px;
-            align-self: flex-end;
-            box-shadow: 0 4px 12px rgba(14,165,233,0.2);
-        }
-
-        .chat-input-area {
-            padding: 15px;
-            background: white;
-            border-top: 1px solid #f1f5f9;
-        }
-
-        .chat-input-wrapper {
-            background: #f1f5f9;
-            border-radius: 50px;
-            padding: 4px 4px 4px 16px;
-            display: flex;
-            align-items: center;
-        }
-
-            .chat-input-wrapper input {
-                border: none;
-                background: transparent;
-                flex: 1;
-                outline: none;
-                color: #1e293b;
-            }
-
-        .chat-send-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-        }
-
-            .chat-send-btn:hover {
-                background: var(--primary-dark);
-            }
-
-        .ai-floating-btn {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--grad);
-            color: white;
-            border: none;
-            font-size: 24px;
-            box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4);
-            cursor: pointer;
-            z-index: 999999;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-            .ai-floating-btn:hover {
-                transform: scale(1.1);
-            }
-    </style>
-
-    <style>
-        /* ══════════════════════════════════════════════
-           GLOBAL FLOATING CHAT WIDGET STYLES (Doctor Chat)
-           ══════════════════════════════════════════════ */
-        .global-chat-widget-container {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 16px;
-            z-index: 9999;
-            height: 64px;
-            overflow: visible;
-        }
-        .global-widget-item {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .global-chat-trigger {
-            position: relative;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--grad);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 8px 32px rgba(14,165,233,.4);
-            z-index: 10;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .global-chat-trigger:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 12px 40px rgba(14,165,233,.6);
-        }
-        .global-chat-trigger:active {
-            transform: scale(0.95);
-        }
-        .global-chat-trigger .pulse-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 2px solid var(--primary);
-            animation: ringPulse 2s infinite;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .global-call-trigger {
-            position: relative;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #f1faf5;
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(16,185,129,.15);
-            z-index: 5;
-            opacity: 0;
-            transform: translateX(76px) scale(0.5);
-            pointer-events: none;
-            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            gap: 12px;
             text-decoration: none;
         }
-        .global-chat-widget-container:hover .global-call-trigger {
-            opacity: 1;
-            transform: translateX(0) scale(1);
-            pointer-events: auto;
+        .brand-logo-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, var(--cl-red), var(--cl-blue));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.4rem;
+            box-shadow: 0 4px 14px rgba(229,57,53,.3);
+            flex-shrink: 0;
         }
-        .global-call-trigger:hover {
-            background: #10b981;
-            color: #fff;
-            transform: scale(1.1);
-            box-shadow: 0 8px 24px rgba(16,185,129,.35);
+        .brand-text-wrap { line-height: 1.1; }
+        .brand-name {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--cl-blue);
+            display: block;
         }
-        .global-chat-tooltip, .global-call-tooltip {
-            position: absolute;
-            bottom: 74px;
-            background: #1e293b;
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.82rem;
-            font-weight: 500;
+        .brand-sub {
+            font-size: 0.7rem;
+            color: var(--cl-red);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-search {
+            flex: 1; max-width: 420px; margin: 0 32px;
+            display: flex;
+            border: 1.5px solid #d0dce8;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+        .header-search input {
+            flex: 1; border: none; outline: none;
+            padding: 9px 16px; font-size: 0.88rem;
+            background: transparent; color: var(--cl-text);
+        }
+        .header-search input::placeholder { color: #9ab; }
+        .header-search button {
+            background: var(--cl-blue); border: none;
+            color: white; padding: 0 18px; cursor: pointer;
+            font-size: 0.9rem; transition: background .2s;
+        }
+        .header-search button:hover { background: var(--cl-blue-dark); }
+
+        .header-contact { display: flex; align-items: center; gap: 20px; }
+        .hotline-wrap { display: flex; align-items: center; gap: 10px; }
+        .hotline-icon {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: var(--cl-red); color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+        .hotline-number { font-weight: 700; font-size: 1.05rem; color: var(--cl-red); }
+        .hotline-label { font-size: 0.72rem; color: var(--cl-muted); }
+
+        .header-auth { display: flex; gap: 8px; align-items: center; }
+        .btn-register {
+            background: var(--cl-blue); color: white;
+            border: none; border-radius: 5px;
+            padding: 8px 20px; font-weight: 600; font-size: 0.85rem;
+            cursor: pointer; transition: background .2s; text-decoration: none;
             white-space: nowrap;
-            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.2);
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(10px) scale(0.9);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 100;
+        }
+        .btn-register:hover { background: var(--cl-blue-dark); color: white; }
+        .btn-login {
+            background: white; color: var(--cl-blue);
+            border: 1.5px solid var(--cl-blue);
+            border-radius: 5px;
+            padding: 8px 20px; font-weight: 600; font-size: 0.85rem;
+            cursor: pointer; transition: all .2s; text-decoration: none;
+            white-space: nowrap;
+        }
+        .btn-login:hover { background: var(--cl-blue); color: white; }
+
+        /* ── NAVIGATION ── */
+        .main-nav {
+            background: var(--cl-blue-nav);
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 2px 12px rgba(21,101,192,.3);
+        }
+        .nav-list {
+            display: flex; align-items: center;
+            list-style: none; margin: 0; padding: 0; gap: 0;
+        }
+        .nav-item { position: relative; }
+        .nav-link-cl {
+            display: flex; align-items: center; gap: 6px;
+            color: rgba(255,255,255,.92) !important;
+            padding: 14px 18px;
+            font-size: 0.88rem; font-weight: 500;
+            text-decoration: none;
+            transition: background .2s, color .2s;
+            white-space: nowrap;
+        }
+        .nav-link-cl:hover, .nav-link-cl.active {
+            background: rgba(255,255,255,.15);
+            color: #fff !important;
+        }
+        .nav-link-cl i { font-size: 0.8rem; }
+        .nav-home-icon { font-size: 1.1rem !important; }
+
+        /* User avatar in nav */
+        .nav-user-wrap {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 18px;
+        }
+        .nav-user-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(255,255,255,.25);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 0.85rem;
+        }
+        .nav-user-name { color: rgba(255,255,255,.95); font-size: 0.85rem; font-weight: 500; }
+
+        /* ── MAIN CONTENT ── */
+        main.flex-grow-1 { background: var(--cl-bg); }
+
+        /* ── FOOTER ── */
+        .footer-cl {
+            background: var(--cl-blue-nav);
+            color: rgba(255,255,255,.85);
+            padding: 40px 0 0;
+        }
+        .footer-logo-name {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800; font-size: 1.05rem; color: #fff;
+        }
+        .footer-logo-sub { font-size: 0.72rem; color: rgba(255,255,255,.6); }
+        .footer-desc { font-size: 0.82rem; color: rgba(255,255,255,.7); line-height: 1.7; margin-top: 10px; }
+        .footer-social a {
+            width: 32px; height: 32px;
+            border-radius: 6px;
+            background: rgba(255,255,255,.12);
+            color: white; display: inline-flex;
+            align-items: center; justify-content: center;
+            margin-right: 6px; text-decoration: none;
+            transition: background .2s;
+        }
+        .footer-social a:hover { background: rgba(255,255,255,.3); }
+        .footer-col-title {
+            font-size: 0.78rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            color: rgba(255,255,255,.95); margin-bottom: 14px;
+            border-bottom: 2px solid rgba(255,255,255,.15); padding-bottom: 8px;
+        }
+        .footer-schedule-row {
+            display: flex; justify-content: space-between;
+            padding: 6px 0; font-size: 0.82rem;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+        .footer-schedule-row:last-child { border: none; }
+        .footer-schedule-row .day { color: rgba(255,255,255,.7); }
+        .footer-schedule-row .time { font-weight: 600; color: #fff; }
+        .footer-contact-item {
+            display: flex; gap: 10px; align-items: flex-start;
+            margin-bottom: 10px; font-size: 0.82rem;
+        }
+        .footer-contact-item i { color: rgba(255,255,255,.5); margin-top: 2px; width: 14px; text-align: center; }
+        .footer-contact-item span { color: rgba(255,255,255,.8); line-height: 1.5; }
+        .footer-bottom {
+            background: rgba(0,0,0,.15);
+            padding: 14px 0;
+            text-align: center;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,.5);
+            margin-top: 32px;
+        }
+
+        /* ── CHATBOT POPUP (giữ nguyên) ── */
+        .chatbot-popup {
+            position: fixed; bottom: 90px; right: 25px;
+            width: 360px; height: 520px;
+            background: white; border-radius: 18px;
+            box-shadow: 0 15px 50px rgba(0,0,0,.18);
+            display: none; flex-direction: column;
+            z-index: 99999; overflow: hidden;
+            animation: slideUp .3s cubic-bezier(.175,.885,.32,1.275);
+        }
+        @@keyframes slideUp {
+            from { opacity:0; transform:translateY(30px) scale(.95); }
+            to   { opacity:1; transform:translateY(0) scale(1); }
+        }
+        .chatbot-header {
+            background: linear-gradient(135deg, var(--cl-blue), #1a56db);
+            padding: 16px 20px; color: white; font-weight: 600;
+        }
+        .chat-messages {
+            flex: 1; overflow-y: auto; padding: 16px;
+            background: #f8fafc;
+        }
+        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: #c8d4e0; border-radius: 4px; }
+        .chat-bubble {
+            max-width: 85%; padding: 10px 14px;
+            font-size: 0.88rem; line-height: 1.5; word-wrap: break-word;
+        }
+        .ai-bubble {
+            background: white; color: #334155;
+            border-radius: 14px 14px 14px 4px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 6px rgba(0,0,0,.04);
+        }
+        .user-bubble {
+            background: linear-gradient(135deg, var(--cl-blue), #1a56db);
+            color: white; border-radius: 14px 14px 4px 14px;
+            box-shadow: 0 4px 12px rgba(26,115,200,.25);
+        }
+        .chat-input-area { padding: 12px 14px; background: white; border-top: 1px solid #f1f5f9; }
+        .chat-input-wrapper {
+            background: #f1f5f9; border-radius: 40px;
+            padding: 4px 4px 4px 16px;
+            display: flex; align-items: center;
+        }
+        .chat-input-wrapper input {
+            border: none; background: transparent;
+            flex: 1; outline: none; color: var(--cl-text); font-size: 0.88rem;
+        }
+        .chat-send-btn {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--cl-blue); color: white;
+            border: none; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; transition: .2s;
+        }
+        .chat-send-btn:hover { background: var(--cl-blue-dark); }
+
+        /* Popup welcome */
+        .popup-welcome {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 16px 14px 12px; gap: 5px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .popup-welcome-title { font-size: 0.88rem; font-weight: 600; color: var(--cl-text); margin: 0; }
+        .popup-welcome-sub   { font-size: 0.76rem; color: #8a9bb0; margin: 0 0 6px; }
+        .popup-suggestions   { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+        .popup-suggestion-btn {
+            background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 9px;
+            padding: 8px 12px; font-size: 0.78rem; color: var(--cl-blue); font-weight: 500;
+            cursor: pointer; text-align: left; display: flex; align-items: center; gap: 7px;
+            transition: all .2s; line-height: 1.4;
+        }
+        .popup-suggestion-btn:hover { background: #eff6ff; border-color: var(--cl-blue); transform: translateX(2px); }
+        .popup-suggestion-btn i { font-size: 0.8rem; flex-shrink: 0; color: var(--cl-orange); }
+
+        /* AI Floating button */
+        .ai-floating-btn {
+            position: fixed; bottom: 25px; right: 25px;
+            width: 58px; height: 58px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--cl-blue), #1a56db);
+            color: white; border: none; font-size: 22px;
+            box-shadow: 0 8px 24px rgba(26,115,200,.4);
+            cursor: pointer; z-index: 999999;
+            transition: transform .3s cubic-bezier(.175,.885,.32,1.275);
+        }
+        .ai-floating-btn:hover { transform: scale(1.1); }
+
+        /* Global doctor chat widget */
+        .global-chat-widget-container {
+            position: fixed; bottom: 24px; right: 24px;
+            display: flex; align-items: center; justify-content: flex-end; gap: 16px;
+            z-index: 9999; height: 64px; overflow: visible;
+        }
+        .global-widget-item { position: relative; display: flex; align-items: center; justify-content: center; }
+        .global-chat-trigger {
+            position: relative; width: 60px; height: 60px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--cl-blue), #1a56db);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; cursor: pointer;
+            box-shadow: 0 8px 32px rgba(26,115,200,.4); z-index: 10;
+            transition: all .3s cubic-bezier(.175,.885,.32,1.275);
+        }
+        .global-chat-trigger:hover { transform: scale(1.1) rotate(5deg); }
+        .global-chat-trigger .pulse-ring {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 50%; border: 2px solid var(--cl-blue);
+            animation: ringPulse 2s infinite; opacity: 0; pointer-events: none;
+        }
+        @@keyframes ringPulse { 0% { transform:scale(1);opacity:.8; } 100% { transform:scale(1.4);opacity:0; } }
+        .global-call-trigger {
+            position: relative; width: 60px; height: 60px; border-radius: 50%;
+            background: #f1faf5; color: #10b981;
+            border: 1px solid rgba(16,185,129,.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer;
+            box-shadow: 0 6px 20px rgba(16,185,129,.15); z-index: 5;
+            opacity: 0; transform: translateX(76px) scale(.5); pointer-events: none;
+            transition: all .35s cubic-bezier(.175,.885,.32,1.275); text-decoration: none;
+        }
+        .global-chat-widget-container:hover .global-call-trigger {
+            opacity: 1; transform: translateX(0) scale(1); pointer-events: auto;
+        }
+        .global-call-trigger:hover { background: #10b981; color: #fff; transform: scale(1.1); }
+        .global-chat-tooltip, .global-call-tooltip {
+            position: absolute; bottom: 74px;
+            background: #1e293b; color: #fff; padding: 8px 16px;
+            border-radius: 8px; font-size: .82rem; font-weight: 500;
+            white-space: nowrap; box-shadow: 0 6px 20px rgba(15,23,42,.2);
+            opacity: 0; pointer-events: none;
+            transform: translateY(10px) scale(.9);
+            transition: all .3s cubic-bezier(.175,.885,.32,1.275); z-index: 100;
         }
         .global-chat-tooltip::after, .global-call-tooltip::after {
-            content: '';
-            position: absolute;
-            bottom: -6px;
-            left: 50%;
+            content: ''; position: absolute; bottom: -6px; left: 50%;
             transform: translateX(-50%) rotate(45deg);
-            width: 12px;
-            height: 12px;
-            background: #1e293b;
+            width: 12px; height: 12px; background: #1e293b;
         }
-        .global-widget-item:hover .global-chat-tooltip {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
+        .global-widget-item:hover .global-chat-tooltip,
         .global-widget-item:hover .global-call-tooltip {
-            opacity: 1;
-            transform: translateY(0) scale(1);
+            opacity: 1; transform: translateY(0) scale(1);
         }
-        /* Doctor badge */
         .chat-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--danger, #ef4444);
-            color: #fff;
-            font-size: 0.72rem;
-            font-weight: 700;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 8px rgba(239,68,68,.4);
-            animation: pulseBadge 2s infinite;
-            z-index: 12;
+            position: absolute; top: -5px; right: -5px;
+            background: #ef4444; color: #fff; font-size: .72rem; font-weight: 700;
+            width: 22px; height: 22px; border-radius: 50%;
+            display: none; align-items: center; justify-content: center;
+            border: 2px solid #fff; box-shadow: 0 2px 8px rgba(239,68,68,.4);
+            animation: pulseBadge 2s infinite; z-index: 12;
         }
-        @@keyframes pulseBadge {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); }
-        }
+        @@keyframes pulseBadge { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
         .global-chat-box {
-            position: fixed;
-            bottom: 96px;
-            right: 24px;
-            width: 400px;
-            height: 600px;
-            z-index: 9998;
-            border-radius: 16px;
-            box-shadow: 0 12px 40px rgba(15, 23, 42, 0.15);
-            border: 1px solid rgba(226,232,240,1);
-            background: #fff;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            transform: translateY(20px) scale(0.95);
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+            position: fixed; bottom: 96px; right: 24px;
+            width: 400px; height: 600px; z-index: 9998;
+            border-radius: 16px; box-shadow: 0 12px 40px rgba(15,23,42,.15);
+            border: 1px solid rgba(226,232,240,1); background: #fff;
+            display: none; flex-direction: column; overflow: hidden;
+            transform: translateY(20px) scale(.95); opacity: 0;
+            transition: all .3s cubic-bezier(.175,.885,.32,1.15);
         }
-        .global-chat-box.active {
-            display: flex;
-            transform: translateY(0) scale(1);
-            opacity: 1;
-        }
-        .global-chat-box.doctor-mode {
-            width: 850px;
-            max-width: 90vw;
-            height: 700px;
-            max-height: 85vh;
-        }
+        .global-chat-box.active { display: flex; transform: translateY(0) scale(1); opacity: 1; }
+        .global-chat-box.doctor-mode { width: 850px; max-width: 90vw; height: 700px; max-height: 85vh; }
         .global-chat-header {
-            background: #f8fafc;
-            padding: 12px 16px;
+            background: #f8fafc; padding: 12px 16px;
             border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            display: flex; align-items: center; justify-content: space-between;
         }
-        .global-chat-header-title {
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .global-chat-header-title { font-weight: 700; font-size: .9rem; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+        .global-chat-header-title i { color: var(--cl-blue); }
+        .global-chat-close-btn { background: none; border: none; font-size: 1rem; color: #94a3b8; cursor: pointer; padding: 4px; transition: color .2s; }
+        .global-chat-close-btn:hover { color: #ef4444; }
+        .global-chat-iframe { width: 100%; height: calc(100% - 45px); border: none; }
+        @@media(max-width:576px) {
+            .global-chat-box { bottom:0!important;right:0!important;width:100vw!important;height:100vh!important;border-radius:0!important; }
+            .global-chat-box.doctor-mode { width:100vw!important;max-width:100vw!important;height:100vh!important;max-height:100vh!important;border-radius:0!important; }
         }
-        .global-chat-header-title i {
-            color: var(--primary);
-        }
-        .global-chat-close-btn {
-            background: none;
-            border: none;
-            font-size: 1rem;
-            color: #94a3b8;
-            cursor: pointer;
-            padding: 4px;
-            transition: color 0.2s;
-        }
-        .global-chat-close-btn:hover {
-            color: #ef4444;
-        }
-        .global-chat-iframe {
-            width: 100%;
-            height: calc(100% - 45px);
-            border: none;
-        }
-        @@keyframes ringPulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.4); opacity: 0; }
-        }
-        @@media (max-width: 576px) {
-            .global-chat-box {
-                bottom: 0 !important;
-                right: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                border-radius: 0 !important;
-            }
-            .global-chat-box.doctor-mode {
-                width: 100vw !important;
-                max-width: 100vw !important;
-                height: 100vh !important;
-                max-height: 100vh !important;
-                border-radius: 0 !important;
-            }
+        @@media(max-width:992px) {
+            .header-search { display: none; }
+            .header-main .container-xl { flex-wrap: wrap; gap: 10px; }
         }
     </style>
 
@@ -514,73 +414,150 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg fixed-top navbar-glass py-2" id="mainNav">
-        <div class="container-fluid container-xl">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-                <div class="brand-icon"><i class="fas fa-heartbeat"></i></div>
-                <div class="d-flex flex-column justify-content-center">
-                    <span class="brand-text fs-5">SmartHealth</span>
-                    <small class="text-muted text-uppercase" style="font-size: 0.6rem; letter-spacing: 1px; margin-top: -4px;">Monitoring System</small>
+    <!-- ── TOP INFO BAR ── -->
+    <div class="top-infobar d-none d-md-block">
+        <div class="container container-xl d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-1">
+                <a href="#"><i class="fab fa-facebook-f me-1"></i></a>
+                <a href="#" class="ms-2"><i class="fab fa-instagram me-1"></i></a>
+                <a href="#" class="ms-2"><i class="fab fa-youtube me-1"></i></a>
+                <a href="#" class="ms-2"><i class="fas fa-envelope me-1"></i></a>
+            </div>
+            <div class="d-flex align-items-center">
+                <a href="#"><i class="fas fa-envelope me-1"></i> Liên hệ</a>
+                <span class="divider">|</span>
+                <span><i class="fas fa-clock me-1"></i> 08:00 – 17:00</span>
+                <span class="divider">|</span>
+                <a href="tel:+84901234567"><i class="fas fa-phone me-1"></i> +84 90 123 4567</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── HEADER LOGO BAR ── -->
+    <header class="header-main">
+        <div class="container container-xl d-flex align-items-center justify-content-between">
+            <a asp-controller="Home" asp-action="Index" class="brand-wrap">
+                <div class="brand-logo-icon"><i class="fas fa-heartbeat"></i></div>
+                <div class="brand-text-wrap">
+                    <span class="brand-name">SmartHealth</span>
+                    <span class="brand-sub">Tim Mạch</span>
                 </div>
             </a>
 
-            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
-                <i class="fas fa-bars text-dark fs-4"></i>
-            </button>
+            <div class="header-search d-none d-lg-flex">
+                <input type="text" placeholder="Tìm kiếm dịch vụ, thông tin..." />
+                <button type="button"><i class="fas fa-search"></i></button>
+            </div>
 
-            <div class="collapse navbar-collapse" id="navContent">
-                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
-                    @{
-                        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-                        bool isDoctor = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("1");
-                    }
+            <div class="header-contact d-none d-md-flex">
+                <div class="hotline-wrap">
+                    <div class="hotline-icon"><i class="fas fa-phone-alt"></i></div>
+                    <div>
+                        <div class="hotline-number">0999 999 999</div>
+                        <div class="hotline-label">Hotline 24/7</div>
+                    </div>
+                </div>
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    var fullName = User.FindFirst("FullName")?.Value ?? "";
+                    var lastName = fullName.Split(' ').LastOrDefault() ?? "";
 
-                    <li class="nav-item">
-                        <a class="nav-link @(currentController == "Home" ? "active fw-semibold" : "")" asp-controller="Home" asp-action="Index">Trang chủ</a>
-                    </li>
-
-                    @if (isDoctor)
-                    {
-                        <li class="nav-item"><a class="nav-link @(currentController == "DoctorDashboard" ? "active fw-semibold" : "")" asp-controller="DoctorDashboard" asp-action="Index">Bệnh nhân</a></li>
-                        <li class="nav-item"><a class="nav-link @(currentController == "WarningAlert" ? "active fw-semibold" : "")" asp-controller="WarningAlert" asp-action="Dashboard">Cảnh báo AI</a></li>
-                        <li class="nav-item"><a class="nav-link @(currentController == "EmailNotification" ? "active fw-semibold" : "")" asp-controller="EmailNotification" asp-action="Index">Lịch sử Email</a></li>
-                    }
-                    else if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("0"))
-                    {
-                        <li class="nav-item"><a class="nav-link @(currentController == "Patient" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active fw-semibold" : "")" asp-controller="Patient" asp-action="Index">Sổ tay hằng ngày</a></li>
-                        <li class="nav-item"><a class="nav-link @(currentController == "Patient" && ViewContext.RouteData.Values["action"]?.ToString() == "Tracker" ? "active fw-semibold" : "")" asp-controller="Patient" asp-action="Tracker">Biểu đồ Sức khỏe</a></li>
-                        <li class="nav-item"><a class="nav-link @(currentController == "ClinicalRecord" ? "active fw-semibold" : "")" asp-controller="ClinicalRecord" asp-action="MyRecords">Hồ sơ bệnh án</a></li>
-                        <li class="nav-item"><a class="nav-link @(currentController == "Chatbot" ? "active fw-semibold" : "")" asp-controller="Chatbot" asp-action="History">Lịch sử Chat</a></li>
-                    }
-                    <li class="nav-item">
-                        <a class="nav-link @(currentController == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Contact" ? "active fw-semibold" : "")" asp-controller="Home" asp-action="Contact">Liên hệ</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center gap-3">
-                    @if (User.Identity != null && User.Identity.IsAuthenticated)
-                    {
-                        var fullName = User.FindFirst("FullName")?.Value ?? "";
-                        var lastName = fullName.Split(' ').LastOrDefault() ?? "";
-
-                        <a asp-controller="Home" asp-action="Profile" class="d-flex align-items-center gap-2 text-decoration-none">
-                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex justify-content-center align-items-center" style="width: 38px; height: 38px;">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <span class="text-nowrap fw-semibold text-dark">@lastName</span>
+                    <div class="header-auth">
+                        <a asp-controller="Home" asp-action="Profile" class="btn-login">
+                            <i class="fas fa-user me-1"></i> @lastName
                         </a>
-
                         <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-light rounded-pill px-3 fw-medium border shadow-sm">Đăng xuất</button>
+                            <button type="submit" class="btn-login" style="border-color:#e53935;color:#e53935;">Đăng xuất</button>
                         </form>
-                    }
-                    else
-                    {
-                        <a asp-controller="Auth" asp-action="Login" class="btn btn-light rounded-pill px-4 fw-medium border shadow-sm">Đăng nhập</a>
-                        <a asp-controller="Auth" asp-action="Register" class="btn btn-gradient rounded-pill px-4 fw-medium shadow-sm">Đăng ký</a>
-                    }
-                </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="header-auth">
+                        <a asp-controller="Auth" asp-action="Register" class="btn-register">Đăng ký</a>
+                        <a asp-controller="Auth" asp-action="Login"    class="btn-login">Đăng nhập</a>
+                    </div>
+                }
             </div>
+        </div>
+    </header>
+
+    <!-- ── NAVIGATION BAR ── -->
+    <nav class="main-nav">
+        <div class="container container-xl">
+            @{
+                var ctrl   = ViewContext.RouteData.Values["controller"]?.ToString();
+                var action = ViewContext.RouteData.Values["action"]?.ToString();
+                bool isDoc = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("1");
+                bool isPat = User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("0");
+            }
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a class="nav-link-cl @(ctrl=="Home" && action=="Index" ? "active" : "")" asp-controller="Home" asp-action="Index">
+                        <i class="fas fa-home nav-home-icon"></i>
+                    </a>
+                </li>
+
+                @if (isDoc)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="DoctorDashboard" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="Index">
+                            <i class="fas fa-users"></i> Bệnh nhân
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="WarningAlert" ? "active" : "")" asp-controller="WarningAlert" asp-action="Dashboard">
+                            <i class="fas fa-robot"></i> Cảnh báo AI
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="EmailNotification" ? "active" : "")" asp-controller="EmailNotification" asp-action="Index">
+                            <i class="fas fa-envelope"></i> Lịch sử Email
+                        </a>
+                    </li>
+                }
+                else if (isPat)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="Patient" && action=="Index" ? "active" : "")" asp-controller="Patient" asp-action="Index">
+                            <i class="fas fa-book-medical"></i> Sổ tay hằng ngày
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="Patient" && action=="Tracker" ? "active" : "")" asp-controller="Patient" asp-action="Tracker">
+                            <i class="fas fa-chart-line"></i> Biểu đồ sức khỏe
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="ClinicalRecord" ? "active" : "")" asp-controller="ClinicalRecord" asp-action="MyRecords">
+                            <i class="fas fa-file-medical"></i> Hồ sơ bệnh án
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="Chatbot" ? "active" : "")" asp-controller="Chatbot" asp-action="History">
+                            <i class="fas fa-comments"></i> Lịch sử Chat
+                        </a>
+                    </li>
+                }
+
+                <li class="nav-item">
+                    <a class="nav-link-cl @(ctrl=="Home" && action=="Contact" ? "active" : "")" asp-controller="Home" asp-action="Contact">
+                        <i class="fas fa-phone-alt"></i> Liên hệ
+                    </a>
+                </li>
+
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <li class="nav-item ms-auto">
+                        <div class="nav-user-wrap">
+                            <div class="nav-user-avatar"><i class="fas fa-user"></i></div>
+                            @{ var fn = User.FindFirst("FullName")?.Value ?? "Người dùng"; }
+                            <span class="nav-user-name d-none d-lg-block">@fn</span>
+                        </div>
+                    </li>
+                }
+            </ul>
         </div>
     </nav>
 
@@ -588,72 +565,103 @@
         @RenderBody()
     </main>
 
-    <footer class="footer-modern pt-5 pb-3">
+    <!-- ── FOOTER ── -->
+    <footer class="footer-cl">
         <div class="container container-xl">
-            <div class="row gy-4 mb-4">
-                <div class="col-lg-4 col-md-6">
-                    <a class="d-flex align-items-center gap-2 mb-3 text-white text-decoration-none" href="/">
-                        <div class="brand-icon shadow-none"><i class="fas fa-heartbeat"></i></div>
-                        <span class="brand-text text-white fs-4">SmartHealth</span>
-                    </a>
-                    <p class="small text-muted pe-lg-4 mb-4">
-                        Hệ thống quản lý hồ sơ bệnh án và theo dõi sức khỏe thông minh. Phát hiện sớm nguy cơ bệnh tật nhờ AI tiên tiến.
-                    </p>
-                    <div class="d-flex gap-2">
-                        <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-btn"><i class="fab fa-linkedin-in"></i></a>
-                    </div>
-                </div>
+            <div class="row gy-4 pb-4">
 
-                <div class="col-lg-2 col-md-6">
-                    <h6 class="text-white text-uppercase letter-spacing-1 mb-3 fs-7 fw-bold">Dịch vụ</h6>
-                    <ul class="list-unstyled d-flex flex-column gap-2 small">
-                        <li><a href="#">Hồ sơ bệnh án</a></li>
-                        <li><a href="#">Theo dõi sức khỏe</a></li>
-                        <li><a href="#">Cảnh báo bệnh sớm</a></li>
-                        <li><a href="#">Phân tích AI</a></li>
-                    </ul>
-                </div>
-
+                <!-- Cột 1: Logo + mô tả -->
                 <div class="col-lg-3 col-md-6">
-                    <h6 class="text-white text-uppercase letter-spacing-1 mb-3 fs-7 fw-bold">Liên hệ</h6>
-                    <ul class="list-unstyled d-flex flex-column gap-3 small">
-                        <li class="d-flex gap-3 align-items-start">
-                            <i class="fas fa-map-marker-alt text-primary mt-1"></i>
-                            <span>Đại học FPT,<br>HOLA Nơi Tình Yêu Bắt Đầu</span>
-                        </li>
-                        <li class="d-flex gap-3 align-items-center">
-                            <i class="fas fa-phone-alt text-primary"></i>
-                            <span>1900 1234 — Hotline 24/7</span>
-                        </li>
-                        <li class="d-flex gap-3 align-items-center">
-                            <i class="fas fa-envelope text-primary"></i>
-                            <span>contact@smarthealth.vn</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-3 col-md-6">
-                    <div class="bg-dark bg-opacity-50 p-3 rounded-4 border border-secondary border-opacity-25">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <div class="spinner-grow text-success spinner-grow-sm" role="status"></div>
-                            <span class="text-white fw-medium small">Hệ thống đang hoạt động</span>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="brand-logo-icon" style="width:40px;height:40px;font-size:1.1rem;"><i class="fas fa-heartbeat"></i></div>
+                        <div>
+                            <div class="footer-logo-name">SmartHealth</div>
+                            <div class="footer-logo-sub">Theo dõi Tim mạch AI</div>
                         </div>
-                        <p class="text-muted small mb-0" style="font-size: 0.75rem;">AI Server & Database ổn định. Cập nhật 1 phút trước.</p>
+                    </div>
+                    <p class="footer-desc">
+                        Hệ thống theo dõi sức khỏe tim mạch thông minh. Phát hiện sớm nguy cơ và nhận cảnh báo kịp thời từ AI.
+                    </p>
+                    <p style="font-size:0.75rem;color:rgba(255,255,255,.5);margin-top:8px;">
+                        Giấy phép số 47/GP-TTĐT, ngày 20 tháng 01 năm 2017
+                    </p>
+                    <div class="footer-social mt-3">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#"><i class="fas fa-envelope"></i></a>
                     </div>
                 </div>
-            </div>
 
-            <hr class="border-secondary border-opacity-50 my-4">
-
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small">
-                <p class="mb-2 mb-md-0">© 2026 SmartHealth Monitoring System. Bảo lưu mọi quyền.</p>
-                <div class="d-flex gap-3">
-                    <a href="#">Điều khoản sử dụng</a>
-                    <a href="#">Chính sách bảo mật</a>
+                <!-- Cột 2: Lịch làm việc -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="footer-col-title"><i class="fas fa-clock me-1"></i>Lịch làm việc</div>
+                    <div class="footer-schedule-row">
+                        <span class="day">Thứ 2 – Thứ 7</span>
+                        <span class="time">08:00 – 17:00</span>
+                    </div>
+                    <div class="footer-schedule-row">
+                        <span class="day">Chuyên khoa Tim mạch</span>
+                        <span class="time">08:00 – 12:00</span>
+                    </div>
+                    <div class="footer-schedule-row">
+                        <span class="day">Thứ 2 – Thứ 6</span>
+                        <span class="time">17:00 – 20:00</span>
+                    </div>
+                    <div class="footer-schedule-row">
+                        <span class="day">Chủ nhật</span>
+                        <span class="time" style="color:#fbbf24;">Nghỉ</span>
+                    </div>
+                    <div class="footer-schedule-row mt-2">
+                        <span class="day"><i class="fas fa-phone-alt me-1"></i>Hotline 24/7</span>
+                        <span class="time" style="color:#fbbf24;">0999 999 999</span>
+                    </div>
                 </div>
+
+                <!-- Cột 3: Liên hệ -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="footer-col-title"><i class="fas fa-map-marker-alt me-1"></i>Liên hệ</div>
+                    <div class="footer-contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Đại học FPT,<br>TP. Hồ Chí Minh</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="fas fa-phone-alt"></i>
+                        <span>1900 1234 — Hotline 24/7</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>contact@smarthealth.vn</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="fas fa-globe"></i>
+                        <span>www.smarthealth.vn</span>
+                    </div>
+                    <div class="mt-3">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <div class="spinner-grow text-success spinner-grow-sm" role="status" style="width:8px;height:8px;"></div>
+                            <span style="font-size:0.76rem;color:rgba(255,255,255,.8);">Hệ thống đang hoạt động ổn định</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột 4: Bản đồ -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="footer-col-title"><i class="fas fa-map me-1"></i>Bản đồ</div>
+                    <div style="border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.15);">
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4482!2d106.8!3d10.85!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDUxJzAwLjAiTiAxMDbCsDQ4JzAwLjAiRQ!5e0!3m2!1svi!2svn!4v1234567890"
+                            width="100%" height="150" style="border:0;" allowfullscreen="" loading="lazy">
+                        </iframe>
+                    </div>
+                </div>
+
             </div>
+        </div>
+        <div class="footer-bottom">
+            © 2026 SmartHealth Tim Mạch. Bảo lưu mọi quyền.
+            &nbsp;|&nbsp; <a href="#" style="color:rgba(255,255,255,.5);">Điều khoản</a>
+            &nbsp;|&nbsp; <a href="#" style="color:rgba(255,255,255,.5);">Bảo mật</a>
         </div>
     </footer>
 
@@ -662,102 +670,74 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
-        // Hiệu ứng Glass Navbar khi cuộn chuột
-        window.addEventListener('scroll', () => {
-            const nav = document.getElementById('mainNav');
-            if (window.scrollY > 20) {
-                nav.classList.add('scrolled', 'py-1');
-                nav.classList.remove('py-2');
-            } else {
-                nav.classList.remove('scrolled', 'py-1');
-                nav.classList.add('py-2');
-            }
-        });
-
-        // Logic Mở/Đóng AI Chatbot (Gemini)
+        // Logic AI Chatbot popup
         document.addEventListener("DOMContentLoaded", function () {
             const openBtn = document.getElementById("openChatbot");
             const closeBtn = document.getElementById("closeChatbot");
-            const popup = document.getElementById("chatbotPopup");
-
-            if (openBtn && popup) {
-                openBtn.addEventListener("click", () => {
-                    popup.style.display = "flex";
-                });
-            }
-
-            if (closeBtn && popup) {
-                closeBtn.addEventListener("click", () => {
-                    popup.style.display = "none";
-                });
-            }
+            const popup   = document.getElementById("chatbotPopup");
+            if (openBtn && popup) openBtn.addEventListener("click", () => popup.style.display = "flex");
+            if (closeBtn && popup) closeBtn.addEventListener("click", () => popup.style.display = "none");
         });
 
-        // Logic Chat API
         document.addEventListener("DOMContentLoaded", function () {
-            const sendBtn = document.getElementById("sendMessage");
-            const input = document.getElementById("chatInput");
+            const sendBtn  = document.getElementById("sendMessage");
+            const input    = document.getElementById("chatInput");
             const messages = document.getElementById("chatMessages");
-
             if (!sendBtn || !input || !messages) return;
 
             async function sendMessage() {
                 const text = input.value.trim();
                 if (!text) return;
-
-                // In câu hỏi User
-                messages.innerHTML += `
-                    <div class="d-flex justify-content-end mb-3">
-                        <div class="chat-bubble user-bubble">${text}</div>
-                    </div>`;
+                hideWelcome();
+                messages.innerHTML += `<div class="d-flex justify-content-end mb-2"><div class="chat-bubble user-bubble">${text}</div></div>`;
                 input.value = "";
                 scrollToBottom();
 
-                // Hiện "Đang gõ..."
                 const typingId = "typing-" + Date.now();
-                messages.innerHTML += `
-                    <div id="${typingId}" class="d-flex justify-content-start mb-3">
-                        <div class="chat-bubble ai-bubble text-muted">
-                            <i class="fas fa-circle-notch fa-spin me-2"></i>Đang suy nghĩ...
-                        </div>
-                    </div>`;
+                messages.innerHTML += `<div id="${typingId}" class="d-flex justify-content-start mb-2"><div class="chat-bubble ai-bubble text-muted"><i class="fas fa-circle-notch fa-spin me-1"></i>Đang suy nghĩ...</div></div>`;
                 scrollToBottom();
 
                 try {
-                    const response = await fetch('/Chatbot/SendMessage', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                    const res  = await fetch('/Chatbot/SendMessage', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ Message: text })
                     });
-
-                    const data = await response.json();
+                    const data = await res.json();
                     document.getElementById(typingId).remove();
-
                     if (data.success) {
-                        messages.innerHTML += `
-                            <div class="d-flex justify-content-start mb-3">
-                                <div class="chat-bubble ai-bubble">${data.reply.replace(/\n/g, '<br>')}</div>
-                            </div>`;
+                        messages.innerHTML += `<div class="d-flex justify-content-start mb-2"><div class="chat-bubble ai-bubble">${data.reply.replace(/\n/g,'<br>')}</div></div>`;
                     } else {
-                        messages.innerHTML += `<div class="text-center text-danger small mb-3">Lỗi: ${data.error}</div>`;
+                        messages.innerHTML += `<div class="text-center text-danger small mb-2">Lỗi: ${data.error}</div>`;
                     }
-                } catch (err) {
-                    document.getElementById(typingId).remove();
-                    messages.innerHTML += `<div class="text-center text-danger small mb-3">Mất kết nối tới máy chủ.</div>`;
+                } catch {
+                    document.getElementById(typingId)?.remove();
+                    messages.innerHTML += `<div class="text-center text-danger small mb-2">Mất kết nối máy chủ.</div>`;
                 }
-
                 scrollToBottom();
             }
 
-            function scrollToBottom() {
-                messages.scrollTop = messages.scrollHeight;
+            function scrollToBottom() { messages.scrollTop = messages.scrollHeight; }
+            function hideWelcome() {
+                const w = document.getElementById('popupWelcome');
+                if (w) w.style.display = 'none';
             }
 
             sendBtn.addEventListener("click", sendMessage);
-            input.addEventListener("keypress", function (e) {
-                if (e.key === "Enter") sendMessage();
-            });
+            input.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
+
+            window._popupSendMessage  = sendMessage;
+            window._popupHideWelcome  = hideWelcome;
         });
+
+        function sendPopupSuggestion(btn) {
+            const text  = btn.innerText.trim();
+            const input = document.getElementById('chatInput');
+            if (input && window._popupSendMessage) {
+                input.value = text;
+                window._popupHideWelcome?.();
+                window._popupSendMessage();
+            }
+        }
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
@@ -772,28 +752,41 @@
     <div id="chatbotPopup" class="chatbot-popup">
         <div class="chatbot-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2">
-                <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center" style="width:30px;height:30px;color:var(--cl-blue);">
                     <i class="fas fa-robot"></i>
                 </div>
-                <span>Trợ lý sức khỏe</span>
+                <span>Trợ lý Tim mạch AI</span>
             </div>
-            <button id="closeChatbot" class="btn text-white fs-4 p-0 shadow-none border-0" style="line-height: 1;">&times;</button>
+            <button id="closeChatbot" class="btn text-white fs-4 p-0 shadow-none border-0" style="line-height:1;">&times;</button>
         </div>
 
         <div id="chatMessages" class="chat-messages d-flex flex-column">
-            <div class="d-flex justify-content-start mb-3">
-                <div class="chat-bubble ai-bubble">Xin chào 👋 Tôi là AI từ SmartHealth. Tôi có thể hỗ trợ gì cho sức khỏe của bạn hôm nay?</div>
+            <div id="popupWelcome" class="popup-welcome">
+                <p class="popup-welcome-title">Xin chào! 👋</p>
+                <p class="popup-welcome-sub">Bạn muốn hỏi gì về tim mạch?</p>
+                <div class="popup-suggestions">
+                    <button class="popup-suggestion-btn" onclick="sendPopupSuggestion(this)">
+                        <i class="fas fa-chart-line"></i>
+                        Xu hướng sức khỏe trong 30 ngày qua
+                    </button>
+                    <button class="popup-suggestion-btn" onclick="sendPopupSuggestion(this)">
+                        <i class="fas fa-heartbeat"></i>
+                        Chỉ số của tôi hôm nay có đáng lo ngại không?
+                    </button>
+                </div>
+            </div>
+            <div class="d-flex justify-content-start mb-2">
+                <div class="chat-bubble ai-bubble">Xin chào 👋 Tôi là trợ lý AI chuyên về <strong>tim mạch</strong>. Tôi có thể giúp gì cho bạn hôm nay?</div>
             </div>
         </div>
 
         <div class="chat-input-area">
-            <div class="chat-input-wrapper border shadow-sm">
-                <input type="text" id="chatInput" placeholder="Hỏi tôi bất cứ điều gì..." autocomplete="off" />
-                <button id="sendMessage" class="chat-send-btn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+            <div class="chat-input-wrapper">
+                <input type="text" id="chatInput" placeholder="Hỏi về tim mạch..." autocomplete="off" />
+                <button id="sendMessage" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
+
 </body>
 </html>
