@@ -178,5 +178,76 @@ namespace SmartHealthMonitoring.Services
                 Console.WriteLine($"[SendHealthWarningAsync Error] {ex.Message}");
             }
         }
+
+        public async Task SendDailyVitalLogReminderAsync(int patientId, string lastLogTimeDisplay)
+        {
+            try
+            {
+                var patient = await _context.Patients
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.Id == patientId);
+
+                if (patient?.User?.Email != null)
+                {
+                    var patientEmail = patient.User.Email;
+                    var patientName = patient.User.FullName ?? "Bệnh nhân";
+
+                    var replacements = new Dictionary<string, string>
+                    {
+                        { "{{PatientName}}", patientName },
+                        { "{{LastLogTimeDisplay}}", lastLogTimeDisplay },
+                        { "{{ActionUrl}}", "http://localhost:5033/Patient/Create" }
+                    };
+
+                    string subject = "NHẮC NHỞ: Vui lòng ghi nhận chỉ số sức khỏe hàng ngày - Smart Health";
+                    string htmlBody = _emailService.GetHtmlContentFromFile("VitalLogReminderTemplate.html", replacements);
+
+                    var notification = new EmailNotification
+                    {
+                        AlertId = null,
+                        PatientId = patientId,
+                        ToEmail = patientEmail,
+                        Subject = subject,
+                        Body = htmlBody,
+                        Status = 0,
+                        IsSent = false,
+                        SentByDoctorId = null,
+                        CreatedAt = DateTime.Now
+                    };
+                    _context.EmailNotifications.Add(notification);
+                    await _context.SaveChangesAsync();
+
+                    if (!string.IsNullOrEmpty(htmlBody))
+                    {
+                        try
+                        {
+                            await _emailService.SendEmailAsync(patientEmail, subject, htmlBody);
+                            notification.Status = 1;
+                            notification.IsSent = true;
+                            notification.SentAt = DateTime.Now;
+                        }
+                        catch (Exception ex)
+                        {
+                            notification.Status = 2;
+                            notification.IsSent = false;
+                            notification.ErrorMessage = ex.Message;
+                            Console.WriteLine($"[EmailError] {ex.Message}");
+                        }
+                    }
+                    else
+                    {
+                        notification.Status = 2;
+                        notification.IsSent = false;
+                        notification.ErrorMessage = "Template không tìm thấy.";
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SendDailyVitalLogReminderAsync Error] {ex.Message}");
+            }
+        }
     }
 }

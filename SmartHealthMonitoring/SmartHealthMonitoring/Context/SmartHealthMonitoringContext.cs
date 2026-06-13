@@ -233,6 +233,7 @@ public partial class SmartHealthMonitoringContext : DbContext
 
             entity.HasOne(d => d.Alert).WithMany(p => p.EmailNotifications)
                 .HasForeignKey(d => d.AlertId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__EmailNoti__Alert__75A278F5");
 

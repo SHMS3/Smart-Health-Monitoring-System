@@ -53,6 +53,7 @@ namespace SmartHealthMonitoring.Controllers.AI
             ViewBag.TotalPages = totalPages;
             ViewBag.Keyword = keyword;
             ViewBag.Status = status;
+            ViewBag.TotalRecords = totalRecords;
 
             // Truyền doctorId để UI chỉ hiển thị Resolution note cho đúng bác sĩ đã claim
             int? doctorId = null;
@@ -79,15 +80,17 @@ namespace SmartHealthMonitoring.Controllers.AI
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+            if (string.IsNullOrEmpty(userIdString))
+            {
+                return Json(new { success = false, message = "Unauthorized" });
+            }
 
             int userId = int.Parse(userIdString);
             var doctor = await _doctorService.GetDoctorByUserIdAsync(userId);
 
             if (doctor == null)
             {
-                TempData["Error"] = "Doctor not found";
-                return RedirectToAction("Dashboard");
+                return Json(new { success = false, message = "Doctor not found" });
             }
 
             var success = await _warningAlertService.ClaimAlertAsync(id, doctor.Id);
@@ -109,13 +112,10 @@ namespace SmartHealthMonitoring.Controllers.AI
                     alert?.Patient?.UserId,
                     alert?.Patient?.User?.FullName);
 
-                TempData["Success"] = "Đã tiếp nhận cảnh báo thành công.";
+                return Json(new { success = true, message = "Đã tiếp nhận cảnh báo thành công." });
             }
-            else
-            {
-                TempData["Error"] = "Cảnh báo này đã được tiếp nhận bởi người khác.";
-            }
-            return RedirectToAction("Dashboard");
+
+            return Json(new { success = false, message = "Cảnh báo này đã được tiếp nhận bởi người khác." });
         }
 
         [HttpPost]
@@ -124,15 +124,17 @@ namespace SmartHealthMonitoring.Controllers.AI
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+            if (string.IsNullOrEmpty(userIdString))
+            {
+                return Json(new { success = false, message = "Unauthorized" });
+            }
 
             int userId = int.Parse(userIdString);
             var doctor = await _doctorService.GetDoctorByUserIdAsync(userId);
 
             if (doctor == null)
             {
-                TempData["Error"] = "Doctor not found";
-                return RedirectToAction("Dashboard");
+                return Json(new { success = false, message = "Doctor not found" });
             }
 
             var success = await _warningAlertService.ResolveAlertAsync(id, doctor.Id, resolutionNote);
@@ -157,19 +159,47 @@ namespace SmartHealthMonitoring.Controllers.AI
                 if (sendEmailInvitation)
                 {
                     await _emailTriggerService.SendAppointmentInvitationAsync(id, doctor.Id, appointmentDate);
-                    TempData["Success"] = "Đã xử lý & gửi email thư mời tái khám thành công!";
+                    return Json(new { success = true, message = "Đã xử lý và gửi email thành công" });
                 }
                 else
                 {
-                    TempData["Success"] = "Đã xử lý xong cảnh báo.";
+                    return Json(new { success = true, message = "Đã xử lý cảnh báo thành công" });
                 }
             }
-            else
-            {
-                TempData["Error"] = "Bạn không có quyền xử lý cảnh báo này.";
-            }
 
-            return RedirectToAction("Dashboard");
+            return Json(new { success = false, message = "Bạn không có quyền xử lý cảnh báo này." });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Filter(byte? status, string? keyword, int page = 1, int pageSize = 10)
+        {
+            var totalRecords = await _warningAlertService.GetTotalAlertsAsync(status, keyword);
+            int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            if (totalPages < 1) totalPages = 1;
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var alerts = await _warningAlertService.GetAlertsAsync(
+                status,
+                keyword,
+                page,
+                pageSize);
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.Status = status;
+            ViewBag.Keyword = keyword;
+
+            // Cũng cần truyền ViewData["DoctorId"] cho _AlertTable
+            int? doctorId = null;
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out var userId))
+            {
+                var doctor = await _doctorService.GetDoctorByUserIdAsync(userId);
+                doctorId = doctor?.Id;
+            }
+            ViewData["DoctorId"] = doctorId;
+
+            return PartialView("_AlertTable", alerts);
         }
     }
 }
