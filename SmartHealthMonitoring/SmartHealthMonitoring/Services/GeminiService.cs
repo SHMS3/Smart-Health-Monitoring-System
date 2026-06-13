@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using SmartHealthMonitoring.Models;
@@ -64,7 +64,7 @@ namespace SmartHealthMonitoring.Services
             {
                 system_instruction = new { parts = new[] { new { text = systemPrompt } } },
                 contents = contents,
-                generationConfig = new { temperature = 0.7, maxOutputTokens = 300 }
+                generationConfig = new { temperature = 0.7, maxOutputTokens = 600 }
             };
 
 

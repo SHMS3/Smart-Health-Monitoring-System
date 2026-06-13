@@ -1,555 +1,693 @@
 @{
-	ViewData["Title"] = "Trang chủ";
+    ViewData["Title"] = "Trang chủ";
 }
 
 <style>
-	/* ── HERO ── */
-	.hero {
-		margin-top: 70px;
-		position: relative;
-		min-height: 580px;
-		display: flex;
-		align-items: center;
-		overflow: hidden;
-	}
+    /* ══ HERO BANNER ══ */
+    .hero-banner {
+        position: relative;
+        min-height: 460px;
+        background: linear-gradient(100deg, #e8f4fd 0%, #f0f7ff 50%, #e3f0fb 100%);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+    }
+    .hero-banner::before {
+        content: '';
+        position: absolute;
+        right: 0; top: 0; bottom: 0;
+        width: 55%;
+        background: url('/images/banner.jpg') center/cover no-repeat;
+        opacity: 0.5;
+    }
+    .hero-banner::after {
+        content: '';
+        position: absolute;
+        right: 0; top: 0; bottom: 0;
+        width: 55%;
+        background: linear-gradient(to right, #e8f4fd 0%, transparent 35%);
+    }
+    .hero-content-wrap {
+        position: relative; z-index: 2;
+        padding: 60px 0;
+    }
+    .hero-eyebrow {
+        font-size: 0.8rem; font-weight: 600;
+        color: #e53935; text-transform: uppercase;
+        letter-spacing: 1px; margin-bottom: 6px;
+        font-style: italic;
+    }
+    .hero-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+        font-weight: 800;
+        color: #1a2340;
+        line-height: 1.2;
+        margin-bottom: 10px;
+    }
+    .hero-title .highlight {
+        color: #1a73c8;
+    }
+    .hero-price-tag {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.92rem; color: #607080; margin-bottom: 4px;
+        font-style: italic;
+    }
+    .hero-price {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: clamp(1.6rem, 3vw, 2.4rem);
+        font-weight: 800;
+        color: #1a73c8;
+        margin-bottom: 20px;
+    }
+    .btn-hero-cta {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: #e53935; color: white;
+        border: none; border-radius: 6px;
+        padding: 12px 28px; font-weight: 700; font-size: 0.9rem;
+        text-decoration: none; cursor: pointer;
+        transition: all .25s; box-shadow: 0 4px 14px rgba(229,57,53,.3);
+    }
+    .btn-hero-cta:hover { background: #c62828; color: white; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(229,57,53,.4); }
+    .hero-sub-note {
+        font-size: 0.82rem; color: #1a73c8;
+        margin-top: 10px; font-style: italic;
+    }
 
-	.hero-bg {
-		position: absolute;
-		inset: 0;
-		background: url('/images/banner.jpg') center/cover no-repeat;
-		filter: brightness(0.45);
-		z-index: 0;
-	}
+    /* ══ STATS BANNER ══ */
+    .stats-banner {
+        background: linear-gradient(135deg, #1565c0 0%, #1a73c8 60%, #2196f3 100%);
+        padding: 30px 0;
+    }
+    .stat-cl { text-align: center; color: white; padding: 0 20px; }
+    .stat-cl-num {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 2rem; font-weight: 800; color: white;
+    }
+    .stat-cl-label { font-size: 0.82rem; color: rgba(255,255,255,.75); margin-top: 2px; }
+    .stat-divider-v { border-left: 1px solid rgba(255,255,255,.2); }
 
-	.hero-overlay {
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(135deg, rgba(14,165,233,.55) 0%, rgba(99,102,241,.45) 100%);
-		z-index: 1;
-	}
+    /* ══ SECTION COMMON ══ */
+    .section-cl { padding: 64px 0; }
+    .section-cl-gray { background: #f0f4f9; }
+    .section-heading {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+        font-weight: 800;
+        color: #1a2340;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+    .section-heading span { color: #1a73c8; }
+    .section-sub { text-align: center; color: #607080; font-size: 0.9rem; max-width: 560px; margin: 0 auto 40px; line-height: 1.7; }
 
-	.hero-content {
-		position: relative;
-		z-index: 2;
-		max-width: 1280px;
-		margin: 0 auto;
-		padding: 80px 32px;
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 48px;
-		align-items: center;
-	}
+    /* ══ SERVICES / TIỆN ÍCH ══ */
+    .service-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
+    .service-card {
+        background: white; border-radius: 12px;
+        border: 1px solid #e0eaf4;
+        padding: 22px;
+        display: flex; gap: 16px;
+        transition: all .25s;
+        text-decoration: none;
+        color: inherit;
+    }
+    .service-card:hover { border-color: #1a73c8; box-shadow: 0 6px 24px rgba(26,115,200,.12); transform: translateY(-3px); color: inherit; }
+    .service-icon {
+        width: 52px; height: 52px; flex-shrink: 0;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem;
+    }
+    .service-card h5 { font-size: 0.95rem; font-weight: 700; color: #1a2340; margin-bottom: 5px; }
+    .service-card p  { font-size: 0.8rem; color: #607080; margin-bottom: 8px; line-height: 1.5; }
+    .service-link { font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
 
-	.hero-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		background: rgba(255,255,255,.12);
-		border: 1px solid rgba(255,255,255,.2);
-		border-radius: 50px;
-		padding: 6px 16px;
-		font-size: .78rem;
-		color: #bfdbfe;
-		font-weight: 500;
-		margin-bottom: 20px;
-	}
+    /* ══ ABOUT / GIỚI THIỆU ══ */
+    .about-tag {
+        display: inline-block;
+        background: linear-gradient(135deg, #1a73c8, #2196f3);
+        color: white; font-size: 0.72rem; font-weight: 600;
+        padding: 4px 14px; border-radius: 30px;
+        margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .about-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.5rem; font-weight: 800; color: #1a2340;
+        margin-bottom: 12px; line-height: 1.3;
+    }
+    .about-desc { font-size: 0.88rem; color: #607080; line-height: 1.75; margin-bottom: 16px; }
+    .about-link {
+        color: #1a73c8; font-weight: 600; font-size: 0.88rem;
+        display: inline-flex; align-items: center; gap: 5px;
+        text-decoration: none;
+    }
+    .about-link:hover { color: #135fa5; }
+    .about-img-stack { position: relative; }
+    .about-img-main {
+        border-radius: 14px;
+        width: 100%; object-fit: cover; max-height: 280px;
+        box-shadow: 0 8px 28px rgba(0,0,0,.12);
+    }
+    .about-img-badge {
+        position: absolute; bottom: -16px; right: 16px;
+        background: white; border-radius: 12px; padding: 10px 16px;
+        box-shadow: 0 6px 20px rgba(0,0,0,.1);
+        display: flex; align-items: center; gap: 8px;
+        font-size: 0.78rem; font-weight: 600; color: #1a2340;
+    }
 
-		.hero-badge i {
-			color: #60a5fa;
-		}
+    /* ══ NEWS ══ */
+    .news-tabs { display: flex; gap: 0; margin-bottom: 28px; justify-content: center; }
+    .news-tab {
+        padding: 9px 22px; font-size: 0.85rem; font-weight: 600;
+        border: 1.5px solid #1a73c8; cursor: pointer;
+        background: white; color: #1a73c8; transition: .2s;
+    }
+    .news-tab:first-child { border-radius: 6px 0 0 6px; }
+    .news-tab:last-child  { border-radius: 0 6px 6px 0; }
+    .news-tab.active { background: #1a73c8; color: white; }
+    .news-card-main {
+        border-radius: 12px; overflow: hidden;
+        background: white; border: 1px solid #e0eaf4;
+        height: 100%;
+    }
+    .news-card-main img { width: 100%; height: 240px; object-fit: cover; }
+    .news-card-body { padding: 18px; }
+    .news-date { font-size: 0.76rem; color: #8a9bb0; display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
+    .news-card-title { font-size: 1rem; font-weight: 700; color: #1a2340; margin-bottom: 8px; line-height: 1.4; }
+    .news-card-desc { font-size: 0.82rem; color: #607080; line-height: 1.6; margin-bottom: 12px; }
+    .btn-news { background: #1a73c8; color: white; border: none; border-radius: 6px; padding: 9px 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: .2s; text-decoration: none; }
+    .btn-news:hover { background: #135fa5; color: white; }
+    .news-card-sm {
+        background: white; border: 1px solid #e0eaf4;
+        border-radius: 10px; overflow: hidden;
+        display: flex; flex-direction: column;
+        transition: box-shadow .2s;
+    }
+    .news-card-sm:hover { box-shadow: 0 4px 16px rgba(26,115,200,.1); }
+    .news-card-sm img { width: 100%; height: 130px; object-fit: cover; }
+    .news-card-sm-body { padding: 12px; }
+    .news-card-sm-title { font-size: 0.85rem; font-weight: 600; color: #1a2340; margin-bottom: 6px; line-height: 1.4; }
 
-	.hero h1 {
-		font-family: 'Plus Jakarta Sans', sans-serif;
-		font-size: clamp(2rem, 4vw, 3rem);
-		font-weight: 800;
-		color: #fff;
-		line-height: 1.2;
-		margin-bottom: 18px;
-	}
+    /* ══ CTA ══ */
+    .cta-cl {
+        background: linear-gradient(135deg, #1565c0, #1a73c8);
+        padding: 50px 0; text-align: center;
+    }
+    .cta-cl h2 { font-family: 'Plus Jakarta Sans',sans-serif; font-size: 1.8rem; font-weight: 800; color: white; margin-bottom: 10px; }
+    .cta-cl p  { color: rgba(255,255,255,.8); font-size: 0.92rem; max-width: 480px; margin: 0 auto 24px; line-height: 1.7; }
+    .btn-cta-white {
+        background: white; color: #1a73c8;
+        border: none; border-radius: 6px; padding: 12px 28px;
+        font-weight: 700; font-size: 0.9rem; cursor: pointer;
+        transition: all .25s; text-decoration: none;
+    }
+    .btn-cta-white:hover { background: #e8f4fd; color: #135fa5; transform: translateY(-2px); }
+    .btn-cta-outline {
+        background: transparent; color: white;
+        border: 2px solid rgba(255,255,255,.6);
+        border-radius: 6px; padding: 12px 28px;
+        font-weight: 600; font-size: 0.9rem; cursor: pointer;
+        transition: all .25s; text-decoration: none; margin-left: 10px;
+    }
+    .btn-cta-outline:hover { border-color: white; background: rgba(255,255,255,.12); color: white; }
 
-		.hero h1 span {
-			background: linear-gradient(135deg,#60a5fa,#a78bfa);
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			background-clip: text;
-		}
-
-	.hero p {
-		color: #cbd5e1;
-		font-size: 1rem;
-		line-height: 1.75;
-		margin-bottom: 32px;
-	}
-
-	.hero-actions {
-		display: flex;
-		gap: 14px;
-		flex-wrap: wrap;
-	}
-
-	.btn-hero-primary {
-		padding: 13px 30px;
-		border-radius: 50px;
-		background: linear-gradient(135deg,#0ea5e9,#6366f1);
-		color: #fff;
-		font-weight: 700;
-		font-size: .9rem;
-		box-shadow: 0 6px 20px rgba(14,165,233,.4);
-		transition: all .3s;
-		border: none;
-		cursor: pointer;
-	}
-
-		.btn-hero-primary:hover {
-			transform: translateY(-3px);
-			box-shadow: 0 10px 28px rgba(14,165,233,.5);
-			color: #fff;
-		}
-
-	.btn-hero-ghost {
-		padding: 13px 30px;
-		border-radius: 50px;
-		background: rgba(255,255,255,.1);
-		border: 1.5px solid rgba(255,255,255,.3);
-		color: #fff;
-		font-weight: 600;
-		font-size: .9rem;
-		transition: all .3s;
-	}
-
-		.btn-hero-ghost:hover {
-			background: rgba(255,255,255,.2);
-			color: #fff;
-			transform: translateY(-2px);
-		}
-
-	/* Hero card */
-	.hero-card {
-		background: rgba(255,255,255,.1);
-		backdrop-filter: blur(16px);
-		border: 1px solid rgba(255,255,255,.2);
-		border-radius: 20px;
-		padding: 28px;
-		color: #fff;
-	}
-
-	.hero-card-title {
-		font-size: .75rem;
-		text-transform: uppercase;
-		letter-spacing: 1.5px;
-		color: #93c5fd;
-		font-weight: 600;
-		margin-bottom: 16px;
-	}
-
-	.vital-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 10px 0;
-		border-bottom: 1px solid rgba(255,255,255,.1);
-	}
-
-		.vital-row:last-child {
-			border-bottom: none;
-		}
-
-	.vital-label {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		font-size: .85rem;
-		color: #cbd5e1;
-	}
-
-	.vital-dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-	}
-
-	.vital-val {
-		font-size: .95rem;
-		font-weight: 700;
-	}
-
-	.status-ok {
-		color: #34d399;
-	}
-
-	.status-warn {
-		color: #fbbf24;
-	}
-
-	.ai-alert {
-		margin-top: 16px;
-		padding: 12px 16px;
-		border-radius: 12px;
-		background: rgba(251,191,36,.12);
-		border: 1px solid rgba(251,191,36,.3);
-		display: flex;
-		align-items: flex-start;
-		gap: 10px;
-	}
-
-		.ai-alert i {
-			color: #fbbf24;
-			margin-top: 2px;
-			font-size: .9rem;
-		}
-
-		.ai-alert span {
-			font-size: .8rem;
-			color: #fde68a;
-			line-height: 1.5;
-		}
-
-	/* ── STATS ── */
-	.stats-bar {
-		background: #fff;
-		padding: 40px 0;
-		border-bottom: 1px solid #e2e8f0;
-	}
-
-	.stats-inner {
-		max-width: 1280px;
-		margin: 0 auto;
-		padding: 0 32px;
-		display: grid;
-		grid-template-columns: repeat(4,1fr);
-		gap: 24px;
-	}
-
-	.stat-item {
-		text-align: center;
-	}
-
-	.stat-num {
-		font-family: 'Plus Jakarta Sans',sans-serif;
-		font-size: 2.2rem;
-		font-weight: 800;
-		background: linear-gradient(135deg,#0ea5e9,#6366f1);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-
-	.stat-label {
-		font-size: .82rem;
-		color: #64748b;
-		margin-top: 4px;
-		font-weight: 500;
-	}
-
-	.stat-divider {
-		border-right: 1px solid #e2e8f0;
-	}
-
-	/* ── FEATURES ── */
-	.section {
-		padding: 80px 0;
-	}
-
-	.section-inner {
-		max-width: 1280px;
-		margin: 0 auto;
-		padding: 0 32px;
-	}
-
-	.section-tag {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		background: rgba(14,165,233,.08);
-		border: 1px solid rgba(14,165,233,.2);
-		border-radius: 50px;
-		padding: 5px 14px;
-		font-size: .75rem;
-		color: #0ea5e9;
-		font-weight: 600;
-		margin-bottom: 14px;
-	}
-
-	.section-title {
-		font-family: 'Plus Jakarta Sans',sans-serif;
-		font-size: clamp(1.6rem,3vw,2.2rem);
-		font-weight: 800;
-		color: #0f172a;
-		margin-bottom: 12px;
-	}
-
-	.section-sub {
-		color: #64748b;
-		font-size: .95rem;
-		line-height: 1.7;
-		max-width: 540px;
-	}
-
-	.features-grid {
-		display: grid;
-		grid-template-columns: repeat(3,1fr);
-		gap: 24px;
-		margin-top: 48px;
-	}
-
-	.feat-card {
-		padding: 28px;
-		border-radius: 16px;
-		border: 1px solid #e2e8f0;
-		background: #fff;
-		transition: all .3s;
-		position: relative;
-		overflow: hidden;
-	}
-
-		.feat-card::before {
-			content: '';
-			position: absolute;
-			inset: 0;
-			background: linear-gradient(135deg,rgba(14,165,233,.04),rgba(99,102,241,.04));
-			opacity: 0;
-			transition: .3s;
-		}
-
-		.feat-card:hover {
-			border-color: rgba(14,165,233,.35);
-			box-shadow: 0 8px 32px rgba(14,165,233,.12);
-			transform: translateY(-4px);
-		}
-
-			.feat-card:hover::before {
-				opacity: 1;
-			}
-
-	.feat-icon {
-		width: 48px;
-		height: 48px;
-		border-radius: 12px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 1.2rem;
-		margin-bottom: 18px;
-	}
-
-	.feat-card h3 {
-		font-size: 1rem;
-		font-weight: 700;
-		color: #0f172a;
-		margin-bottom: 8px;
-	}
-
-	.feat-card p {
-		font-size: .84rem;
-		color: #64748b;
-		line-height: 1.65;
-	}
-
-	/* ── CTA ── */
-	.cta-section {
-		background: linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);
-		padding: 80px 0;
-	}
-
-	.cta-inner {
-		max-width: 760px;
-		margin: 0 auto;
-		text-align: center;
-		padding: 0 32px;
-	}
-
-		.cta-inner h2 {
-			font-family: 'Plus Jakarta Sans',sans-serif;
-			font-size: clamp(1.6rem,3vw,2.2rem);
-			font-weight: 800;
-			color: #fff;
-			margin-bottom: 14px;
-		}
-
-		.cta-inner p {
-			color: #94a3b8;
-			font-size: .95rem;
-			line-height: 1.7;
-			margin-bottom: 32px;
-		}
-
-	.cta-actions {
-		display: flex;
-		gap: 14px;
-		justify-content: center;
-		flex-wrap: wrap;
-	}
-
-	/* Responsive */
-	@@media(max-width:900px) {
-		.hero-content {
-			grid-template-columns: 1fr;
-		}
-
-		.features-grid {
-			grid-template-columns: 1fr 1fr;
-		}
-
-		.stats-inner {
-			grid-template-columns: 1fr 1fr;
-		}
-	}
-
-	@@media(max-width:600px) {
-		.features-grid {
-			grid-template-columns: 1fr;
-		}
-
-		.stats-inner {
-			grid-template-columns: 1fr 1fr;
-		}
-
-		.stat-divider {
-			border-right: none;
-		}
-	}
+    @@media(max-width: 768px) {
+        .service-grid { grid-template-columns: 1fr; }
+        .hero-banner::before, .hero-banner::after { width: 100%; opacity: .15; }
+    }
 </style>
 
-<!-- ══ HERO ══ -->
-<section class="hero">
-	<div class="hero-bg"></div>
-	<div class="hero-overlay"></div>
-	<div class="hero-content">
-		<div>
-			<div class="hero-badge"><i class="fas fa-robot"></i> AI-Powered Health Monitoring</div>
-			<h1>Hệ thống <span>Theo dõi Bệnh án</span> & Cảnh báo Sớm</h1>
-			<p>Quản lý hồ sơ bệnh án toàn diện, theo dõi sức khỏe liên tục và nhận cảnh báo nguy cơ bệnh tật từ hệ thống AI thông minh.</p>
-			<div class="hero-actions">
-				<a asp-controller="Appointment" asp-action="Index" class="btn-hero-primary">
-					<i class="fas fa-calendar-plus me-2"></i>Đặt lịch khám ngay
-				</a>
-				<a href="#features" class="btn-hero-ghost">
-					<i class="fas fa-play-circle me-2"></i>Tìm hiểu thêm
-				</a>
-			</div>
-		</div>
-		<div>
-			<div class="hero-card">
-				<div class="hero-card-title"><i class="fas fa-heartbeat me-1"></i> Chỉ số sức khỏe thời gian thực</div>
-				<div class="vital-row">
-					<div class="vital-label"><div class="vital-dot" style="background:#34d399"></div> Nhịp tim</div>
-					<div class="vital-val status-ok">72 bpm</div>
-				</div>
-				<div class="vital-row">
-					<div class="vital-label"><div class="vital-dot" style="background:#60a5fa"></div> Huyết áp</div>
-					<div class="vital-val status-ok">120/80</div>
-				</div>
-				<div class="vital-row">
-					<div class="vital-label"><div class="vital-dot" style="background:#fbbf24"></div> Đường huyết</div>
-					<div class="vital-val status-warn">6.8 mmol/L</div>
-				</div>
-				<div class="vital-row">
-					<div class="vital-label"><div class="vital-dot" style="background:#a78bfa"></div> SpO₂</div>
-					<div class="vital-val status-ok">98%</div>
-				</div>
-				<div class="ai-alert">
-					<i class="fas fa-exclamation-triangle"></i>
-					<span><strong>AI Cảnh báo:</strong> Đường huyết cao hơn mức bình thường. Khuyến nghị tái khám sớm.</span>
-				</div>
-			</div>
-		</div>
-	</div>
+<!-- ══ HERO BANNER ══ -->
+<section class="hero-banner">
+    <div class="container container-xl">
+        <div class="hero-content-wrap" style="max-width:520px;">
+            <p class="hero-eyebrow">Ưu đãi dành riêng cho bệnh nhân</p>
+            <h1 class="hero-title">
+                Theo dõi Sức khỏe <span class="highlight">Tim Mạch</span><br>Thông minh cùng AI
+            </h1>
+            <p class="hero-price-tag">Gói theo dõi hằng ngày</p>
+            <div class="hero-price">Miễn phí<small class="fs-5 fw-normal text-muted"> khi đăng ký</small></div>
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <a asp-controller="Patient" asp-action="Create" class="btn-hero-cta">
+                    <i class="fas fa-plus-circle"></i> Nhập chỉ số ngay
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Auth" asp-action="Register" class="btn-hero-cta">
+                    <i class="fas fa-user-plus"></i> Đăng ký miễn phí ngay
+                </a>
+            }
+            <p class="hero-sub-note"><i class="fas fa-shield-heart me-1"></i> Được theo dõi bởi bác sĩ chuyên khoa tim mạch</p>
+        </div>
+    </div>
 </section>
 
-<!-- ══ STATS ══ -->
-<div class="stats-bar">
-	<div class="stats-inner">
-		<div class="stat-item stat-divider">
-			<div class="stat-num">5,000+</div>
-			<div class="stat-label"><i class="fas fa-users me-1" style="color:#0ea5e9"></i> Bệnh nhân</div>
-		</div>
-		<div class="stat-item stat-divider">
-			<div class="stat-num">40+</div>
-			<div class="stat-label"><i class="fas fa-user-md me-1" style="color:#6366f1"></i> Bác sĩ chuyên khoa</div>
-		</div>
-		<div class="stat-item stat-divider">
-			<div class="stat-num">98%</div>
-			<div class="stat-label"><i class="fas fa-star me-1" style="color:#f59e0b"></i> Độ hài lòng</div>
-		</div>
-		<div class="stat-item">
-			<div class="stat-num">24/7</div>
-			<div class="stat-label"><i class="fas fa-robot me-1" style="color:#10b981"></i> AI phân tích</div>
-		</div>
-	</div>
+<!-- ══ STATS BANNER ══ -->
+<div class="stats-banner">
+    <div class="container container-xl">
+        <div class="row g-0 justify-content-center text-center">
+            <div class="col-6 col-md-3 stat-cl">
+                <div class="stat-cl-num">5+</div>
+                <div class="stat-cl-label">Năm thành lập</div>
+            </div>
+            <div class="col-6 col-md-3 stat-cl stat-divider-v">
+                <div class="stat-cl-num">40+</div>
+                <div class="stat-cl-label">Bác sĩ tim mạch</div>
+            </div>
+            <div class="col-6 col-md-3 stat-cl stat-divider-v">
+                <div class="stat-cl-num">5.000+</div>
+                <div class="stat-cl-label">Bệnh nhân</div>
+            </div>
+            <div class="col-6 col-md-3 stat-cl stat-divider-v">
+                <div class="stat-cl-num">24/7</div>
+                <div class="stat-cl-label">AI cảnh báo</div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- ══ FEATURES ══ -->
-<section class="section" id="features" style="background:#f8fafc;">
-	<div class="section-inner">
-		<div class="section-tag"><i class="fas fa-star"></i> Tính năng nổi bật</div>
-		<h2 class="section-title">Giải pháp y tế toàn diện</h2>
-		<p class="section-sub">Nền tảng quản lý sức khỏe thông minh tích hợp công nghệ AI, giúp bác sĩ và bệnh nhân kết nối hiệu quả hơn.</p>
-		<div class="features-grid">
+<!-- ══ SERVICES + ABOUT ══ -->
+<section class="section-cl">
+    <div class="container container-xl">
+        <div class="row gy-4 align-items-start">
 
-			<div class="feat-card">
-				<div class="feat-icon" style="background:rgba(14,165,233,.1)"><i class="fas fa-file-medical" style="color:#0ea5e9"></i></div>
-				<h3>Hồ sơ bệnh án điện tử</h3>
-				<p>Lưu trữ và quản lý toàn bộ lịch sử khám chữa bệnh, xét nghiệm, đơn thuốc trong một nơi duy nhất.</p>
-			</div>
+            <!-- Tiện ích -->
+            <div class="col-lg-7">
+                <h2 class="section-heading text-start mb-2">TIỆN ÍCH <span>CHO BỆNH NHÂN</span></h2>
+                <p class="section-sub text-start mb-4">Hệ thống theo dõi sức khỏe tim mạch toàn diện, dễ sử dụng.</p>
 
-			<div class="feat-card">
-				<div class="feat-icon" style="background:rgba(239,68,68,.1)"><i class="fas fa-heartbeat" style="color:#ef4444"></i></div>
-				<h3>Theo dõi sức khỏe thời gian thực</h3>
-				<p>Giám sát liên tục các chỉ số sinh hiệu: nhịp tim, huyết áp, đường huyết, SpO₂ và nhiều chỉ số khác.</p>
-			</div>
+                <div class="service-grid">
+                    <a asp-controller="Patient" asp-action="Index" class="service-card">
+                        <div class="service-icon" style="background:#e8f4fd;color:#1a73c8;">
+                            <i class="fas fa-book-medical"></i>
+                        </div>
+                        <div>
+                            <h5>Sổ tay hằng ngày</h5>
+                            <p>Ghi lại huyết áp, nhịp tim, đường huyết mỗi ngày để theo dõi sức khỏe liên tục.</p>
+                            <span class="service-link" style="color:#1a73c8;">Ghi chỉ số <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </a>
 
-			<div class="feat-card">
-				<div class="feat-icon" style="background:rgba(245,158,11,.1)"><i class="fas fa-bell" style="color:#f59e0b"></i></div>
-				<h3>Cảnh báo bệnh sớm bằng AI</h3>
-				<p>Hệ thống AI phân tích dữ liệu và đưa ra cảnh báo nguy cơ bệnh tật trước khi có triệu chứng rõ ràng.</p>
-			</div>
+                    <a asp-controller="Patient" asp-action="Tracker" class="service-card">
+                        <div class="service-icon" style="background:#e8f8f0;color:#10b981;">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h5>Biểu đồ sức khỏe</h5>
+                            <p>Xem biểu đồ trực quan xu hướng tim mạch theo ngày, tuần, tháng.</p>
+                            <span class="service-link" style="color:#10b981;">Xem biểu đồ <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </a>
 
-			<div class="feat-card">
-				<div class="feat-icon" style="background:rgba(99,102,241,.1)"><i class="fas fa-calendar-check" style="color:#6366f1"></i></div>
-				<h3>Đặt lịch hẹn trực tuyến</h3>
-				<p>Đặt lịch khám với bác sĩ chuyên khoa nhanh chóng, nhận xác nhận tức thì qua email và SMS.</p>
-			</div>
+                    <a asp-controller="WarningAlert" asp-action="Dashboard" class="service-card">
+                        <div class="service-icon" style="background:#fff3e0;color:#f57c00;">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div>
+                            <h5>Cảnh báo AI</h5>
+                            <p>Hệ thống AI phân tích và cảnh báo khi phát hiện nguy cơ tim mạch bất thường.</p>
+                            <span class="service-link" style="color:#f57c00;">Xem cảnh báo <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </a>
 
-			<div class="feat-card">
-				<div class="feat-icon" style="background:rgba(16,185,129,.1)"><i class="fas fa-pills" style="color:#10b981"></i></div>
-				<h3>Quản lý đơn thuốc</h3>
-				<p>Theo dõi lịch uống thuốc, nhắc nhở tự động và kiểm tra tương tác thuốc an toàn.</p>
-			</div>
+                    <a asp-controller="ClinicalRecord" asp-action="MyRecords" class="service-card">
+                        <div class="service-icon" style="background:#fce4ec;color:#e53935;">
+                            <i class="fas fa-file-medical-alt"></i>
+                        </div>
+                        <div>
+                            <h5>Hồ sơ bệnh án</h5>
+                            <p>Lưu trữ và tra cứu toàn bộ lịch sử khám chữa bệnh tim mạch của bạn.</p>
+                            <span class="service-link" style="color:#e53935;">Tra cứu <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </a>
+                </div>
+            </div>
 
-			<div class="feat-card">
-				<div class="feat-icon" style="background:rgba(139,92,246,.1)"><i class="fas fa-chart-line" style="color:#8b5cf6"></i></div>
-				<h3>Báo cáo & Thống kê</h3>
-				<p>Biểu đồ trực quan về xu hướng sức khỏe theo thời gian, hỗ trợ bác sĩ đưa ra quyết định điều trị chính xác.</p>
-			</div>
+            <!-- Giới thiệu -->
+            <div class="col-lg-5">
+                <div class="about-img-stack mb-5">
+                    <img src="/images/banner.jpg" alt="SmartHealth Tim Mạch" class="about-img-main" />
+                    <div class="about-img-badge">
+                        <i class="fas fa-award" style="color:#1a73c8;font-size:1.2rem;"></i>
+                        <div>
+                            <div style="font-size:0.72rem;color:#8a9bb0;">Chứng nhận</div>
+                            <div>Chuyên môn cao – Công nghệ hiện đại</div>
+                        </div>
+                    </div>
+                </div>
+                <span class="about-tag">Giới thiệu về chúng tôi</span>
+                <h3 class="about-title">Hệ thống SmartHealth<br>Tim Mạch</h3>
+                <p class="about-desc">
+                    SmartHealth được thành lập với sứ mệnh ứng dụng công nghệ AI trong theo dõi và cảnh báo sức khỏe tim mạch. Đội ngũ bác sĩ chuyên khoa tim mạch kết hợp hệ thống phân tích dữ liệu thông minh giúp phát hiện sớm các nguy cơ và đưa ra can thiệp kịp thời.
+                </p>
+                <a href="#" class="about-link">Xem thêm <i class="fas fa-arrow-right"></i></a>
+            </div>
 
-		</div>
-	</div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ QUY TRÌNH CẢNH BÁO AI ══ -->
+<section class="section-cl" style="background:#f8fbff;">
+    <div class="container container-xl">
+        <h2 class="section-heading">QUY TRÌNH <span>CẢNH BÁO AI</span></h2>
+        <p class="section-sub">Hệ thống hoạt động tự động — từ khi bệnh nhân ghi chỉ số đến khi bác sĩ tiếp nhận cảnh báo.</p>
+
+        <!-- 3 bước trực quan -->
+        <div class="process-timeline">
+            <!-- Đường kẻ ngang xuyên qua -->
+            <div class="process-line"></div>
+
+            <!-- Bước 1 -->
+            <div class="process-step">
+                <div class="process-circle-wrap">
+                    <div class="process-circle" style="background:linear-gradient(135deg,#1a73c8,#42a5f5);">
+                        <i class="fas fa-book-medical"></i>
+                    </div>
+                    <div class="process-num">01</div>
+                </div>
+                <div class="process-step-title">Bệnh nhân ghi log</div>
+                <div class="process-step-sub">Nhập chỉ số huyết áp, nhịp tim mỗi ngày</div>
+            </div>
+
+            <!-- Mũi tên -->
+            <div class="process-arrow"><i class="fas fa-chevron-right"></i></div>
+
+            <!-- Bước 2 -->
+            <div class="process-step">
+                <div class="process-circle-wrap">
+                    <div class="process-circle" style="background:linear-gradient(135deg,#f57c00,#ffb74d);">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="process-num">02</div>
+                </div>
+                <div class="process-step-title">AI Phân tích &amp; Cảnh báo</div>
+                <div class="process-step-sub">Hệ thống AI phát hiện bất thường &amp; gửi cảnh báo</div>
+            </div>
+
+            <!-- Mũi tên -->
+            <div class="process-arrow"><i class="fas fa-chevron-right"></i></div>
+
+            <!-- Bước 3 -->
+            <div class="process-step">
+                <div class="process-circle-wrap">
+                    <div class="process-circle" style="background:linear-gradient(135deg,#e53935,#ef9a9a);">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="process-num">03</div>
+                </div>
+                <div class="process-step-title">Bác sĩ tiếp nhận</div>
+                <div class="process-step-sub">Bác sĩ xem xét và tư vấn điều trị kịp thời</div>
+            </div>
+        </div>
+
+        <!-- Chi tiết mỗi bước -->
+        <div class="row g-4 mt-2">
+
+            <div class="col-md-4">
+                <div class="process-detail-card" style="border-top:3px solid #1a73c8;">
+                    <div class="process-detail-header" style="color:#1a73c8;">
+                        <span class="process-detail-num" style="background:#e8f4fd;color:#1a73c8;">01</span>
+                        Bệnh nhân ghi log
+                    </div>
+                    <ul class="process-detail-list">
+                        <li>
+                            <div class="process-detail-dot" style="background:#1a73c8;"></div>
+                            <div>
+                                <strong>Ghi chỉ số hằng ngày</strong>
+                                <p>Nhập huyết áp (tâm thu/tâm trương), nhịp tim, đường huyết vào sổ tay điện tử.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="process-detail-dot" style="background:#1a73c8;"></div>
+                            <div>
+                                <strong>Theo dõi xu hướng</strong>
+                                <p>Biểu đồ tự động cập nhật, giúp bệnh nhân nhận biết chiều hướng sức khỏe theo thời gian.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="process-detail-dot" style="background:#1a73c8;"></div>
+                            <div>
+                                <strong>Dễ dàng sử dụng</strong>
+                                <p>Giao diện đơn giản, phù hợp mọi lứa tuổi, không cần kiến thức y tế chuyên sâu.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="process-detail-card" style="border-top:3px solid #f57c00;">
+                    <div class="process-detail-header" style="color:#f57c00;">
+                        <span class="process-detail-num" style="background:#fff3e0;color:#f57c00;">02</span>
+                        AI Phân tích &amp; Cảnh báo
+                    </div>
+                    <ul class="process-detail-list">
+                        <li>
+                            <div class="process-detail-dot" style="background:#f57c00;"></div>
+                            <div>
+                                <strong>Phân tích tức thì</strong>
+                                <p>AI đối chiếu chỉ số với ngưỡng chuẩn y tế và lịch sử của từng bệnh nhân.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="process-detail-dot" style="background:#f57c00;"></div>
+                            <div>
+                                <strong>3 mức cảnh báo</strong>
+                                <p>Phân loại rõ ràng: <span style="color:#27ae60;">Bình thường</span> / <span style="color:#f57c00;">Cảnh báo</span> / <span style="color:#e53935;">Nguy hiểm</span> để ưu tiên xử lý.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="process-detail-dot" style="background:#f57c00;"></div>
+                            <div>
+                                <strong>Thông báo qua email</strong>
+                                <p>Gửi email cảnh báo tự động đến bác sĩ phụ trách khi phát hiện dấu hiệu nguy hiểm.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="process-detail-card" style="border-top:3px solid #e53935;">
+                    <div class="process-detail-header" style="color:#e53935;">
+                        <span class="process-detail-num" style="background:#fce4ec;color:#e53935;">03</span>
+                        Bác sĩ tiếp nhận
+                    </div>
+                    <ul class="process-detail-list">
+                        <li>
+                            <div class="process-detail-dot" style="background:#e53935;"></div>
+                            <div>
+                                <strong>Xem cảnh báo trực tiếp</strong>
+                                <p>Bác sĩ nhận thông báo và truy cập dashboard cảnh báo AI ngay trên hệ thống.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="process-detail-dot" style="background:#e53935;"></div>
+                            <div>
+                                <strong>Xem hồ sơ toàn diện</strong>
+                                <p>Tra cứu lịch sử bệnh án, xu hướng chỉ số và biểu đồ sức khỏe của bệnh nhân.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="process-detail-dot" style="background:#e53935;"></div>
+                            <div>
+                                <strong>Tư vấn &amp; can thiệp</strong>
+                                <p>Đưa ra chỉ định điều trị, cập nhật hồ sơ lâm sàng và theo dõi tiến trình hồi phục.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<style>
+    /* ══ PROCESS TIMELINE ══ */
+    .process-timeline {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        position: relative;
+        margin: 48px 0 40px;
+    }
+    .process-line {
+        position: absolute;
+        top: 44px;
+        left: 10%; right: 10%;
+        height: 3px;
+        background: linear-gradient(to right, #1a73c8, #f57c00, #e53935);
+        z-index: 0;
+        border-radius: 3px;
+    }
+    .process-step {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
+    .process-circle-wrap { position: relative; margin-bottom: 12px; }
+    .process-circle {
+        width: 88px; height: 88px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2rem; color: white;
+        box-shadow: 0 6px 24px rgba(0,0,0,.18);
+        border: 4px solid white;
+        transition: transform .3s;
+    }
+    .process-circle:hover { transform: scale(1.08); }
+    .process-num {
+        position: absolute;
+        bottom: -6px; right: -6px;
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #e0eaf4;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.68rem; font-weight: 800; color: #607080;
+        box-shadow: 0 2px 6px rgba(0,0,0,.1);
+    }
+    .process-step-title {
+        font-weight: 700; font-size: 0.95rem;
+        color: #1a2340; margin-bottom: 4px;
+    }
+    .process-step-sub {
+        font-size: 0.78rem; color: #8a9bb0;
+        max-width: 160px; line-height: 1.5;
+    }
+    .process-arrow {
+        font-size: 1.4rem; color: #c8d8e8;
+        flex-shrink: 0; margin-bottom: 60px;
+        animation: arrowPulse 1.5s ease-in-out infinite;
+    }
+    @@keyframes arrowPulse {
+        0%, 100% { transform: translateX(0); opacity: .6; }
+        50%       { transform: translateX(5px); opacity: 1; }
+    }
+
+    /* ══ PROCESS DETAIL CARDS ══ */
+    .process-detail-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e0eaf4;
+        padding: 22px;
+        height: 100%;
+        transition: box-shadow .25s;
+    }
+    .process-detail-card:hover { box-shadow: 0 6px 24px rgba(26,115,200,.1); }
+    .process-detail-header {
+        display: flex; align-items: center; gap: 10px;
+        font-weight: 700; font-size: 0.95rem;
+        margin-bottom: 18px;
+    }
+    .process-detail-num {
+        width: 28px; height: 28px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.72rem; font-weight: 800;
+        flex-shrink: 0;
+    }
+    .process-detail-list {
+        list-style: none; padding: 0; margin: 0;
+        display: flex; flex-direction: column; gap: 14px;
+    }
+    .process-detail-list li {
+        display: flex; gap: 10px; align-items: flex-start;
+    }
+    .process-detail-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        flex-shrink: 0; margin-top: 5px;
+    }
+    .process-detail-list strong { font-size: 0.85rem; color: #1a2340; display: block; margin-bottom: 2px; }
+    .process-detail-list p { font-size: 0.78rem; color: #8a9bb0; margin: 0; line-height: 1.55; }
+
+    @@media(max-width: 768px) {
+        .process-timeline { flex-direction: column; gap: 20px; }
+        .process-line { display: none; }
+        .process-arrow { transform: rotate(90deg); margin: 0; }
+    }
+</style>
+
+<!-- ══ NEWS ══ -->
+<section class="section-cl section-cl-gray">
+    <div class="container container-xl">
+        <h2 class="section-heading">TIN TỨC <span>NỔI BẬT</span></h2>
+        <p class="section-sub">Cập nhật kiến thức tim mạch và thông tin sức khỏe mới nhất từ chuyên gia.</p>
+
+        <div class="news-tabs">
+            <button class="news-tab active">Tổng hợp</button>
+            <button class="news-tab">Tim mạch</button>
+            <button class="news-tab">Sức khỏe AI</button>
+        </div>
+
+        <div class="row g-3">
+            <!-- Tin lớn -->
+            <div class="col-md-5">
+                <div class="news-card-main h-100">
+                    <img src="/images/banner.jpg" alt="Tin tức tim mạch" />
+                    <div class="news-card-body">
+                        <div class="news-date"><i class="fas fa-calendar-alt"></i> 13/06/2026</div>
+                        <div class="news-card-title">5 dấu hiệu cảnh báo bệnh tim mạch cần biết sớm</div>
+                        <p class="news-card-desc">Bệnh tim mạch thường tiến triển âm thầm. Phát hiện sớm các dấu hiệu bất thường giúp điều trị hiệu quả hơn và giảm nguy cơ biến chứng nguy hiểm...</p>
+                        <a href="#" class="btn-news">Xem thêm</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tin nhỏ -->
+            <div class="col-md-7">
+                <div class="row g-3">
+                    @for(int i = 1; i <= 4; i++) {
+                    <div class="col-6">
+                        <div class="news-card-sm">
+                            <img src="/images/banner.jpg" alt="Tin @i" />
+                            <div class="news-card-sm-body">
+                                <div class="news-date" style="font-size:0.72rem;"><i class="fas fa-calendar-alt"></i> 13/06/2026</div>
+                                <div class="news-card-sm-title">AI phát hiện rối loạn nhịp tim qua phân tích dữ liệu – Tin @i</div>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
 <!-- ══ CTA ══ -->
-<section class="cta-section">
-	<div class="cta-inner">
-		<div class="section-tag" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#93c5fd">
-			<i class="fas fa-rocket"></i> Bắt đầu ngay hôm nay
-		</div>
-		<h2>Chăm sóc sức khỏe thông minh<br>bắt đầu từ đây</h2>
-		<p>Đăng ký miễn phí và trải nghiệm hệ thống theo dõi sức khỏe AI tiên tiến nhất hiện nay.</p>
-		<div class="cta-actions">
-			@if (User.Identity != null && User.Identity.IsAuthenticated)
-			{
-				<a asp-controller="Patient" asp-action="Create" class="btn-hero-ghost">
-					<i class="fas fa-calendar-plus me-2"></i>Nhập chỉ số ngay
-				</a>
-			}
-			else
-			{
-				<a asp-controller="Auth" asp-action="Register" class="btn-hero-primary">
-					<i class="fas fa-user-plus me-2"></i>Đăng ký miễn phí
-				</a>
-				<a asp-controller="Auth" asp-action="Login" class="btn-hero-ghost">
-					<i class="fas fa-calendar-plus me-2"></i>Nhập chỉ số ngay
-				</a>
-			}
-		</div>
-	</div>
+<section class="cta-cl">
+    <div class="container container-xl">
+        <h2>Bắt đầu theo dõi tim mạch ngay hôm nay</h2>
+        <p>Đăng ký miễn phí và nhận cảnh báo nguy cơ tim mạch từ hệ thống AI 24/7.</p>
+        <div>
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <a asp-controller="Patient" asp-action="Create" class="btn-cta-white">
+                    <i class="fas fa-plus me-1"></i> Nhập chỉ số ngay
+                </a>
+                <a asp-controller="Patient" asp-action="Tracker" class="btn-cta-outline">
+                    <i class="fas fa-chart-line me-1"></i> Xem biểu đồ
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Auth" asp-action="Register" class="btn-cta-white">
+                    <i class="fas fa-user-plus me-1"></i> Đăng ký miễn phí
+                </a>
+                <a asp-controller="Auth" asp-action="Login" class="btn-cta-outline">
+                    <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập
+                </a>
+            }
+        </div>
+    </div>
 </section>

@@ -46,6 +46,16 @@
                 <div class="card-body">
                     <canvas id="sexChart"></canvas>
                 </div>
+                <div class="card-footer bg-light border-0 pb-3 pt-2">
+                    <p class="text-muted mb-1" style="font-size:0.8rem;">
+                        <i class="fas fa-circle-info text-primary me-1"></i>
+                        <strong>Biểu đồ này cho biết gì?</strong>
+                    </p>
+                    <p class="text-muted mb-0" style="font-size:0.78rem;">
+                        Hiển thị tỷ lệ phần trăm giữa bệnh nhân <span class="fw-semibold text-danger">nữ</span> và <span class="fw-semibold" style="color:#36a2eb;">nam</span> trong toàn bộ hệ thống.
+                        Dùng để xác định nhóm giới tính chiếm ưu thế — giúp định hướng chiến dịch chăm sóc phù hợp.
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -57,6 +67,16 @@
                 </div>
                 <div class="card-body">
                     <canvas id="ageChart"></canvas>
+                </div>
+                <div class="card-footer bg-light border-0 pb-3 pt-2">
+                    <p class="text-muted mb-1" style="font-size:0.8rem;">
+                        <i class="fas fa-circle-info text-primary me-1"></i>
+                        <strong>Biểu đồ này cho biết gì?</strong>
+                    </p>
+                    <p class="text-muted mb-0" style="font-size:0.78rem;">
+                        Mỗi cột thể hiện <span class="fw-semibold">số lượng bệnh nhân</span> trong một nhóm tuổi (trục ngang). Cột cao = nhóm tuổi có nhiều người dùng nhất.
+                        Xác định độ tuổi nào chiếm đa số để ưu tiên nguồn lực theo dõi sức khỏe.
+                    </p>
                 </div>
             </div>
         </div>
@@ -71,6 +91,53 @@
                 </div>
                 <div class="card-body" style="position: relative; height:40vh; width:100%">
                     <canvas id="chestPainChart"></canvas>
+                </div>
+                <div class="card-footer bg-light border-0 pb-3 pt-2">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <p class="text-muted mb-1" style="font-size:0.8rem;">
+                                <i class="fas fa-circle-info text-primary me-1"></i>
+                                <strong>Biểu đồ này cho biết gì?</strong>
+                                — Phân loại bệnh nhân theo dạng đau ngực họ gặp phải. Miếng bánh to = dạng đau ngực phổ biến nhất.
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-start gap-2 p-2 rounded-3 bg-white border">
+                                <span style="width:12px;height:12px;min-width:12px;border-radius:50%;background:#ffce56;margin-top:3px;display:inline-block;"></span>
+                                <div>
+                                    <span class="fw-semibold" style="font-size:0.78rem;">Không triệu chứng (ASY)</span>
+                                    <p class="text-muted mb-0" style="font-size:0.75rem;">Không có biểu hiện đau rõ ràng. Nguy hiểm vì bệnh tiến triển âm thầm.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-start gap-2 p-2 rounded-3 bg-white border">
+                                <span style="width:12px;height:12px;min-width:12px;border-radius:50%;background:#ff9f40;margin-top:3px;display:inline-block;"></span>
+                                <div>
+                                    <span class="fw-semibold" style="font-size:0.78rem;">Không điển hình (NAP / ATA)</span>
+                                    <p class="text-muted mb-0" style="font-size:0.75rem;">Triệu chứng đau không rõ nguồn gốc tim mạch, cần theo dõi thêm.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-start gap-2 p-2 rounded-3 bg-white border">
+                                <span style="width:12px;height:12px;min-width:12px;border-radius:50%;background:#4bc0c0;margin-top:3px;display:inline-block;"></span>
+                                <div>
+                                    <span class="fw-semibold" style="font-size:0.78rem;">Nghi ngờ tim mạch (TA)</span>
+                                    <p class="text-muted mb-0" style="font-size:0.75rem;">Có dấu hiệu liên quan tim, cần ưu tiên kiểm tra chuyên sâu.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-start gap-2 p-2 rounded-3 bg-warning bg-opacity-10 border border-warning">
+                                <i class="fas fa-triangle-exclamation text-warning mt-1"></i>
+                                <div>
+                                    <span class="fw-semibold" style="font-size:0.78rem;">Lưu ý quản trị</span>
+                                    <p class="text-muted mb-0" style="font-size:0.75rem;">Nhóm ASY chiếm tỷ lệ cao → cần tăng tầm soát định kỳ cho bệnh nhân không có triệu chứng.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

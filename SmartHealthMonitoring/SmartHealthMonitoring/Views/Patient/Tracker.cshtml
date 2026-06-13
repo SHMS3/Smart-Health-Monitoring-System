@@ -35,6 +35,40 @@
                     <div class="card-body">
                         <canvas id="bpChart" height="80"></canvas>
                     </div>
+                    <div class="card-footer bg-light border-0 rounded-bottom-4 px-4 pb-4 pt-0">
+                        <div class="row g-2 mt-1">
+                            <div class="col-12">
+                                <p class="text-muted small mb-2"><i class="fas fa-circle-info me-1 text-primary"></i><strong>Cách đọc biểu đồ:</strong> Biểu đồ thể hiện sự thay đổi huyết áp của bạn theo thời gian. Trục ngang là thời điểm đo, trục dọc là chỉ số huyết áp (mmHg).</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start gap-2 p-2 rounded-3 bg-white border">
+                                    <span class="mt-1" style="width:14px;height:14px;min-width:14px;border-radius:50%;background:#ef4444;display:inline-block;"></span>
+                                    <div>
+                                        <span class="fw-semibold small text-dark">Tâm thu (Huyết áp trên)</span>
+                                        <p class="text-muted mb-0" style="font-size:0.78rem;">Áp lực khi tim co bóp. Bình thường: <strong>dưới 120 mmHg</strong>. Trên 140 mmHg là cao huyết áp.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start gap-2 p-2 rounded-3 bg-white border">
+                                    <span class="mt-1" style="width:14px;height:14px;min-width:14px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
+                                    <div>
+                                        <span class="fw-semibold small text-dark">Tâm trương (Huyết áp dưới)</span>
+                                        <p class="text-muted mb-0" style="font-size:0.78rem;">Áp lực khi tim nghỉ giữa các nhịp. Bình thường: <strong>dưới 80 mmHg</strong>. Trên 90 mmHg là cao huyết áp.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start gap-2 p-2 rounded-3 bg-warning bg-opacity-10 border border-warning">
+                                    <i class="fas fa-triangle-exclamation text-warning mt-1"></i>
+                                    <div>
+                                        <span class="fw-semibold small text-dark">Lưu ý quan trọng</span>
+                                        <p class="text-muted mb-0" style="font-size:0.78rem;">Nếu đường đỏ vượt <strong>140</strong> hoặc đường xanh vượt <strong>90</strong> liên tục, hãy thông báo ngay cho bác sĩ của bạn.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -45,6 +79,40 @@
                     </div>
                     <div class="card-body">
                         <canvas id="hrChart" height="80"></canvas>
+                    </div>
+                    <div class="card-footer bg-light border-0 rounded-bottom-4 px-4 pb-4 pt-0">
+                        <div class="row g-2 mt-1">
+                            <div class="col-12">
+                                <p class="text-muted small mb-2"><i class="fas fa-circle-info me-1 text-primary"></i><strong>Cách đọc biểu đồ:</strong> Biểu đồ thể hiện số lần tim đập mỗi phút (BPM) của bạn theo thời gian. Vùng màu vàng cho thấy xu hướng chung của nhịp tim.</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start gap-2 p-2 rounded-3 bg-white border">
+                                    <i class="fas fa-heart-pulse text-success mt-1"></i>
+                                    <div>
+                                        <span class="fw-semibold small text-dark">Nhịp tim bình thường</span>
+                                        <p class="text-muted mb-0" style="font-size:0.78rem;">Người lớn khi nghỉ ngơi: <strong>60 – 100 BPM</strong>. Vận động viên có thể thấp hơn (40–60 BPM) và vẫn bình thường.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start gap-2 p-2 rounded-3 bg-white border">
+                                    <i class="fas fa-arrow-trend-up text-danger mt-1"></i>
+                                    <div>
+                                        <span class="fw-semibold small text-dark">Nhịp tim cao (Nhịp nhanh)</span>
+                                        <p class="text-muted mb-0" style="font-size:0.78rem;">Trên <strong>100 BPM</strong> khi nghỉ có thể do căng thẳng, sốt, mất nước hoặc bệnh lý. Trên 150 BPM cần chú ý đặc biệt.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start gap-2 p-2 rounded-3 bg-warning bg-opacity-10 border border-warning">
+                                    <i class="fas fa-triangle-exclamation text-warning mt-1"></i>
+                                    <div>
+                                        <span class="fw-semibold small text-dark">Lưu ý quan trọng</span>
+                                        <p class="text-muted mb-0" style="font-size:0.78rem;">Nếu nhịp tim <strong>dưới 50</strong> hoặc <strong>trên 120 BPM</strong> liên tục khi nghỉ, hãy liên hệ bác sĩ để được tư vấn kịp thời.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -57,112 +125,179 @@
     <script>
         $(document).ready(function () {
             const labels = @Html.Raw(Json.Serialize(Model.Labels));
-            const sysBp = @Html.Raw(Json.Serialize(Model.SystolicBpValues));
-            const diaBp = @Html.Raw(Json.Serialize(Model.DiastolicBpValues));
-            const hr = @Html.Raw(Json.Serialize(Model.HeartRateValues));
+            const sysBp  = @Html.Raw(Json.Serialize(Model.SystolicBpValues));
+            const diaBp  = @Html.Raw(Json.Serialize(Model.DiastolicBpValues));
+            const hr     = @Html.Raw(Json.Serialize(Model.HeartRateValues));
 
-            if(labels.length > 0) {
-                // Biểu đồ Huyết áp
-                const ctxBp = document.getElementById('bpChart').getContext('2d');
-                new Chart(ctxBp, {
+            // ── Ngưỡng ─────────────────────────────────────────────
+            const SYS_DANGER  = 140, SYS_WARN  = 130;
+            const DIA_DANGER  = 90,  DIA_WARN  = 80;
+            const HR_HIGH_D   = 120, HR_HIGH_W = 100;
+            const HR_LOW_D    = 50,  HR_LOW_W  = 60;
+
+            // ── Hàm tô màu / kích thước từng điểm ─────────────────
+            function ptColor(values, dangerFn, warnFn, normalColor) {
+                return values.map(v => dangerFn(v) ? '#ef4444' : warnFn(v) ? '#f97316' : normalColor);
+            }
+            function ptRadius(values, dangerFn, warnFn) {
+                return values.map(v => dangerFn(v) ? 9 : warnFn(v) ? 7 : 4);
+            }
+            function ptBorder(values, dangerFn, warnFn) {
+                return values.map(v => (dangerFn(v) || warnFn(v)) ? '#fff' : 'transparent');
+            }
+            function statusBadge(v, dangerFn, warnFn) {
+                return dangerFn(v) ? ' ⚠️ NGUY HIỂM' : warnFn(v) ? ' ⚡ Cảnh báo' : ' ✅ Bình thường';
+            }
+
+            // ── Plugin vẽ đường ngưỡng ngang ───────────────────────
+            const thresholdPlugin = {
+                id: 'thresholdLines',
+                afterDraw(chart, _args, opts) {
+                    const { ctx, chartArea: { left, right }, scales: { y } } = chart;
+                    (opts.lines || []).forEach(({ value, color, dash, label }) => {
+                        if (value < y.min || value > y.max) return;
+                        const yPos = y.getPixelForValue(value);
+                        ctx.save();
+                        ctx.setLineDash(dash || [6, 4]);
+                        ctx.strokeStyle = color;
+                        ctx.lineWidth   = 1.5;
+                        ctx.globalAlpha = 0.7;
+                        ctx.beginPath(); ctx.moveTo(left, yPos); ctx.lineTo(right, yPos); ctx.stroke();
+                        ctx.globalAlpha = 1; ctx.setLineDash([]);
+                        ctx.fillStyle = color;
+                        ctx.font = 'bold 10px Inter, sans-serif';
+                        const tw = ctx.measureText(label).width;
+                        ctx.fillText(label, right - tw - 6, yPos - 4);
+                        ctx.restore();
+                    });
+                }
+            };
+
+            if (labels.length > 0) {
+
+                // ════════════════════════════════════════
+                // BIỂU ĐỒ HUYẾT ÁP
+                // ════════════════════════════════════════
+                const sysDanger = v => v >= SYS_DANGER;
+                const sysWarn   = v => v >= SYS_WARN && v < SYS_DANGER;
+                const diaDanger = v => v >= DIA_DANGER;
+                const diaWarn   = v => v >= DIA_WARN  && v < DIA_DANGER;
+
+                new Chart(document.getElementById('bpChart').getContext('2d'), {
                     type: 'line',
+                    plugins: [thresholdPlugin],
                     data: {
-                        labels: labels,
+                        labels,
                         datasets: [
                             {
                                 label: 'Tâm thu (Systolic)',
-                                data: sysBp,
+                                data:  sysBp,
                                 borderColor: '#ef4444',
-                                backgroundColor: '#ef4444',
-                                borderWidth: 3,
-                                pointRadius: 4,
-                                pointHoverRadius: 6,
-                                tension: 0.3,
-                                fill: false
+                                borderWidth: 2.5,
+                                pointRadius:          ptRadius(sysBp, sysDanger, sysWarn),
+                                pointHoverRadius:     9,
+                                pointBackgroundColor: ptColor(sysBp,  sysDanger, sysWarn, '#ef4444'),
+                                pointBorderColor:     ptBorder(sysBp, sysDanger, sysWarn),
+                                pointBorderWidth:     2,
+                                tension: 0.3, fill: false
                             },
                             {
                                 label: 'Tâm trương (Diastolic)',
-                                data: diaBp,
+                                data:  diaBp,
                                 borderColor: '#3b82f6',
-                                backgroundColor: '#3b82f6',
-                                borderWidth: 3,
-                                pointRadius: 4,
-                                pointHoverRadius: 6,
-                                tension: 0.3,
-                                fill: false
+                                borderWidth: 2.5,
+                                pointRadius:          ptRadius(diaBp, diaDanger, diaWarn),
+                                pointHoverRadius:     9,
+                                pointBackgroundColor: ptColor(diaBp,  diaDanger, diaWarn, '#3b82f6'),
+                                pointBorderColor:     ptBorder(diaBp, diaDanger, diaWarn),
+                                pointBorderWidth:     2,
+                                tension: 0.3, fill: false
                             }
                         ]
                     },
                     options: {
                         responsive: true,
-                        interaction: {
-                            mode: 'index',
-                            intersect: false,
-                        },
+                        interaction: { mode: 'index', intersect: false },
                         plugins: {
+                            thresholdLines: { lines: [
+                                { value: SYS_DANGER, color: '#ef4444', label: '⚠ Nguy hiểm HA trên (140)' },
+                                { value: SYS_WARN,   color: '#f97316', label: '⚡ Cảnh báo HA trên (130)', dash: [4,4] },
+                                { value: DIA_DANGER, color: '#be185d', label: '⚠ Nguy hiểm HA dưới (90)' },
+                            ]},
                             legend: { position: 'top' },
-                            tooltip: { 
+                            tooltip: {
                                 padding: 12,
-                                titleFont: { size: 14 },
-                                bodyFont: { size: 14 }
+                                titleFont: { size: 13 }, bodyFont: { size: 13 },
+                                callbacks: {
+                                    label(ctx) {
+                                        const v = ctx.raw;
+                                        const b = ctx.datasetIndex === 0
+                                            ? statusBadge(v, sysDanger, sysWarn)
+                                            : statusBadge(v, diaDanger, diaWarn);
+                                        return ` ${ctx.dataset.label}: ${v} mmHg${b}`;
+                                    }
+                                }
                             }
                         },
                         scales: {
-                            y: { 
-                                suggestedMin: 50, 
-                                suggestedMax: 160,
-                                grid: { color: '#f1f5f9' }
-                            },
-                            x: {
-                                grid: { display: false }
-                            }
+                            y: { suggestedMin: 50, suggestedMax: 200, grid: { color: '#f1f5f9' } },
+                            x: { grid: { display: false } }
                         }
                     }
                 });
 
-                // Biểu đồ Nhịp tim
-                const ctxHr = document.getElementById('hrChart').getContext('2d');
-                new Chart(ctxHr, {
+                // ════════════════════════════════════════
+                // BIỂU ĐỒ NHỊP TIM
+                // ════════════════════════════════════════
+                const hrDanger = v => v > HR_HIGH_D || v < HR_LOW_D;
+                const hrWarn   = v => !hrDanger(v) && (v > HR_HIGH_W || v < HR_LOW_W);
+
+                new Chart(document.getElementById('hrChart').getContext('2d'), {
                     type: 'line',
+                    plugins: [thresholdPlugin],
                     data: {
-                        labels: labels,
+                        labels,
                         datasets: [
                             {
                                 label: 'Nhịp tim (BPM)',
-                                data: hr,
+                                data:  hr,
                                 borderColor: '#f59e0b',
-                                backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                                borderWidth: 3,
-                                pointRadius: 4,
-                                pointHoverRadius: 6,
-                                tension: 0.4,
-                                fill: true
+                                backgroundColor: 'rgba(245,158,11,0.12)',
+                                borderWidth: 2.5,
+                                pointRadius:          ptRadius(hr, hrDanger, hrWarn),
+                                pointHoverRadius:     9,
+                                pointBackgroundColor: ptColor(hr,  hrDanger, hrWarn, '#f59e0b'),
+                                pointBorderColor:     ptBorder(hr, hrDanger, hrWarn),
+                                pointBorderWidth:     2,
+                                tension: 0.4, fill: true
                             }
                         ]
                     },
                     options: {
                         responsive: true,
-                        interaction: {
-                            mode: 'index',
-                            intersect: false,
-                        },
+                        interaction: { mode: 'index', intersect: false },
                         plugins: {
+                            thresholdLines: { lines: [
+                                { value: HR_HIGH_D, color: '#ef4444', label: '⚠ Nguy hiểm cao (120 BPM)' },
+                                { value: HR_HIGH_W, color: '#f97316', label: '⚡ Cảnh báo cao (100 BPM)', dash: [4,4] },
+                                { value: HR_LOW_W,  color: '#f97316', label: '⚡ Cảnh báo thấp (60 BPM)', dash: [4,4] },
+                                { value: HR_LOW_D,  color: '#ef4444', label: '⚠ Nguy hiểm thấp (50 BPM)' },
+                            ]},
                             legend: { position: 'top' },
-                            tooltip: { 
+                            tooltip: {
                                 padding: 12,
-                                titleFont: { size: 14 },
-                                bodyFont: { size: 14 }
+                                titleFont: { size: 13 }, bodyFont: { size: 13 },
+                                callbacks: {
+                                    label(ctx) {
+                                        const v = ctx.raw;
+                                        return ` Nhịp tim: ${v} BPM${statusBadge(v, hrDanger, hrWarn)}`;
+                                    }
+                                }
                             }
                         },
                         scales: {
-                            y: { 
-                                suggestedMin: 50, 
-                                suggestedMax: 120,
-                                grid: { color: '#f1f5f9' }
-                            },
-                            x: {
-                                grid: { display: false }
-                            }
+                            y: { suggestedMin: 40, suggestedMax: 140, grid: { color: '#f1f5f9' } },
+                            x: { grid: { display: false } }
                         }
                     }
                 });
@@ -170,3 +305,4 @@
         });
     </script>
 }
+
