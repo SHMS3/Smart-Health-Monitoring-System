@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels.Admin;
 
 namespace SmartHealthMonitoring.Controllers.Admin
@@ -12,10 +13,14 @@ namespace SmartHealthMonitoring.Controllers.Admin
     public class StandardThresholdController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
+        private readonly IAuditLogService _auditLogService;
 
-        public StandardThresholdController(SmartHealthMonitoringContext context)
+        public StandardThresholdController(
+            SmartHealthMonitoringContext context,
+            IAuditLogService auditLogService)
         {
             _context = context;
+            _auditLogService = auditLogService;
         }
 
         // GET: /Admin/StandardThreshold/Index
@@ -53,6 +58,13 @@ namespace SmartHealthMonitoring.Controllers.Admin
 
             _context.StandardThresholds.Add(entity);
             await _context.SaveChangesAsync();
+            await _auditLogService.LogAsync(
+                "Create",
+                "StandardThreshold",
+                entity.Id.ToString(),
+                $"Tạo ngưỡng chuẩn y tế {entity.Name}.",
+                null,
+                entity.Name);
 
             TempData["Success"] = $"Đã tạo ngưỡng chuẩn \"{entity.Name}\" thành công!";
             return RedirectToAction(nameof(Index));
@@ -90,10 +102,20 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 return RedirectToAction(nameof(Index));
             }
 
+            var oldName = entity.Name;
+            var oldActive = entity.IsActive;
+
             MapToEntity(model, entity);
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+            await _auditLogService.LogAsync(
+                "Update",
+                "StandardThreshold",
+                entity.Id.ToString(),
+                $"Cập nhật ngưỡng chuẩn y tế {oldName} -> {entity.Name}; trạng thái kích hoạt {oldActive} -> {entity.IsActive}.",
+                null,
+                entity.Name);
 
             TempData["Success"] = $"Đã cập nhật ngưỡng chuẩn \"{entity.Name}\" thành công!";
             return RedirectToAction(nameof(Index));
@@ -114,6 +136,15 @@ namespace SmartHealthMonitoring.Controllers.Admin
             entity.IsActive = !entity.IsActive;
             entity.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+            await _auditLogService.LogAsync(
+                entity.IsActive ? "Activate" : "Deactivate",
+                "StandardThreshold",
+                entity.Id.ToString(),
+                entity.IsActive
+                    ? $"Kích hoạt ngưỡng chuẩn y tế {entity.Name}."
+                    : $"Vô hiệu hóa ngưỡng chuẩn y tế {entity.Name}.",
+                null,
+                entity.Name);
 
             TempData["Success"] = entity.IsActive
                 ? $"Đã kích hoạt lại \"{entity.Name}\"."
@@ -135,6 +166,13 @@ namespace SmartHealthMonitoring.Controllers.Admin
 
             _context.StandardThresholds.Remove(entity);
             await _context.SaveChangesAsync();
+            await _auditLogService.LogAsync(
+                "Delete",
+                "StandardThreshold",
+                id.ToString(),
+                $"Xóa ngưỡng chuẩn y tế {entity.Name}.",
+                null,
+                entity.Name);
 
             TempData["Success"] = $"Đã xóa ngưỡng chuẩn \"{entity.Name}\".";
             return RedirectToAction(nameof(Index));

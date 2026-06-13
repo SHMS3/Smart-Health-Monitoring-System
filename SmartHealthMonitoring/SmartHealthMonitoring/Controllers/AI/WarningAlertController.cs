@@ -18,19 +18,22 @@ namespace SmartHealthMonitoring.Controllers.AI
         private readonly IEmailService _emailService;
         private readonly IDoctorService _doctorService;
         private readonly IEmailTriggerService _emailTriggerService;
+        private readonly IAuditLogService _auditLogService;
 
         public WarningAlertController(
             IAiWarningAlertService warningAlertService,
             IDoctorService doctorService,
             SmartHealthMonitoringContext context,
             IEmailService emailService,
-            IEmailTriggerService emailTriggerService)
+            IEmailTriggerService emailTriggerService,
+            IAuditLogService auditLogService)
         {
             _warningAlertService = warningAlertService;
             _doctorService = doctorService;
             _context = context;
             _emailService = emailService;
             _emailTriggerService = emailTriggerService;
+            _auditLogService = auditLogService;
         }
 
         public async Task<IActionResult> Dashboard(byte? status, string? keyword, int page = 1, int pageSize = 10)
@@ -91,6 +94,21 @@ namespace SmartHealthMonitoring.Controllers.AI
 
             if (success)
             {
+                var alert = await _context.WarningAlerts
+                    .Include(a => a.Patient)
+                        .ThenInclude(p => p.User)
+                    .Include(a => a.Prediction)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(a => a.Id == id);
+
+                await _auditLogService.LogAsync(
+                    "Claim",
+                    "WarningAlert",
+                    id.ToString(),
+                    $"Tiếp nhận cảnh báo AI #{id} của bệnh nhân {alert?.Patient?.User?.FullName ?? "không xác định"}; mức rủi ro {alert?.Prediction?.RiskLevel.ToString() ?? "không xác định"}.",
+                    alert?.Patient?.UserId,
+                    alert?.Patient?.User?.FullName);
+
                 TempData["Success"] = "Đã tiếp nhận cảnh báo thành công.";
             }
             else
@@ -121,6 +139,21 @@ namespace SmartHealthMonitoring.Controllers.AI
 
             if (success)
             {
+                var alert = await _context.WarningAlerts
+                    .Include(a => a.Patient)
+                        .ThenInclude(p => p.User)
+                    .Include(a => a.Prediction)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(a => a.Id == id);
+
+                await _auditLogService.LogAsync(
+                    "Resolve",
+                    "WarningAlert",
+                    id.ToString(),
+                    $"Xử lý cảnh báo AI #{id} của bệnh nhân {alert?.Patient?.User?.FullName ?? "không xác định"}; mức rủi ro {alert?.Prediction?.RiskLevel.ToString() ?? "không xác định"}.",
+                    alert?.Patient?.UserId,
+                    alert?.Patient?.User?.FullName);
+
                 if (sendEmailInvitation)
                 {
                     await _emailTriggerService.SendAppointmentInvitationAsync(id, doctor.Id, appointmentDate);

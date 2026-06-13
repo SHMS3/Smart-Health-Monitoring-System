@@ -95,7 +95,7 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         public DateOnly DateOfBirth { get; set; }
         public byte Sex { get; set; }
         public bool IsDeleted { get; set; }
-        public string LockReason { get; set; }
+        public string? LockReason { get; set; }
     }
 
     // 4. Statistics ViewModels

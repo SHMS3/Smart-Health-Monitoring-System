@@ -18,6 +18,8 @@ public partial class SmartHealthMonitoringContext : DbContext
 
     public virtual DbSet<AiriskPrediction> AiriskPredictions { get; set; }
 
+    public virtual DbSet<AuditLog> AuditLogs { get; set; }
+
     public virtual DbSet<ChatMessage> ChatMessages { get; set; }
 
     public virtual DbSet<ChatbotSession> ChatbotSessions { get; set; }
@@ -50,6 +52,46 @@ public partial class SmartHealthMonitoringContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("AuditLogs");
+
+            entity.Property(e => e.Action).HasMaxLength(50);
+            entity.Property(e => e.ActorEmail)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.ActorName).HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.EntityId).HasMaxLength(64);
+            entity.Property(e => e.EntityName).HasMaxLength(100);
+            entity.Property(e => e.IpAddress)
+                .HasMaxLength(45)
+                .IsUnicode(false);
+            entity.Property(e => e.TargetName).HasMaxLength(100);
+            entity.Property(e => e.UserAgent).HasMaxLength(512);
+
+            entity.HasIndex(e => e.Action);
+            entity.HasIndex(e => e.ActorUserId);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.EntityName);
+            entity.HasIndex(e => e.TargetUserId);
+
+            entity.HasOne(d => d.ActorUser)
+                .WithMany()
+                .HasForeignKey(d => d.ActorUserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_AuditLogs_ActorUser");
+
+            entity.HasOne(d => d.TargetUser)
+                .WithMany()
+                .HasForeignKey(d => d.TargetUserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_AuditLogs_TargetUser");
+        });
+
         modelBuilder.Entity<AiriskPrediction>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__AIRiskPr__3214EC076EE87583");

@@ -1,0 +1,352 @@
+@model SmartHealthMonitoring.ViewModels.Admin.AuditLogIndexViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Nhật ký hoạt động";
+
+    var todayValue = DateTime.Today.ToString("yyyy-MM-dd");
+
+    string BadgeClass(string action) => action switch
+    {
+        "Create" => "bg-success",
+        "Update" => "bg-primary",
+        "Delete" => "bg-danger",
+        "Lock" => "bg-warning text-dark",
+        "Unlock" => "bg-info text-dark",
+        "Activate" => "bg-success",
+        "Deactivate" => "bg-secondary",
+        "Claim" => "bg-info text-dark",
+        "Resolve" => "bg-success",
+        "Void" => "bg-danger",
+        "GrantAccess" => "bg-success",
+        "RevokeAccess" => "bg-warning text-dark",
+        "SendMessage" => "bg-primary",
+        "Close" => "bg-secondary",
+        _ => "bg-dark"
+    };
+
+    string ActionLabel(string action) => action switch
+    {
+        "Create" => "Tạo mới",
+        "Update" => "Cập nhật",
+        "Delete" => "Xóa",
+        "Lock" => "Khóa",
+        "Unlock" => "Mở khóa",
+        "Activate" => "Kích hoạt",
+        "Deactivate" => "Vô hiệu hóa",
+        "Claim" => "Tiếp nhận",
+        "Resolve" => "Xử lý",
+        "Void" => "Hủy hồ sơ",
+        "GrantAccess" => "Cho phép xem",
+        "RevokeAccess" => "Ẩn quyền xem",
+        "SendMessage" => "Gửi tin nhắn",
+        "Close" => "Kết thúc",
+        _ => action
+    };
+
+    string EntityLabel(string entityName) => entityName switch
+    {
+        "Doctor" => "Bác sĩ",
+        "DoctorAccount" => "Tài khoản bác sĩ",
+        "PatientAccount" => "Tài khoản bệnh nhân",
+        "ClinicalRecord" => "Hồ sơ lâm sàng",
+        "PatientThreshold" => "Ngưỡng riêng bệnh nhân",
+        "WarningAlert" => "Cảnh báo AI",
+        "TelemedicineChatSession" => "Phiên chat từ xa",
+        "TelemedicineChatMessage" => "Tin nhắn chat từ xa",
+        "StandardThreshold" => "Ngưỡng chuẩn y tế",
+        _ => entityName
+    };
+
+    string DescriptionLabel(string description)
+    {
+        var hiddenFromPatient = description.StartsWith("Hid clinical record", StringComparison.OrdinalIgnoreCase);
+
+        var text = description
+            .Replace("Created doctor account", "Tạo tài khoản bác sĩ")
+            .Replace("Updated doctor", "Cập nhật bác sĩ")
+            .Replace("Locked doctor account", "Khóa tài khoản bác sĩ")
+            .Replace("Unlocked doctor account", "Mở khóa tài khoản bác sĩ")
+            .Replace("Locked patient account", "Khóa tài khoản bệnh nhân")
+            .Replace("Unlocked patient account", "Mở khóa tài khoản bệnh nhân")
+            .Replace("Created standard threshold", "Tạo ngưỡng chuẩn y tế")
+            .Replace("Updated standard threshold", "Cập nhật ngưỡng chuẩn y tế")
+            .Replace("Activated standard threshold", "Kích hoạt ngưỡng chuẩn y tế")
+            .Replace("Deactivated standard threshold", "Vô hiệu hóa ngưỡng chuẩn y tế")
+            .Replace("Deleted standard threshold", "Xóa ngưỡng chuẩn y tế")
+            .Replace("Created clinical record", "Tạo hồ sơ lâm sàng")
+            .Replace("Voided clinical record", "Hủy hồ sơ lâm sàng")
+            .Replace("Allowed patient", "Cho phép bệnh nhân")
+            .Replace("to view clinical record", "xem hồ sơ lâm sàng")
+            .Replace("Hid clinical record", "Ẩn hồ sơ lâm sàng")
+            .Replace("Created patient threshold", "Tạo ngưỡng riêng")
+            .Replace("Updated patient threshold", "Cập nhật ngưỡng riêng")
+            .Replace("Claimed AI warning alert", "Tiếp nhận cảnh báo AI")
+            .Replace("Resolved AI warning alert", "Xử lý cảnh báo AI")
+            .Replace("Sent telemedicine chat message in session", "Gửi tin nhắn trong phiên chat từ xa")
+            .Replace("Claimed telemedicine chat session", "Tiếp nhận phiên chat từ xa")
+            .Replace("Closed telemedicine chat session", "Kết thúc phiên chat từ xa")
+            .Replace("for patient", "cho bệnh nhân")
+            .Replace("with patient", "với bệnh nhân")
+            .Replace("risk level", "mức rủi ro")
+            .Replace("Reason:", "Lý do:")
+            .Replace("email", "email")
+            .Replace("specialty", "chuyên khoa")
+            .Replace("on shift", "trạng thái trực")
+            .Replace("active", "trạng thái kích hoạt")
+            .Replace("systolic", "huyết áp tâm thu")
+            .Replace("heart rate", "nhịp tim")
+            .Replace("cholesterol", "cholesterol")
+            .Replace("max HR", "nhịp tim tối đa")
+            .Replace("BP", "huyết áp");
+
+        return hiddenFromPatient
+            ? text.Replace("from patient", "khỏi bệnh nhân")
+            : text.Replace("from patient", "từ bệnh nhân");
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Nhật ký hoạt động</h3>
+        <p class="text-muted small mb-0">Theo dõi các thao tác quan trọng trong hệ thống.</p>
+    </div>
+    <div class="badge bg-dark rounded-pill px-3 py-2">
+        @Model.Logs.TotalCount bản ghi
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const form = document.getElementById('auditLogFilterForm');
+            const fromDate = document.getElementById('auditFromDate');
+            const toDate = document.getElementById('auditToDate');
+
+            if (!form || !fromDate || !toDate) {
+                return;
+            }
+
+            const today = toDate.dataset.today;
+
+            const syncDateValidation = () => {
+                fromDate.setCustomValidity('');
+                toDate.setCustomValidity('');
+                toDate.max = today;
+
+                if (fromDate.value) {
+                    toDate.min = fromDate.value;
+                } else {
+                    toDate.removeAttribute('min');
+                }
+
+                if (toDate.value) {
+                    fromDate.max = toDate.value < today ? toDate.value : today;
+                } else {
+                    fromDate.removeAttribute('max');
+                }
+
+                if (toDate.value && toDate.value > today) {
+                    toDate.setCustomValidity('Đến ngày không được vượt quá ngày hiện tại.');
+                    return;
+                }
+
+                if (fromDate.value && toDate.value && fromDate.value > toDate.value) {
+                    fromDate.setCustomValidity('Từ ngày không được lớn hơn Đến ngày.');
+                }
+            };
+
+            fromDate.addEventListener('change', syncDateValidation);
+            toDate.addEventListener('change', syncDateValidation);
+            form.addEventListener('submit', (event) => {
+                syncDateValidation();
+
+                if (!form.reportValidity()) {
+                    event.preventDefault();
+                }
+            });
+
+            syncDateValidation();
+        })();
+    </script>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger border-0 shadow-sm rounded-4">
+        <div class="fw-semibold mb-1">
+            <i class="fas fa-exclamation-triangle me-2"></i>Vui lòng kiểm tra lại bộ lọc thời gian.
+        </div>
+        @foreach (var state in ViewData.ModelState.Values)
+        {
+            foreach (var error in state.Errors)
+            {
+                <div class="small">@error.ErrorMessage</div>
+            }
+        }
+    </div>
+}
+
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body">
+        <form id="auditLogFilterForm" method="get" asp-action="Index" class="row g-3 align-items-end">
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label small text-muted fw-semibold">Hành động</label>
+                <select name="actionType" class="form-select rounded-3">
+                    <option value="">Tất cả</option>
+                    <option value="Create" selected="@(Model.ActionType == "Create")">Tạo mới</option>
+                    <option value="Update" selected="@(Model.ActionType == "Update")">Cập nhật</option>
+                    <option value="Delete" selected="@(Model.ActionType == "Delete")">Xóa</option>
+                    <option value="Lock" selected="@(Model.ActionType == "Lock")">Khóa</option>
+                    <option value="Unlock" selected="@(Model.ActionType == "Unlock")">Mở khóa</option>
+                    <option value="Activate" selected="@(Model.ActionType == "Activate")">Kích hoạt</option>
+                    <option value="Deactivate" selected="@(Model.ActionType == "Deactivate")">Vô hiệu hóa</option>
+                    <option value="Claim" selected="@(Model.ActionType == "Claim")">Tiếp nhận</option>
+                    <option value="Resolve" selected="@(Model.ActionType == "Resolve")">Xử lý</option>
+                    <option value="Void" selected="@(Model.ActionType == "Void")">Hủy hồ sơ</option>
+                    <option value="GrantAccess" selected="@(Model.ActionType == "GrantAccess")">Cho phép xem</option>
+                    <option value="RevokeAccess" selected="@(Model.ActionType == "RevokeAccess")">Ẩn quyền xem</option>
+                    <option value="SendMessage" selected="@(Model.ActionType == "SendMessage")">Gửi tin nhắn</option>
+                    <option value="Close" selected="@(Model.ActionType == "Close")">Kết thúc</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label small text-muted fw-semibold">Dữ liệu</label>
+                <select name="entityName" class="form-select rounded-3">
+                    <option value="">Tất cả</option>
+                    <option value="Doctor" selected="@(Model.EntityName == "Doctor")">Bác sĩ</option>
+                    <option value="DoctorAccount" selected="@(Model.EntityName == "DoctorAccount")">Tài khoản bác sĩ</option>
+                    <option value="PatientAccount" selected="@(Model.EntityName == "PatientAccount")">Tài khoản bệnh nhân</option>
+                    <option value="ClinicalRecord" selected="@(Model.EntityName == "ClinicalRecord")">Hồ sơ lâm sàng</option>
+                    <option value="PatientThreshold" selected="@(Model.EntityName == "PatientThreshold")">Ngưỡng riêng bệnh nhân</option>
+                    <option value="WarningAlert" selected="@(Model.EntityName == "WarningAlert")">Cảnh báo AI</option>
+                    <option value="TelemedicineChatSession" selected="@(Model.EntityName == "TelemedicineChatSession")">Phiên chat từ xa</option>
+                    <option value="TelemedicineChatMessage" selected="@(Model.EntityName == "TelemedicineChatMessage")">Tin nhắn chat từ xa</option>
+                    <option value="StandardThreshold" selected="@(Model.EntityName == "StandardThreshold")">Ngưỡng chuẩn y tế</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label small text-muted fw-semibold">Từ ngày</label>
+                <input type="date" id="auditFromDate" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" class="form-control rounded-3" />
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label small text-muted fw-semibold">Đến ngày</label>
+                <input type="date" id="auditToDate" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" max="@todayValue" data-today="@todayValue" class="form-control rounded-3" />
+            </div>
+            <div class="col-lg-3 col-md-8">
+                <label class="form-label small text-muted fw-semibold">Tìm kiếm</label>
+                <input type="text" name="keyword" value="@Model.Keyword" class="form-control rounded-3" placeholder="Người thực hiện, email, mục tiêu, mô tả..." />
+            </div>
+            <div class="col-lg-1 col-md-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-3 w-100">
+                    <i class="fas fa-filter"></i>
+                </button>
+                <a asp-action="Index" class="btn btn-light rounded-3 border">
+                    <i class="fas fa-rotate-left"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted small">
+                    <tr>
+                        <th class="ps-4">Thời gian</th>
+                        <th>Người thực hiện</th>
+                        <th>Hành động</th>
+                        <th>Dữ liệu</th>
+                        <th>Mục tiêu</th>
+                        <th>Mô tả</th>
+                        @* <th class="text-end pe-4">IP</th> *@
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Logs.Items.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-5">
+                                <i class="fas fa-clipboard-list fs-2 d-block mb-2"></i>
+                                Chưa có nhật ký phù hợp.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var log in Model.Logs.Items)
+                    {
+                        <tr>
+                            <td class="ps-4 text-nowrap">
+                                <div class="fw-semibold text-dark">@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</div>
+                                <div class="small text-muted">@log.CreatedAt.ToLocalTime().ToString("HH:mm:ss")</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark">@log.ActorName</div>
+                                <div class="small text-muted">@log.ActorEmail</div>
+                            </td>
+                            <td>
+                                <span class="badge @BadgeClass(log.Action) rounded-pill px-3">@ActionLabel(log.Action)</span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@EntityLabel(log.EntityName)</div>
+                                @if (!string.IsNullOrEmpty(log.EntityId))
+                                {
+                                    <div class="small text-muted">#@log.EntityId</div>
+                                }
+                            </td>
+                            <td>@(log.TargetName ?? "-")</td>
+                            <td style="min-width: 280px;">
+                                <span class="text-dark">@DescriptionLabel(log.Description)</span>
+                            </td>
+                            @* <td class="text-end pe-4 text-muted text-nowrap">@(log.IpAddress ?? "-")</td> *@
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.Logs.TotalPages > 1)
+    {
+        <div class="card-footer bg-white border-top-0 p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <span class="text-muted small">Trang @Model.Logs.Page / @Model.Logs.TotalPages</span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.Logs.Page == 1 ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@(Model.Logs.Page - 1)"
+                           asp-route-actionType="@Model.ActionType"
+                           asp-route-entityName="@Model.EntityName"
+                           asp-route-keyword="@Model.Keyword"
+                           asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                           asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">Trước</a>
+                    </li>
+                    @for (int i = 1; i <= Model.Logs.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Logs.Page ? "active" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@i"
+                               asp-route-actionType="@Model.ActionType"
+                               asp-route-entityName="@Model.EntityName"
+                               asp-route-keyword="@Model.Keyword"
+                               asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                               asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Logs.Page == Model.Logs.TotalPages ? "disabled" : "")">
+                        <a class="page-link"
+                           asp-action="Index"
+                           asp-route-page="@(Model.Logs.Page + 1)"
+                           asp-route-actionType="@Model.ActionType"
+                           asp-route-entityName="@Model.EntityName"
+                           asp-route-keyword="@Model.Keyword"
+                           asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
+                           asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">Sau</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
