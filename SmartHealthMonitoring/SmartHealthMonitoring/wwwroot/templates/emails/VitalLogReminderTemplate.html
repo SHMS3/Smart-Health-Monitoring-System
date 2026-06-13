@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #334155; }
+        .container { background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.05); max-width: 600px; margin: auto; border: 1px solid #e2e8f0; }
+        .header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff; padding: 25px; border-radius: 12px 12px 0 0; text-align: center; margin: -30px -30px 25px -30px; }
+        .header h2 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em; }
+        .content { line-height: 1.6; font-size: 16px; }
+        .patient-name { color: #1e3a8a; font-weight: 600; }
+        .reminder-box { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 0 8px 8px 0; margin: 20px 0; }
+        .reminder-box p { margin: 0 0 10px 0; }
+        .reminder-box p:last-child { margin: 0; }
+        .btn-container { text-align: center; margin: 30px 0 20px 0; }
+        .btn { display: inline-block; background-color: #2563eb; color: #ffffff !important; padding: 12px 30px; font-weight: 600; text-decoration: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.2); transition: background-color 0.2s; }
+        .btn:hover { background-color: #1d4ed8; }
+        .footer { margin-top: 30px; text-align: center; font-size: 13px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Nhắc Nhở Ghi Chỉ Số Sức Khỏe</h2>
+        </div>
+        <div class="content">
+            <p>Chào bạn <strong class="patient-name">{{PatientName}}</strong>,</p>
+            <p>Hệ thống Smart Health Monitoring nhận thấy bạn đã không cập nhật chỉ số sức khỏe hàng ngày trong hơn 1 giờ qua.</p>
+            
+            <div class="reminder-box">
+                <p><strong>Thời gian ghi nhận cuối cùng:</strong> {{LastLogTimeDisplay}}</p>
+                <p>Việc theo dõi chỉ số huyết áp, nhịp tim và các triệu chứng hàng ngày là cực kỳ quan trọng để hệ thống AI và bác sĩ chuyên trách có thể phân tích, đưa ra cảnh báo kịp thời về tình trạng sức khỏe của bạn.</p>
+            </div>
+            
+            <p>Vui lòng dành 1 phút để truy cập hệ thống và cập nhật các chỉ số sức khỏe hiện tại của bạn.</p>
+            
+            <div class="btn-container">
+                <a href="{{ActionUrl}}" class="btn">Ghi Nhận Chỉ Số Ngay</a>
+            </div>
+            
+            <p>Chúc bạn luôn có nhiều sức khỏe!<br/><strong>Đội ngũ Smart Health Monitoring</strong></p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 Smart Health Monitoring System. Trí tuệ AI tập trung (AI Focus).</p>
+        </div>
+    </div>
+</body>
+</html>

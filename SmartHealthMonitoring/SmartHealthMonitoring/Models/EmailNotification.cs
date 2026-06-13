@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SmartHealthMonitoring.Models;
@@ -7,7 +7,7 @@ public partial class EmailNotification
 {
     public int Id { get; set; }
 
-    public int AlertId { get; set; }
+    public int? AlertId { get; set; }
 
     public int PatientId { get; set; }
 
@@ -25,7 +25,7 @@ public partial class EmailNotification
 
     public DateTime CreatedAt { get; set; }
 
-    public virtual WarningAlert Alert { get; set; } = null!;
+    public virtual WarningAlert? Alert { get; set; }
 
     public virtual Patient Patient { get; set; } = null!;
 }
