@@ -2,15 +2,6 @@
 
 @{
     ViewData["Title"] = "Cảnh báo sức khỏe";
-
-    var currentStatus =
-        ViewContext.HttpContext.Request.Query["status"]
-        .ToString();
-
-    bool IsActive(string? status) =>
-        string.IsNullOrEmpty(status)
-        && string.IsNullOrEmpty(currentStatus)
-        || status == currentStatus;
 }
 
 <style>
@@ -351,7 +342,7 @@
     <div class="alert-count">
 
         Tổng cộng:
-        <strong>@ViewBag.TotalRecords</strong>
+        <strong id="total-records-count">@ViewBag.TotalRecords</strong>
         cảnh báo
 
     </div>
@@ -427,6 +418,11 @@
 
                 currentStatus = status;
                 currentPage = page;
+
+                let total = $('#alertContainer').find('.alert-table-wrap').data('total-records');
+                if (total !== undefined) {
+                    $('#total-records-count').text(total);
+                }
 
                 $('.filter-btn').removeClass('active');
 
