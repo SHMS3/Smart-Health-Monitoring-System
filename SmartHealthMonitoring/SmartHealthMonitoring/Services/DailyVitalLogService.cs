@@ -197,6 +197,41 @@ namespace SmartHealthMonitoring.Services
             return result.Items;
         }
 
+        public async Task<PersonalHealthTrackerViewModel> GetPatientHealthTrendsAsync(int userId, int days = 7)
+        {
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+            if (patient == null)
+                throw new Exception("Không tìm thấy hồ sơ bệnh nhân");
+
+            DateTime startDate;
+            if (days == 1)
+            {
+                startDate = DateTime.Today; // Từ 0h00 hôm nay
+            }
+            else
+            {
+                startDate = DateTime.Today.AddDays(-days + 1); 
+            }
+
+            var pagedLogs = await _repository.GetAllDailyLogByPatientIdAsync(patient.Id, startDate, DateTime.Now, 1, 1000);
+            
+            var logs = pagedLogs.Items.OrderBy(x => x.LoggedAt).ToList();
+
+            var vm = new PersonalHealthTrackerViewModel { Days = days };
+
+            foreach (var log in logs)
+            {
+                // Nếu là 1 ngày, hiển thị Giờ:Phút. Nếu là 7/30 ngày, hiển thị Ngày/Tháng Giờ:Phút
+                string labelFormat = days == 1 ? "HH:mm" : "dd/MM HH:mm";
+                vm.Labels.Add(log.LoggedAt.ToString(labelFormat));
+                vm.SystolicBpValues.Add(log.SystolicBp);
+                vm.DiastolicBpValues.Add(log.DiastolicBp);
+                vm.HeartRateValues.Add(log.HeartRate);
+            }
+
+            return vm;
+        }
+
         private string EvaluateAlertLevel(DailyVitalLogViewModel model, PatientThreshold? threshold)
         {
             // Nếu bác sĩ chưa cấu hình, dùng một instance mới (nó sẽ tự lấy giá trị mặc định đã set trong Model)

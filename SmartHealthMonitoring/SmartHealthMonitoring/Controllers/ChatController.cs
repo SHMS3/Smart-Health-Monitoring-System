@@ -142,7 +142,7 @@ public class ChatController : Controller
         await _chatService.MarkMessagesAsReadAsync(sessionId, userId);
 
         // Trả về số lượng tin nhắn chưa đọc qua header
-        Response.Headers.Add("X-Unread-Count", unreadCount.ToString());
+        Response.Headers["X-Unread-Count"] = unreadCount.ToString();
 
         var result = messages.Select(m => new
         {

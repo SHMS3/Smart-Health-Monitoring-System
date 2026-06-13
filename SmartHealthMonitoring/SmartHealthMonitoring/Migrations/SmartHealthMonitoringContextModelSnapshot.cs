@@ -198,6 +198,83 @@ namespace SmartHealthMonitoring.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SmartHealthMonitoring.Models.AuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ActorEmail")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<string>("ActorName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("ActorUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(sysutcdatetime())");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(45)");
+
+                    b.Property<string>("TargetName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("TargetUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Action");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("EntityName");
+
+                    b.HasIndex("TargetUserId");
+
+                    b.ToTable("AuditLogs", (string)null);
+                });
+
             modelBuilder.Entity("SmartHealthMonitoring.Models.ChatMessage", b =>
                 {
                     b.Property<int>("Id")
@@ -880,11 +957,37 @@ namespace SmartHealthMonitoring.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CitizenId")
+                        .HasMaxLength(12)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(12)");
+
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsOnShift")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsPhoneVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(15)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(15)");
+
+                    b.Property<string>("PracticeLicense")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte?>("Sex")
+                        .HasColumnType("tinyint");
 
                     b.Property<string>("Specialty")
                         .IsRequired()
@@ -912,6 +1015,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 1,
                             IsDeleted = false,
                             IsOnShift = true,
+                            IsPhoneVerified = false,
                             Specialty = "Tim mạch can thiệp",
                             UserId = 1
                         },
@@ -920,6 +1024,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 2,
                             IsDeleted = false,
                             IsOnShift = false,
+                            IsPhoneVerified = false,
                             Specialty = "Nhịp học tim mạch",
                             UserId = 2
                         },
@@ -928,6 +1033,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 3,
                             IsDeleted = false,
                             IsOnShift = true,
+                            IsPhoneVerified = false,
                             Specialty = "Nội tim mạch",
                             UserId = 3
                         },
@@ -936,6 +1042,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 4,
                             IsDeleted = false,
                             IsOnShift = false,
+                            IsPhoneVerified = false,
                             Specialty = "Phẫu thuật tim",
                             UserId = 4
                         },
@@ -944,6 +1051,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 5,
                             IsDeleted = false,
                             IsOnShift = true,
+                            IsPhoneVerified = false,
                             Specialty = "Nội tim mạch",
                             UserId = 5
                         },
@@ -952,6 +1060,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 6,
                             IsDeleted = false,
                             IsOnShift = false,
+                            IsPhoneVerified = false,
                             Specialty = "Tim mạch nhi",
                             UserId = 6
                         },
@@ -960,6 +1069,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 7,
                             IsDeleted = false,
                             IsOnShift = true,
+                            IsPhoneVerified = false,
                             Specialty = "Chẩn đoán hình ảnh",
                             UserId = 7
                         },
@@ -968,6 +1078,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 8,
                             IsDeleted = false,
                             IsOnShift = false,
+                            IsPhoneVerified = false,
                             Specialty = "Nội tim mạch",
                             UserId = 8
                         },
@@ -976,6 +1087,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 9,
                             IsDeleted = false,
                             IsOnShift = true,
+                            IsPhoneVerified = false,
                             Specialty = "Tim mạch can thiệp",
                             UserId = 9
                         },
@@ -984,6 +1096,7 @@ namespace SmartHealthMonitoring.Migrations
                             Id = 10,
                             IsDeleted = false,
                             IsOnShift = false,
+                            IsPhoneVerified = false,
                             Specialty = "Nội tim mạch",
                             UserId = 10
                         });
@@ -1197,6 +1310,11 @@ namespace SmartHealthMonitoring.Migrations
 
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CitizenId")
+                        .HasMaxLength(12)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(12)");
 
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
@@ -2264,6 +2382,25 @@ namespace SmartHealthMonitoring.Migrations
                     b.Navigation("DailyLog");
 
                     b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("SmartHealthMonitoring.Models.AuditLog", b =>
+                {
+                    b.HasOne("SmartHealthMonitoring.Models.User", "ActorUser")
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasConstraintName("FK_AuditLogs_ActorUser");
+
+                    b.HasOne("SmartHealthMonitoring.Models.User", "TargetUser")
+                        .WithMany()
+                        .HasForeignKey("TargetUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasConstraintName("FK_AuditLogs_TargetUser");
+
+                    b.Navigation("ActorUser");
+
+                    b.Navigation("TargetUser");
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.ChatMessage", b =>

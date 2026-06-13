@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SmartHealthMonitoring.Models;
@@ -16,6 +16,20 @@ public partial class Doctor
     public bool IsDeleted { get; set; }
 
     public virtual ICollection<ClinicalRecord> ClinicalRecords { get; set; } = new List<ClinicalRecord>();
+
+    public string? CitizenId { get; set; }
+
+    public string? PracticeLicense { get; set; }
+
+    public string? Phone { get; set; }
+
+    public string? Address { get; set; }
+
+    public bool IsPhoneVerified { get; set; }
+
+    public DateOnly? DateOfBirth { get; set; }
+
+    public byte? Sex { get; set; }
 
     public virtual User User { get; set; } = null!;
 

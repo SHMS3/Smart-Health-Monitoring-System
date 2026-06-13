@@ -1,4 +1,4 @@
-﻿@model SmartHealthMonitoring.ViewModels.Admin.DoctorCreateViewModel
+@model SmartHealthMonitoring.ViewModels.Admin.DoctorCreateViewModel
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Cấp tài khoản Bác sĩ";
@@ -29,10 +29,38 @@
                         <span asp-validation-for="Email" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-3">
+                        <label asp-for="DateOfBirth" class="form-label fw-medium text-dark">Ngày sinh</label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Sex" class="form-label fw-medium text-dark">Giới tính</label>
+                        <select asp-for="Sex" class="form-select">
+                            <option value="">-- Chọn giới tính --</option>
+                            <option value="1">Nam</option>
+                            <option value="0">Nữ</option>
+                        </select>
+                        <span asp-validation-for="Sex" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
                         <label asp-for="Specialty" class="form-label fw-medium text-dark">Chuyên khoa khám <span class="text-danger">*</span></label>
                         <input asp-for="Specialty" class="form-control" placeholder="Ví dụ: Tim mạch, Nội tiết..." value="Tim mạch" />
                         <span asp-validation-for="Specialty" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CitizenId" class="form-label fw-medium text-dark">Số CCCD / CMND</label>
+                        <input asp-for="CitizenId" class="form-control" maxlength="12" placeholder="Nhập 12 chữ số CCCD..." />
+                        <span asp-validation-for="CitizenId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="PracticeLicense" class="form-label fw-medium text-dark">Giấy phép hành nghề</label>
+                        <input asp-for="PracticeLicense" class="form-control" placeholder="Nhập số giấy phép hành nghề..." />
+                        <span asp-validation-for="PracticeLicense" class="text-danger small"></span>
                     </div>
 
                     <div class="d-flex justify-content-end">

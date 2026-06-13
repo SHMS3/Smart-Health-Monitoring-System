@@ -19,6 +19,11 @@ namespace SmartHealthMonitoring.ViewModels
         public bool IsPhoneVerified { get; set; }
         public string? Address { get; set; }
 
+        // ── Căn cước & Giấy phép ──
+        public string? CitizenId { get; set; }
+        public string? PracticeLicense { get; set; }
+        public string? Specialty { get; set; }
+
         // ── Thống kê nhanh ──
         public int TotalVitalLogs { get; set; }
         public int TotalClinicalRecords { get; set; }
@@ -55,16 +60,20 @@ namespace SmartHealthMonitoring.ViewModels
         [MaxLength(100)]
         public string FullName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Vui lòng chọn ngày sinh.")]
-        public DateOnly DateOfBirth { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng chọn giới tính.")]
-        public byte Sex { get; set; }
+        public byte? Sex { get; set; }
 
         [RegularExpression(@"^(0|\+84)[0-9]{9}$", ErrorMessage = "Số điện thoại không hợp lệ (VD: 0912345678 hoặc +84912345678).")]
         public string? Phone { get; set; }
 
         [MaxLength(200)]
         public string? Address { get; set; }
+
+        [RegularExpression(@"^\d{12}$", ErrorMessage = "Căn cước công dân phải bao gồm đúng 12 chữ số.")]
+        public string? CitizenId { get; set; }
+
+        [MaxLength(100, ErrorMessage = "Giấy phép hành nghề không được vượt quá 100 ký tự.")]
+        public string? PracticeLicense { get; set; }
     }
 }

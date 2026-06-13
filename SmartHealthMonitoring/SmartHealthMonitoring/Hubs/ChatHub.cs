@@ -17,10 +17,14 @@ namespace SmartHealthMonitoring.Hubs;
 public class ChatHub : Hub
 {
     private readonly IChatService _chatService;
+    private readonly IAuditLogService _auditLogService;
 
-    public ChatHub(IChatService chatService)
+    public ChatHub(
+        IChatService chatService,
+        IAuditLogService auditLogService)
     {
         _chatService = chatService;
+        _auditLogService = auditLogService;
     }
 
     /// <summary>
@@ -46,6 +50,22 @@ public class ChatHub : Hub
 
         // Lưu tin nhắn
         var savedMessage = await _chatService.SaveMessageAsync(sessionId, senderId, message.Trim());
+
+        if (IsDoctor())
+        {
+            await _auditLogService.LogForActorAsync(
+                senderId,
+                GetActorName(),
+                GetActorEmail(),
+                "SendMessage",
+                "TelemedicineChatMessage",
+                savedMessage.Id.ToString(),
+                $"Gửi tin nhắn trong phiên chat từ xa #{sessionId} cho bệnh nhân {session.PatientUser.FullName}.",
+                session.PatientUserId,
+                session.PatientUser.FullName,
+                GetIpAddress(),
+                GetUserAgent());
+        }
 
         var payload = new
         {
@@ -83,9 +103,25 @@ public class ChatHub : Hub
         if (doctorUserId == 0)
             throw new HubException("Không thể xác định bác sĩ.");
 
+        if (!IsDoctor())
+            throw new HubException("Only doctors can claim chat sessions.");
+
         var session = await _chatService.ClaimSessionAsync(sessionId, doctorUserId);
         if (session == null)
             throw new HubException("Phiên chat đã được tiếp nhận hoặc không tồn tại.");
+
+        await _auditLogService.LogForActorAsync(
+            doctorUserId,
+            GetActorName(),
+            GetActorEmail(),
+            "Claim",
+            "TelemedicineChatSession",
+            session.Id.ToString(),
+            $"Tiếp nhận phiên chat từ xa #{session.Id} của bệnh nhân {session.PatientUser.FullName}.",
+            session.PatientUserId,
+            session.PatientUser.FullName,
+            GetIpAddress(),
+            GetUserAgent());
 
         var payload = new
         {
@@ -121,6 +157,22 @@ public class ChatHub : Hub
         var success = await _chatService.CloseSessionAsync(sessionId, userId);
         if (!success)
             throw new HubException("Không thể kết thúc phiên chat.");
+
+        if (IsDoctor())
+        {
+            await _auditLogService.LogForActorAsync(
+                userId,
+                GetActorName(),
+                GetActorEmail(),
+                "Close",
+                "TelemedicineChatSession",
+                sessionId.ToString(),
+                $"Kết thúc phiên chat từ xa #{sessionId} với bệnh nhân {session.PatientUser.FullName}.",
+                session.PatientUserId,
+                session.PatientUser.FullName,
+                GetIpAddress(),
+                GetUserAgent());
+        }
 
         var payload = new { sessionId = sessionId };
 
@@ -164,5 +216,30 @@ public class ChatHub : Hub
     {
         var idStr = Context.UserIdentifier;
         return int.TryParse(idStr, out int id) ? id : 0;
+    }
+
+    private bool IsDoctor()
+    {
+        return Context.User?.FindFirst(ClaimTypes.Role)?.Value == "1";
+    }
+
+    private string? GetActorName()
+    {
+        return Context.User?.FindFirst("FullName")?.Value ?? Context.User?.Identity?.Name;
+    }
+
+    private string? GetActorEmail()
+    {
+        return Context.User?.FindFirst(ClaimTypes.Email)?.Value;
+    }
+
+    private string? GetIpAddress()
+    {
+        return Context.GetHttpContext()?.Connection.RemoteIpAddress?.ToString();
+    }
+
+    private string? GetUserAgent()
+    {
+        return Context.GetHttpContext()?.Request.Headers.UserAgent.ToString();
     }
 }

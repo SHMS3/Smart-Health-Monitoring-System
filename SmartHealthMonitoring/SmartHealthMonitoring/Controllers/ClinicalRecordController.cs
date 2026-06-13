@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;
 using System;
 using System.Linq;
@@ -15,10 +16,14 @@ namespace SmartHealthMonitoring.Controllers
     public class ClinicalRecordController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
+        private readonly IAuditLogService _auditLogService;
 
-        public ClinicalRecordController(SmartHealthMonitoringContext context)
+        public ClinicalRecordController(
+            SmartHealthMonitoringContext context,
+            IAuditLogService auditLogService)
         {
             _context = context;
+            _auditLogService = auditLogService;
         }
 
         [Authorize(Roles = "0")]
@@ -183,7 +188,10 @@ namespace SmartHealthMonitoring.Controllers
         {
             try
             {
-                var record = await _context.ClinicalRecords.FirstOrDefaultAsync(r => r.Id == id);
+                var record = await _context.ClinicalRecords
+                    .Include(r => r.Patient)
+                        .ThenInclude(p => p.User)
+                    .FirstOrDefaultAsync(r => r.Id == id);
 
                 if (record == null)
                 {
@@ -201,6 +209,13 @@ namespace SmartHealthMonitoring.Controllers
                 record.IsDeleted = true;
 
                 await _context.SaveChangesAsync();
+                await _auditLogService.LogAsync(
+                    "Void",
+                    "ClinicalRecord",
+                    record.Id.ToString(),
+                    $"Hủy hồ sơ lâm sàng #{record.Id} của bệnh nhân {record.Patient.User.FullName}.",
+                    record.Patient.UserId,
+                    record.Patient.User.FullName);
 
                 TempData["Success"] = "Đã đánh dấu hủy hồ sơ thành công.";
                 return RedirectToAction(nameof(Index), new { id = record.PatientId });
@@ -219,7 +234,10 @@ namespace SmartHealthMonitoring.Controllers
         {
             try
             {
-                var record = await _context.ClinicalRecords.FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted);
+                var record = await _context.ClinicalRecords
+                    .Include(r => r.Patient)
+                        .ThenInclude(p => p.User)
+                    .FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted);
 
                 if (record == null)
                 {
@@ -231,6 +249,15 @@ namespace SmartHealthMonitoring.Controllers
                 record.IsViewForPatient = !record.IsViewForPatient;
 
                 await _context.SaveChangesAsync();
+                await _auditLogService.LogAsync(
+                    record.IsViewForPatient ? "GrantAccess" : "RevokeAccess",
+                    "ClinicalRecord",
+                    record.Id.ToString(),
+                    record.IsViewForPatient
+                        ? $"Cho phép bệnh nhân {record.Patient.User.FullName} xem hồ sơ lâm sàng #{record.Id}."
+                        : $"Ẩn hồ sơ lâm sàng #{record.Id} khỏi bệnh nhân {record.Patient.User.FullName}.",
+                    record.Patient.UserId,
+                    record.Patient.User.FullName);
 
                 TempData["Success"] = record.IsViewForPatient
                     ? "Đã cho phép bệnh nhân xem hồ sơ này."

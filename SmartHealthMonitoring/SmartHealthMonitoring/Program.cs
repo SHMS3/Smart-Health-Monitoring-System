@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Minio;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.DI; // Gọi namespace DI của bạn
+using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.Hubs;
 using System;
 
@@ -30,8 +31,11 @@ namespace SmartHealthMonitoring
                 .WithSSL(false)
                 .Build());
 
+            builder.Services.AddHttpClient<GeminiService>();
+
             // 3. MVC & Razor
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+            builder.Services.AddHttpContextAccessor();
 
             // 3b. SignalR cho Telemedicine Chat
             builder.Services.AddSignalR();
@@ -43,10 +47,19 @@ namespace SmartHealthMonitoring
             // 4b. HttpClient cho EsmsSmsService
             builder.Services.AddHttpClient();
 
+            // 4c. Memory Cache & News Scraper Service
+            builder.Services.AddMemoryCache();
+            builder.Services.AddScoped<SmartHealthMonitoring.Services.INewsScraperService, SmartHealthMonitoring.Services.NewsScraperService>();
+
+
             // ====================================================================
             // 5. GỌI HÀM QUÉT TỰ ĐỘNG TỪ THƯ MỤC DI
             // ====================================================================
+            // ====================================================================
             builder.Services.AddApplicationServices();
+            
+            // Đăng ký Background Worker quét hồ sơ lâm sàng mới (DA-1.3)
+            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AI.AiPredictionWorker>();
             // ====================================================================
 
             // 6.5. Session (dùng để lưu OTP xác thực số điện thoại)
@@ -75,9 +88,8 @@ namespace SmartHealthMonitoring
                     options.CallbackPath = "/Auth/GoogleCallback";
                 });
 
-            var app = builder.Build();  
-            // Đăng ký Memory Cache cho Webhook
-            builder.Services.AddMemoryCache();
+            var app = builder.Build();
+
 
             using (var scope = app.Services.CreateScope())
             {

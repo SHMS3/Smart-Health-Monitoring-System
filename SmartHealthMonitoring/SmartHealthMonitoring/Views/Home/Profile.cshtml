@@ -587,9 +587,12 @@
         <div class="section-card">
             <div class="section-header">
                 <span class="section-title"><i class="fas fa-id-card me-2 text-primary"></i>Thông tin cơ bản</span>
-                <button class="btn-link-action" id="btnToggleEdit" onclick="toggleEditForm()">
-                    <i class="fas fa-pen"></i> Chỉnh sửa
-                </button>
+                @if (Model.Role == 0 || Model.Role == 1)
+                {
+                    <button class="btn-link-action" id="btnToggleEdit" onclick="toggleEditForm()">
+                        <i class="fas fa-pen"></i> Chỉnh sửa
+                    </button>
+                }
             </div>
             <div class="section-body" id="viewMode">
                 <div class="info-grid">
@@ -652,12 +655,15 @@
                             }
                         </span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">Lần ghi cuối</span>
-                        <span class="info-value @(Model.LastLogAt.HasValue ? "" : "muted")">
-                            @(Model.LastLogAt.HasValue ? Model.LastLogAt.Value.ToString("HH:mm dd/MM/yyyy") : "Chưa có")
-                        </span>
-                    </div>
+                    @if (Model.Role == 0)
+                    {
+                        <div class="info-row">
+                            <span class="info-label">Lần ghi cuối</span>
+                            <span class="info-value @(Model.LastLogAt.HasValue ? "" : "muted")">
+                                @(Model.LastLogAt.HasValue ? Model.LastLogAt.Value.ToString("HH:mm dd/MM/yyyy") : "Chưa có")
+                            </span>
+                        </div>
+                    }
                     <div class="info-row" style="grid-column: 1 / -1;">
                         <span class="info-label">Nhà / Địa chỉ</span>
                         <span class="info-value @(string.IsNullOrEmpty(Model.Address) ? "muted" : "")">
@@ -668,88 +674,146 @@
                             else { <span>Chưa cập nhật</span> }
                         </span>
                     </div>
+                    <div class="info-row">
+                        <span class="info-label">Số CCCD / CMND</span>
+                        <span class="info-value @(string.IsNullOrEmpty(Model.CitizenId) ? "muted" : "")">
+                            @if (!string.IsNullOrEmpty(Model.CitizenId))
+                            {
+                                <i class="fas fa-id-card text-primary"></i> @Model.CitizenId
+                            }
+                            else { <span>Chưa cập nhật</span> }
+                        </span>
+                    </div>
+                    @if (Model.Role == 1)
+                    {
+                        <div class="info-row">
+                            <span class="info-label">Chứng chỉ hành nghề</span>
+                            <span class="info-value @(string.IsNullOrEmpty(Model.PracticeLicense) ? "muted" : "")">
+                                @if (!string.IsNullOrEmpty(Model.PracticeLicense))
+                                {
+                                    <i class="fas fa-certificate text-primary"></i> @Model.PracticeLicense
+                                }
+                                else { <span>Chưa cập nhật</span> }
+                            </span>
+                        </div>
+                    }
+
                 </div>
+                @if (Model.Role == 1)
+                {
+                    <div style="display:flex; align-items:flex-start; gap:14px; margin-top:20px; padding:16px 20px; background:rgba(99,102,241,.04); border-radius:12px; border-top: 1px solid #f1f5f9;">
+                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i class="fas fa-user-shield" style="color:#6366f1;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:700;color:#0f172a;font-size:.9rem;margin-bottom:4px;">Thông tin được quản lý bởi Admin</div>
+                            <div style="font-size:.82rem;color:#64748b;line-height:1.6;">
+                                Tài khoản bác sĩ được quản lý bởi bệnh viện. Bạn chỉ có thể tự thay đổi số điện thoại và địa chỉ nhà. Để thay đổi các thông tin khác, vui lòng liên hệ bộ phận quản trị.<br/>
+                                <strong>Bạn vẫn có thể đổi mật khẩu</strong> trong tab <em>Bảo mật</em>.
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
 
-            @* Edit form *@
-            <div class="section-body" id="editMode" style="display:none; border-top: 1px solid #f1f5f9;">
-                <form asp-controller="Home" asp-action="UpdateProfile" method="post" id="editProfileForm">
-                    @Html.AntiForgeryToken()
-                    <div class="form-grid-2">
-                        <div class="form-group-p">
-                            <label>Họ và tên</label>
-                            <input name="FullName" value="@Model.FullName" class="form-input-p" placeholder="Nhập họ và tên" required />
-                            <span class="field-validation-error" data-valmsg-for="FullName"></span>
-                        </div>
-                        <div class="form-group-p">
-                            <label>Ngày sinh</label>
-                            <input name="DateOfBirth" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" type="date" class="form-input-p" required />
-                        </div>
-                        <div class="form-group-p">
-                            <label>Giới tính</label>
-                            <select name="Sex" class="form-input-p">
-                                @if (Model.Sex == 1)
-                                {
-                                    <option value="1" selected>Nam</option>
-                                    <option value="0">Nữ</option>
-                                }
-                                else
-                                {
-                                    <option value="1">Nam</option>
-                                    <option value="0" selected>Nữ</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="form-group-p">
-                            <label>Số điện thoại</label>
-                            <div style="display:flex; gap:8px; align-items:flex-start;">
-                                <div style="flex:1;">
-                                    <input name="Phone" id="phoneInput" value="@Model.Phone" type="tel" class="form-input-p"
-                                           placeholder="VD: 0912345678" oninput="onPhoneChange()" />
-                                    <span class="field-validation-error" data-valmsg-for="Phone"></span>
+            @* Edit form — Bệnh nhân và Bác sĩ đều chỉnh sửa được *@
+            @if (Model.Role == 0 || Model.Role == 1)
+            {
+                <div class="section-body" id="editMode" style="display:none; border-top: 1px solid #f1f5f9;">
+                    <form asp-controller="Home" asp-action="UpdateProfile" method="post" id="editProfileForm">
+                        @Html.AntiForgeryToken()
+                        <div class="form-grid-2">
+                            @if (Model.Role == 0)
+                            {
+                                <div class="form-group-p">
+                                    <label>Họ và tên</label>
+                                    <input name="FullName" value="@Model.FullName" class="form-input-p" placeholder="Nhập họ và tên" required />
+                                    <span class="field-validation-error" data-valmsg-for="FullName"></span>
                                 </div>
-                                <button type="button" id="btnSendOtp" onclick="sendOtp()"
-                                        style="white-space:nowrap;padding:10px 14px;background:#eff6ff;border:1.5px solid #bfdbfe;
-                                               border-radius:10px;font-size:.82rem;font-weight:600;color:#0ea5e9;cursor:pointer;transition:all .2s;">
-                                    <i class="fas fa-paper-plane"></i> Gửi OTP
-                                </button>
-                            </div>
-                            @* Msg luôn hiển thị dù thành công hay lỗi *@
-                            <div id="otpMsg" style="font-size:.82rem; margin-top:8px; min-height:20px;"></div>
-                            <div id="otpRow" style="display:none; margin-top:8px;">
-                                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
-                                    <input type="text" id="otpInput" maxlength="6" class="form-input-p"
-                                           placeholder="Nhập mã 6 chữ số"
-                                           style="max-width:180px;letter-spacing:6px;font-weight:700;font-size:1.1rem;" />
-                                    <button type="button" onclick="verifyOtp()"
-                                            style="white-space:nowrap;padding:10px 14px;background:linear-gradient(135deg,#10b981,#0ea5e9);
-                                                   border:none;border-radius:10px;font-size:.82rem;font-weight:600;color:#fff;cursor:pointer;">
-                                        <i class="fas fa-check"></i> Xác nhận
+                                <div class="form-group-p">
+                                    <label>Ngày sinh</label>
+                                    <input name="DateOfBirth" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" type="date" class="form-input-p" required />
+                                </div>
+                                <div class="form-group-p">
+                                    <label>Giới tính</label>
+                                    <select name="Sex" class="form-input-p">
+                                        @if (Model.Sex == 1)
+                                        {
+                                            <option value="1" selected>Nam</option>
+                                            <option value="0">Nữ</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="1">Nam</option>
+                                            <option value="0" selected>Nữ</option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+                            else
+                            {
+                                <input type="hidden" name="FullName" value="@Model.FullName" />
+                            }
+
+                            <div class="form-group-p">
+                                <label>Số điện thoại</label>
+                                <div style="display:flex; gap:8px; align-items:flex-start;">
+                                    <div style="flex:1;">
+                                        <input name="Phone" id="phoneInput" value="@Model.Phone" type="tel" class="form-input-p"
+                                               placeholder="VD: 0912345678" oninput="onPhoneChange()" />
+                                        <span class="field-validation-error" data-valmsg-for="Phone"></span>
+                                    </div>
+                                    <button type="button" id="btnSendOtp" onclick="sendOtp()"
+                                            style="white-space:nowrap;padding:10px 14px;background:#eff6ff;border:1.5px solid #bfdbfe;
+                                                   border-radius:10px;font-size:.82rem;font-weight:600;color:#0ea5e9;cursor:pointer;transition:all .2s;">
+                                        <i class="fas fa-paper-plane"></i> Gửi OTP
                                     </button>
                                 </div>
-                                <div id="otpCountdown" style="font-size:.75rem; color:#94a3b8;"></div>
+                                <div id="otpMsg" style="font-size:.82rem; margin-top:8px; min-height:20px;"></div>
+                                <div id="otpRow" style="display:none; margin-top:8px;">
+                                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+                                        <input type="text" id="otpInput" maxlength="6" class="form-input-p"
+                                               placeholder="Nhập mã 6 chữ số"
+                                               style="max-width:180px;letter-spacing:6px;font-weight:700;font-size:1.1rem;" />
+                                        <button type="button" onclick="verifyOtp()"
+                                                style="white-space:nowrap;padding:10px 14px;background:linear-gradient(135deg,#10b981,#0ea5e9);
+                                                       border:none;border-radius:10px;font-size:.82rem;font-weight:600;color:#fff;cursor:pointer;">
+                                            <i class="fas fa-check"></i> Xác nhận
+                                        </button>
+                                    </div>
+                                    <div id="otpCountdown" style="font-size:.75rem; color:#94a3b8;"></div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group-p" style="grid-column: 1 / -1;">
-                            <label>Nhà / Địa chỉ</label>
-                            <input name="Address" value="@Model.Address" class="form-input-p"
-                                   placeholder="VD: 123 Đường ABC, Quận 1, TP.HCM" />
-                            <span class="field-validation-error" data-valmsg-for="Address"></span>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-3 mt-2">
-                        <button type="submit" class="btn-save" id="btnSaveProfile">
-                            <i class="fas fa-check"></i> Lưu thay đổi
-                        </button>
-                        <button type="button" class="btn-link-action" onclick="toggleEditForm()">
-                            Hủy
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                            
+                            <div class="form-group-p" style="grid-column: 1 / -1;">
+                                <label>Nhà / Địa chỉ</label>
+                                <input name="Address" value="@Model.Address" class="form-input-p"
+                                       placeholder="VD: 123 Đường ABC, Quận 1, TP.HCM" />
+                                <span class="field-validation-error" data-valmsg-for="Address"></span>
+                            </div>
 
-    </div>
+                            @if (Model.Role == 0)
+                            {
+                                <div class="form-group-p">
+                                    <label>Số CCCD / CMND</label>
+                                    <input name="CitizenId" value="@Model.CitizenId" class="form-input-p"
+                                           maxlength="12" inputmode="numeric" pattern="\d{12}"
+                                           placeholder="12 chữ số (VD: 079204012345)" />
+                                    <span class="field-validation-error" data-valmsg-for="CitizenId"></span>
+                                </div>
+                            }
+                        </div>
+                        <div class="d-flex gap-3 mt-2">
+                            <button type="submit" class="btn-save" id="btnSaveProfile">
+                                <i class="fas fa-check"></i> Lưu thay đổi
+                            </button>
+                            <button type="button" class="btn-link-action" onclick="toggleEditForm()">
+                                Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            }
 
     @* ══════════════════════
        TAB 2: Chi tiết tài khoản (giống Patient Access - Account details)

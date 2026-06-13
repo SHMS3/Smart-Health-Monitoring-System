@@ -76,9 +76,11 @@
         </div>
         <div class="d-flex flex-column gap-1 mt-4">
             <a asp-controller="AdminDashboard" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-chart-pie me-3"></i>Tổng quan</a>
+            <a asp-controller="AdminDashboard" asp-action="PatientStatistics" class="nav-link text-decoration-none"><i class="fas fa-chart-line me-3"></i>Thống kê Lâm sàng</a>
             <a asp-controller="AdminDoctor" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-user-md me-3"></i>Quản lý Bác sĩ</a>
             <a asp-controller="AdminPatient" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-users me-3"></i>Quản lý Bệnh nhân</a>
             <a asp-controller="StandardThreshold" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-sliders me-3"></i>Ngưỡng Chuẩn Y Tế</a>
+            <a asp-controller="AdminAuditLog" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-clipboard-list me-3"></i>Nhật ký hoạt động</a>
         </div>
         <div class="mt-auto p-4">
             <a href="/" class="btn btn-outline-light w-100 rounded-pill"><i class="fas fa-external-link-alt me-2"></i>Về Website</a>
