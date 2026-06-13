@@ -123,6 +123,7 @@ namespace SmartHealthMonitoring
 
             // SignalR Hub endpoint cho Telemedicine Chat
             app.MapHub<ChatHub>("/chatHub");
+            app.MapHub<AuditLogHub>("/auditLogHub");
 
             app.Run();
         }
