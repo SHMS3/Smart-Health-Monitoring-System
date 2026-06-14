@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
@@ -115,25 +116,40 @@ namespace SmartHealthMonitoring.Services
                 {
                     // Lấy WarningAlert để gán AlertId (Foreign Key bắt buộc trong EmailNotification)
                     var alert = await _context.WarningAlerts.FirstOrDefaultAsync(a => a.PredictionId == predictionId);
-                    int alertIdValue = alert?.Id ?? 0;
+                    if (alert == null || prediction.RiskScore <= 0.70m)
+                    {
+                        return;
+                    }
+
+                    var alreadySent = await _context.EmailNotifications.AnyAsync(n =>
+                        n.AlertId == alert.Id &&
+                        n.PatientId == patientId &&
+                        n.SentByDoctorId == null);
+
+                    if (alreadySent)
+                    {
+                        return;
+                    }
 
                     var patientEmail = patient.User.Email;
                     var patientName = patient.User.FullName ?? "Bệnh nhân";
+                    var riskScorePercent = (prediction.RiskScore * 100m)
+                        .ToString("F2", CultureInfo.InvariantCulture);
 
                     var replacements = new Dictionary<string, string>
                     {
                         { "{{PatientName}}", patientName },
-                        { "{{RiskScore}}", prediction.RiskScore.ToString("F2") },
+                        { "{{RiskScore}}", riskScorePercent },
                         { "{{RiskLevel}}", prediction.RiskLevel.ToString() },
                         { "{{DetectedAt}}", prediction.PredictedAt.ToString("dd/MM/yyyy HH:mm:ss") }
                     };
 
-                    string subject = "CẢNH BÁO SỨC KHỎE KHẨN CẤP - Smart Health Monitoring";
+                    string subject = "CẢNH BÁO SỨC KHỎE KHẨN CẤP - Cần tới khám ngay";
                     string htmlBody = _emailService.GetHtmlContentFromFile("HealthWarningTemplate.html", replacements);
 
                     var notification = new EmailNotification
                     {
-                        AlertId = alertIdValue,
+                        AlertId = alert.Id,
                         PatientId = patientId,
                         ToEmail = patientEmail,
                         Subject = subject,
