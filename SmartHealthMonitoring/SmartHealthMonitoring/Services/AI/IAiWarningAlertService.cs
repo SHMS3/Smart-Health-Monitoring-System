@@ -1,6 +1,7 @@
 namespace SmartHealthMonitoring.Services.AI
 {
     using SmartHealthMonitoring.Models;
+    using SmartHealthMonitoring.ViewModels;
 
     /// <summary>
     /// Interface cho service quản lý cảnh báo nguy cơ tim mạch (WarningAlert).
@@ -21,5 +22,6 @@ namespace SmartHealthMonitoring.Services.AI
         Task<bool> ClaimAlertAsync(int alertId, int doctorId);
 
         Task<bool> ResolveAlertAsync(int alertId, int doctorId, string resolutionNote);
+        Task<WarningAlertDetailViewModel?> GetDetailAsync(int id);
     }
 }

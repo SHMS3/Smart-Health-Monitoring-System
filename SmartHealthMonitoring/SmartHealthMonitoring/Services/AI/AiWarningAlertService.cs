@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.ViewModels;
 
 namespace SmartHealthMonitoring.Services.AI
 {
@@ -52,6 +53,8 @@ namespace SmartHealthMonitoring.Services.AI
                 return false;
             }
         }
+
+       
 
         public async Task<List<WarningAlert>> GetAlertsAsync(byte? status, string? keyword, int page, int pageSize)
         {
@@ -149,5 +152,52 @@ namespace SmartHealthMonitoring.Services.AI
                 return false;
             }
         }
+
+        public async Task<WarningAlertDetailViewModel?> GetDetailAsync(int id)
+        {
+            var alert = await _context.WarningAlerts
+                .Include(x => x.Patient)
+                    .ThenInclude(x => x.User)
+
+                .Include(x => x.Patient)
+                    .ThenInclude(x => x.ClinicalRecords)
+                    .Include(x => x.Patient)
+            .ThenInclude(x => x.ClinicalRecords)
+                .ThenInclude(x => x.Doctor)
+                    .ThenInclude(x => x.User)
+
+                .Include(x => x.Patient)
+                    .ThenInclude(x => x.DailyVitalLogs)
+
+                .Include(x => x.Prediction)
+
+                .Include(x => x.ClaimedByDoctor)
+                    .ThenInclude(x => x.User)
+
+                .FirstOrDefaultAsync(x =>
+                    x.Id == id &&
+                    !x.IsDeleted);
+
+            if (alert == null)
+                return null;
+
+            return new WarningAlertDetailViewModel
+            {
+                Alert = alert,
+
+                RecentVitalLogs = alert.Patient
+            .DailyVitalLogs
+            .OrderByDescending(x => x.LoggedAt)
+            .Take(10)
+            .ToList(),
+
+                ClinicalRecords = alert.Patient
+            .ClinicalRecords
+            .OrderByDescending(x => x.VisitDate)
+            .Take(10)
+            .ToList()
+            };
+        }
+
     }
 }

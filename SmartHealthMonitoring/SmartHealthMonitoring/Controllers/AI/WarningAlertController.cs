@@ -201,5 +201,18 @@ namespace SmartHealthMonitoring.Controllers.AI
 
             return PartialView("_AlertTable", alerts);
         }
+        [HttpGet]
+        public async Task<IActionResult> Detail(int id)
+        {
+            var model = await _warningAlertService
+                .GetDetailAsync(id);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            return View(model);
+        }
     }
 }
