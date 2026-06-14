@@ -127,6 +127,61 @@ public class AiPredictionWorker : BackgroundService
                             (double)predKNN.RiskScore, (double)predSVM.RiskScore, (double)avgScore);
                     }
 
+                    // DIEU CHINH LAM SANG - BU DAP CHO DU LIEU THIEU/DO TRE THOI GIAN (chi ap dung cho DailyVitalLog)
+                    // Mo hinh UCI can 18 features (do cung 1 thoi diem). DailyLog chi co 5/18 features cap tinh.
+                    // 13 features con lai (tu ho so kham cu hoac fallback 'khoe manh') se lam pha loang
+                    // cac trieu chung cap tinh hien tai -> model de bi thien lech ve khong benh.
+                    // Giai phap: Cong them bonus nguy co dua tren huong dan lam sang ACC/AHA 2017.
+                    decimal clinicalAdj = 0m;
+
+                    short sbp = log.SystolicBp;
+                    short rhr = log.HeartRate;
+                    byte  cp  = log.ChestPainLevel;
+                    bool  ex  = log.HasExerciseAngina;
+
+                    // (1) Huyet ap tam thu - ACC/AHA 2017 Hypertension Guidelines
+                    if      (sbp >= 180) clinicalAdj += 0.32m; // Hypertensive Crisis
+                    else if (sbp >= 160) clinicalAdj += 0.22m; // Stage 2 nang
+                    else if (sbp >= 140) clinicalAdj += 0.15m; // Stage 2
+                    else if (sbp >= 130) clinicalAdj += 0.08m; // Stage 1
+                    else if (sbp >= 120) clinicalAdj += 0.03m; // Elevated (tren binh thuong)
+
+                    // (2) Nhip tim nghi ngoi - AHA Resting Tachycardia
+                    // Ngu?ng ha xuong 85 bpm de bat ca nhip tim hoi cao cua benh nhan tim
+                    if      (rhr >= 130) clinicalAdj += 0.28m; // Tachycardia nghiem trong
+                    else if (rhr >= 110) clinicalAdj += 0.18m; // Tachycardia vua
+                    else if (rhr >= 100) clinicalAdj += 0.12m; // Tachycardia nhe
+                    else if (rhr >=  90) clinicalAdj += 0.06m; // Nhip hoi cao
+                    else if (rhr >=  85) clinicalAdj += 0.02m; // Nhip gioi han tren binh thuong
+
+                    // (3) Muc do dau nguc - ghi nhan tu benh nhan
+                    // Model da xu ly cp nhu feature nhung bi 13 fallback 'khoe' lam giam tai trong.
+                    // Cong them bonus doc lap de dam bao dau nguc duoc the hien trong ket qua.
+                    if      (cp >= 3) clinicalAdj += 0.20m; // Dau nang (Typical Angina tuong duong)
+                    else if (cp >= 2) clinicalAdj += 0.12m; // Dau vua (Atypical Angina tuong duong)
+                    else if (cp >= 1) clinicalAdj += 0.05m; // Dau nhe
+
+                    // (4) Dau that nguc khi van dong - dau hieu lam sang quan trong
+                    if (ex) clinicalAdj += 0.15m;
+
+                    // (5) Bonus ket hop: nhieu yeu to nguy co cung luc -> nguy co nhan len
+                    int riskFactorCount = 0;
+                    if (sbp >= 130) riskFactorCount++;
+                    if (rhr >= 90)  riskFactorCount++;
+                    if (cp  >= 1)   riskFactorCount++;
+                    if (ex)         riskFactorCount++;
+                    if (riskFactorCount >= 3) clinicalAdj += 0.12m; // 3+ yeu to nguy co -> cong them
+                    else if (riskFactorCount >= 2) clinicalAdj += 0.05m; // 2 yeu to -> cong nhe
+
+                    if (clinicalAdj > 0m)
+                    {
+                        decimal scoreBeforeAdj = avgScore;
+                        avgScore = Math.Min(1m, avgScore + clinicalAdj);
+                        _logger.LogInformation(
+                            "[LUONG 1] CLINICAL ADJ: SBP={SBP}mmHg, HR={HR}bpm, CP={CP}, ExAngina={Ex}, RiskFactors={RF} => +{Adj:F2} ({Before:F4} -> {After:F4})",
+                            sbp, rhr, cp, ex, riskFactorCount, (double)clinicalAdj, (double)scoreBeforeAdj, (double)avgScore);
+                    }
+
                     prediction.RiskScore = avgScore;
                     prediction.PredictedTarget = (byte)(avgScore >= 0.5m ? 1 : 0);
                     if (avgScore >= 0.8m)
