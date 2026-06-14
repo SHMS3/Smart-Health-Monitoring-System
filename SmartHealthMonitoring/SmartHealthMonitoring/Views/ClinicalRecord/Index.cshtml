@@ -495,7 +495,7 @@
                                         <strong class="text-dark text-end ms-2">@(record.RestECG == 0 ? "Normal" : record.RestECG == 1 ? "ST-T" : "LVH")</strong>
                                     </li>
                                     <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-                                        <span class="text-muted">Độ dốc ST:</span> <strong class="text-dark text-end">@(record.STSlope == 0 ? "Upsloping" : record.STSlope == 1 ? "Flat" : "Downsloping")</strong>
+                                        <span class="text-muted">Độ dốc ST:</span> <strong class="text-dark text-end">@(record.STSlope == 1 ? "Upsloping" : record.STSlope == 2 ? "Flat" : "Downsloping")</strong>
                                     </li>
                                     <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
                                         <span class="text-muted">OldPeak:</span> <strong class="text-dark">@record.OldPeak</strong>
@@ -505,7 +505,7 @@
                                     </li>
                                     <li class="d-flex justify-content-between">
                                         <span class="text-muted">Thal:</span> 
-                                        <strong class="text-dark text-end ms-2">@(record.ThalResult == 0 ? "Normal" : record.ThalResult == 1 ? "Fixed" : "Reversable")</strong>
+                                        <strong class="text-dark text-end ms-2">@(record.ThalResult == 1 ? "Normal" : record.ThalResult == 2 ? "Fixed Defect" : "Reversable")</strong>
                                     </li>
                                 </ul>
 

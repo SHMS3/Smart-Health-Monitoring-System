@@ -247,9 +247,9 @@
                                     <label asp-for="STSlope" class="custom-label">Độ dốc ST</label>
                                     <select asp-for="STSlope" class="form-select shadow-sm auto-field" disabled>
                                         <option value="">-- Trống --</option>
-                                        <option value="0">Upsloping</option>
-                                        <option value="1">Flat</option>
-                                        <option value="2">Downsloping</option>
+                                        <option value="1">Upsloping</option>
+                                        <option value="2">Flat</option>
+                                        <option value="3">Downsloping</option>
                                     </select>
                                     <span asp-validation-for="STSlope" class="text-danger small fw-medium mt-1 d-block"></span>
                                 </div>
@@ -276,9 +276,9 @@
                                     <label asp-for="ThalResult" class="custom-label">Khuyết tật Thal</label>
                                     <select asp-for="ThalResult" class="form-select shadow-sm auto-field" disabled>
                                         <option value="">--</option>
-                                        <option value="0">Normal</option>
-                                        <option value="1">Fixed Defect</option>
-                                        <option value="2">Reversable</option>
+                                        <option value="1">Normal</option>
+                                        <option value="2">Fixed Defect</option>
+                                        <option value="3">Reversable</option>
                                     </select>
                                     <span asp-validation-for="ThalResult" class="text-danger small fw-medium mt-1 d-block"></span>
                                 </div>
@@ -478,8 +478,13 @@
             }
             toggleView.addEventListener('change', updateViewBadge);
 
-            // Mở khóa disable trước khi submit để C# nhận được data
+            // Mở khóa disable trước khi submit để C# nhận được data và chống Double Click
             form.addEventListener('submit', function() {
+                // 1. Disable nút lưu để tránh click đúp
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Đang xử lý...';
+
+                // 2. Mở khóa các trường bị disable để gửi data
                 document.querySelectorAll('.auto-field').forEach(el => {
                     el.removeAttribute('disabled');
                 });

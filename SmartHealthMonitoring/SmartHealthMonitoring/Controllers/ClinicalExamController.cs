@@ -133,7 +133,9 @@ namespace SmartHealthMonitoring.Controllers
                     patient?.UserId,
                     patient?.User?.FullName);
 
-                // GỬI EMAIL TỰ ĐỘNG
+                // ĐÃ TẮT CƠ CHẾ GỬI EMAIL TỰ ĐỘNG THEO YÊU CẦU NGHIỆP VỤ Y KHOA
+                // Tránh tình trạng bệnh nhân nhận kết quả chẩn đoán bệnh hiểm nghèo qua email mà không có Bác sĩ tư vấn tâm lý.
+                /*
                 try
                 {
                     if (patient != null && patient.User != null && !string.IsNullOrEmpty(patient.User.Email))
@@ -151,7 +153,12 @@ namespace SmartHealthMonitoring.Controllers
                         string htmlContent = _emailService.GetHtmlContentFromFile("PatientHealthReportTemplate.html", replacements);
                         if (!string.IsNullOrEmpty(htmlContent))
                         {
-                            await _emailService.SendEmailAsync(patient.User.Email, "Báo cáo Tình trạng Y tế - Smart Health", htmlContent);
+                            // Đẩy việc gửi mail chạy ngầm (Fire and Forget) để không làm chậm UI
+                            var userEmail = patient.User.Email;
+                            _ = Task.Run(async () => 
+                            {
+                                await _emailService.SendEmailAsync(userEmail, "Báo cáo Tình trạng Y tế - Smart Health", htmlContent);
+                            });
                         }
                     }
                 }
@@ -159,6 +166,7 @@ namespace SmartHealthMonitoring.Controllers
                 {
                     Console.WriteLine($"Lỗi khi gửi email sau khi lưu: {emailEx.Message}");
                 }
+                */
 
                 TempData["Success"] = "Đã lưu phiếu khám lâm sàng thành công.";
                 return RedirectToAction("Index", "ClinicalRecord", new { id = model.PatientId });
