@@ -120,7 +120,19 @@ namespace SmartHealthMonitoring.Controllers.AI
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Resolve(int id, string resolutionNote, bool sendEmailInvitation = false, DateTime? appointmentDate = null)
+        public async Task<IActionResult> Resolve(
+            int id, 
+            string resolutionNote, 
+            bool sendEmailInvitation = false, 
+            DateTime? appointmentDate = null,
+            short? systolicBpWarning = null,
+            short? systolicBpDanger = null,
+            short? diastolicBpWarning = null,
+            short? diastolicBpDanger = null,
+            short? heartRateWarningMin = null,
+            short? heartRateDangerMin = null,
+            short? heartRateWarningMax = null,
+            short? heartRateDangerMax = null)
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -137,24 +149,114 @@ namespace SmartHealthMonitoring.Controllers.AI
                 return Json(new { success = false, message = "Doctor not found" });
             }
 
+            // Fetch alert with Patient and PatientThreshold details first to validate and perform threshold updates
+            var alert = await _context.WarningAlerts
+                .Include(a => a.Patient)
+                    .ThenInclude(p => p.User)
+                .Include(a => a.Patient)
+                    .ThenInclude(p => p.PatientThreshold)
+                .Include(a => a.Prediction)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            if (alert == null)
+            {
+                return Json(new { success = false, message = "Cảnh báo không tồn tại." });
+            }
+
+            // Perform Range Validation if any threshold values are provided
+            bool hasThresholdUpdate = systolicBpWarning.HasValue ||
+                                      systolicBpDanger.HasValue ||
+                                      diastolicBpWarning.HasValue ||
+                                      diastolicBpDanger.HasValue ||
+                                      heartRateWarningMin.HasValue ||
+                                      heartRateDangerMin.HasValue ||
+                                      heartRateWarningMax.HasValue ||
+                                      heartRateDangerMax.HasValue;
+
+            if (hasThresholdUpdate)
+            {
+                // Current or default values for range validation
+                var currentThreshold = alert.Patient.PatientThreshold;
+                short sysWarn = systolicBpWarning ?? (currentThreshold?.SystolicBpWarning ?? 130);
+                short sysDanger = systolicBpDanger ?? (currentThreshold?.SystolicBpDanger ?? 140);
+                if (sysWarn >= sysDanger)
+                {
+                    return Json(new { success = false, message = "Ngưỡng Cảnh báo Huyết áp TT phải nhỏ hơn ngưỡng Nguy hiểm." });
+                }
+
+                short diaWarn = diastolicBpWarning ?? (currentThreshold?.DiastolicBpWarning ?? 80);
+                short diaDanger = diastolicBpDanger ?? (currentThreshold?.DiastolicBpDanger ?? 90);
+                if (diaWarn >= diaDanger)
+                {
+                    return Json(new { success = false, message = "Ngưỡng Cảnh báo Huyết áp TR phải nhỏ hơn ngưỡng Nguy hiểm." });
+                }
+
+                short hrWarnMin = heartRateWarningMin ?? (currentThreshold?.HeartRateWarningMin ?? 60);
+                short hrDangerMin = heartRateDangerMin ?? (currentThreshold?.HeartRateDangerMin ?? 50);
+                if (hrDangerMin >= hrWarnMin)
+                {
+                    return Json(new { success = false, message = "Ngưỡng Nguy hiểm Nhịp tim thấp phải nhỏ hơn ngưỡng Cảnh báo." });
+                }
+
+                short hrWarnMax = heartRateWarningMax ?? (currentThreshold?.HeartRateWarningMax ?? 100);
+                short hrDangerMax = heartRateDangerMax ?? (currentThreshold?.HeartRateDangerMax ?? 120);
+                if (hrWarnMax >= hrDangerMax)
+                {
+                    return Json(new { success = false, message = "Ngưỡng Cảnh báo Nhịp tim cao phải nhỏ hơn ngưỡng Nguy hiểm." });
+                }
+            }
+
             var success = await _warningAlertService.ResolveAlertAsync(id, doctor.Id, resolutionNote);
 
             if (success)
             {
-                var alert = await _context.WarningAlerts
-                    .Include(a => a.Patient)
-                        .ThenInclude(p => p.User)
-                    .Include(a => a.Prediction)
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(a => a.Id == id);
+                if (hasThresholdUpdate)
+                {
+                    var threshold = alert.Patient.PatientThreshold;
+                    bool isNew = (threshold == null);
+                    if (isNew)
+                    {
+                        threshold = new PatientThreshold
+                        {
+                            PatientId = alert.PatientId
+                        };
+                    }
 
+                    threshold.SystolicBpWarning = systolicBpWarning ?? threshold.SystolicBpWarning;
+                    threshold.SystolicBpDanger = systolicBpDanger ?? threshold.SystolicBpDanger;
+                    threshold.DiastolicBpWarning = diastolicBpWarning ?? threshold.DiastolicBpWarning;
+                    threshold.DiastolicBpDanger = diastolicBpDanger ?? threshold.DiastolicBpDanger;
+                    threshold.HeartRateWarningMin = heartRateWarningMin ?? threshold.HeartRateWarningMin;
+                    threshold.HeartRateDangerMin = heartRateDangerMin ?? threshold.HeartRateDangerMin;
+                    threshold.HeartRateWarningMax = heartRateWarningMax ?? threshold.HeartRateWarningMax;
+                    threshold.HeartRateDangerMax = heartRateDangerMax ?? threshold.HeartRateDangerMax;
+                    threshold.UpdatedAt = DateTime.Now;
+                    threshold.UpdatedByDoctorId = doctor.Id;
+
+                    if (isNew)
+                    {
+                        _context.PatientThresholds.Add(threshold);
+                    }
+                    await _context.SaveChangesAsync();
+
+                    // Log Audit for PatientThreshold update
+                    await _auditLogService.LogAsync(
+                        isNew ? "Create" : "Update",
+                        "PatientThreshold",
+                        threshold.Id.ToString(),
+                        $"{(isNew ? "Tạo" : "Cập nhật")} ngưỡng riêng cho bệnh nhân {alert.Patient?.User?.FullName ?? $"#{alert.PatientId}"} khi xử lý cảnh báo; huyết áp tâm thu {threshold.SystolicBpWarning}/{threshold.SystolicBpDanger}, nhịp tim {threshold.HeartRateWarningMin}-{threshold.HeartRateWarningMax}.",
+                        alert.Patient?.UserId,
+                        alert.Patient?.User?.FullName);
+                }
+
+                // Log Audit for WarningAlert resolution
                 await _auditLogService.LogAsync(
                     "Resolve",
                     "WarningAlert",
                     id.ToString(),
-                    $"Xử lý cảnh báo AI #{id} của bệnh nhân {alert?.Patient?.User?.FullName ?? "không xác định"}; mức rủi ro {alert?.Prediction?.RiskLevel.ToString() ?? "không xác định"}.",
-                    alert?.Patient?.UserId,
-                    alert?.Patient?.User?.FullName);
+                    $"Xử lý cảnh báo AI #{id} của bệnh nhân {alert.Patient?.User?.FullName ?? "không xác định"}; mức rủi ro {alert.Prediction?.RiskLevel.ToString() ?? "không xác định"}.",
+                    alert.Patient?.UserId,
+                    alert.Patient?.User?.FullName);
 
                 if (sendEmailInvitation)
                 {

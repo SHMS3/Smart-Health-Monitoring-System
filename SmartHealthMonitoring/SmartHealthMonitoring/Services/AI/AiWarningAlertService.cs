@@ -62,6 +62,8 @@ namespace SmartHealthMonitoring.Services.AI
                 .Where(x => !x.IsDeleted)
                 .Include(x => x.Patient)
                     .ThenInclude(p => p.User)
+                .Include(x => x.Patient)
+                    .ThenInclude(p => p.PatientThreshold)
                 .Include(x => x.ClaimedByDoctor)
                     .ThenInclude(d => d.User)
                 .Include(x => x.Prediction)
