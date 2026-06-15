@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Hubs;
 using SmartHealthMonitoring.Models;
 
 namespace SmartHealthMonitoring.Services;
@@ -8,13 +10,19 @@ public class AuditLogService : IAuditLogService
 {
     private readonly SmartHealthMonitoringContext _context;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IHubContext<AuditLogHub> _auditLogHubContext;
+    private readonly ILogger<AuditLogService> _logger;
 
     public AuditLogService(
         SmartHealthMonitoringContext context,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IHubContext<AuditLogHub> auditLogHubContext,
+        ILogger<AuditLogService> logger)
     {
         _context = context;
         _httpContextAccessor = httpContextAccessor;
+        _auditLogHubContext = auditLogHubContext;
+        _logger = logger;
     }
 
     public async Task LogAsync(
@@ -50,6 +58,7 @@ public class AuditLogService : IAuditLogService
 
         _context.AuditLogs.Add(auditLog);
         await _context.SaveChangesAsync();
+        await BroadcastAuditLogAsync(auditLog);
     }
 
     public async Task LogForActorAsync(
@@ -80,6 +89,35 @@ public class AuditLogService : IAuditLogService
 
         _context.AuditLogs.Add(auditLog);
         await _context.SaveChangesAsync();
+        await BroadcastAuditLogAsync(auditLog);
+    }
+
+    private async Task BroadcastAuditLogAsync(AuditLog auditLog)
+    {
+        try
+        {
+            var payload = new
+            {
+                id = auditLog.Id,
+                actorName = auditLog.ActorName,
+                actorEmail = auditLog.ActorEmail,
+                action = auditLog.Action,
+                entityName = auditLog.EntityName,
+                entityId = auditLog.EntityId,
+                targetName = auditLog.TargetName,
+                description = auditLog.Description,
+                ipAddress = auditLog.IpAddress,
+                createdAt = auditLog.CreatedAt.ToString("O")
+            };
+
+            await _auditLogHubContext.Clients
+                .Group(AuditLogHub.AdminGroupName)
+                .SendAsync("AuditLogCreated", payload);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Failed to broadcast audit log {AuditLogId}.", auditLog.Id);
+        }
     }
 
     private static AuditLog CreateAuditLog(

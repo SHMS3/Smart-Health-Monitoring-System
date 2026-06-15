@@ -110,17 +110,20 @@
         <h3 class="fw-bold text-dark mb-1">Nhật ký hoạt động</h3>
         <p class="text-muted small mb-0">Theo dõi các thao tác quan trọng trong hệ thống.</p>
     </div>
-    <div class="badge bg-dark rounded-pill px-3 py-2">
+    <div id="auditLogTotalCount" data-total-count="@Model.Logs.TotalCount" class="badge bg-dark rounded-pill px-3 py-2">
         @Model.Logs.TotalCount bản ghi
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://unpkg.com/@@microsoft/signalr@@8.0.0/dist/browser/signalr.min.js"></script>
     <script>
         (() => {
             const form = document.getElementById('auditLogFilterForm');
             const fromDate = document.getElementById('auditFromDate');
             const toDate = document.getElementById('auditToDate');
+            const tableBody = document.getElementById('auditLogTableBody');
+            const totalBadge = document.getElementById('auditLogTotalCount');
 
             if (!form || !fromDate || !toDate) {
                 return;
@@ -166,6 +169,215 @@
             });
 
             syncDateValidation();
+
+            if (!window.signalR || !tableBody || !totalBadge) {
+                return;
+            }
+
+            const actionLabels = {
+                Create: 'Tạo mới',
+                Update: 'Cập nhật',
+                Delete: 'Xóa',
+                Lock: 'Khóa',
+                Unlock: 'Mở khóa',
+                Activate: 'Kích hoạt',
+                Deactivate: 'Vô hiệu hóa',
+                Claim: 'Tiếp nhận',
+                Resolve: 'Xử lý',
+                Void: 'Hủy hồ sơ',
+                GrantAccess: 'Cho phép xem',
+                RevokeAccess: 'Ẩn quyền xem',
+                SendMessage: 'Gửi tin nhắn',
+                Close: 'Kết thúc'
+            };
+
+            const badgeClasses = {
+                Create: 'bg-success',
+                Update: 'bg-primary',
+                Delete: 'bg-danger',
+                Lock: 'bg-warning text-dark',
+                Unlock: 'bg-info text-dark',
+                Activate: 'bg-success',
+                Deactivate: 'bg-secondary',
+                Claim: 'bg-info text-dark',
+                Resolve: 'bg-success',
+                Void: 'bg-danger',
+                GrantAccess: 'bg-success',
+                RevokeAccess: 'bg-warning text-dark',
+                SendMessage: 'bg-primary',
+                Close: 'bg-secondary'
+            };
+
+            const entityLabels = {
+                Doctor: 'Bác sĩ',
+                DoctorAccount: 'Tài khoản bác sĩ',
+                PatientAccount: 'Tài khoản bệnh nhân',
+                ClinicalRecord: 'Hồ sơ lâm sàng',
+                PatientThreshold: 'Ngưỡng riêng bệnh nhân',
+                WarningAlert: 'Cảnh báo AI',
+                TelemedicineChatSession: 'Phiên chat từ xa',
+                TelemedicineChatMessage: 'Tin nhắn chat từ xa',
+                StandardThreshold: 'Ngưỡng chuẩn y tế'
+            };
+
+            const descriptionLabel = (value) => {
+                if (!value) {
+                    return '';
+                }
+
+                const hiddenFromPatient = value.toLowerCase().startsWith('hid clinical record');
+                let text = value
+                    .replaceAll('Created doctor account', 'Tạo tài khoản bác sĩ')
+                    .replaceAll('Updated doctor', 'Cập nhật bác sĩ')
+                    .replaceAll('Locked doctor account', 'Khóa tài khoản bác sĩ')
+                    .replaceAll('Unlocked doctor account', 'Mở khóa tài khoản bác sĩ')
+                    .replaceAll('Locked patient account', 'Khóa tài khoản bệnh nhân')
+                    .replaceAll('Unlocked patient account', 'Mở khóa tài khoản bệnh nhân')
+                    .replaceAll('Created standard threshold', 'Tạo ngưỡng chuẩn y tế')
+                    .replaceAll('Updated standard threshold', 'Cập nhật ngưỡng chuẩn y tế')
+                    .replaceAll('Activated standard threshold', 'Kích hoạt ngưỡng chuẩn y tế')
+                    .replaceAll('Deactivated standard threshold', 'Vô hiệu hóa ngưỡng chuẩn y tế')
+                    .replaceAll('Deleted standard threshold', 'Xóa ngưỡng chuẩn y tế')
+                    .replaceAll('Created clinical record', 'Tạo hồ sơ lâm sàng')
+                    .replaceAll('Voided clinical record', 'Hủy hồ sơ lâm sàng')
+                    .replaceAll('Allowed patient', 'Cho phép bệnh nhân')
+                    .replaceAll('to view clinical record', 'xem hồ sơ lâm sàng')
+                    .replaceAll('Hid clinical record', 'Ẩn hồ sơ lâm sàng')
+                    .replaceAll('Created patient threshold', 'Tạo ngưỡng riêng')
+                    .replaceAll('Updated patient threshold', 'Cập nhật ngưỡng riêng')
+                    .replaceAll('Claimed AI warning alert', 'Tiếp nhận cảnh báo AI')
+                    .replaceAll('Resolved AI warning alert', 'Xử lý cảnh báo AI')
+                    .replaceAll('Sent telemedicine chat message in session', 'Gửi tin nhắn trong phiên chat từ xa')
+                    .replaceAll('Claimed telemedicine chat session', 'Tiếp nhận phiên chat từ xa')
+                    .replaceAll('Closed telemedicine chat session', 'Kết thúc phiên chat từ xa')
+                    .replaceAll('for patient', 'cho bệnh nhân')
+                    .replaceAll('with patient', 'với bệnh nhân')
+                    .replaceAll('risk level', 'mức rủi ro')
+                    .replaceAll('Reason:', 'Lý do:')
+                    .replaceAll('specialty', 'chuyên khoa')
+                    .replaceAll('on shift', 'trạng thái trực')
+                    .replaceAll('active', 'trạng thái kích hoạt')
+                    .replaceAll('systolic', 'huyết áp tâm thu')
+                    .replaceAll('heart rate', 'nhịp tim')
+                    .replaceAll('max HR', 'nhịp tim tối đa')
+                    .replaceAll('BP', 'huyết áp');
+
+                return hiddenFromPatient
+                    ? text.replaceAll('from patient', 'khỏi bệnh nhân')
+                    : text.replaceAll('from patient', 'từ bệnh nhân');
+            };
+
+            const escapeHtml = (value) => {
+                const div = document.createElement('div');
+                div.textContent = value ?? '';
+                return div.innerHTML;
+            };
+
+            const localDateValue = (date) => {
+                const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+                return local.toISOString().slice(0, 10);
+            };
+
+            const matchesCurrentFilters = (log) => {
+                const actionType = form.elements.actionType?.value;
+                const entityName = form.elements.entityName?.value;
+                const keyword = form.elements.keyword?.value.trim().toLowerCase();
+                const fromValue = fromDate.value;
+                const toValue = toDate.value;
+                const logDate = localDateValue(new Date(log.createdAt));
+
+                if (actionType && log.action !== actionType) {
+                    return false;
+                }
+
+                if (entityName && log.entityName !== entityName) {
+                    return false;
+                }
+
+                if (fromValue && logDate < fromValue) {
+                    return false;
+                }
+
+                if (toValue && logDate > toValue) {
+                    return false;
+                }
+
+                if (keyword) {
+                    const haystack = [
+                        log.actorName,
+                        log.actorEmail,
+                        log.targetName,
+                        log.entityId,
+                        log.description
+                    ].join(' ').toLowerCase();
+
+                    if (!haystack.includes(keyword)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            };
+
+            const updateTotalCount = () => {
+                const current = Number.parseInt(totalBadge.dataset.totalCount || '0', 10) + 1;
+                totalBadge.dataset.totalCount = current.toString();
+                totalBadge.textContent = `${current} bản ghi`;
+            };
+
+            const prependAuditLog = (log) => {
+                updateTotalCount();
+
+                if (Number.parseInt(tableBody.dataset.currentPage || '1', 10) !== 1 || !matchesCurrentFilters(log)) {
+                    return;
+                }
+
+                document.getElementById('auditLogEmptyRow')?.remove();
+
+                const createdAt = new Date(log.createdAt);
+                const row = document.createElement('tr');
+                row.className = 'audit-log-row table-success';
+                row.dataset.logId = log.id;
+                row.innerHTML = `
+                    <td class="ps-4 text-nowrap">
+                        <div class="fw-semibold text-dark">${createdAt.toLocaleDateString('vi-VN')}</div>
+                        <div class="small text-muted">${createdAt.toLocaleTimeString('vi-VN')}</div>
+                    </td>
+                    <td>
+                        <div class="fw-semibold text-dark">${escapeHtml(log.actorName)}</div>
+                        <div class="small text-muted">${escapeHtml(log.actorEmail)}</div>
+                    </td>
+                    <td>
+                        <span class="badge ${badgeClasses[log.action] || 'bg-dark'} rounded-pill px-3">${escapeHtml(actionLabels[log.action] || log.action)}</span>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">${escapeHtml(entityLabels[log.entityName] || log.entityName)}</div>
+                        ${log.entityId ? `<div class="small text-muted">#${escapeHtml(log.entityId)}</div>` : ''}
+                    </td>
+                    <td>${escapeHtml(log.targetName || '-')}</td>
+                    <td style="min-width: 280px;">
+                        <span class="text-dark">${escapeHtml(descriptionLabel(log.description))}</span>
+                    </td>`;
+
+                tableBody.prepend(row);
+
+                const pageSize = Number.parseInt(tableBody.dataset.pageSize || '15', 10);
+                const rows = tableBody.querySelectorAll('.audit-log-row');
+                if (rows.length > pageSize) {
+                    rows[rows.length - 1].remove();
+                }
+
+                window.setTimeout(() => row.classList.remove('table-success'), 2500);
+            };
+
+            const auditConnection = new signalR.HubConnectionBuilder()
+                .withUrl('/auditLogHub')
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.Warning)
+                .build();
+
+            auditConnection.on('AuditLogCreated', prependAuditLog);
+            auditConnection.start().catch((error) => console.error('[AuditLog] SignalR error:', error));
         })();
     </script>
 }
@@ -263,10 +475,10 @@
                         @* <th class="text-end pe-4">IP</th> *@
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="auditLogTableBody" data-current-page="@Model.Logs.Page" data-page-size="@Model.Logs.PageSize">
                     @if (!Model.Logs.Items.Any())
                     {
-                        <tr>
+                        <tr id="auditLogEmptyRow">
                             <td colspan="7" class="text-center text-muted py-5">
                                 <i class="fas fa-clipboard-list fs-2 d-block mb-2"></i>
                                 Chưa có nhật ký phù hợp.
@@ -275,7 +487,7 @@
                     }
                     @foreach (var log in Model.Logs.Items)
                     {
-                        <tr>
+                        <tr class="audit-log-row" data-log-id="@log.Id">
                             <td class="ps-4 text-nowrap">
                                 <div class="fw-semibold text-dark">@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</div>
                                 <div class="small text-muted">@log.CreatedAt.ToLocalTime().ToString("HH:mm:ss")</div>

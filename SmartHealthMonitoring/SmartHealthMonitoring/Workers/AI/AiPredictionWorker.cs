@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.Services.AI;
 
 namespace SmartHealthMonitoring.Workers.AI;
@@ -46,9 +47,11 @@ public class AiPredictionWorker : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
         var aiService = scope.ServiceProvider.GetRequiredService<IAiPredictionService>();
+        var emailTriggerService = scope.ServiceProvider.GetRequiredService<IEmailTriggerService>();
 
         int successCount = 0;
         int alertCount   = 0;
+        var highRiskEmailCandidates = new List<(int PatientId, AiriskPrediction Prediction)>();
 
         // ═══════════════════════════════════════════════════════════════════════
         // LUONG 1: Quet DailyVitalLogs chua co du bao
@@ -233,6 +236,12 @@ public class AiPredictionWorker : BackgroundService
                         };
                         dbContext.WarningAlerts.Add(alert);
                         alertCount++;
+
+                        if (prediction.RiskScore > 0.70m)
+                        {
+                            highRiskEmailCandidates.Add((log.PatientId, prediction));
+                        }
+
                         _logger.LogWarning(
                             "[LUONG 1] => TAO CANH BAO MOI (RiskLevel={Level}, RiskScore={Score:F4}) cho BenhNhan={PatientId}",
                             prediction.RiskLevel, (double)prediction.RiskScore, log.PatientId);
@@ -365,6 +374,12 @@ public class AiPredictionWorker : BackgroundService
                         };
                         dbContext.WarningAlerts.Add(alert);
                         alertCount++;
+
+                        if (prediction.RiskScore > 0.70m)
+                        {
+                            highRiskEmailCandidates.Add((record.PatientId, prediction));
+                        }
+
                         _logger.LogWarning(
                             "[LUONG 2] => TAO CANH BAO MOI (RiskLevel={Level}, RiskScore={Score:F4}) cho BenhNhan={PatientId}",
                             prediction.RiskLevel, (double)prediction.RiskScore, record.PatientId);
@@ -392,6 +407,35 @@ public class AiPredictionWorker : BackgroundService
         if (successCount > 0)
         {
             await dbContext.SaveChangesAsync(stoppingToken);
+
+            foreach (var candidate in highRiskEmailCandidates)
+            {
+                if (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                try
+                {
+                    await emailTriggerService.SendHealthWarningAsync(
+                        candidate.PatientId,
+                        candidate.Prediction.Id);
+
+                    _logger.LogWarning(
+                        "[EMAIL] Da kich hoat mail canh bao khan cap cho BenhNhan={PatientId}, Prediction={PredictionId}, RiskScore={RiskScore:P2}",
+                        candidate.PatientId,
+                        candidate.Prediction.Id,
+                        (double)candidate.Prediction.RiskScore);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "[EMAIL] Loi khi gui mail canh bao khan cap cho BenhNhan={PatientId}, Prediction={PredictionId}",
+                        candidate.PatientId,
+                        candidate.Prediction.Id);
+                }
+            }
         }
 
         int total = pendingDailyLogs.Count + pendingClinicalRecords.Count;
