@@ -51,6 +51,35 @@ namespace SmartHealthMonitoring.ViewModels
             2 => "Quản trị viên",
             _ => "Người dùng"
         };
+
+        // ── Thói quen sinh hoạt (chỉ dành cho Role = 0) ──
+        public HabitViewModel? Habit { get; set; }
+    }
+
+    // ViewModel cho form Thói quen sinh hoạt
+    public class HabitViewModel
+    {
+        // Nhóm 1: Thói quen ăn uống
+        public bool DietSalty { get; set; }
+        public bool DietHighFat { get; set; }
+        public bool DietHighSugar { get; set; }
+        public bool DietLowFiber { get; set; }
+        public bool AlcoholHeavy { get; set; }
+        public bool CaffeineSpike { get; set; }
+
+        // Nhóm 2: Thói quen sinh hoạt
+        public bool LifestyleSedentary { get; set; }
+        public bool LifestyleSitLong { get; set; }
+        public bool SleepDeprived { get; set; }
+        public bool NoHealthCheck { get; set; }
+
+        // Nhóm 3: Hành vi có hại
+        public bool SmokeActive { get; set; }
+        public bool SmokePassive { get; set; }
+        public bool SelfMedication { get; set; }
+
+        // Nhóm 4: Yếu tố tâm lý
+        public bool StressHigh { get; set; }
     }
 
     // ViewModel riêng để cập nhật thông tin cá nhân
