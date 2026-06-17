@@ -3,6 +3,19 @@
 @{
     ViewData["Title"] = "Chi tiết cảnh báo";
 }
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
 
 <div class="container-fluid py-4">
 
@@ -213,7 +226,7 @@
                         <th>Ngày</th>
                         <th>HA</th>
                         <th>Nhịp tim</th>
-                        <th>Đau ngực</th>
+                        <th>Mức độ đau ngực</th>
                         <th>Exercise Angina</th>
 
                     </tr>
@@ -345,5 +358,201 @@
         </div>
 
     </div>
+    @if (Model.Alert.Status == 1)
+    {
+    <div class="card shadow-sm border-0 mt-4">
+
+        
+        <div class="card-header bg-warning">
+
+            <strong>Xử lý cảnh báo</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <form asp-action="Resolve"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       name="id"
+                       value="@Model.Alert.Id" />
+
+                <div class="mb-3">
+
+                    <label class="form-label fw-bold">
+                        Ghi chú xử lý
+                    </label>
+
+                    <textarea name="resolutionNote"
+                              class="form-control"
+                              rows="4"
+                              required
+                              placeholder="Nhập ghi chú xử lý..."></textarea>
+
+                </div>
+
+                <h6 class="border-bottom pb-2 mb-3">
+                    Cập nhật ngưỡng cảnh báo (Tùy chọn)
+                </h6>
+
+                <div class="row">
+
+                        <div class="col-md-3 mb-3">
+
+                            <label>HA Tâm Thu Cảnh Báo</label>
+
+                            <input type="number"
+                                   name="systolicBpWarning"
+                                   class="form-control"
+                                   placeholder="VD: @(Model.Alert.Patient.PatientThreshold?.SystolicBpWarning)" />
+
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+
+                            <label>HA Tâm Thu Nguy Hiểm</label>
+
+                            <input type="number"
+                                   name="systolicBpDanger"
+                                   class="form-control"
+                                   placeholder="VD: @(Model.Alert.Patient.PatientThreshold?.SystolicBpDanger)" />
+
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+
+                            <label>HA Tâm Trương Cảnh Báo</label>
+
+                            <input type="number"
+                                   name="diastolicBpWarning"
+                                   class="form-control"
+                                   placeholder="VD: @(Model.Alert.Patient.PatientThreshold?.DiastolicBpWarning)" />
+
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+
+                            <label>HA Tâm Trương Nguy Hiểm</label>
+
+                            <input type="number"
+                                   name="diastolicBpDanger"
+                                   class="form-control"
+                                   placeholder="VD: @(Model.Alert.Patient.PatientThreshold?.DiastolicBpDanger)" />
+
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+
+                            <label>Nhịp tim thấp nguy hiểm</label>
+
+                            <input type="number"
+                                   name="heartRateDangerMin"
+                                   class="form-control"
+                                   placeholder="VD: @(Model.Alert.Patient.PatientThreshold?.HeartRateDangerMin)" />
+
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+
+                            <label>Nhịp tim thấp cảnh báo</label>
+
+                            <input type="number"
+                                   name="heartRateWarningMin"
+                                   class="form-control"
+                                   placeholder="VD: @(Model.Alert.Patient.PatientThreshold?.HeartRateWarningMin)" />
+
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+
+                            <label>Nhịp tim cao cảnh báo</label>
+
+                            <input type="number"
+                                   name="heartRateWarningMax"
+                                   class="form-control"
+                                   placeholder="VD: @(Model.Alert.Patient.PatientThreshold?.HeartRateWarningMax)" />
+
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+
+                            <label>Nhịp tim cao nguy hiểm</label>
+
+                            <input type="number"
+                                   name="heartRateDangerMax"
+                                   class="form-control"
+                                   placeholder="VD: @(Model.Alert.Patient.PatientThreshold?.HeartRateDangerMax)" />
+
+                        </div>
+
+                </div>
+
+                <hr />
+
+                <div class="form-check mb-3">
+
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="sendEmailInvitation"
+                           value="true"
+                           id="sendEmail"
+                           checked />
+
+                    <label class="form-check-label"
+                           for="sendEmail">
+
+                        Gửi email mời tái khám
+
+                    </label>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Ngày tái khám
+                    </label>
+
+                    <input type="datetime-local"
+                           name="appointmentDate"
+                           class="form-control" />
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success">
+
+                    <i class="fas fa-check-circle me-1"></i>
+                    Hoàn tất xử lý
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+        
+
+        }
+
 
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const sendEmail = document.getElementById('sendEmail');
+        const appointmentDate = document.querySelector('[name="appointmentDate"]');
+
+        function toggleRequired() {
+            appointmentDate.required = sendEmail.checked;
+        }
+
+        sendEmail.addEventListener('change', toggleRequired);
+
+        toggleRequired();
+    });
+</script>
