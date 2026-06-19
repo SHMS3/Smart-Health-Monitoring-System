@@ -49,6 +49,7 @@ public class AiPredictionWorker : BackgroundService
         var dbContext  = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
         var aiService  = scope.ServiceProvider.GetRequiredService<IAiPredictionService>();
         var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+        var emailTriggerService = scope.ServiceProvider.GetRequiredService<IEmailTriggerService>();
 
         int successCount = 0;
         int alertCount   = 0;
