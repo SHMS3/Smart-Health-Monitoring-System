@@ -19,6 +19,7 @@ namespace SmartHealthMonitoring.Controllers.AI
         private readonly IDoctorService _doctorService;
         private readonly IEmailTriggerService _emailTriggerService;
         private readonly IAuditLogService _auditLogService;
+        private readonly IAnfisExplainabilityService _explainabilityService;
 
         public WarningAlertController(
             IAiWarningAlertService warningAlertService,
@@ -26,7 +27,8 @@ namespace SmartHealthMonitoring.Controllers.AI
             SmartHealthMonitoringContext context,
             IEmailService emailService,
             IEmailTriggerService emailTriggerService,
-            IAuditLogService auditLogService)
+            IAuditLogService auditLogService,
+            IAnfisExplainabilityService explainabilityService)
         {
             _warningAlertService = warningAlertService;
             _doctorService = doctorService;
@@ -34,7 +36,9 @@ namespace SmartHealthMonitoring.Controllers.AI
             _emailService = emailService;
             _emailTriggerService = emailTriggerService;
             _auditLogService = auditLogService;
+            _explainabilityService = explainabilityService;
         }
+
 
         public async Task<IActionResult> Dashboard(byte? status, string? keyword, int page = 1, int pageSize = 10)
         {
@@ -303,18 +307,49 @@ namespace SmartHealthMonitoring.Controllers.AI
 
             return PartialView("_AlertTable", alerts);
         }
-        [HttpGet]
-        public async Task<IActionResult> Detail(int id)
-        {
-            var model = await _warningAlertService
-                .GetDetailAsync(id);
 
-            if (model == null)
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var alert = await _context.WarningAlerts
+                .Include(a => a.Patient)
+                    .ThenInclude(p => p.User)
+                .Include(a => a.ClaimedByDoctor)
+                    .ThenInclude(d => d.User)
+                .Include(a => a.Prediction)
+                    .ThenInclude(p => p.ClinicalRecord)
+                .Include(a => a.Prediction)
+                    .ThenInclude(p => p.DailyLog)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+
+            if (alert == null)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "Không tìm thấy cảnh báo này.";
+                return RedirectToAction(nameof(Dashboard));
             }
 
-            return View(model);
+            // Sinh lời giải thích XAI từ AnfisExplainabilityService
+            var explanation = _explainabilityService.Explain(alert.Prediction, alert);
+            ViewBag.Explanation = explanation;
+
+            // Fetch history
+            var clinicalHistory = await _context.ClinicalRecords
+                .Where(c => c.PatientId == alert.PatientId && !c.IsDeleted)
+                .OrderByDescending(c => c.VisitDate)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var dailyHistory = await _context.DailyVitalLogs
+                .Where(d => d.PatientId == alert.PatientId && !d.IsDeleted)
+                .OrderByDescending(d => d.LoggedAt)
+                .AsNoTracking()
+                .ToListAsync();
+
+            ViewBag.ClinicalHistory = clinicalHistory;
+            ViewBag.DailyHistory = dailyHistory;
+
+            return View(alert);
         }
     }
 }

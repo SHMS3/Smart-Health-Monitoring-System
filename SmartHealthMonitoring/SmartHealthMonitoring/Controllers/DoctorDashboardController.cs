@@ -10,6 +10,7 @@ using SmartHealthMonitoring.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SmartHealthMonitoring.Controllers
@@ -29,6 +30,20 @@ namespace SmartHealthMonitoring.Controllers
         {
             try
             {
+                // Lấy thông tin bác sĩ đang đăng nhập để hiển thị trạng thái ca trực
+                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (int.TryParse(userIdString, out int userId))
+                {
+                    var currentDoctor = await _context.Doctors
+                        .FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+
+                    ViewBag.IsOnShift = currentDoctor?.IsOnShift ?? false;
+
+                    // Số cảnh báo chưa xử lý (Status = 0) để hiện banner đỏ khi vừa đăng nhập
+                    ViewBag.UnresolvedAlertCount = await _context.WarningAlerts
+                        .CountAsync(w => w.Status == 0 && !w.IsDeleted);
+                }
+
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
                 // 1. Dựng Query cơ sở
@@ -71,6 +86,29 @@ namespace SmartHealthMonitoring.Controllers
                 return View(new PagedResult<PatientListViewModel>());
             }
         }
+
+        /// <summary>
+        /// AJAX: Bác sĩ tự gạt công tắc ca trực (bật/tắt thủ công)
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleShift()
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdString, out int userId))
+                return Json(new { success = false, message = "Không xác định được tài khoản." });
+
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+            if (doctor == null)
+                return Json(new { success = false, message = "Không tìm thấy hồ sơ bác sĩ." });
+
+            doctor.IsOnShift = !doctor.IsOnShift;
+            await _context.SaveChangesAsync();
+
+            string status = doctor.IsOnShift ? "Đang trực" : "Ngoài ca";
+            return Json(new { success = true, isOnShift = doctor.IsOnShift, message = $"Đã chuyển trạng thái: {status}" });
+        }
+
 
         [HttpGet("DoctorDashboard/PatientProfile/{patientId}")]
         public async Task<IActionResult> PatientProfile(int patientId, int page = 1)
