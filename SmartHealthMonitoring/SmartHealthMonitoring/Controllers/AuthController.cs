@@ -101,7 +101,19 @@ namespace SmartHealthMonitoring.Controllers
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
-            // 6. Redirect
+
+            // 6. Bật ca trực tự động nếu là Bác sĩ (role = 1)
+            if (user.Role == 1)
+            {
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == user.Id && !d.IsDeleted);
+                if (doctor != null)
+                {
+                    doctor.IsOnShift = true;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            // 7. Redirect
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl != "/")
             {
                 return Redirect(returnUrl);
@@ -284,6 +296,19 @@ namespace SmartHealthMonitoring.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
+            // Tắt ca trực khi Bác sĩ đăng xuất
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var roleString = User.FindFirstValue(ClaimTypes.Role);
+            if (!string.IsNullOrEmpty(userIdString) && roleString == "1" && int.TryParse(userIdString, out int userId))
+            {
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+                if (doctor != null)
+                {
+                    doctor.IsOnShift = false;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }

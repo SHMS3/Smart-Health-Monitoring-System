@@ -87,12 +87,20 @@ namespace SmartHealthMonitoring.Services
             var trendData = await _dailyVitalLogService.GetPatientHealthTrendsAsync(userId, 30);
             string chartContext = BuildChartRagContext(trendData);
             systemContext += chartContext;
+
+            // =========================================================================
+            // 4. RAG: INJECT THÓI QUEN SINH HOẠT CỦA BỆNH NHÂN
+            // =========================================================================
+            var habitData = await _chatbotRepository.GetPatientHabitAsync(patient.Id);
+            string habitContext = BuildHabitRagContext(habitData);
+            systemContext += habitContext;
             // =========================================================================
 
             var history = session.ChatMessages?.ToList() ?? new List<ChatMessage>();
 
-            // 4. Gọi Gemini với Context mới (bao gồm cả dữ liệu biểu đồ)
+            // 5. Gọi Gemini với Context đầy đủ (chỉ số + biểu đồ + thói quen)
             var aiResponse = await _geminiService.AskAsync(message, history, systemContext);
+
 
             // 4. LƯU TIN NHẮN AI
             await _chatbotRepository.CreateMessageAsync(new ChatMessage
@@ -175,6 +183,74 @@ namespace SmartHealthMonitoring.Services
 
             sb.AppendLine("(Hãy dùng dữ liệu trên để giải thích biểu đồ khi người dùng hỏi. Không bịa đặt số liệu.)");
 
+            return sb.ToString();
+        }
+        // =========================================================================
+
+        // =========================================================================
+        // HABIT RAG BUILDER: Dịch thói quen sang văn bản cho AI
+        // =========================================================================
+        private string BuildHabitRagContext(SmartHealthMonitoring.Models.PatientHabit? habit)
+        {
+            if (habit == null)
+                return "\n[THÓI QUEN SINH HOẠT]: Bệnh nhân chưa cập nhật thông tin thói quen sinh hoạt. Hãy khuyến khích họ cập nhật ở trang Hồ sơ cá nhân để được tư vấn chính xác hơn.\n";
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine();
+            sb.AppendLine("[THÓI QUEN SINH HOẠT & YẾU TỐ RỦI RO CỦA BỆNH NHÂN]:");
+
+            // Nhóm 1: Ăn uống
+            var diet = new List<string>();
+            if (habit.DietSalty)       diet.Add("ăn mặn (tăng huyết áp)");
+            if (habit.DietHighFat)     diet.Add("nhiều đồ chiên rán/thức ăn nhanh (xơ vữa động mạch)");
+            if (habit.DietHighSugar)   diet.Add("nhiều đường/nước ngọt (béo phì, tiểu đường)");
+            if (habit.DietLowFiber)    diet.Add("ít rau xanh và trái cây (thiếu chất chống oxy hóa)");
+            if (habit.AlcoholHeavy)    diet.Add("uống nhiều rượu bia (rối loạn nhịp tim, suy tim)");
+            if (habit.CaffeineSpike)   diet.Add("lạm dụng cà phê/nước tăng lực (tăng nhịp tim)");
+            sb.AppendLine(diet.Any()
+                ? $"- Ăn uống: {string.Join(", ", diet)}."
+                : "- Ăn uống: Không có thói quen ăn uống xấu được ghi nhận.");
+
+            // Nhóm 2: Sinh hoạt
+            var lifestyle = new List<string>();
+            if (habit.LifestyleSedentary) lifestyle.Add("ít vận động thể dục");
+            if (habit.LifestyleSitLong)   lifestyle.Add("ngồi quá lâu/ít đứng dậy vận động");
+            if (habit.SleepDeprived)      lifestyle.Add("thức khuya/thiếu ngủ");
+            if (habit.NoHealthCheck)      lifestyle.Add("không kiểm tra sức khỏe định kỳ");
+            sb.AppendLine(lifestyle.Any()
+                ? $"- Sinh hoạt: {string.Join(", ", lifestyle)}."
+                : "- Sinh hoạt: Lối sống khoa học, không có thói quen xấu.");
+
+            // Nhóm 3: Hành vi có hại
+            var harmful = new List<string>();
+            if (habit.SmokeActive)      harmful.Add("đang hút thuốc lá (nguy cơ cao nhất)");
+            if (habit.SmokePassive)     harmful.Add("tiếp xúc khói thuốc thụ động");
+            if (habit.SelfMedication)   harmful.Add("tự ý dùng thuốc/TPCN không rõ nguồn gốc");
+            sb.AppendLine(harmful.Any()
+                ? $"- Hành vi có hại: {string.Join(", ", harmful)}."
+                : "- Hành vi có hại: Không ghi nhận hành vi có hại.");
+
+            // Nhóm 4: Tâm lý
+            sb.AppendLine(habit.StressHigh
+                ? "- Tâm lý: Căng thẳng/stress kéo dài (tăng nguy cơ đau tim, đột quỵ)."
+                : "- Tâm lý: Không ghi nhận căng thẳng kéo dài.");
+
+            // Đếm tổng số thói quen xấu
+            int riskCount = new[] {
+                habit.DietSalty, habit.DietHighFat, habit.DietHighSugar, habit.DietLowFiber,
+                habit.AlcoholHeavy, habit.CaffeineSpike, habit.LifestyleSedentary,
+                habit.LifestyleSitLong, habit.SleepDeprived, habit.NoHealthCheck,
+                habit.SmokeActive, habit.SmokePassive, habit.SelfMedication, habit.StressHigh
+            }.Count(x => x);
+
+            if (riskCount == 0)
+                sb.AppendLine("=> ĐÁNH GIÁ: Bệnh nhân có lối sống lành mạnh. Hãy khen ngợi và khuyến khích duy trì.");
+            else if (riskCount <= 3)
+                sb.AppendLine($"=> ĐÁNH GIÁ: Bệnh nhân có {riskCount} thói quen rủi ro. Hãy nhẹ nhàng khuyến khích cải thiện từng bước.");
+            else
+                sb.AppendLine($"=> ĐÁNH GIÁ: Bệnh nhân có tới {riskCount} thói quen rủi ro. Đây là yếu tố QUAN TRỌNG cần đề cập khi tư vấn tim mạch. Hãy ưu tiên tập trung vào các thói quen nguy hiểm nhất.");
+
+            sb.AppendLine("(Hãy dựa vào thông tin thói quen trên để cá nhân hóa lời khuyên. Không bịa đặt.)");
             return sb.ToString();
         }
         // =========================================================================

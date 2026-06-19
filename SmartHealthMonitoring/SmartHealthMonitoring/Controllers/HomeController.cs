@@ -118,7 +118,9 @@ namespace SmartHealthMonitoring.Controllers
             // Nếu là Patient thì lấy thêm thông tin
             if (user.Role == 0)
             {
-                var patient = await _context.Patients.FirstOrDefaultAsync(p => p.UserId == userId && !p.IsDeleted);
+                var patient = await _context.Patients
+                    .Include(p => p.PatientHabit)
+                    .FirstOrDefaultAsync(p => p.UserId == userId && !p.IsDeleted);
                 if (patient != null)
                 {
                     vm.PatientId       = patient.Id;
@@ -138,6 +140,33 @@ namespace SmartHealthMonitoring.Controllers
                         .OrderByDescending(v => v.LoggedAt)
                         .Select(v => (DateTime?)v.LoggedAt)
                         .FirstOrDefaultAsync();
+
+                    // Load thói quen sinh hoạt (nếu có)
+                    if (patient.PatientHabit != null)
+                    {
+                        var h = patient.PatientHabit;
+                        vm.Habit = new SmartHealthMonitoring.ViewModels.HabitViewModel
+                        {
+                            DietSalty          = h.DietSalty,
+                            DietHighFat        = h.DietHighFat,
+                            DietHighSugar      = h.DietHighSugar,
+                            DietLowFiber       = h.DietLowFiber,
+                            AlcoholHeavy       = h.AlcoholHeavy,
+                            CaffeineSpike      = h.CaffeineSpike,
+                            LifestyleSedentary = h.LifestyleSedentary,
+                            LifestyleSitLong   = h.LifestyleSitLong,
+                            SleepDeprived      = h.SleepDeprived,
+                            NoHealthCheck      = h.NoHealthCheck,
+                            SmokeActive        = h.SmokeActive,
+                            SmokePassive       = h.SmokePassive,
+                            SelfMedication     = h.SelfMedication,
+                            StressHigh         = h.StressHigh,
+                        };
+                    }
+                    else
+                    {
+                        vm.Habit = new SmartHealthMonitoring.ViewModels.HabitViewModel(); // form trống
+                    }
                 }
             }
             // Nếu là Doctor thì lấy thêm thông tin
@@ -247,6 +276,79 @@ namespace SmartHealthMonitoring.Controllers
 
             TempData["SuccessMessage"] = "Cập nhật thông tin thành công!";
             return RedirectToAction(nameof(Profile));
+        }
+
+        // ==========================================
+        // POST: /Home/UpdateHabits — Cập nhật thói quen sinh hoạt
+        // ==========================================
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateHabits(HabitViewModel model)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId))
+                return RedirectToAction("Login", "Auth");
+
+            var patient = await _context.Patients
+                .Include(p => p.PatientHabit)
+                .FirstOrDefaultAsync(p => p.UserId == userId && !p.IsDeleted);
+
+            if (patient == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy hồ sơ bệnh nhân.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            if (patient.PatientHabit == null)
+            {
+                // Chưa có record → tạo mới
+                var habit = new PatientHabit
+                {
+                    PatientId          = patient.Id,
+                    DietSalty          = model.DietSalty,
+                    DietHighFat        = model.DietHighFat,
+                    DietHighSugar      = model.DietHighSugar,
+                    DietLowFiber       = model.DietLowFiber,
+                    AlcoholHeavy       = model.AlcoholHeavy,
+                    CaffeineSpike      = model.CaffeineSpike,
+                    LifestyleSedentary = model.LifestyleSedentary,
+                    LifestyleSitLong   = model.LifestyleSitLong,
+                    SleepDeprived      = model.SleepDeprived,
+                    NoHealthCheck      = model.NoHealthCheck,
+                    SmokeActive        = model.SmokeActive,
+                    SmokePassive       = model.SmokePassive,
+                    SelfMedication     = model.SelfMedication,
+                    StressHigh         = model.StressHigh,
+                    UpdatedAt          = DateTime.UtcNow,
+                };
+                _context.PatientHabits.Add(habit);
+            }
+            else
+            {
+                // Đã có → cập nhật
+                var h = patient.PatientHabit;
+                h.DietSalty          = model.DietSalty;
+                h.DietHighFat        = model.DietHighFat;
+                h.DietHighSugar      = model.DietHighSugar;
+                h.DietLowFiber       = model.DietLowFiber;
+                h.AlcoholHeavy       = model.AlcoholHeavy;
+                h.CaffeineSpike      = model.CaffeineSpike;
+                h.LifestyleSedentary = model.LifestyleSedentary;
+                h.LifestyleSitLong   = model.LifestyleSitLong;
+                h.SleepDeprived      = model.SleepDeprived;
+                h.NoHealthCheck      = model.NoHealthCheck;
+                h.SmokeActive        = model.SmokeActive;
+                h.SmokePassive       = model.SmokePassive;
+                h.SelfMedication     = model.SelfMedication;
+                h.StressHigh         = model.StressHigh;
+                h.UpdatedAt          = DateTime.UtcNow;
+                _context.PatientHabits.Update(h);
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Đã cập nhật thói quen sinh hoạt thành công!";
+            return RedirectToAction(nameof(Profile), new { tab = "habits" });
         }
 
         // ==========================================

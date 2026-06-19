@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 
@@ -25,6 +25,7 @@ namespace SmartHealthMonitoring.Repositories
         public async Task<List<ChatbotSession>>GetPatientSessionsAsync(int patientId)
         {
             return await _context.ChatbotSessions
+                .Include(x => x.ChatMessages)
                 .Where(x => x.PatientId == patientId)
                 .OrderByDescending(x => x.StartedAt)
                 .ToListAsync();
@@ -60,6 +61,12 @@ namespace SmartHealthMonitoring.Repositories
         {
             _context.ChatbotSessions.Remove(session);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<PatientHabit?> GetPatientHabitAsync(int patientId)
+        {
+            return await _context.PatientHabits
+                .FirstOrDefaultAsync(h => h.PatientId == patientId);
         }
     }
 }

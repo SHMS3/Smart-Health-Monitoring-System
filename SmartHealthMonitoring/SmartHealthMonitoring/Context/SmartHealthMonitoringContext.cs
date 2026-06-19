@@ -38,6 +38,7 @@ public partial class SmartHealthMonitoringContext : DbContext
 
     public virtual DbSet<WarningAlert> WarningAlerts { get; set; }
     public virtual DbSet<PatientThreshold> PatientThresholds { get; set; }
+    public virtual DbSet<PatientHabit> PatientHabits { get; set; }
 
     public virtual DbSet<StandardThreshold> StandardThresholds { get; set; }
 
@@ -328,7 +329,23 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .WithMany() // Không cần khai báo Collection ở Doctor cho gọn
                 .HasForeignKey(d => d.UpdatedByDoctorId)
                 .OnDelete(DeleteBehavior.SetNull) // Nếu bác sĩ bị xóa, giữ lại ngưỡng nhưng set null
-                .HasConstraintName("FK__PatientTh__Docto");
+                .HasConstraintName("FK_PatientThreshold_Doctor");
+        });
+
+        modelBuilder.Entity<PatientHabit>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_PatientHabits");
+
+            entity.ToTable("PatientHabit");
+
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
+
+            // Quan hệ 1-1 với Patient
+            entity.HasOne(d => d.Patient)
+                .WithOne(p => p.PatientHabit)
+                .HasForeignKey<PatientHabit>(d => d.PatientId)
+                .OnDelete(DeleteBehavior.Cascade) // Nếu xóa bệnh nhân thì xóa luôn thói quen
+                .HasConstraintName("FK_PatientHabit_Patient");
         });
 
         modelBuilder.Entity<StandardThreshold>(entity =>
