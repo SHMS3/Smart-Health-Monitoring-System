@@ -31,9 +31,13 @@
                         </td>
 
                         <td>
-                            <span class="patient-name">
+                            <a href="/WarningAlert/Details/@item.Id"
+                               style="font-weight:600;color:#0f172a;text-decoration:none;transition:color .2s"
+                               onmouseover="this.style.color='#6366f1'"
+                               onmouseout="this.style.color='#0f172a'">
+                                <i class="fas fa-user-circle me-1" style="color:#94a3b8;font-size:.85rem"></i>
                                 @item.Patient.User.FullName
-                            </span>
+                            </a>
                         </td>
 
                         <td>

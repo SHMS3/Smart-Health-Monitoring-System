@@ -32,15 +32,25 @@
 
     @if (Model.WarningAlerts.Any(w => w.Status == 0))
     {
+        var pendingAlert = Model.WarningAlerts.OrderByDescending(w => w.FlaggedAt).FirstOrDefault(w => w.Status == 0);
         <div class="row mb-4">
             <div class="col-12">
-                <div class="alert alert-danger shadow-sm mb-0">
-                    <strong><i class="bi bi-exclamation-triangle-fill"></i> CẢNH BÁO ĐANG CHỜ!</strong>
-                    <p class="mb-0 small">Bệnh nhân có @Model.WarningAlerts.Count(w => w.Status == 0) cảnh báo chưa được xử lý.</p>
+                <div class="alert alert-danger shadow-sm mb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong><i class="bi bi-exclamation-triangle-fill"></i> CẢNH BÁO ĐANG CHỜ!</strong>
+                        <p class="mb-0 small">Bệnh nhân có @Model.WarningAlerts.Count(w => w.Status == 0) cảnh báo chưa được xử lý.</p>
+                    </div>
+                    @if (pendingAlert != null)
+                    {
+                        <a href="/WarningAlert/Details/@pendingAlert.Id" class="btn btn-danger btn-sm fw-bold">
+                            Xem chi tiết cảnh báo
+                        </a>
+                    }
                 </div>
             </div>
         </div>
     }
+
 
     <div class="row g-4 mb-4">
         <div class="col-lg-4">

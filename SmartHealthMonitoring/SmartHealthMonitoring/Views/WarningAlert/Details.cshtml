@@ -1,0 +1,350 @@
+@using SmartHealthMonitoring.Services.AI
+@model SmartHealthMonitoring.Models.WarningAlert
+
+@{
+    ViewData["Title"] = $"Chi tiết cảnh báo #{Model.Id}";
+    var explanation = ViewBag.Explanation as ExplainabilityResult;
+    string riskLevelText = Model.Prediction.RiskLevel switch { 3 => "NGUY KỊCH", 2 => "CAO", 1 => "TRUNG BÌNH", _ => "THẤP" };
+    string riskClass = Model.Prediction.RiskLevel switch { 3 => "danger", 2 => "danger", 1 => "warning", _ => "success" };
+    string statusText = Model.Status switch { 0 => "Chờ xử lý", 1 => "Đang xử lý", 2 => "Đã xử lý", _ => "Không xác định" };
+    string statusClass = Model.Status switch { 0 => "status-pending", 1 => "status-processing", 2 => "status-resolved", _ => "" };
+}
+
+<style>
+    .details-page { margin-top: 70px; padding: 40px 0 80px; background: #f8fafc; min-height: calc(100vh - 70px); }
+    .details-inner { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; color: #64748b; text-decoration: none; font-size: .88rem; font-weight: 600; margin-bottom: 24px; transition: color .2s; }
+    .back-link:hover { color: #0ea5e9; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
+    .page-title { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0; }
+    .page-meta { color: #64748b; font-size: .88rem; margin-top: 4px; }
+    .badge-risk { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 50px; font-size: .85rem; font-weight: 700; }
+    .badge-danger  { background: rgba(239,68,68,.12); color: #dc2626; }
+    .badge-warning { background: rgba(245,158,11,.12); color: #d97706; }
+    .badge-success { background: rgba(16,185,129,.12); color: #059669; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    @@media(max-width:640px) { .info-grid { grid-template-columns: 1fr; } }
+
+    .card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,.05); }
+    .card-header { padding: 18px 24px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 10px; }
+    .card-header-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .card-header-title { font-size: .95rem; font-weight: 700; color: #0f172a; }
+    .card-body { padding: 20px 24px; }
+    .card-full { margin-bottom: 24px; }
+
+    .kv-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f8fafc; font-size: .88rem; }
+    .kv-row:last-child { border-bottom: none; }
+    .kv-label { color: #64748b; font-weight: 500; }
+    .kv-value { font-weight: 600; color: #0f172a; text-align: right; max-width: 55%; }
+
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 50px; font-size: .78rem; font-weight: 700; }
+    .status-pending    { background: rgba(239,68,68,.12); color: #dc2626; }
+    .status-processing { background: rgba(245,158,11,.12); color: #d97706; }
+    .status-resolved   { background: rgba(16,185,129,.12); color: #059669; }
+
+    /* ─── XAI Block ──────────────────────────────────────────── */
+    .xai-block { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,.05); margin-bottom: 24px; }
+    .xai-header { background: linear-gradient(135deg, #1e1b4b, #3730a3); padding: 20px 24px; display: flex; align-items: center; gap: 14px; }
+    .xai-header-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; }
+    .xai-header-text h3 { color: #fff; margin: 0; font-size: 1rem; font-weight: 700; }
+    .xai-header-text p { color: rgba(255,255,255,.7); margin: 2px 0 0; font-size: .78rem; }
+    .xai-body { padding: 24px; }
+    .xai-summary { background: #f8fafc; border-left: 4px solid #6366f1; border-radius: 0 12px 12px 0; padding: 16px 20px; color: #1e293b; font-size: .92rem; line-height: 1.75; margin-bottom: 20px; font-style: italic; }
+    .xai-section-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 10px; }
+    .xai-list { list-style: none; margin: 0 0 20px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .xai-list li { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 10px; font-size: .87rem; line-height: 1.55; }
+    .xai-risk-item { background: #fef2f2; color: #7f1d1d; border: 1px solid #fecaca; }
+    .xai-risk-item::before { content: '⚠'; font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .xai-protect-item { background: #f0fdf4; color: #14532d; border: 1px solid #bbf7d0; }
+    .xai-protect-item::before { content: '✓'; font-size: 1rem; flex-shrink: 0; margin-top: 1px; font-weight: 800; }
+    .datasource-tag { display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 50px; padding: 4px 12px; font-size: .75rem; font-weight: 600; color: #1d4ed8; }
+    .score-ring { display: flex; align-items: center; gap: 12px; }
+    .score-number { font-size: 2rem; font-weight: 900; }
+    .score-sub { font-size: .78rem; color: #64748b; }
+    .risk-score-danger { color: #dc2626; }
+    .risk-score-warning { color: #d97706; }
+    .risk-score-success { color: #059669; }
+</style>
+
+<div class="details-page">
+<div class="details-inner">
+
+    <a href="/WarningAlert/Dashboard" class="back-link">
+        <i class="fas fa-arrow-left"></i> Quay lại Bảng cảnh báo
+    </a>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-shield-alt me-2" style="color:#6366f1"></i>
+                Chi tiết Cảnh báo #@Model.Id
+            </h1>
+            <p class="page-meta">
+                Gắn cờ lúc: <strong>@Model.FlaggedAt.ToString("HH:mm - dd/MM/yyyy")</strong>
+                &nbsp;|&nbsp; Bệnh nhân: <strong>@Model.Patient.User.FullName</strong>
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge-risk badge-@riskClass">
+                <i class="fas fa-circle"></i> Rủi ro @riskLevelText
+            </span>
+            <span class="status-badge @statusClass">@statusText</span>
+        </div>
+    </div>
+
+    <!-- ═══ KHỐI GIẢI THÍCH XAI (ANFIS Explainability) ═══ -->
+    <div class="xai-block">
+        <div class="xai-header">
+            <div class="xai-header-icon"><i class="fas fa-brain"></i></div>
+            <div class="xai-header-text">
+                <h3>Phân tích & Giải thích của Thuật toán ANFIS</h3>
+                <p>Adaptive Neuro-Fuzzy Inference System — XAI Layer v1.0</p>
+            </div>
+        </div>
+        <div class="xai-body">
+            <!-- Điểm rủi ro nổi bật -->
+            <div class="d-flex align-items-center gap-4 mb-4">
+                <div class="score-ring">
+                    <div>
+                        <div class="score-number risk-score-@riskClass">
+                            @((Model.Prediction.RiskScore * 100).ToString("0.0"))%
+                        </div>
+                        <div class="score-sub">Xác suất bệnh tim mạch</div>
+                    </div>
+                </div>
+                <div>
+                    <span class="datasource-tag mb-2 d-inline-flex">
+                        <i class="fas fa-database"></i> Nguồn: @(explanation?.DataSource ?? "Không xác định")
+                    </span>
+                    <div style="font-size:.82rem;color:#64748b">
+                        Mô hình: <strong>@Model.Prediction.ModelVersion</strong>
+                        &nbsp;|&nbsp; Phân tích lúc: <strong>@Model.Prediction.PredictedAt.ToString("HH:mm dd/MM/yyyy")</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tóm tắt kết luận -->
+            <div class="xai-summary">
+                <i class="fas fa-quote-left me-2" style="color:#6366f1;opacity:.5"></i>
+                @(explanation?.Summary ?? "Không có đủ dữ liệu để tạo phân tích.")
+            </div>
+
+            <!-- Yếu tố nguy cơ -->
+            @if (explanation?.RiskFactors?.Count > 0)
+            {
+                <div class="xai-section-title">
+                    <i class="fas fa-exclamation-triangle me-1" style="color:#ef4444"></i>
+                    Yếu tố nguy cơ được phát hiện (@explanation.RiskFactors.Count)
+                </div>
+                <ul class="xai-list">
+                    @foreach (var factor in explanation.RiskFactors)
+                    {
+                        <li class="xai-risk-item">@factor</li>
+                    }
+                </ul>
+            }
+
+            <!-- Yếu tố bảo vệ -->
+            @if (explanation?.Protective?.Count > 0)
+            {
+                <div class="xai-section-title">
+                    <i class="fas fa-shield-alt me-1" style="color:#10b981"></i>
+                    Chỉ số trong giới hạn an toàn (@explanation.Protective.Count)
+                </div>
+                <ul class="xai-list">
+                    @foreach (var p in explanation.Protective)
+                    {
+                        <li class="xai-protect-item">@p</li>
+                    }
+                </ul>
+            }
+
+            <div style="font-size:.78rem;color:#94a3b8;margin-top:8px">
+                <i class="fas fa-info-circle me-1"></i>
+                Lời giải thích được tạo tự động bởi lớp XAI Wrapper theo mô hình lập luận Fuzzy của ANFIS.
+                Đây là công cụ hỗ trợ ra quyết định, không thay thế chẩn đoán lâm sàng của Bác sĩ.
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ THÔNG TIN 2 CỘT ═══ -->
+    <div class="info-grid">
+        <!-- Thông tin bệnh nhân -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-icon" style="background:#eff6ff;color:#2563eb">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="card-header-title">Thông tin bệnh nhân</div>
+            </div>
+            <div class="card-body">
+                <div class="kv-row">
+                    <span class="kv-label">Họ và tên</span>
+                    <span class="kv-value">@Model.Patient.User.FullName</span>
+                </div>
+                <div class="kv-row">
+                    <span class="kv-label">Email</span>
+                    <span class="kv-value">@(Model.Patient.User.Email ?? "—")</span>
+                </div>
+                <div class="kv-row">
+                    <span class="kv-label">Trạng thái cảnh báo</span>
+                    <span class="kv-value"><span class="status-badge @statusClass">@statusText</span></span>
+                </div>
+                <div class="kv-row">
+                    <span class="kv-label">Thời gian gắn cờ</span>
+                    <span class="kv-value">@Model.FlaggedAt.ToString("HH:mm dd/MM/yyyy")</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin xử lý -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-icon" style="background:#f0fdf4;color:#16a34a">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="card-header-title">Thông tin xử lý</div>
+            </div>
+            <div class="card-body">
+                <div class="kv-row">
+                    <span class="kv-label">Bác sĩ tiếp nhận</span>
+                    <span class="kv-value">@(Model.ClaimedByDoctor?.User?.FullName ?? "Chưa tiếp nhận")</span>
+                </div>
+                <div class="kv-row">
+                    <span class="kv-label">Thời gian tiếp nhận</span>
+                    <span class="kv-value">@(Model.ClaimedAt.HasValue ? Model.ClaimedAt.Value.ToString("HH:mm dd/MM/yyyy") : "—")</span>
+                </div>
+                <div class="kv-row">
+                    <span class="kv-label">Ghi chú xử lý</span>
+                    <span class="kv-value" style="font-style:italic">
+                        @(string.IsNullOrWhiteSpace(Model.ResolutionNote) ? "—" : Model.ResolutionNote)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ DỮ LIỆU GỐC ═══ -->
+    <div class="row">
+        <div class="col-12">
+            <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 16px; margin-top: 20px;">
+                <i class="fas fa-history me-2"></i> Lịch sử đo chỉ số của Bệnh nhân
+            </h3>
+        </div>
+    </div>
+
+    <!-- Bảng Lịch sử đo tại Bệnh viện (Clinical Exam) -->
+    <div class="card card-full">
+        <div class="card-header" style="background:#fdf4ff;">
+            <div class="card-header-icon" style="background:#fdf4ff;color:#9333ea; font-size:1.2rem">
+                <i class="fas fa-hospital"></i>
+            </div>
+            <div class="card-header-title">Hồ sơ khám tại Bệnh viện (Clinical Exam)</div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" style="font-size: .88rem; border-color: #f1f5f9;">
+                    <thead style="background:#f8fafc; color:#64748b; text-transform:uppercase; font-size:.75rem;">
+                        <tr>
+                            <th class="ps-4">Ngày khám</th>
+                            <th>Đau ngực (CP)</th>
+                            <th>HA Tâm thu (mmHg)</th>
+                            <th>Nhịp tim max (bpm)</th>
+                            <th>Cholesterol</th>
+                            <th>ST Slope</th>
+                            <th>Trạng thái nguồn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.ClinicalHistory != null)
+                        {
+                            foreach (var rec in (List<SmartHealthMonitoring.Models.ClinicalRecord>)ViewBag.ClinicalHistory)
+                            {
+                                bool isTriggerSource = Model.Prediction.ClinicalRecordId == rec.Id;
+                                <tr style="@(isTriggerSource ? "background-color: #f5f3ff;" : "")">
+                                    <td class="ps-4 fw-bold">@rec.VisitDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@rec.ChestPainType</td>
+                                    <td>@rec.RestingBp</td>
+                                    <td>@rec.MaxHeartRate</td>
+                                    <td>@rec.Cholesterol</td>
+                                    <td>@rec.Stslope</td>
+                                    <td>
+                                        @if (isTriggerSource)
+                                        {
+                                            <span class="badge bg-purple text-purple bg-opacity-10 px-2 py-1" style="color: #9333ea; border: 1px solid #d8b4fe; border-radius: 4px;">
+                                                <i class="fas fa-bullseye me-1"></i> Gây ra cảnh báo này
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span style="color:#94a3b8">Lịch sử</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng Lịch sử đo tại Nhà (Daily Log) -->
+    <div class="card card-full">
+        <div class="card-header" style="background:#fff7ed;">
+            <div class="card-header-icon" style="background:#fff7ed;color:#ea580c; font-size:1.2rem">
+                <i class="fas fa-home"></i>
+            </div>
+            <div class="card-header-title">Nhật ký đo tại Nhà (Daily Vital Log)</div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" style="font-size: .88rem; border-color: #f1f5f9;">
+                    <thead style="background:#f8fafc; color:#64748b; text-transform:uppercase; font-size:.75rem;">
+                        <tr>
+                            <th class="ps-4">Thời gian đo</th>
+                            <th>Huyết áp (Sys/Dia)</th>
+                            <th>Nhịp tim (bpm)</th>
+                            <th>Đau ngực (Level)</th>
+                            <th>Gắng sức</th>
+                            <th>Trạng thái nguồn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.DailyHistory != null)
+                        {
+                            foreach (var log in (List<SmartHealthMonitoring.Models.DailyVitalLog>)ViewBag.DailyHistory)
+                            {
+                                bool isTriggerSource = Model.Prediction.DailyLogId == log.Id;
+                                <tr style="@(isTriggerSource ? "background-color: #fff7ed;" : "")">
+                                    <td class="ps-4 fw-bold">@log.LoggedAt.ToString("HH:mm - dd/MM/yyyy")</td>
+                                    <td>@log.SystolicBp / @log.DiastolicBp</td>
+                                    <td>@log.HeartRate</td>
+                                    <td>@log.ChestPainLevel / 3</td>
+                                    <td>@(log.HasExerciseAngina ? "Có đau" : "Không")</td>
+                                    <td>
+                                        @if (isTriggerSource)
+                                        {
+                                            <span class="badge bg-orange text-orange bg-opacity-10 px-2 py-1" style="color: #ea580c; border: 1px solid #fdba74; border-radius: 4px;">
+                                                <i class="fas fa-bullseye me-1"></i> Gây ra cảnh báo này
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span style="color:#94a3b8">Lịch sử</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
