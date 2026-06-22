@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SmartHealthMonitoring.Context;
-using SmartHealthMonitoring.Services;
+using SmartHealthMonitoring.Interfaces;
 
 namespace SmartHealthMonitoring.Workers
 {
