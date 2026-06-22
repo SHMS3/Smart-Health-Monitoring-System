@@ -1,4 +1,4 @@
-namespace SmartHealthMonitoring.Services;
+namespace SmartHealthMonitoring.Interfaces;
 
 public interface IAuditLogService
 {

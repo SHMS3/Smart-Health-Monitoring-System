@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Interfaces;
 
 namespace SmartHealthMonitoring.Services
 {

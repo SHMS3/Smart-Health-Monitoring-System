@@ -5,10 +5,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
-using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;
+using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Context;
 
 namespace SmartHealthMonitoring.Controllers
 {
