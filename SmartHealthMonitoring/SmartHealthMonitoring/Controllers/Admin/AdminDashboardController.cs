@@ -49,7 +49,14 @@ namespace SmartHealthMonitoring.Controllers.Admin
         public async Task<IActionResult> PatientStatistics()
         {
             var vm = await _adminStatisticsService.GetDashboardStatisticsAsync();
-            return View(vm);
+            return View("~/Views/AdminDashboard/Statistics/PatientStatistics.cshtml", vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> HabitStatistics()
+        {
+            var vm = await _adminStatisticsService.GetHabitStatisticsAsync();
+            return View("~/Views/AdminDashboard/Statistics/HabitStatistics.cshtml", vm);
         }
     }
 }
