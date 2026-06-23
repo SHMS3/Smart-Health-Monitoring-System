@@ -1,0 +1,228 @@
+@model IEnumerable<SmartHealthMonitoring.Models.HealthNewsPost>
+@{
+    ViewData["Title"] = "Tin Tức";
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+    string keyword = ViewBag.Keyword as string;
+}
+
+<style>
+    body {
+        background-color: #fff5f7; /* Pinkish background matching screenshot */
+    }
+    .news-page-header {
+        padding: 40px 0 20px 0;
+        text-align: center;
+    }
+    .news-page-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 800;
+        color: #1a2340;
+        font-size: 2.2rem;
+        margin-bottom: 20px;
+    }
+    .search-container {
+        max-width: 600px;
+        margin: 0 auto 40px auto;
+        position: relative;
+    }
+    .search-input {
+        width: 100%;
+        padding: 14px 20px 14px 50px;
+        border-radius: 30px;
+        border: 1px solid #e0eaf4;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        font-size: 1rem;
+        outline: none;
+        transition: box-shadow 0.2s;
+    }
+    .search-input:focus {
+        box-shadow: 0 4px 20px rgba(26,115,200,0.15);
+        border-color: #1a73c8;
+    }
+    .search-icon {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #8a9bb0;
+        font-size: 1.1rem;
+    }
+    .search-btn {
+        position: absolute;
+        right: 6px;
+        top: 6px;
+        bottom: 6px;
+        background: #1a73c8;
+        color: white;
+        border: none;
+        border-radius: 24px;
+        padding: 0 20px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .search-btn:hover { background: #135fa5; }
+
+    /* ══ NEWS CARD ══ */
+    .news-grid-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        text-decoration: none;
+        transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .news-grid-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    }
+    .news-grid-img-wrap {
+        width: 100%;
+        height: 220px;
+        overflow: hidden;
+    }
+    .news-grid-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s;
+    }
+    .news-grid-card:hover .news-grid-img-wrap img {
+        transform: scale(1.05);
+    }
+    .news-grid-body {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+    .news-grid-badge {
+        display: inline-block;
+        background-color: #fce4e4;
+        color: #d32f2f;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 20px;
+        margin-bottom: 14px;
+        align-self: flex-start;
+    }
+    .news-grid-title {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #1a2340;
+        margin-bottom: 12px;
+        line-height: 1.45;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* ══ PAGINATION ══ */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 40px;
+        margin-bottom: 60px;
+        gap: 8px;
+    }
+    .page-link-custom {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: white;
+        color: #1a2340;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+    }
+    .page-link-custom:hover {
+        background: #f0f4f8;
+        color: #1a73c8;
+    }
+    .page-link-custom.active {
+        background: #1a73c8;
+        color: white;
+        box-shadow: 0 4px 12px rgba(26,115,200,0.3);
+    }
+    .page-link-custom.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+</style>
+
+<div class="container container-xl pb-5 mb-5">
+    <div class="news-page-header">
+        <h1 class="news-page-title">Tin Tức Sức Khỏe</h1>
+        
+        <form method="get" asp-action="News" asp-controller="Home" class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" name="keyword" class="search-input" placeholder="Tìm kiếm bài viết, triệu chứng, từ khóa..." value="@keyword" />
+            <button type="submit" class="search-btn">Tìm kiếm</button>
+        </form>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <img src="/images/empty.png" style="width:120px; opacity:0.5; margin-bottom: 20px;" alt="Không tìm thấy bài viết" onerror="this.style.display='none'" />
+            <h4 class="text-muted">Không tìm thấy bài viết nào phù hợp.</h4>
+            @if (!string.IsNullOrEmpty(keyword))
+            {
+                <a asp-action="News" class="btn btn-outline-primary mt-3">Xem tất cả tin tức</a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var news in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <a asp-action="NewsDetail" asp-route-id="@news.Id" class="news-grid-card">
+                        <div class="news-grid-img-wrap">
+                            <img src="@(string.IsNullOrEmpty(news.ThumbnailUrl) ? "/images/banner.jpg" : news.ThumbnailUrl)" alt="@news.Title" />
+                        </div>
+                        <div class="news-grid-body">
+                            <span class="news-grid-badge">@news.PublishedAt?.ToString("dd/MM/yyyy")</span>
+                            <div class="news-grid-title">@news.Title</div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <div class="pagination-container">
+                <!-- Previous -->
+                <a asp-action="News" asp-route-keyword="@keyword" asp-route-page="@(currentPage - 1)" class="page-link-custom @(currentPage <= 1 ? "disabled" : "")">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+
+                <!-- Pages -->
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <a asp-action="News" asp-route-keyword="@keyword" asp-route-page="@i" class="page-link-custom @(i == currentPage ? "active" : "")">
+                        @i
+                    </a>
+                }
+
+                <!-- Next -->
+                <a asp-action="News" asp-route-keyword="@keyword" asp-route-page="@(currentPage + 1)" class="page-link-custom @(currentPage >= totalPages ? "disabled" : "")">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        }
+    }
+</div>

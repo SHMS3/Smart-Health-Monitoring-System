@@ -47,7 +47,7 @@ namespace SmartHealthMonitoring.Controllers
 
         [HttpGet]
         [Authorize(Roles = "0,1")]
-        public async Task<IActionResult> Index(int id, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Index(int id, int page = 1, int pageSize = 10, int diaryPage = 1, int diaryPageSize = 10, DateTime? searchDate = null, string activeTab = "clinical-content")
         {
             try
             {
@@ -127,10 +127,23 @@ namespace SmartHealthMonitoring.Controllers
                 // ========================================================
                 // TAB 2: Lấy danh sách Sổ tay tại nhà của bệnh nhân
                 // ========================================================
-                var dailyLogs = await _context.DailyVitalLogs
-                    .Where(d => d.PatientId == id && !d.IsDeleted)
-                    .OrderByDescending(d => d.LoggedAt)
-                    .Take(30) // Lấy 30 bản ghi gần nhất để giao diện load mượt
+                var dailyLogsQuery = _context.DailyVitalLogs
+                    .Where(d => d.PatientId == id && !d.IsDeleted);
+
+                if (searchDate.HasValue)
+                {
+                    var dateStart = searchDate.Value.Date;
+                    var dateEnd = searchDate.Value.Date.AddDays(1).AddTicks(-1);
+                    dailyLogsQuery = dailyLogsQuery.Where(d => d.LoggedAt >= dateStart && d.LoggedAt <= dateEnd);
+                }
+
+                dailyLogsQuery = dailyLogsQuery.OrderByDescending(d => d.LoggedAt);
+
+                int totalDiaryRecords = await dailyLogsQuery.CountAsync();
+
+                var dailyLogsItems = await dailyLogsQuery
+                    .Skip((diaryPage - 1) * diaryPageSize)
+                    .Take(diaryPageSize)
                     .Select(d => new DailyVitalLogViewModel
                     {
                         Id = d.Id,
@@ -162,7 +175,16 @@ namespace SmartHealthMonitoring.Controllers
                         PageSize = pageSize
                     },
 
-                    DailyLogs = dailyLogs
+                    DailyLogs = new PagedResult<DailyVitalLogViewModel>
+                    {
+                        Items = dailyLogsItems,
+                        TotalCount = totalDiaryRecords,
+                        Page = diaryPage,
+                        PageSize = diaryPageSize
+                    },
+                    
+                    SearchDate = searchDate,
+                    ActiveTab = activeTab
                 };
 
                 return View(viewModel);

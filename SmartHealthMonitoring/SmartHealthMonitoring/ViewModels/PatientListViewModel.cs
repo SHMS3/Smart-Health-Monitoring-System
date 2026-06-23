@@ -36,8 +36,11 @@ namespace SmartHealthMonitoring.ViewModels
         // Tab 1: Cận lâm sàng (Từ máy/Bác sĩ)
         public PagedResult<ClinicalRecordSummaryViewModel> Records { get; set; } = new();
 
-        // Tab 2: Sổ tay hằng ngày (Bệnh nhân tự nhập) - THÊM DÒNG NÀY
-        public List<DailyVitalLogViewModel> DailyLogs { get; set; } = new();
+        // Tab 2: Sổ tay hằng ngày (Bệnh nhân tự nhập)
+        public PagedResult<DailyVitalLogViewModel> DailyLogs { get; set; } = new();
+
+        public DateTime? SearchDate { get; set; }
+        public string ActiveTab { get; set; } = "clinical-content";
     }
 
     public class ClinicalRecordSummaryViewModel

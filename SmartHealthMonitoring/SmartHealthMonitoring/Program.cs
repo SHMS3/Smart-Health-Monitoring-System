@@ -110,11 +110,12 @@ namespace SmartHealthMonitoring
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+            app.UseSession(); // Session phải trước UseRouting để hoạt động đúng
+
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseSession();
 
             app.MapControllerRoute(
                  name: "areas",
