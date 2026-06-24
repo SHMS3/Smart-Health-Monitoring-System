@@ -5,5 +5,7 @@ namespace SmartHealthMonitoring.Interfaces
     public interface IAdminStatisticsService
     {
         Task<DashboardStatisticsViewModel> GetDashboardStatisticsAsync();
+        Task<HabitStatisticsViewModel> GetHabitStatisticsAsync();
     }
 }
+

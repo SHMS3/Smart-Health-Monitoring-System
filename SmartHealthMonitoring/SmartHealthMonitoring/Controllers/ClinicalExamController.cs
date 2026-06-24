@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;

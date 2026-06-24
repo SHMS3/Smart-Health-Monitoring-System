@@ -34,6 +34,14 @@ namespace SmartHealthMonitoring.Models
         // Nhóm 4: Yếu tố tâm lý (Psychological Factors)
         public bool StressHigh { get; set; }
 
+        // Nhóm 5: Thói quen tốt (Good Habits)
+        public bool ExerciseRegularly { get; set; } // Tập thể dục thường xuyên
+        public bool SleepEarly { get; set; } // Ngủ sớm, đủ giấc
+        public bool DrinkEnoughWater { get; set; } // Uống đủ nước
+        public bool DietBalanced { get; set; } // Ăn uống đủ chất
+        public bool RegularHealthCheck { get; set; } // Đi kiểm tra sức khỏe điều độ
+        public bool NoSubstanceAbuse { get; set; } // Không sử dụng các chất kích thích
+
         public DateTime UpdatedAt { get; set; }
 
         [ForeignKey("PatientId")]

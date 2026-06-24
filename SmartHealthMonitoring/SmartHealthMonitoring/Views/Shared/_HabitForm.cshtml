@@ -1,0 +1,228 @@
+@model SmartHealthMonitoring.ViewModels.HabitViewModel
+
+<form method="post" asp-action="UpdateHabits" asp-controller="Home" id="habitForm">
+	@Html.AntiForgeryToken()
+	<input type="hidden" name="source" value="@ViewBag.Source" />
+
+	<div class="habit-three-col">
+
+		<!-- ══ CỘT 1: Nhóm 1 + 2 ══ -->
+		<div class="habit-col">
+			<div class="habit-col-header" style="background:#fff8f0;color:#c45e00;border-bottom:1.5px solid #ffd59e;">
+				<i class="fas fa-utensils"></i>
+				<span>Ăn uống &amp; Sinh hoạt</span>
+			</div>
+			<div class="habit-col-body">
+
+				<div class="habit-group">
+					<div class="habit-group-title">
+						<i class="fas fa-utensils" style="color:#f57c00;"></i>&nbsp; Nhóm 1 — Ăn uống
+					</div>
+					<div class="habit-checks">
+						<label class="habit-check-item @(Model.DietSalty ? "checked" : "")">
+							<input type="checkbox" name="DietSalty" value="true" @(Model.DietSalty ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Ăn mặn</div><div class="habit-check-sub">Hay ăn thức ăn nhiều muối, nước mắm, đồ kho</div><span class="habit-risk-badge" style="background:#fff3e0;color:#f57c00;"><i class="fas fa-exclamation-triangle"></i> Tăng huyết áp</span></div>
+						</label>
+						<label class="habit-check-item @(Model.DietHighFat ? "checked" : "")">
+							<input type="checkbox" name="DietHighFat" value="true" @(Model.DietHighFat ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Nhiều đồ chiên rán, thức ăn nhanh</div><div class="habit-check-sub">Hay ăn đồ chiên, fast food, nhiều dầu mỡ</div><span class="habit-risk-badge" style="background:#fce4ec;color:#e53935;"><i class="fas fa-exclamation-triangle"></i> Xơ vữa động mạch</span></div>
+						</label>
+						<label class="habit-check-item @(Model.DietHighSugar ? "checked" : "")">
+							<input type="checkbox" name="DietHighSugar" value="true" @(Model.DietHighSugar ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Nhiều đường, nước ngọt có gas</div><div class="habit-check-sub">Hay uống nước ngọt, trà sữa, đồ ngọt nhiều</div><span class="habit-risk-badge" style="background:#fce4ec;color:#e53935;"><i class="fas fa-exclamation-triangle"></i> Béo phì, tiểu đường</span></div>
+						</label>
+						<label class="habit-check-item @(Model.DietLowFiber ? "checked" : "")">
+							<input type="checkbox" name="DietLowFiber" value="true" @(Model.DietLowFiber ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Ít ăn rau xanh, trái cây</div><div class="habit-check-sub">Bữa ăn ít rau củ, không ăn trái cây mỗi ngày</div><span class="habit-risk-badge" style="background:#fff3e0;color:#f57c00;"><i class="fas fa-exclamation-triangle"></i> Thiếu chất chống oxy hóa</span></div>
+						</label>
+						<label class="habit-check-item @(Model.AlcoholHeavy ? "checked" : "")">
+							<input type="checkbox" name="AlcoholHeavy" value="true" @(Model.AlcoholHeavy ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Uống nhiều rượu bia</div><div class="habit-check-sub">Uống thường xuyên hoặc với lượng lớn</div><span class="habit-risk-badge" style="background:#fce4ec;color:#e53935;"><i class="fas fa-exclamation-triangle"></i> Rối loạn nhịp tim</span></div>
+						</label>
+						<label class="habit-check-item @(Model.CaffeineSpike ? "checked" : "")">
+							<input type="checkbox" name="CaffeineSpike" value="true" @(Model.CaffeineSpike ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Lạm dụng cà phê, nước tăng lực</div><div class="habit-check-sub">Uống nhiều hơn 3-4 ly cà phê/ngày hoặc hay dùng nước tăng lực</div><span class="habit-risk-badge" style="background:#fff3e0;color:#f57c00;"><i class="fas fa-exclamation-triangle"></i> Tăng nhịp tim</span></div>
+						</label>
+					</div>
+				</div>
+
+				<div class="habit-group" style="margin-bottom:0;">
+					<div class="habit-group-title">
+						<i class="fas fa-bed" style="color:#1a73c8;"></i>&nbsp; Nhóm 2 — Sinh hoạt
+					</div>
+					<div class="habit-checks">
+						<label class="habit-check-item @(Model.LifestyleSedentary ? "checked" : "")">
+							<input type="checkbox" name="LifestyleSedentary" value="true" @(Model.LifestyleSedentary ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Ít vận động thể dục</div><div class="habit-check-sub">Không đi bộ, tập thể dục hay vận động đều đặn</div><span class="habit-risk-badge" style="background:#fce4ec;color:#e53935;"><i class="fas fa-exclamation-triangle"></i> Tăng nguy cơ bệnh tim</span></div>
+						</label>
+						<label class="habit-check-item @(Model.LifestyleSitLong ? "checked" : "")">
+							<input type="checkbox" name="LifestyleSitLong" value="true" @(Model.LifestyleSitLong ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Ngồi quá lâu (máy tính)</div><div class="habit-check-sub">Làm việc nhiều giờ liên tục không đứng dậy vận động</div><span class="habit-risk-badge" style="background:#fff3e0;color:#f57c00;"><i class="fas fa-exclamation-triangle"></i> Giảm tuần hoàn máu</span></div>
+						</label>
+						<label class="habit-check-item @(Model.SleepDeprived ? "checked" : "")">
+							<input type="checkbox" name="SleepDeprived" value="true" @(Model.SleepDeprived ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Thức khuya, thiếu ngủ</div><div class="habit-check-sub">Ngủ ít hơn 6 tiếng/ngày hoặc ngủ thất thường</div><span class="habit-risk-badge" style="background:#fce4ec;color:#e53935;"><i class="fas fa-exclamation-triangle"></i> Ảnh hưởng huyết áp</span></div>
+						</label>
+						<label class="habit-check-item @(Model.NoHealthCheck ? "checked" : "")">
+							<input type="checkbox" name="NoHealthCheck" value="true" @(Model.NoHealthCheck ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Không khám sức khỏe định kỳ</div><div class="habit-check-sub">Không đi khám sức khỏe tổng quát ít nhất 1 lần/năm</div><span class="habit-risk-badge" style="background:#fff3e0;color:#f57c00;"><i class="fas fa-exclamation-triangle"></i> Bỏ sót bệnh nền</span></div>
+						</label>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<!-- ══ CỘT 2: Nhóm 3 + 4 ══ -->
+		<div class="habit-col">
+			<div class="habit-col-header" style="background:#fff5f5;color:#c62828;border-bottom:1.5px solid #ffcdd2;">
+				<i class="fas fa-smoking-ban"></i>
+				<span>Hành vi có hại &amp; Tâm lý</span>
+			</div>
+			<div class="habit-col-body">
+
+				<div class="habit-group">
+					<div class="habit-group-title">
+						<i class="fas fa-smoking-ban" style="color:#e53935;"></i>&nbsp; Nhóm 3 — Hành vi Có hại
+					</div>
+					<div class="habit-checks">
+						<label class="habit-check-item @(Model.SmokeActive ? "checked" : "")">
+							<input type="checkbox" name="SmokeActive" value="true" @(Model.SmokeActive ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Hút thuốc lá</div><div class="habit-check-sub">Đang hút hoặc mới bỏ dưới 1 năm</div><span class="habit-risk-badge" style="background:#fce4ec;color:#e53935;"><i class="fas fa-exclamation-triangle"></i> Nguy cơ cao nhất</span></div>
+						</label>
+						<label class="habit-check-item @(Model.SmokePassive ? "checked" : "")">
+							<input type="checkbox" name="SmokePassive" value="true" @(Model.SmokePassive ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Tiếp xúc khói thuốc thụ động</div><div class="habit-check-sub">Thường xuyên ở trong môi trường có người hút thuốc</div><span class="habit-risk-badge" style="background:#fff3e0;color:#f57c00;"><i class="fas fa-exclamation-triangle"></i> Nguy cơ tim mạch</span></div>
+						</label>
+						<label class="habit-check-item @(Model.SelfMedication ? "checked" : "")">
+							<input type="checkbox" name="SelfMedication" value="true" @(Model.SelfMedication ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Tự ý dùng thuốc không rõ nguồn gốc</div><div class="habit-check-sub">Tự mua thuốc không kê đơn hoặc TPCN không rõ nguồn gốc</div><span class="habit-risk-badge" style="background:#fff3e0;color:#f57c00;"><i class="fas fa-exclamation-triangle"></i> Ảnh hưởng tim mạch</span></div>
+						</label>
+					</div>
+				</div>
+
+				<div class="habit-group" style="margin-bottom:0;">
+					<div class="habit-group-title">
+						<i class="fas fa-brain" style="color:#6366f1;"></i>&nbsp; Nhóm 4 — Tâm lý
+					</div>
+					<div class="habit-checks">
+						<label class="habit-check-item @(Model.StressHigh ? "checked" : "")">
+							<input type="checkbox" name="StressHigh" value="true" @(Model.StressHigh ? "checked" : "") onchange="toggleHabit(this,'checked')" />
+							<div><div class="habit-check-label">Căng thẳng, stress kéo dài</div><div class="habit-check-sub">Áp lực công việc, lo âu mãn tính, không có thời gian thư giãn</div><span class="habit-risk-badge" style="background:#fce4ec;color:#e53935;"><i class="fas fa-exclamation-triangle"></i> Tăng nguy cơ đau tim</span></div>
+						</label>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<!-- ══ CỘT 3: Nhóm 5 ══ -->
+		<div class="habit-col">
+			<div class="habit-col-header" style="background:#f0fdf4;color:#166534;border-bottom:1.5px solid #bbf7d0;">
+				<i class="fas fa-seedling"></i>
+				<span>Thói quen tốt</span>
+			</div>
+			<div class="habit-col-body">
+				<div class="habit-checks">
+					<label class="habit-check-item habit-check-item--good @(Model.ExerciseRegularly ? "checked-good" : "")">
+						<input type="checkbox" name="ExerciseRegularly" value="true" @(Model.ExerciseRegularly ? "checked" : "") onchange="toggleHabit(this,'checked-good')" />
+						<div><div class="habit-check-label">Tập thể dục thường xuyên</div><div class="habit-check-sub">Tập ít nhất 30 phút/ngày, 3-5 ngày/tuần</div><span class="habit-risk-badge" style="background:#dcfce7;color:#166534;"><i class="fas fa-check-circle"></i> Tốt cho tim mạch</span></div>
+					</label>
+					<label class="habit-check-item habit-check-item--good @(Model.SleepEarly ? "checked-good" : "")">
+						<input type="checkbox" name="SleepEarly" value="true" @(Model.SleepEarly ? "checked" : "") onchange="toggleHabit(this,'checked-good')" />
+						<div><div class="habit-check-label">Ngủ sớm, đủ giấc</div><div class="habit-check-sub">Ngủ 7-8 tiếng/ngày, đi ngủ trước 11h đêm</div><span class="habit-risk-badge" style="background:#dcfce7;color:#166534;"><i class="fas fa-check-circle"></i> Phục hồi năng lượng</span></div>
+					</label>
+					<label class="habit-check-item habit-check-item--good @(Model.DrinkEnoughWater ? "checked-good" : "")">
+						<input type="checkbox" name="DrinkEnoughWater" value="true" @(Model.DrinkEnoughWater ? "checked" : "") onchange="toggleHabit(this,'checked-good')" />
+						<div><div class="habit-check-label">Uống đủ nước</div><div class="habit-check-sub">Uống 1.5 - 2 lít nước lọc mỗi ngày</div><span class="habit-risk-badge" style="background:#dcfce7;color:#166534;"><i class="fas fa-check-circle"></i> Thanh lọc cơ thể</span></div>
+					</label>
+					<label class="habit-check-item habit-check-item--good @(Model.DietBalanced ? "checked-good" : "")">
+						<input type="checkbox" name="DietBalanced" value="true" @(Model.DietBalanced ? "checked" : "") onchange="toggleHabit(this,'checked-good')" />
+						<div><div class="habit-check-label">Ăn uống đủ chất</div><div class="habit-check-sub">Chế độ ăn nhiều rau xanh, cân bằng dinh dưỡng</div><span class="habit-risk-badge" style="background:#dcfce7;color:#166534;"><i class="fas fa-check-circle"></i> Tăng sức đề kháng</span></div>
+					</label>
+					<label class="habit-check-item habit-check-item--good @(Model.RegularHealthCheck ? "checked-good" : "")">
+						<input type="checkbox" name="RegularHealthCheck" value="true" @(Model.RegularHealthCheck ? "checked" : "") onchange="toggleHabit(this,'checked-good')" />
+						<div><div class="habit-check-label">Đi kiểm tra sức khỏe điều độ</div><div class="habit-check-sub">Khám tổng quát định kỳ ít nhất 1-2 lần/năm</div><span class="habit-risk-badge" style="background:#dcfce7;color:#166534;"><i class="fas fa-check-circle"></i> Ngăn ngừa bệnh tật</span></div>
+					</label>
+					<label class="habit-check-item habit-check-item--good @(Model.NoSubstanceAbuse ? "checked-good" : "")">
+						<input type="checkbox" name="NoSubstanceAbuse" value="true" @(Model.NoSubstanceAbuse ? "checked" : "") onchange="toggleHabit(this,'checked-good')" />
+						<div><div class="habit-check-label">Không sử dụng các chất kích thích</div><div class="habit-check-sub">Không dùng ma túy, cần sa, thuốc lắc...</div><span class="habit-risk-badge" style="background:#dcfce7;color:#166534;"><i class="fas fa-check-circle"></i> Bảo vệ thần kinh</span></div>
+					</label>
+				</div>
+			</div>
+		</div>
+
+	</div><!-- end habit-three-col -->
+
+	<div class="d-flex align-items-center gap-3 pt-3 mt-3" style="border-top:1px solid #e0eaf4;">
+		<button type="submit" class="btn btn-danger px-4">
+			<i class="fas fa-save me-2"></i>Lưu thói quen
+		</button>
+		<span style="font-size:.8rem;color:#8a9bb0;">
+			<i class="fas fa-info-circle me-1"></i>Thông tin này chỉ được AI sử dụng để tư vấn cho bạn.
+		</span>
+	</div>
+</form>
+
+<script>
+	function toggleHabit(checkbox, cls) {
+		const item = checkbox.closest('.habit-check-item');
+		if (checkbox.checked) { item.classList.add(cls); } else { item.classList.remove(cls); }
+	}
+</script>
+
+<style>
+	.habit-three-col {
+		display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+		gap: 20px;
+		align-items: start;
+		margin-bottom: 24px;
+	}
+	@@media (max-width: 900px) {
+		.habit-three-col { grid-template-columns: 1fr 1fr; }
+	}
+	@@media (max-width: 580px) {
+		.habit-three-col { grid-template-columns: 1fr; }
+	}
+
+	.habit-col {
+		border: 1.5px solid #e0eaf4;
+		border-radius: 14px;
+		overflow: hidden;
+	}
+	.habit-col-header {
+		display: flex; align-items: center; gap: 10px;
+		padding: 12px 18px;
+		font-weight: 700; font-size: 0.88rem;
+	}
+	.habit-col-body { padding: 18px; }
+
+	.habit-group { margin-bottom: 18px; }
+	.habit-group-title {
+		font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+		letter-spacing: 0.5px; color: #8a9bb0; margin-bottom: 10px;
+		display: flex; align-items: center; gap: 6px;
+	}
+	.habit-checks { display: grid; grid-template-columns: 1fr; gap: 8px; }
+
+	.habit-check-item {
+		display: flex; align-items: flex-start; gap: 10px;
+		background: #f8fbff; border: 1.5px solid #e0eaf4;
+		border-radius: 10px; padding: 10px 12px;
+		cursor: pointer; transition: all .2s;
+	}
+	.habit-check-item:hover    { border-color: #1a73c8; background: #eef6ff; }
+	.habit-check-item.checked  { border-color: #e53935; background: #fff5f5; }
+
+	.habit-check-item--good                { background: #f8fff8; border-color: #d1fae5; }
+	.habit-check-item--good:hover          { border-color: #10b981; background: #ecfdf5; }
+	.habit-check-item--good.checked-good   { border-color: #10b981; background: #d1fae5; }
+
+	.habit-check-item input[type=checkbox]           { margin-top: 2px; width: 16px; height: 16px; accent-color: #e53935; flex-shrink: 0; }
+	.habit-check-item--good input[type=checkbox]     { accent-color: #10b981; }
+
+	.habit-check-label  { font-size: 0.84rem; color: #1a2340; font-weight: 500; line-height: 1.4; }
+	.habit-check-sub    { font-size: 0.74rem; color: #8a9bb0; margin-top: 2px; }
+	.habit-risk-badge   { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 4px; }
+</style>

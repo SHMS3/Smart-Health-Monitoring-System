@@ -2,11 +2,12 @@ using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Minio;
-using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.DI; // Gọi namespace DI của bạn
 using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.Hubs;
 using System;
+using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Context;
 
 namespace SmartHealthMonitoring
 {
@@ -49,7 +50,7 @@ namespace SmartHealthMonitoring
 
             // 4c. Memory Cache & News Scraper Service
             builder.Services.AddMemoryCache();
-            builder.Services.AddScoped<SmartHealthMonitoring.Services.INewsScraperService, SmartHealthMonitoring.Services.NewsScraperService>();
+            builder.Services.AddScoped<INewsScraperService, SmartHealthMonitoring.Services.NewsScraperService>();
 
 
             // ====================================================================
@@ -109,11 +110,12 @@ namespace SmartHealthMonitoring
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+            app.UseSession(); // Session phải trước UseRouting để hoạt động đúng
+
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseSession();
 
             app.MapControllerRoute(
                  name: "areas",

@@ -4,77 +4,120 @@
     ViewData["Title"] = "Chỉnh sửa thông tin Bác sĩ";
 }
 
+<style>
+    .modern-form-label {
+        font-weight: 600;
+        color: #334155;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .modern-input {
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        background-color: #f8fafc;
+    }
+    
+    .modern-input:focus {
+        background-color: #fff;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+    }
+    
+    .required-star {
+        color: var(--color-danger);
+        margin-left: 3px;
+    }
+</style>
+
 <div class="mb-4">
-    <a asp-action="Index" class="text-decoration-none text-muted"><i class="fas fa-arrow-left me-2"></i>Quay lại danh sách</a>
+    <a asp-action="Index" class="btn btn-sm btn-light rounded-pill px-3 shadow-sm border fw-medium text-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+    </a>
 </div>
 
-<div class="row">
-    <div class="col-lg-6">
-        <div class="card border-0 shadow-sm rounded-4">
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="admin-card p-0 overflow-hidden">
             <div class="card-header bg-white border-bottom p-4">
-                <h5 class="fw-bold mb-0">Chỉnh sửa thông tin Bác sĩ</h5>
-                <p class="text-muted small mb-0 mt-1">Cập nhật thông tin tài khoản bác sĩ.</p>
+                <h4 class="fw-bold mb-1" style="color: #0f172a; font-family: 'Outfit', sans-serif;">
+                    <i class="fas fa-user-edit text-primary me-2"></i>Cập nhật Thông tin Bác sĩ
+                </h4>
+                <p class="text-muted small mb-0 mt-2">Chỉnh sửa hồ sơ thông tin cá nhân và chuyên môn của bác sĩ trong hệ thống.</p>
             </div>
-            <div class="card-body p-4">
+            
+            <div class="card-body p-4 p-md-5">
                 <form asp-action="Edit" method="post">
                     <input type="hidden" asp-for="DoctorId" />
                     <input type="hidden" asp-for="UserId" />
 
-                    <div class="mb-3">
-                        <label asp-for="FullName" class="form-label fw-medium text-dark">Họ và tên <span class="text-danger">*</span></label>
-                        <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên bác sĩ..." />
-                        <span asp-validation-for="FullName" class="text-danger small"></span>
-                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label asp-for="FullName" class="modern-form-label">Họ và tên <span class="required-star">*</span></label>
+                            <input asp-for="FullName" class="form-control modern-input" placeholder="Nhập họ tên đầy đủ..." />
+                            <span asp-validation-for="FullName" class="text-danger small mt-1 d-block fw-medium"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label fw-medium text-dark">Địa chỉ Email <span class="text-danger">*</span></label>
-                        <input asp-for="Email" type="email" class="form-control" placeholder="name@hospital.com" />
-                        <span asp-validation-for="Email" class="text-danger small"></span>
-                    </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="modern-form-label">Địa chỉ Email <span class="required-star">*</span></label>
+                            <input asp-for="Email" type="email" class="form-control modern-input" placeholder="name@hospital.com" />
+                            <span asp-validation-for="Email" class="text-danger small mt-1 d-block fw-medium"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="DateOfBirth" class="form-label fw-medium text-dark">Ngày sinh</label>
-                        <input asp-for="DateOfBirth" type="date" class="form-control" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" />
-                        <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
-                    </div>
+                        <div class="col-md-6">
+                            <label asp-for="Specialty" class="modern-form-label">Chuyên khoa khám <span class="required-star">*</span></label>
+                            <input asp-for="Specialty" class="form-control modern-input" placeholder="Ví dụ: Tim mạch, Nội tiết..." />
+                            <span asp-validation-for="Specialty" class="text-danger small mt-1 d-block fw-medium"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Sex" class="form-label fw-medium text-dark">Giới tính</label>
-                        <select asp-for="Sex" class="form-select">
-                            <option value="">-- Chọn giới tính --</option>
-                            <option value="1">Nam</option>
-                            <option value="0">Nữ</option>
-                        </select>
-                        <span asp-validation-for="Sex" class="text-danger small"></span>
-                    </div>
+                        <div class="col-md-6">
+                            <label asp-for="Sex" class="modern-form-label">Giới tính</label>
+                            <select asp-for="Sex" class="form-select modern-input">
+                                <option value="">-- Chọn giới tính --</option>
+                                <option value="1">Nam</option>
+                                <option value="0">Nữ</option>
+                            </select>
+                            <span asp-validation-for="Sex" class="text-danger small mt-1 d-block fw-medium"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Specialty" class="form-label fw-medium text-dark">Chuyên khoa khám <span class="text-danger">*</span></label>
-                        <input asp-for="Specialty" class="form-control" placeholder="Ví dụ: Tim mạch, Nội tiết..." />
-                        <span asp-validation-for="Specialty" class="text-danger small"></span>
-                    </div>
+                        <div class="col-md-6">
+                            <label asp-for="DateOfBirth" class="modern-form-label">Ngày sinh</label>
+                            <input asp-for="DateOfBirth" type="date" class="form-control modern-input" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" />
+                            <span asp-validation-for="DateOfBirth" class="text-danger small mt-1 d-block fw-medium"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="CitizenId" class="form-label fw-medium text-dark">Số CCCD / CMND</label>
-                        <input asp-for="CitizenId" class="form-control" maxlength="12" placeholder="Nhập 12 chữ số CCCD..." />
-                        <span asp-validation-for="CitizenId" class="text-danger small"></span>
-                    </div>
+                        <div class="col-md-6">
+                            <label asp-for="CitizenId" class="modern-form-label">Số CCCD / CMND</label>
+                            <input asp-for="CitizenId" class="form-control modern-input" maxlength="12" placeholder="Nhập 12 chữ số..." />
+                            <span asp-validation-for="CitizenId" class="text-danger small mt-1 d-block fw-medium"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="PracticeLicense" class="form-label fw-medium text-dark">Giấy phép hành nghề</label>
-                        <input asp-for="PracticeLicense" class="form-control" placeholder="Nhập số giấy phép hành nghề..." />
-                        <span asp-validation-for="PracticeLicense" class="text-danger small"></span>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="form-check form-switch">
-                            <input asp-for="IsOnShift" class="form-check-input" type="checkbox" role="switch" id="isOnShiftSwitch">
-                            <label class="form-check-label fw-medium text-dark" for="isOnShiftSwitch">Đang trong ca trực (On Shift)</label>
+                        <div class="col-md-12">
+                            <label asp-for="PracticeLicense" class="modern-form-label">Giấy phép hành nghề</label>
+                            <input asp-for="PracticeLicense" class="form-control modern-input" placeholder="Nhập số giấy phép hành nghề (nếu có)..." />
+                            <span asp-validation-for="PracticeLicense" class="text-danger small mt-1 d-block fw-medium"></span>
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <div class="admin-card bg-light border-0 d-flex align-items-center p-3 mb-2">
+                                <div class="form-check form-switch mb-0">
+                                    <input asp-for="IsOnShift" class="form-check-input fs-5" type="checkbox" role="switch" id="isOnShiftSwitch">
+                                    <label class="form-check-label fw-bold text-dark ms-2 pt-1" for="isOnShiftSwitch">Bác sĩ Đang trong Ca trực (On Shift)</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-medium shadow-sm">Lưu thay đổi</button>
+                    <hr class="my-4 border-secondary opacity-25">
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Index" class="btn btn-light rounded-pill px-4 fw-medium border">Hủy bỏ</a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow" style="background-color: var(--color-primary-dark); border: none;">
+                            <i class="fas fa-save me-2"></i> Lưu thay đổi
+                        </button>
                     </div>
                 </form>
             </div>

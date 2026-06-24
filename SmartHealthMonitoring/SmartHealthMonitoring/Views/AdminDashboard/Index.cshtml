@@ -1,62 +1,158 @@
-﻿@model SmartHealthMonitoring.ViewModels.Admin.AdminDashboardViewModel
+@model SmartHealthMonitoring.ViewModels.Admin.AdminDashboardViewModel
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Dashboard Tổng quan";
 }
 
-<h3 class="fw-bold mb-4 text-dark">Bảng Điều Khiển</h3>
+<style>
+    /* Premium Stat Cards */
+    .stat-card {
+        border-radius: 16px;
+        padding: 24px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 140px;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 25px -5px rgba(0,0,0,0.15);
+    }
 
-<div class="row g-4 mb-4">
+    .stat-card.blue { background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%); }
+    .stat-card.green { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
+    .stat-card.purple { background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%); }
+    .stat-card.red { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); }
+
+    .stat-card-icon {
+        position: absolute;
+        right: -15px;
+        bottom: -20px;
+        font-size: 7rem;
+        color: rgba(255,255,255,0.15);
+        transform: rotate(-10deg);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover .stat-card-icon {
+        transform: rotate(0deg) scale(1.1);
+    }
+
+    .stat-card-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        opacity: 0.9;
+        margin-bottom: 8px;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .stat-card-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0;
+        line-height: 1;
+        font-family: 'Outfit', sans-serif;
+    }
+</style>
+
+<div class="page-header">
+    <h1 class="page-title">Bảng Điều Khiển Tổng Quan</h1>
+    <p class="text-muted mt-2">Theo dõi các chỉ số quan trọng của hệ thống SmartHealth</p>
+</div>
+
+<div class="row g-4 mb-5">
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
-            <div class="text-primary mb-2"><i class="fas fa-user-md fa-2x"></i></div>
-            <h2 class="fw-bold text-dark mb-0">@Model.TotalDoctors</h2>
-            <p class="text-muted small mb-0">Bác sĩ hoạt động</p>
+        <div class="stat-card blue">
+            <i class="fas fa-user-md stat-card-icon"></i>
+            <div>
+                <div class="stat-card-title">BÁC SĨ HOẠT ĐỘNG</div>
+                <div class="stat-card-value">@Model.TotalDoctors</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
-            <div class="text-success mb-2"><i class="fas fa-users fa-2x"></i></div>
-            <h2 class="fw-bold text-dark mb-0">@Model.TotalPatients</h2>
-            <p class="text-muted small mb-0">Bệnh nhân</p>
+        <div class="stat-card green">
+            <i class="fas fa-users stat-card-icon"></i>
+            <div>
+                <div class="stat-card-title">BỆNH NHÂN</div>
+                <div class="stat-card-value">@Model.TotalPatients</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
-            <div class="text-info mb-2"><i class="fas fa-notes-medical fa-2x"></i></div>
-            <h2 class="fw-bold text-dark mb-0">@Model.TotalClinicalRecords</h2>
-            <p class="text-muted small mb-0">Hồ sơ Cận lâm sàng</p>
+        <div class="stat-card purple">
+            <i class="fas fa-file-medical-alt stat-card-icon"></i>
+            <div>
+                <div class="stat-card-title">HỒ SƠ LÂM SÀNG</div>
+                <div class="stat-card-value">@Model.TotalClinicalRecords</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-danger bg-opacity-10">
-            <div class="text-danger mb-2"><i class="fas fa-flag fa-2x"></i></div>
-            <h2 class="fw-bold text-danger mb-0">@Model.TotalPendingAlerts</h2>
-            <p class="text-danger small mb-0 fw-medium">Cảnh báo Tồn đọng</p>
+        <div class="stat-card red">
+            <i class="fas fa-exclamation-triangle stat-card-icon"></i>
+            <div>
+                <div class="stat-card-title">CẢNH BÁO TỒN ĐỌNG</div>
+                <div class="stat-card-value">@Model.TotalPendingAlerts</div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="card border-0 shadow-sm rounded-4">
-    <div class="card-header bg-white border-bottom p-4">
-        <h6 class="fw-bold mb-0"><i class="fas fa-bell text-warning me-2"></i> Cảnh báo Cờ đỏ Mới nhất (Top 5)</h6>
+<div class="admin-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold m-0" style="color: #0f172a; font-family: 'Outfit', sans-serif;">
+            <i class="fas fa-bell text-danger me-2"></i> Cảnh báo Cờ đỏ Mới nhất (Top 5)
+        </h5>
+        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3">Xem tất cả</button>
     </div>
-    <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light text-muted small">
+    
+    <div class="table-responsive">
+        <table class="modern-table">
+            <thead>
                 <tr>
-                    <th class="ps-4">Tên Bệnh nhân</th>
+                    <th>Tên Bệnh nhân</th>
                     <th>Mức độ</th>
-                    <th class="text-end pe-4">Thời gian quét (FlaggedAt)</th>
+                    <th class="text-end">Thời gian quét (FlaggedAt)</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model.RecentAlerts)
+                @if (Model.RecentAlerts != null && Model.RecentAlerts.Any())
+                {
+                    foreach (var item in Model.RecentAlerts)
+                    {
+                        <tr>
+                            <td class="fw-bold" style="color: #0f172a;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar" style="width:32px; height:32px; font-size:0.9rem;">
+                                        @(item.PatientName.Substring(0,1).ToUpper())
+                                    </div>
+                                    @item.PatientName
+                                </div>
+                            </td>
+                            <td>
+                                <span class="modern-badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                                    <i class="fas fa-circle" style="font-size: 6px; vertical-align: middle; margin-right: 4px;"></i> @item.WarningLevel
+                                </span>
+                            </td>
+                            <td class="text-end text-muted">@item.FlaggedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        </tr>
+                    }
+                }
+                else
                 {
                     <tr>
-                        <td class="ps-4 fw-bold text-dark">@item.PatientName</td>
-                        <td><span class="badge bg-danger rounded-pill px-3">@item.WarningLevel</span></td>
-                        <td class="text-end pe-4 text-muted small">@item.FlaggedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td colspan="3" class="text-center py-4 text-muted">
+                            <i class="fas fa-check-circle text-success fs-4 mb-2 d-block"></i>
+                            Không có cảnh báo cờ đỏ nào gần đây.
+                        </td>
                     </tr>
                 }
             </tbody>

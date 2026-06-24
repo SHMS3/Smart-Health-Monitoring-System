@@ -1300,6 +1300,67 @@ namespace SmartHealthMonitoring.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SmartHealthMonitoring.Models.HealthNewsPost", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthorName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(sysutcdatetime())");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("Manual");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Draft");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("HealthNewsPosts", (string)null);
+                });
+
             modelBuilder.Entity("SmartHealthMonitoring.Models.Patient", b =>
                 {
                     b.Property<int>("Id")
@@ -1460,6 +1521,9 @@ namespace SmartHealthMonitoring.Migrations
                     b.Property<bool>("CaffeineSpike")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("DietBalanced")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("DietHighFat")
                         .HasColumnType("bit");
 
@@ -1472,6 +1536,12 @@ namespace SmartHealthMonitoring.Migrations
                     b.Property<bool>("DietSalty")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("DrinkEnoughWater")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ExerciseRegularly")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("LifestyleSedentary")
                         .HasColumnType("bit");
 
@@ -1481,13 +1551,22 @@ namespace SmartHealthMonitoring.Migrations
                     b.Property<bool>("NoHealthCheck")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("NoSubstanceAbuse")
+                        .HasColumnType("bit");
+
                     b.Property<int>("PatientId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("RegularHealthCheck")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("SelfMedication")
                         .HasColumnType("bit");
 
                     b.Property<bool>("SleepDeprived")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SleepEarly")
                         .HasColumnType("bit");
 
                     b.Property<bool>("SmokeActive")

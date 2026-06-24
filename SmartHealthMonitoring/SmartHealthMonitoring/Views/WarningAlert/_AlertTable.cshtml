@@ -122,8 +122,16 @@
                         </td>
 
                         <td>
-                            
-                        <td>
+                            <a asp-action="Details"
+                               asp-route-id="@item.Id"
+                               class="btn btn-sm btn-outline-primary mb-2">
+
+                                <i class="fas fa-eye"></i>
+                                Chi tiết
+
+                            </a>
+
+                            <br />
 
                             
                             @if (item.Status == 0)

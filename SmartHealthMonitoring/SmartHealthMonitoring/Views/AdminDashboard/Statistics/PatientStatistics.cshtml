@@ -1,0 +1,338 @@
+
+@model SmartHealthMonitoring.ViewModels.Admin.DashboardStatisticsViewModel
+
+@{
+    ViewData["Title"] = "Thống kê Nhân khẩu học & Dịch tễ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    /* Reusing premium stat cards from Index */
+    .stat-card {
+        border-radius: 16px;
+        padding: 24px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 140px;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 25px -5px rgba(0,0,0,0.15);
+    }
+
+    .stat-card.blue { background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%); }
+    .stat-card.red { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); }
+
+    .stat-card-icon {
+        position: absolute;
+        right: -15px;
+        bottom: -20px;
+        font-size: 7rem;
+        color: rgba(255,255,255,0.15);
+        transform: rotate(-10deg);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover .stat-card-icon {
+        transform: rotate(0deg) scale(1.1);
+    }
+
+    .stat-card-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        opacity: 0.9;
+        margin-bottom: 8px;
+        font-family: 'Outfit', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-card-value {
+        font-size: 3rem;
+        font-weight: 800;
+        margin: 0;
+        line-height: 1;
+        font-family: 'Outfit', sans-serif;
+    }
+    
+    .chart-container-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chart-header {
+        padding: 24px 24px 0 24px;
+        border-bottom: none;
+        background: transparent;
+    }
+    
+    .chart-header-title {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .chart-body {
+        padding: 24px;
+        flex: 1;
+    }
+    
+    .chart-footer {
+        padding: 20px 24px;
+        background: #f8fafc;
+        border-top: 1px solid #f1f5f9;
+        border-radius: 0 0 16px 16px;
+    }
+</style>
+
+<div class="page-header">
+    <h1 class="page-title">Thống kê Nhân khẩu học & Lâm sàng</h1>
+    <p class="text-muted mt-2">Tổng quan về tệp bệnh nhân và các vấn đề sức khỏe phổ biến.</p>
+</div>
+
+<!-- Cảnh báo/Chỉ số nổi bật -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="stat-card blue">
+            <i class="fas fa-heartbeat stat-card-icon"></i>
+            <div>
+                <div class="stat-card-title">Cholesterol trung bình (Tuổi 40-50)</div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <div class="stat-card-value">@Model.Symptoms.AverageCholesterolAge40To50</div>
+                    <span style="font-weight: 600; opacity: 0.8">mg/dl</span>
+                </div>
+            </div>
+            <div class="mt-3" style="font-size: 0.85rem; opacity: 0.9;">
+                <i class="fas fa-info-circle me-1"></i> Định hướng chiến dịch tầm soát mỡ máu cho tuổi trung niên.
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="stat-card red">
+            <i class="fas fa-tint stat-card-icon"></i>
+            <div>
+                <div class="stat-card-title">Đường huyết vượt mức (>120mg/dl)</div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <div class="stat-card-value">@Model.Symptoms.FastingBsHighRate</div>
+                    <span style="font-weight: 600; opacity: 0.8">%</span>
+                </div>
+            </div>
+            <div class="mt-3" style="font-size: 0.85rem; opacity: 0.9;">
+                <i class="fas fa-exclamation-triangle me-1"></i> Tỷ lệ bệnh nhân nguy cơ cao mắc kèm đái tháo đường.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Biểu đồ -->
+<div class="row g-4 mb-4">
+    <!-- Biểu đồ Giới tính -->
+    <div class="col-lg-4 col-md-6">
+        <div class="chart-container-card">
+            <div class="chart-header text-center">
+                <h5 class="chart-header-title">Phân bố Giới tính</h5>
+            </div>
+            <div class="chart-body">
+                <canvas id="sexChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <p class="text-muted fw-bold mb-1" style="font-size:0.8rem;">
+                    <i class="fas fa-circle-info text-primary me-1"></i> Ý nghĩa biểu đồ
+                </p>
+                <p class="text-muted mb-0" style="font-size:0.8rem;">
+                    Hiển thị tỷ lệ phần trăm giữa bệnh nhân <span class="fw-semibold text-danger">nữ</span> và <span class="fw-semibold text-primary">nam</span>. Giúp định hướng chăm sóc phù hợp.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ Tuổi -->
+    <div class="col-lg-8 col-md-6">
+        <div class="chart-container-card">
+            <div class="chart-header text-center">
+                <h5 class="chart-header-title">Phân bố Độ tuổi</h5>
+            </div>
+            <div class="chart-body">
+                <canvas id="ageChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <p class="text-muted fw-bold mb-1" style="font-size:0.8rem;">
+                    <i class="fas fa-circle-info text-primary me-1"></i> Ý nghĩa biểu đồ
+                </p>
+                <p class="text-muted mb-0" style="font-size:0.8rem;">
+                    Cột cao biểu thị nhóm tuổi có nhiều người dùng nhất. Giúp ưu tiên nguồn lực theo dõi sức khỏe cho nhóm đa số.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Biểu đồ Đau ngực -->
+    <div class="col-12">
+        <div class="chart-container-card">
+            <div class="chart-header text-center">
+                <h5 class="chart-header-title">Tỷ lệ các loại Đau ngực (Chest Pain Type)</h5>
+            </div>
+            <div class="chart-body" style="position: relative; height:40vh; width:100%">
+                <canvas id="chestPainChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <p class="text-muted fw-bold mb-1" style="font-size:0.85rem;">
+                            <i class="fas fa-circle-info text-primary me-1"></i> Phân loại biểu hiện lâm sàng
+                        </p>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-start gap-2 p-3 rounded-3 bg-white border h-100">
+                            <span style="width:12px;height:12px;min-width:12px;border-radius:50%;background:#ffce56;margin-top:3px;display:inline-block;"></span>
+                            <div>
+                                <span class="fw-bold text-dark" style="font-size:0.85rem;">Không triệu chứng (ASY)</span>
+                                <p class="text-muted mb-0 mt-1" style="font-size:0.8rem;">Không biểu hiện đau. Rất nguy hiểm vì tiến triển âm thầm.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-start gap-2 p-3 rounded-3 bg-white border h-100">
+                            <span style="width:12px;height:12px;min-width:12px;border-radius:50%;background:#ff9f40;margin-top:3px;display:inline-block;"></span>
+                            <div>
+                                <span class="fw-bold text-dark" style="font-size:0.85rem;">Không điển hình (NAP/ATA)</span>
+                                <p class="text-muted mb-0 mt-1" style="font-size:0.8rem;">Đau không rõ nguồn gốc tim, cần theo dõi thêm.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-start gap-2 p-3 rounded-3 bg-white border h-100">
+                            <span style="width:12px;height:12px;min-width:12px;border-radius:50%;background:#4bc0c0;margin-top:3px;display:inline-block;"></span>
+                            <div>
+                                <span class="fw-bold text-dark" style="font-size:0.85rem;">Nghi ngờ (TA)</span>
+                                <p class="text-muted mb-0 mt-1" style="font-size:0.8rem;">Dấu hiệu liên quan tim, ưu tiên kiểm tra chuyên sâu.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-start gap-2 p-3 rounded-3 bg-warning bg-opacity-10 border border-warning h-100">
+                            <i class="fas fa-triangle-exclamation text-warning mt-1 fs-5"></i>
+                            <div>
+                                <span class="fw-bold text-warning" style="font-size:0.85rem;">Lưu ý Quản trị</span>
+                                <p class="text-dark mb-0 mt-1 fw-medium" style="font-size:0.8rem;">Nếu ASY cao, cần tăng tầm soát định kỳ cho hệ thống.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Nhúng thư viện Chart.js qua CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            
+            // 1. Biểu đồ Giới tính (Pie Chart)
+            const sexLabels = @Html.Raw(Json.Serialize(Model.Demographics.SexLabels));
+            const sexValues = @Html.Raw(Json.Serialize(Model.Demographics.SexValues));
+            
+            new Chart(document.getElementById('sexChart'), {
+                type: 'pie',
+                data: {
+                    labels: sexLabels,
+                    datasets: [{
+                        data: sexValues,
+                        backgroundColor: ['#ff6384', '#36a2eb'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // 2. Biểu đồ Độ tuổi (Bar Chart)
+            const ageLabels = @Html.Raw(Json.Serialize(Model.Demographics.AgeLabels));
+            const ageValues = @Html.Raw(Json.Serialize(Model.Demographics.AgeValues));
+
+            new Chart(document.getElementById('ageChart'), {
+                type: 'bar',
+                data: {
+                    labels: ageLabels,
+                    datasets: [{
+                        label: 'Số lượng bệnh nhân',
+                        data: ageValues,
+                        backgroundColor: '#4bc0c0',
+                        borderColor: '#3da5a5',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // 3. Biểu đồ Đau ngực (Doughnut Chart)
+            const cpLabels = @Html.Raw(Json.Serialize(Model.Symptoms.ChestPainLabels));
+            const cpValues = @Html.Raw(Json.Serialize(Model.Symptoms.ChestPainValues));
+
+            new Chart(document.getElementById('chestPainChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: cpLabels,
+                    datasets: [{
+                        data: cpValues,
+                        backgroundColor: [
+                            '#ffce56', '#ff9f40', '#4bc0c0', '#9966ff', '#c9cbcf'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        });
+    </script>
+    <script>
+    function handleAiClick(btn) {
+        setTimeout(function() {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>AI đang tạo tin tức...';
+        }, 10);
+        return true;
+    }
+    </script>
+}

@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace SmartHealthMonitoring.Services
+namespace SmartHealthMonitoring.Interfaces
 {
     public interface IEmailTriggerService
     {

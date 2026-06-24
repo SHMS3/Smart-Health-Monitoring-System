@@ -7,21 +7,21 @@
 
     string BadgeClass(string action) => action switch
     {
-        "Create" => "bg-success",
-        "Update" => "bg-primary",
-        "Delete" => "bg-danger",
-        "Lock" => "bg-warning text-dark",
-        "Unlock" => "bg-info text-dark",
-        "Activate" => "bg-success",
-        "Deactivate" => "bg-secondary",
-        "Claim" => "bg-info text-dark",
-        "Resolve" => "bg-success",
-        "Void" => "bg-danger",
-        "GrantAccess" => "bg-success",
-        "RevokeAccess" => "bg-warning text-dark",
-        "SendMessage" => "bg-primary",
-        "Close" => "bg-secondary",
-        _ => "bg-dark"
+        "Create" => "modern-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25",
+        "Update" => "modern-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25",
+        "Delete" => "modern-badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25",
+        "Lock" => "modern-badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25",
+        "Unlock" => "modern-badge bg-info bg-opacity-10 text-info border border-info border-opacity-25",
+        "Activate" => "modern-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25",
+        "Deactivate" => "modern-badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25",
+        "Claim" => "modern-badge bg-info bg-opacity-10 text-info border border-info border-opacity-25",
+        "Resolve" => "modern-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25",
+        "Void" => "modern-badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25",
+        "GrantAccess" => "modern-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25",
+        "RevokeAccess" => "modern-badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25",
+        "SendMessage" => "modern-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25",
+        "Close" => "modern-badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25",
+        _ => "modern-badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25"
     };
 
     string ActionLabel(string action) => action switch
@@ -105,12 +105,12 @@
     }
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="page-header d-flex justify-content-between align-items-center">
     <div>
-        <h3 class="fw-bold text-dark mb-1">Nhật ký hoạt động</h3>
-        <p class="text-muted small mb-0">Theo dõi các thao tác quan trọng trong hệ thống.</p>
+        <h1 class="page-title">Nhật ký hoạt động</h1>
+        <p class="text-muted mt-2 mb-0">Theo dõi các thao tác quan trọng trong hệ thống.</p>
     </div>
-    <div id="auditLogTotalCount" data-total-count="@Model.Logs.TotalCount" class="badge bg-dark rounded-pill px-3 py-2">
+    <div id="auditLogTotalCount" data-total-count="@Model.Logs.TotalCount" class="modern-badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25 px-3 py-2 fw-bold" style="font-size: 0.9rem;">
         @Model.Logs.TotalCount bản ghi
     </div>
 </div>
@@ -192,20 +192,20 @@
             };
 
             const badgeClasses = {
-                Create: 'bg-success',
-                Update: 'bg-primary',
-                Delete: 'bg-danger',
-                Lock: 'bg-warning text-dark',
-                Unlock: 'bg-info text-dark',
-                Activate: 'bg-success',
-                Deactivate: 'bg-secondary',
-                Claim: 'bg-info text-dark',
-                Resolve: 'bg-success',
-                Void: 'bg-danger',
-                GrantAccess: 'bg-success',
-                RevokeAccess: 'bg-warning text-dark',
-                SendMessage: 'bg-primary',
-                Close: 'bg-secondary'
+                Create: 'modern-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25',
+                Update: 'modern-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25',
+                Delete: 'modern-badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25',
+                Lock: 'modern-badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25',
+                Unlock: 'modern-badge bg-info bg-opacity-10 text-info border border-info border-opacity-25',
+                Activate: 'modern-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25',
+                Deactivate: 'modern-badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25',
+                Claim: 'modern-badge bg-info bg-opacity-10 text-info border border-info border-opacity-25',
+                Resolve: 'modern-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25',
+                Void: 'modern-badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25',
+                GrantAccess: 'modern-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25',
+                RevokeAccess: 'modern-badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25',
+                SendMessage: 'modern-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25',
+                Close: 'modern-badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25'
             };
 
             const entityLabels = {
@@ -348,14 +348,14 @@
                         <div class="small text-muted">${escapeHtml(log.actorEmail)}</div>
                     </td>
                     <td>
-                        <span class="badge ${badgeClasses[log.action] || 'bg-dark'} rounded-pill px-3">${escapeHtml(actionLabels[log.action] || log.action)}</span>
+                        <span class="${badgeClasses[log.action] || 'modern-badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25'}">${escapeHtml(actionLabels[log.action] || log.action)}</span>
                     </td>
                     <td>
                         <div class="fw-semibold">${escapeHtml(entityLabels[log.entityName] || log.entityName)}</div>
                         ${log.entityId ? `<div class="small text-muted">#${escapeHtml(log.entityId)}</div>` : ''}
                     </td>
                     <td>${escapeHtml(log.targetName || '-')}</td>
-                    <td style="min-width: 280px;">
+                    <td style="min-width: 280px; white-space: normal;">
                         <span class="text-dark">${escapeHtml(descriptionLabel(log.description))}</span>
                     </td>`;
 
@@ -398,8 +398,8 @@
     </div>
 }
 
-<div class="card border-0 shadow-sm rounded-4 mb-4">
-    <div class="card-body">
+<div class="admin-card mb-4">
+    <div>
         <form id="auditLogFilterForm" method="get" asp-action="Index" class="row g-3 align-items-end">
             <div class="col-lg-2 col-md-4">
                 <label class="form-label small text-muted fw-semibold">Hành động</label>
@@ -460,21 +460,20 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light text-muted small">
-                    <tr>
-                        <th class="ps-4">Thời gian</th>
-                        <th>Người thực hiện</th>
-                        <th>Hành động</th>
-                        <th>Dữ liệu</th>
-                        <th>Mục tiêu</th>
-                        <th>Mô tả</th>
-                        @* <th class="text-end pe-4">IP</th> *@
-                    </tr>
-                </thead>
+<div class="admin-card p-0 overflow-hidden">
+    <div class="table-responsive">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Thời gian</th>
+                    <th>Người thực hiện</th>
+                    <th>Hành động</th>
+                    <th>Dữ liệu</th>
+                    <th>Mục tiêu</th>
+                    <th>Mô tả</th>
+                    @* <th class="text-end pe-4">IP</th> *@
+                </tr>
+            </thead>
                 <tbody id="auditLogTableBody" data-current-page="@Model.Logs.Page" data-page-size="@Model.Logs.PageSize">
                     @if (!Model.Logs.Items.Any())
                     {
@@ -497,7 +496,7 @@
                                 <div class="small text-muted">@log.ActorEmail</div>
                             </td>
                             <td>
-                                <span class="badge @BadgeClass(log.Action) rounded-pill px-3">@ActionLabel(log.Action)</span>
+                                <span class="@BadgeClass(log.Action)">@ActionLabel(log.Action)</span>
                             </td>
                             <td>
                                 <div class="fw-semibold">@EntityLabel(log.EntityName)</div>
@@ -507,7 +506,7 @@
                                 }
                             </td>
                             <td>@(log.TargetName ?? "-")</td>
-                            <td style="min-width: 280px;">
+                            <td style="min-width: 280px; white-space: normal;">
                                 <span class="text-dark">@DescriptionLabel(log.Description)</span>
                             </td>
                             @* <td class="text-end pe-4 text-muted text-nowrap">@(log.IpAddress ?? "-")</td> *@
@@ -520,8 +519,8 @@
 
     @if (Model.Logs.TotalPages > 1)
     {
-        <div class="card-footer bg-white border-top-0 p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <span class="text-muted small">Trang @Model.Logs.Page / @Model.Logs.TotalPages</span>
+        <div class="d-flex justify-content-between align-items-center p-4 border-top flex-wrap gap-3" style="background: #f8fafc;">
+            <span class="text-muted fw-medium" style="font-size: 0.85rem;">Trang @Model.Logs.Page / @Model.Logs.TotalPages</span>
             <nav>
                 <ul class="pagination pagination-sm mb-0">
                     <li class="page-item @(Model.Logs.Page == 1 ? "disabled" : "")">
