@@ -20,6 +20,9 @@ namespace SmartHealthMonitoring.Controllers.AI
         private readonly IEmailTriggerService _emailTriggerService;
         private readonly IAuditLogService _auditLogService;
         private readonly IAnfisExplainabilityService _explainabilityService;
+        private readonly IThresholdService _thresholdService;
+
+
 
         public WarningAlertController(
             IAiWarningAlertService warningAlertService,
@@ -28,7 +31,8 @@ namespace SmartHealthMonitoring.Controllers.AI
             IEmailService emailService,
             IEmailTriggerService emailTriggerService,
             IAuditLogService auditLogService,
-            IAnfisExplainabilityService explainabilityService)
+            IAnfisExplainabilityService explainabilityService,
+            IThresholdService thresholdService)
         {
             _warningAlertService = warningAlertService;
             _doctorService = doctorService;
@@ -37,6 +41,7 @@ namespace SmartHealthMonitoring.Controllers.AI
             _emailTriggerService = emailTriggerService;
             _auditLogService = auditLogService;
             _explainabilityService = explainabilityService;
+            _thresholdService = thresholdService;
         }
 
 
@@ -157,6 +162,20 @@ namespace SmartHealthMonitoring.Controllers.AI
                 return RedirectToAction(nameof(Dashboard));
             }
 
+            if (sendEmailInvitation)
+            {
+                if (!appointmentDate.HasValue)
+                {
+                    TempData["Error"] = "Vui lòng chọn ngày giờ hẹn tái khám khi gửi email.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+                if (appointmentDate.Value <= DateTime.Now)
+                {
+                    TempData["Error"] = "Ngày hẹn tái khám phải là thời gian trong tương lai.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+            }
+
             var thresholdResult =
                 await _thresholdService.ValidateAndUpdateAsync(
                     alert,
@@ -173,7 +192,7 @@ namespace SmartHealthMonitoring.Controllers.AI
             if (!thresholdResult.Success)
             {
                 TempData["Error"] = thresholdResult.Message;
-                return RedirectToAction(nameof(Detail), new { id });
+                return RedirectToAction(nameof(Details), new { id });
             }
 
             var resolveResult =
@@ -185,7 +204,7 @@ namespace SmartHealthMonitoring.Controllers.AI
             if (!resolveResult.Success)
             {
                 TempData["Error"] = resolveResult.Message;
-                return RedirectToAction(nameof(Detail), new { id });
+                return RedirectToAction(nameof(Details), new { id });
             }
 
             if (sendEmailInvitation)
@@ -258,6 +277,16 @@ namespace SmartHealthMonitoring.Controllers.AI
                 TempData["ErrorMessage"] = "Không tìm thấy cảnh báo này.";
                 return RedirectToAction(nameof(Dashboard));
             }
+
+            // Truyền doctorId để UI hiển thị biểu mẫu xử lý cho đúng bác sĩ đã claim
+            int? doctorId = null;
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out var userId))
+            {
+                var doctor = await _doctorService.GetDoctorByUserIdAsync(userId);
+                doctorId = doctor?.Id;
+            }
+            ViewData["DoctorId"] = doctorId;
 
             // Sinh lời giải thích XAI từ AnfisExplainabilityService
             var explanation = _explainabilityService.Explain(alert.Prediction, alert);
