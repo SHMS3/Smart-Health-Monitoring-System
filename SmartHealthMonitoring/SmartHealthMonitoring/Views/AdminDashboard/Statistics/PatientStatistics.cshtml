@@ -326,4 +326,13 @@
             });
         });
     </script>
+    <script>
+    function handleAiClick(btn) {
+        setTimeout(function() {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>AI đang tạo tin tức...';
+        }, 10);
+        return true;
+    }
+    </script>
 }

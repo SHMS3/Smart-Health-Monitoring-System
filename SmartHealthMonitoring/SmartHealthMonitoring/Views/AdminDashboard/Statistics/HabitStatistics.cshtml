@@ -1,0 +1,511 @@
+@model SmartHealthMonitoring.ViewModels.Admin.HabitStatisticsViewModel
+
+@{
+    ViewData["Title"] = "Thống kê Thói quen Hằng ngày";
+    Layout = "_AdminLayout";
+
+    double coverRate = Model.TotalPatients > 0
+        ? Math.Round(Model.TotalPatientsWithHabit * 100.0 / Model.TotalPatients, 1)
+        : 0;
+}
+
+<style>
+    .habit-page-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border-radius: 16px;
+        padding: 2rem 2.5rem;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .habit-page-header::before {
+        content: '';
+        position: absolute;
+        width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(229,57,53,0.25) 0%, transparent 70%);
+        top: -80px; right: -80px;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .stat-kpi-card {
+        border: none;
+        border-radius: 14px;
+        padding: 1.4rem 1.6rem;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .stat-kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,.13) !important; }
+    .stat-kpi-card .kpi-icon {
+        width: 52px; height: 52px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+    .habit-category-card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.07);
+        overflow: hidden;
+        height: 100%;
+    }
+    .habit-cat-header {
+        padding: .85rem 1.2rem;
+        font-weight: 700;
+        font-size: .92rem;
+        display: flex; align-items: center; gap: .6rem;
+    }
+    .habit-row {
+        display: flex;
+        align-items: center;
+        padding: .55rem 1.2rem;
+        border-bottom: 1px solid rgba(0,0,0,.04);
+        gap: .75rem;
+        transition: background .15s;
+    }
+    .habit-row:last-child { border-bottom: none; }
+    .habit-row:hover { background: rgba(0,0,0,.025); }
+    .habit-icon-wrap {
+        width: 34px; height: 34px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .85rem;
+        flex-shrink: 0;
+    }
+    .habit-bar-outer {
+        flex: 1;
+        height: 8px;
+        border-radius: 99px;
+        background: rgba(0,0,0,.07);
+        overflow: hidden;
+    }
+    .habit-bar-inner {
+        height: 100%;
+        border-radius: 99px;
+        transition: width .6s ease;
+    }
+    .chart-card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    }
+    .chart-card .card-header {
+        background: transparent;
+        border-bottom: 1px solid rgba(0,0,0,.06);
+        padding: 1rem 1.4rem;
+        font-weight: 700;
+    }
+    .badge-bad  { background: rgba(220,53,69,.12);  color: #dc3545; font-size:.72rem; padding:.28em .65em; border-radius:6px; display:inline-block; }
+    .badge-good { background: rgba(25,135,84,.12);  color: #198754; font-size:.72rem; padding:.28em .65em; border-radius:6px; display:inline-block; }
+    .habit-desc { font-size: .72rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .section-title {
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        display: flex; align-items: center; gap: .5rem;
+        margin-bottom: 1rem;
+    }
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(13,110,253,.25), transparent);
+        border-radius: 2px;
+    }
+</style>
+
+@* ===== PAGE HEADER ===== *@
+<div class="habit-page-header mb-4">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <span style="font-size:2.2rem;">🧬</span>
+            <div>
+                <h3 class="fw-bold mb-0">Thống kê Thói quen Hằng ngày</h3>
+                <p class="mb-0 opacity-75" style="font-size:.88rem;">
+                    Phân tích 14 thói quen sinh hoạt ảnh hưởng đến sức khỏe bệnh nhân — nhóm Ăn uống, Sinh hoạt, Hành vi, Tâm lý.
+                </p>
+            </div>
+        </div>  
+    </div>
+</div>
+
+@* ===== KPI CARDS ===== *@
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-kpi-card card shadow-sm" style="background:linear-gradient(135deg,#fff7f7,#fff);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon" style="background:rgba(220,53,69,.12);color:#dc3545;">
+                    <i class="fas fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold text-danger lh-1">@Model.TotalPatientsWithHabit</div>
+                    <div class="text-muted small mt-1">Bệnh nhân có hồ sơ thói quen</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-kpi-card card shadow-sm" style="background:linear-gradient(135deg,#f0fff4,#fff);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon" style="background:rgba(25,135,84,.12);color:#198754;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold text-success lh-1">@Model.TotalPatients</div>
+                    <div class="text-muted small mt-1">Tổng bệnh nhân hệ thống</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-kpi-card card shadow-sm" style="background:linear-gradient(135deg,#f0f4ff,#fff);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon" style="background:rgba(13,110,253,.12);color:#0d6efd;">
+                    <i class="fas fa-percent"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold text-primary lh-1">@coverRate<small class="fs-5">%</small></div>
+                    <div class="text-muted small mt-1">Tỷ lệ có dữ liệu thói quen</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-kpi-card card shadow-sm" style="background:linear-gradient(135deg,#fffbf0,#fff);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon" style="background:rgba(255,193,7,.15);color:#e0a800;">
+                    <i class="fas fa-list-check"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold text-warning lh-1">14</div>
+                    <div class="text-muted small mt-1">Loại thói quen theo dõi</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ===== BIỂU ĐỒ TỔNG QUAN ===== *@
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="chart-card card h-100">
+            <div class="card-header">
+                <i class="fas fa-ranking-star text-danger me-2"></i>
+                Top 5 Thói quen Xấu
+            </div>
+            <div class="card-body" style="position:relative;height:260px;">
+                <canvas id="topBadHabitsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="chart-card card h-100">
+            <div class="card-header">
+                <i class="fas fa-medal text-success me-2"></i>
+                Top 5 Thói quen Tốt
+            </div>
+            <div class="card-body" style="position:relative;height:260px;">
+                <canvas id="topGoodHabitsChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="chart-card card h-100">
+            <div class="card-header">
+                <i class="fas fa-chart-bar text-warning me-2"></i>
+                Phân bố thói quen xấu
+            </div>
+            <div class="card-body" style="position:relative;height:260px;">
+                <canvas id="distributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ===== 4 NHÓM THÓI QUEN ===== *@
+<div class="section-title">
+    <i class="fas fa-layer-group text-primary"></i> Chi tiết theo Nhóm Thói quen
+</div>
+
+@if (!Model.Categories.Any() || Model.TotalPatientsWithHabit == 0)
+{
+    <div class="alert alert-info rounded-3">
+        <i class="fas fa-info-circle me-2"></i>
+        Chưa có dữ liệu thói quen. Bệnh nhân cần cập nhật hồ sơ thói quen sinh hoạt.
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @{
+            var catStyles = new Dictionary<string, Tuple<string, string, string>>
+            {
+                ["Ăn uống"]   = new Tuple<string, string, string>("rgba(220,53,69,.09)",   "text-danger",   "#dc3545"),
+                ["Sinh hoạt"] = new Tuple<string, string, string>("rgba(255,193,7,.12)",   "text-warning",  "#e0a800"),
+                ["Hành vi"]   = new Tuple<string, string, string>("rgba(108,117,125,.09)", "text-secondary","#6c757d"),
+                ["Tâm lý"]    = new Tuple<string, string, string>("rgba(13,202,240,.10)",  "text-info",     "#0dcaf0"),
+            };
+        }
+
+        @foreach (var cat in Model.Categories)
+        {
+            var style = catStyles.ContainsKey(cat.Name)
+                ? catStyles[cat.Name]
+                : new Tuple<string, string, string>("rgba(13,110,253,.09)", "text-primary", "#0d6efd");
+
+            <div class="col-lg-6">
+                <div class="habit-category-card">
+                    <div class="habit-cat-header @style.Item2" style="background:@style.Item1;">
+                        <i class="@cat.Icon"></i>
+                        <span>@cat.Name</span>
+                        <span class="ms-auto badge rounded-pill text-white" style="background:@style.Item3;font-size:.68rem;">
+                            @cat.Items.Count thói quen
+                        </span>
+                    </div>
+                    <div>
+                        @foreach (var item in cat.Items)
+                        {
+                            var barColor2 = item.Type == "bad" ? "#dc3545" : "#198754";
+                            var iconBg    = item.Type == "bad" ? "rgba(220,53,69,.10)" : "rgba(25,135,84,.10)";
+                            <div class="habit-row">
+                                <div class="habit-icon-wrap" style="background:@iconBg;color:@barColor2;">
+                                    <i class="@item.Icon"></i>
+                                </div>
+                                <div style="min-width:0;flex:1;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span style="font-size:.82rem;font-weight:600;white-space:nowrap;">@item.Label</span>
+                                        @if (item.Type == "bad")
+                                        {
+                                            <span class="badge-bad">Xấu</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-good">Tốt</span>
+                                        }
+                                    </div>
+                                    <div class="habit-desc" title="@item.Description">@item.Description</div>
+                                </div>
+                                <div style="min-width:130px;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="habit-bar-outer">
+                                            <div class="habit-bar-inner" style="width:@(item.Percentage)%;background:@barColor2;"></div>
+                                        </div>
+                                        <span style="font-size:.78rem;font-weight:700;min-width:38px;text-align:right;color:@barColor2;">@item.Percentage%</span>
+                                    </div>
+                                    <div class="text-muted text-end" style="font-size:.68rem;">@item.Count BN</div>
+                                </div>
+                            </div>
+                        }
+                        @if (!cat.Items.Any())
+                        {
+                            <div class="text-muted text-center py-3" style="font-size:.82rem;">Không có dữ liệu</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@* ===== BẢNG CHI TIẾT ===== *@
+<div class="section-title mt-4">
+    <i class="fas fa-table text-primary"></i> Bảng Chi tiết Tất cả Thói quen
+</div>
+
+<div class="chart-card card mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted" style="font-size:.78rem;">
+                    <tr>
+                        <th class="ps-4" style="width:36px;">#</th>
+                        <th>Thói quen</th>
+                        <th>Nhóm</th>
+                        <th>Phân loại</th>
+                        <th class="text-center">Số BN</th>
+                        <th style="min-width:180px;">Tỷ lệ</th>
+                        <th>Mô tả</th>
+                    </tr>
+                </thead>
+                <tbody style="font-size:.82rem;">
+                    @{
+                        int idx = 1;
+                        foreach (var cat3 in Model.Categories)
+                        {
+                            foreach (var item3 in cat3.Items)
+                            {
+                                var bc = item3.Type == "bad" ? "#dc3545" : "#198754";
+                                <tr>
+                                    <td class="ps-4 text-muted">@(idx++)</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="@item3.Icon fa-fw" style="color:@bc;"></i>
+                                            <span class="fw-semibold">@item3.Label</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-light text-dark border" style="font-size:.7rem;">
+                                            @item3.Category
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (item3.Type == "bad")
+                                        {
+                                            <span class="badge-bad"><i class="fas fa-circle-xmark me-1"></i>Xấu</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-good"><i class="fas fa-circle-check me-1"></i>Tốt</span>
+                                        }
+                                    </td>
+                                    <td class="text-center fw-bold" style="color:@bc;">@item3.Count</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="habit-bar-outer">
+                                                <div class="habit-bar-inner" style="width:@(item3.Percentage)%;background:@bc;"></div>
+                                            </div>
+                                            <span style="font-size:.78rem;font-weight:700;min-width:36px;color:@bc;">@item3.Percentage%</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-muted" style="max-width:220px;">@item3.Description</td>
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // ---- 1. Top 5 Bad Habits — Horizontal Bar ----
+            const topLabels = @Html.Raw(Json.Serialize(Model.TopBadHabitLabels));
+            const topValues = @Html.Raw(Json.Serialize(Model.TopBadHabitValues));
+
+            new Chart(document.getElementById('topBadHabitsChart'), {
+                type: 'bar',
+                data: {
+                    labels: topLabels,
+                    datasets: [{
+                        label: 'Số bệnh nhân',
+                        data: topValues,
+                        backgroundColor: [
+                            'rgba(220,53,69,.80)',
+                            'rgba(255,100,50,.80)',
+                            'rgba(255,193,7,.80)',
+                            'rgba(108,117,125,.80)',
+                            'rgba(13,202,240,.80)'
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: { label: ctx => ' ' + ctx.parsed.x + ' bệnh nhân' }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,.05)' } },
+                        y: { ticks: { font: { size: 11 } }, grid: { display: false } }
+                    }
+                }
+            });
+
+            // ---- 1b. Top 5 Good Habits — Horizontal Bar ----
+            const topGoodLabels = @Html.Raw(Json.Serialize(Model.TopGoodHabitLabels));
+            const topGoodValues = @Html.Raw(Json.Serialize(Model.TopGoodHabitValues));
+
+            new Chart(document.getElementById('topGoodHabitsChart'), {
+                type: 'bar',
+                data: {
+                    labels: topGoodLabels,
+                    datasets: [{
+                        label: 'Số bệnh nhân',
+                        data: topGoodValues,
+                        backgroundColor: [
+                            'rgba(25,135,84,.80)',
+                            'rgba(32,201,151,.80)',
+                            'rgba(13,202,240,.80)',
+                            'rgba(13,110,253,.80)',
+                            'rgba(102,16,242,.80)'
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: { label: ctx => ' ' + ctx.parsed.x + ' bệnh nhân' }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,.05)' } },
+                        y: { ticks: { font: { size: 11 } }, grid: { display: false } }
+                    }
+                }
+            });
+
+            // ---- 2. Phân bố số thói quen xấu — Bar ----
+            const distLabels = @Html.Raw(Json.Serialize(Model.BadHabitDistributionLabels));
+            const distValues = @Html.Raw(Json.Serialize(Model.BadHabitDistributionValues));
+
+            new Chart(document.getElementById('distributionChart'), {
+                type: 'bar',
+                data: {
+                    labels: distLabels.map(l => l + ' thói quen'),
+                    datasets: [{
+                        label: 'Số bệnh nhân',
+                        data: distValues,
+                        backgroundColor: distValues.map((_, i) => {
+                            const a = (0.25 + (i / Math.max(distValues.length - 1, 1)) * 0.7).toFixed(2);
+                            return 'rgba(220,53,69,' + a + ')';
+                        }),
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ' ' + ctx.parsed.y + ' bệnh nhân',
+                                title: ctx => ctx[0].label + ' mỗi người'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { font: { size: 10 } }, grid: { display: false } },
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,.05)' } }
+                    }
+                }
+            });
+        });
+    </script>
+    <script>
+    function handleAiClickHabit(btn) {
+        setTimeout(function() {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>AI đang tạo tin tức...';
+        }, 10);
+        return true;
+    }
+    </script>
+}

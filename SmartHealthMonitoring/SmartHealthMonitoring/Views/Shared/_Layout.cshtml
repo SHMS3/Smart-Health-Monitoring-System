@@ -170,7 +170,7 @@
         }
         .nav-link-cl:hover, .nav-link-cl.active {
             background: rgba(255,255,255,.15);
-            color: #fff !important;
+            color: #ffd700 !important;
         }
         .nav-link-cl i { font-size: 0.8rem; }
         .nav-home-icon { font-size: 1.1rem !important; }
@@ -762,6 +762,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="Home" && action=="Habits" ? "active" : "")" asp-controller="Home" asp-action="Habits">
+                            <i class="fas fa-heartbeat"></i> Thói quen hằng ngày
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link-cl @(ctrl=="Patient" && action=="Tracker" ? "active" : "")" asp-controller="Patient" asp-action="Tracker">
                             <i class="fas fa-chart-line"></i> Biểu đồ sức khỏe
                         </a>
@@ -777,6 +782,11 @@
                         </a>
                     </li>
                 }
+                <li class="nav-item">
+                    <a class="nav-link-cl @(ctrl=="Home" && action=="News" ? "active" : "")" asp-controller="Home" asp-action="News">
+                        <i class="fas fa-newspaper"></i> Tin tức
+                    </a>
+                </li>
 
                 <li class="nav-item">
                     <a class="nav-link-cl @(ctrl=="Home" && action=="Contact" ? "active" : "")" asp-controller="Home" asp-action="Contact">

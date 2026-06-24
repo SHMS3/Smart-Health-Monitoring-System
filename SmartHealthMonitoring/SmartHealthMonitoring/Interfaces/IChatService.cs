@@ -1,7 +1,7 @@
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels;
 
-namespace SmartHealthMonitoring.Services;
+namespace SmartHealthMonitoring.Interfaces;
 
 /// <summary>
 /// Service xử lý nghiệp vụ chat Telemedicine theo mô hình hàng đợi.

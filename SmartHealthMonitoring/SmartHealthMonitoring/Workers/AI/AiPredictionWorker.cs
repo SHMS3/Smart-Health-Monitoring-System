@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
-using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.Services.AI;
 
 namespace SmartHealthMonitoring.Workers.AI;

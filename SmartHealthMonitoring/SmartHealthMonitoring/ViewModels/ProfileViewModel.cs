@@ -80,6 +80,14 @@ namespace SmartHealthMonitoring.ViewModels
 
         // Nhóm 4: Yếu tố tâm lý
         public bool StressHigh { get; set; }
+
+        // Nhóm 5: Thói quen tốt
+        public bool ExerciseRegularly { get; set; }
+        public bool SleepEarly { get; set; }
+        public bool DrinkEnoughWater { get; set; }
+        public bool DietBalanced { get; set; }
+        public bool RegularHealthCheck { get; set; }
+        public bool NoSubstanceAbuse { get; set; }
     }
 
     // ViewModel riêng để cập nhật thông tin cá nhân

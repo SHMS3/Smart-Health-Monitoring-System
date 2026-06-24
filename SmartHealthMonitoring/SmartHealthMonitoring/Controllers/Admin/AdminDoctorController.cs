@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
-using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels.Admin;
 
 namespace SmartHealthMonitoring.Controllers.Admin

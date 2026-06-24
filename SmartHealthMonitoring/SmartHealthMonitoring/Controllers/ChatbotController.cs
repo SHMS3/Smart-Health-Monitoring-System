@@ -47,7 +47,7 @@ namespace SmartHealthMonitoring.Controllers
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-                int pageSize = 10;
+                int pageSize = 4; // Giảm xuống 4 để với 5 record hiện có, sẽ có 2 trang (dễ dàng nhìn thấy thanh phân trang)
 
                 var result = await _chatbotService.GetHistoryAsync(userId, fromDate, toDate, page, pageSize);
 
