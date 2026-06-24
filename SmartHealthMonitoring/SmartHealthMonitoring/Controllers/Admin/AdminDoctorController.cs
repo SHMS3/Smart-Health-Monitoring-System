@@ -14,13 +14,24 @@ namespace SmartHealthMonitoring.Controllers.Admin
     {
         private readonly SmartHealthMonitoringContext _context;
         private readonly IAuditLogService _auditLogService;
+        private readonly IEmailService _emailService;
 
         public AdminDoctorController(
             SmartHealthMonitoringContext context,
-            IAuditLogService auditLogService)
+            IAuditLogService auditLogService,
+            IEmailService emailService)
         {
             _context = context;
             _auditLogService = auditLogService;
+            _emailService = emailService;
+        }
+
+        private string GenerateRandomPassword(int length = 8)
+        {
+            const string chars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@$?_-";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
         [HttpGet]
@@ -74,11 +85,12 @@ namespace SmartHealthMonitoring.Controllers.Admin
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                string randomPassword = GenerateRandomPassword(8);
                 var user = new User
                 {
                     FullName = model.FullName,
                     Email = model.Email,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(randomPassword),
                     Role = 1,
                     CreatedAt = DateTime.Now,
                     IsDeleted = false
@@ -109,7 +121,31 @@ namespace SmartHealthMonitoring.Controllers.Admin
                     user.FullName);
 
                 await transaction.CommitAsync();
-                TempData["Success"] = "Đã cấp tài khoản Bác sĩ thành công. Mật khẩu: 123456";
+
+                // Send email to the doctor
+                string loginUrl = Url.Action("Login", "Auth", new { returnUrl = "/Home/Profile?tab=security" }, Request.Scheme) ?? "";
+                string mailBody = $@"
+                    <div style='font-family:Arial,sans-serif;background:#f8f9fa;padding:20px'>
+                        <div style='max-width:600px;margin:0 auto;background:#fff;border-radius:12px;padding:30px;box-shadow:0 4px 15px rgba(0,0,0,.1)'>
+                            <h2 style='color:#0f172a'>Tài khoản Bác sĩ được tạo thành công!</h2>
+                            <p style='color:#333;font-size:16px;'>Kính gửi Bác sĩ <strong>{model.FullName}</strong>,</p>
+                            <p style='color:#333;font-size:16px;'>Hệ thống SmartHealth đã cấp phát tài khoản chuyên gia cho bạn. Dưới đây là thông tin đăng nhập:</p>
+                            <div style='background:#f1f5f9;padding:15px;border-radius:8px;margin:20px 0;'>
+                                <p style='margin:0 0 10px;'><strong>Email đăng nhập:</strong> {model.Email}</p>
+                                <p style='margin:0;'><strong>Mật khẩu mặc định:</strong> <span style='color:#e11d48;font-weight:bold;font-size:18px;'>{randomPassword}</span></p>
+                            </div>
+                            <p style='color:#ef4444;font-size:15px;font-weight:bold;'>Vì lý do bảo mật, vui lòng đăng nhập và đổi mật khẩu của bạn ngay lập tức.</p>
+                            <div style='text-align:center;margin:30px 0;'>
+                                <a href='{loginUrl}' style='background:#2563eb;color:#fff;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;'>ĐĂNG NHẬP VÀ ĐỔI MẬT KHẨU</a>
+                            </div>
+                            <hr style='border:none;border-top:1px solid #e2e8f0;margin:30px 0;' />
+                            <p style='color:#64748b;font-size:13px;text-align:center;'>Đây là email tự động, vui lòng không phản hồi.</p>
+                        </div>
+                    </div>";
+
+                await _emailService.SendEmailAsync(model.Email, "Tài khoản Bác sĩ - SmartHealth", mailBody);
+
+                TempData["Success"] = "Đã cấp tài khoản Bác sĩ thành công và gửi email mật khẩu mặc định.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
