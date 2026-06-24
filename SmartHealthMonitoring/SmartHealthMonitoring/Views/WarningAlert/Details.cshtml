@@ -74,6 +74,21 @@
         <i class="fas fa-arrow-left"></i> Quay lại Bảng cảnh báo
     </a>
 
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius: 12px; font-size: 0.9rem; margin-bottom: 24px; padding: 15px 20px; background-color: #d1e7dd; border-color: #badbcc; color: #0f5132;">
+            <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="float: right; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: inherit;"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px; font-size: 0.9rem; margin-bottom: 24px; padding: 15px 20px; background-color: #f8d7da; border-color: #f5c2c7; color: #842029;">
+            <i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="float: right; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: inherit;"></button>
+        </div>
+    }
+
     <!-- Page Header -->
     <div class="page-header">
         <div>
@@ -226,6 +241,88 @@
         </div>
     </div>
 
+    <!-- ═══ KHỐI THAO TÁC / XỬ LÝ CẢNH BÁO ═══ -->
+    @if (Model.Status == 0)
+    {
+        <div class="card card-full" style="margin-bottom: 24px;">
+            <div class="card-header" style="background: rgba(14, 165, 233, 0.05); border-bottom: 1px solid rgba(14, 165, 233, 0.15);">
+                <div class="card-header-icon" style="background: rgba(14, 165, 233, 0.12); color: #0ea5e9;">
+                    <i class="fas fa-hand-holding-medical"></i>
+                </div>
+                <div class="card-header-title" style="color: #0ea5e9;">Tiếp nhận xử lý cảnh báo</div>
+            </div>
+            <div class="card-body text-center py-4">
+                <p class="text-muted mb-3" style="font-size: .9rem;">Cảnh báo này chưa được bác sĩ nào tiếp nhận xử lý. Bạn cần tiếp nhận trước khi tiến hành ghi chú giải quyết.</p>
+                <form id="claimForm" style="display: inline-block;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-primary px-5 py-2.5 fw-bold" style="border-radius: 10px; background: #0ea5e9; border: none; font-size: .88rem; transition: background .2s; color: white;">
+                        <i class="fas fa-check-circle me-2"></i>Tiếp nhận Cảnh báo
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+    else if (Model.Status == 1 && Model.ClaimedByDoctorId == (int?)ViewData["DoctorId"])
+    {
+        <div class="card card-full" style="margin-bottom: 24px;">
+            <div class="card-header" style="background: rgba(245, 158, 11, 0.05); border-bottom: 1px solid rgba(245, 158, 11, 0.15);">
+                <div class="card-header-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="card-header-title" style="color: #d97706;">Xử lý Cảnh báo & Ghi chú</div>
+            </div>
+            <div class="card-body">
+                <form id="resolveForm" asp-action="Resolve" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+
+                    <!-- Ghi chú xử lý -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark" style="font-size: 0.9rem; display: block; margin-bottom: 8px;">
+                            Ghi chú xử lý <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="resolutionNote" class="form-control" rows="4" required 
+                                  placeholder="Nhập chẩn đoán sơ bộ, hướng xử lý hoặc lời khuyên cho bệnh nhân..." 
+                                  style="border-radius: 10px; border-color: #cbd5e1; font-size: 0.9rem; padding: 12px; width: 100%; box-sizing: border-box;"></textarea>
+                    </div>
+
+                    <!-- Gửi email hẹn khám -->
+                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+                    <div class="form-check mb-3" style="display: flex; align-items: center; gap: 8px;">
+                        <input class="form-check-input" type="checkbox" name="sendEmailInvitation" value="true" id="sendEmail" checked style="width: 16px; height: 16px; cursor: pointer;" />
+                        <label class="form-check-label fw-bold text-dark" for="sendEmail" style="font-size: 0.9rem; cursor: pointer; user-select: none;">
+                            Gửi email mời tái khám cho bệnh nhân
+                        </label>
+                    </div>
+
+                    <div class="mb-4 id-appointment-group">
+                        <label class="form-label fw-bold text-muted" style="font-size: 0.8rem; display: block; margin-bottom: 8px;">Ngày giờ hẹn tái khám <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="appointmentDate" class="form-control" style="border-radius: 8px; border: 1px solid #cbd5e1; max-width: 300px; font-size: 0.9rem; padding: 8px;" />
+                    </div>
+
+                    <!-- Nút hành động -->
+                    <div style="margin-top: 20px;">
+                        <button type="submit" class="btn btn-success px-4 py-2.5 fw-bold" style="border-radius: 10px; background: #10b981; border: none; color: white; cursor: pointer; font-size: .88rem; transition: background .2s;">
+                            <i class="fas fa-check-circle me-2"></i>Hoàn tất xử lý
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+    else if (Model.Status == 1)
+    {
+        <div class="card card-full" style="margin-bottom: 24px;">
+            <div class="card-body text-center py-4" style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 16px;">
+                <span class="status-badge status-processing" style="margin-bottom: 12px; padding: 6px 16px; font-size: .85rem;">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý
+                </span>
+                <p class="text-warning mb-0 fw-semibold" style="font-size: .9rem;">Cảnh báo này đã được tiếp nhận và đang được xử lý bởi bác sĩ khác.</p>
+            </div>
+        </div>
+    }
+
     <!-- ═══ DỮ LIỆU GỐC ═══ -->
     <div class="row">
         <div class="col-12">
@@ -347,4 +444,83 @@
 
 </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Claim alert via AJAX
+            const claimForm = document.getElementById('claimForm');
+            if (claimForm) {
+                claimForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(claimForm);
+                    
+                    fetch('/WarningAlert/Claim', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(res => {
+                        alert(res.message);
+                        if (res.success) {
+                            window.location.reload();
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Có lỗi xảy ra khi tiếp nhận cảnh báo.');
+                    });
+                });
+            }
+
+            // Toggle appointment date field validation and visibility
+            const sendEmail = document.getElementById('sendEmail');
+            const appointmentDateGroup = document.querySelector('.id-appointment-group');
+            const appointmentDate = document.querySelector('[name="appointmentDate"]');
+
+            if (sendEmail && appointmentDate) {
+                function toggleRequired() {
+                    if (sendEmail.checked) {
+                        appointmentDateGroup.style.display = 'block';
+                        appointmentDate.required = true;
+                        
+                        // Set min date/time to now (in local timezone)
+                        const now = new Date();
+                        const tzOffset = now.getTimezoneOffset() * 60000;
+                        const localISOTime = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+                        appointmentDate.min = localISOTime;
+                    } else {
+                        appointmentDateGroup.style.display = 'none';
+                        appointmentDate.required = false;
+                        appointmentDate.value = '';
+                    }
+                }
+
+                sendEmail.addEventListener('change', toggleRequired);
+                toggleRequired();
+            }
+
+            // Client-side date check on form submission
+            const resolveForm = document.getElementById('resolveForm');
+            if (resolveForm && sendEmail && appointmentDate) {
+                resolveForm.addEventListener('submit', function (e) {
+                    if (sendEmail.checked) {
+                        const selectedDate = new Date(appointmentDate.value);
+                        const currentDate = new Date();
+                        if (selectedDate <= currentDate) {
+                            e.preventDefault();
+                            alert('Ngày hẹn tái khám phải là thời gian trong tương lai (sau thời điểm hiện tại).');
+                            appointmentDate.focus();
+                            return false;
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}
 

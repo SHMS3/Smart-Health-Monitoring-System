@@ -19,9 +19,15 @@ namespace SmartHealthMonitoring.Services.AI
             byte? status,
             string? keyword);
 
-        Task<bool> ClaimAlertAsync(int alertId, int doctorId);
-
-        Task<bool> ResolveAlertAsync(int alertId, int doctorId, string resolutionNote);
+        Task<ServiceResult> ClaimAlertAsync(
+     int alertId,
+     int doctorId);
+        Task<ServiceResult> ResolveAlertAsync(
+     int alertId,
+     int doctorId,
+     string resolutionNote);
         Task<WarningAlertDetailViewModel?> GetDetailAsync(int id);
+        Task<WarningAlert?> GetAlertForResolveAsync(int id);
     }
+
 }
