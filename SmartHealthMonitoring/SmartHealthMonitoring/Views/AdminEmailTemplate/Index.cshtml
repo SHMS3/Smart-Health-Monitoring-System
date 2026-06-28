@@ -1,0 +1,173 @@
+@model IReadOnlyList<SmartHealthMonitoring.ViewModels.Admin.EmailTemplateListItemViewModel>
+
+@{
+    ViewData["Title"] = "Mẫu Email";
+    Layout = "_AdminLayout";
+}
+
+<style>
+    .template-header {
+        background: linear-gradient(135deg, #0f172a 0%, #164e63 55%, #0f766e 100%);
+        border-radius: 16px;
+        padding: 2rem 2.5rem;
+        color: #fff;
+        margin-bottom: 2rem;
+    }
+
+    .template-header h4 {
+        font-weight: 800;
+        margin-bottom: 0.35rem;
+    }
+
+    .template-header p {
+        color: rgba(255,255,255,0.78);
+        margin: 0;
+    }
+
+    .template-table-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(15,23,42,.08);
+    }
+
+    .template-table th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        padding: 15px 18px;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+
+    .template-table td {
+        padding: 16px 18px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+    }
+
+    .template-table tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .template-title {
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 3px;
+    }
+
+    .template-desc {
+        color: #64748b;
+        font-size: .82rem;
+        max-width: 440px;
+        white-space: normal;
+    }
+
+    .subject-text {
+        max-width: 380px;
+        color: #334155;
+        white-space: normal;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-weight: 700;
+        font-size: .76rem;
+        white-space: nowrap;
+    }
+
+    .status-pill.active {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .status-pill.idle {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-edit-template {
+        border-radius: 10px;
+        font-weight: 700;
+        padding: 8px 16px;
+    }
+</style>
+
+<div class="template-header">
+    <h4><i class="fas fa-envelope-open-text me-2"></i>Quản lý mẫu Email</h4>
+    <p>Chỉnh sửa tiêu đề và nội dung HTML của các email hệ thống gửi cho bệnh nhân.</p>
+</div>
+
+<div class="template-table-card">
+    <div class="table-responsive">
+        <table class="table template-table mb-0">
+            <thead>
+                <tr>
+                    <th>Mẫu email</th>
+                    <th>Tiêu đề gửi đi</th>
+                    <th>Biến</th>
+                    <th>Cập nhật</th>
+                    <th>Trạng thái</th>
+                    <th class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="template-title">@item.DisplayName</div>
+                            <div class="template-desc">@item.Description</div>
+                            <div class="text-muted mt-1" style="font-size:.76rem;">@item.TemplateName</div>
+                        </td>
+                        <td>
+                            <div class="subject-text">@item.Subject</div>
+                        </td>
+                        <td>
+                            <span class="badge rounded-pill bg-info-subtle text-info-emphasis px-3 py-2">
+                                @item.TokenCount biến
+                            </span>
+                        </td>
+                        <td style="white-space:nowrap;">
+                            @if (item.LastModifiedAt.HasValue)
+                            {
+                                <span>@item.LastModifiedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">Thiếu file</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.IsUsedInSystem)
+                            {
+                                <span class="status-pill active"><i class="fas fa-check-circle"></i>Đang dùng</span>
+                            }
+                            else
+                            {
+                                <span class="status-pill idle"><i class="fas fa-box-archive"></i>Dự phòng</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="Edit"
+                               asp-route-templateName="@item.TemplateName"
+                               class="btn btn-primary btn-edit-template">
+                                <i class="fas fa-pen me-1"></i>Sửa
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -13,11 +13,16 @@ namespace SmartHealthMonitoring.Services
     {
         private readonly SmartHealthMonitoringContext _context;
         private readonly IEmailService _emailService;
+        private readonly IEmailTemplateService _emailTemplateService;
 
-        public EmailTriggerService(SmartHealthMonitoringContext context, IEmailService emailService)
+        public EmailTriggerService(
+            SmartHealthMonitoringContext context,
+            IEmailService emailService,
+            IEmailTemplateService emailTemplateService)
         {
             _context = context;
             _emailService = emailService;
+            _emailTemplateService = emailTemplateService;
         }
 
         public async Task SendAppointmentInvitationAsync(int alertId, int sentByDoctorId, DateTime? appointmentDate = null)
@@ -52,7 +57,9 @@ namespace SmartHealthMonitoring.Services
                     };
 
                     string subject = "Thư Mời Tái Khám - Smart Health Monitoring";
-                    string htmlBody = _emailService.GetHtmlContentFromFile("AppointmentInvitationTemplate.html", replacements);
+                    const string templateName = "AppointmentInvitationTemplate.html";
+                    subject = _emailTemplateService.GetSubject(templateName, replacements);
+                    string htmlBody = _emailTemplateService.RenderBody(templateName, replacements);
 
                     var notification = new EmailNotification
                     {
@@ -146,7 +153,9 @@ namespace SmartHealthMonitoring.Services
                     };
 
                     string subject = "CẢNH BÁO SỨC KHỎE KHẨN CẤP - Cần tới khám ngay";
-                    string htmlBody = _emailService.GetHtmlContentFromFile("HealthWarningTemplate.html", replacements);
+                    const string templateName = "HealthWarningTemplate.html";
+                    subject = _emailTemplateService.GetSubject(templateName, replacements);
+                    string htmlBody = _emailTemplateService.RenderBody(templateName, replacements);
 
                     var notification = new EmailNotification
                     {
@@ -217,7 +226,9 @@ namespace SmartHealthMonitoring.Services
                     };
 
                     string subject = "NHẮC NHỞ: Vui lòng ghi nhận chỉ số sức khỏe hàng ngày - Smart Health";
-                    string htmlBody = _emailService.GetHtmlContentFromFile("VitalLogReminderTemplate.html", replacements);
+                    const string templateName = "VitalLogReminderTemplate.html";
+                    subject = _emailTemplateService.GetSubject(templateName, replacements);
+                    string htmlBody = _emailTemplateService.RenderBody(templateName, replacements);
 
                     var notification = new EmailNotification
                     {
