@@ -1,6 +1,6 @@
 ﻿using SmartHealthMonitoring.Models;
 
-namespace SmartHealthMonitoring.Services
+namespace SmartHealthMonitoring.Interfaces
 {
     public interface IDoctorService
     {

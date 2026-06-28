@@ -119,5 +119,43 @@ namespace SmartHealthMonitoring.ViewModels.Admin
     {
         public PatientDemographicStatsViewModel Demographics { get; set; } = new();
         public ClinicalSymptomsStatsViewModel Symptoms { get; set; } = new();
+        public HabitStatisticsViewModel Habits { get; set; } = new();
+    }
+
+    // 5. Habit Statistics ViewModels
+    public class HabitItemViewModel
+    {
+        public string Key { get; set; } = null!;
+        public string Label { get; set; } = null!;
+        public string Description { get; set; } = null!;
+        public string Category { get; set; } = null!;   // "Ăn uống" | "Sinh hoạt" | "Hành vi" | "Tâm lý"
+        public string Type { get; set; } = null!;        // "bad" | "good"
+        public string Icon { get; set; } = null!;
+        public int Count { get; set; }
+        public double Percentage { get; set; }
+    }
+
+    public class HabitCategoryViewModel
+    {
+        public string Name { get; set; } = null!;
+        public string Icon { get; set; } = null!;
+        public string ColorClass { get; set; } = null!;
+        public List<HabitItemViewModel> Items { get; set; } = new();
+    }
+
+    public class HabitStatisticsViewModel
+    {
+        public int TotalPatientsWithHabit { get; set; }
+        public int TotalPatients { get; set; }
+        public List<HabitCategoryViewModel> Categories { get; set; } = new();
+        // Top 5 thói quen xấu phổ biến nhất (for bar chart)
+        public List<string> TopBadHabitLabels { get; set; } = new();
+        public List<int> TopBadHabitValues { get; set; } = new();
+        // Top 5 thói quen tốt phổ biến nhất (for bar chart)
+        public List<string> TopGoodHabitLabels { get; set; } = new();
+        public List<int> TopGoodHabitValues { get; set; } = new();
+        // Phân bố số lượng thói quen xấu mỗi bệnh nhân
+        public List<string> BadHabitDistributionLabels { get; set; } = new();
+        public List<int> BadHabitDistributionValues { get; set; } = new();
     }
 }

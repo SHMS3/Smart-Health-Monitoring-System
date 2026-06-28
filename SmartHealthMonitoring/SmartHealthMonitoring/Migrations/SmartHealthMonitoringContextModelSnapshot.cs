@@ -1300,6 +1300,67 @@ namespace SmartHealthMonitoring.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SmartHealthMonitoring.Models.HealthNewsPost", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthorName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(sysutcdatetime())");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("Manual");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Draft");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("HealthNewsPosts", (string)null);
+                });
+
             modelBuilder.Entity("SmartHealthMonitoring.Models.Patient", b =>
                 {
                     b.Property<int>("Id")
@@ -1444,6 +1505,91 @@ namespace SmartHealthMonitoring.Migrations
                             Sex = (byte)0,
                             UserId = 20
                         });
+                });
+
+            modelBuilder.Entity("SmartHealthMonitoring.Models.PatientHabit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AlcoholHeavy")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CaffeineSpike")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("DietBalanced")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("DietHighFat")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("DietHighSugar")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("DietLowFiber")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("DietSalty")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("DrinkEnoughWater")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ExerciseRegularly")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LifestyleSedentary")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LifestyleSitLong")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NoHealthCheck")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NoSubstanceAbuse")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("RegularHealthCheck")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SelfMedication")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SleepDeprived")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SleepEarly")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SmokeActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SmokePassive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("StressHigh")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(sysutcdatetime())");
+
+                    b.HasKey("Id")
+                        .HasName("PK_PatientHabits");
+
+                    b.HasIndex("PatientId")
+                        .IsUnique();
+
+                    b.ToTable("PatientHabit", (string)null);
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.PatientThreshold", b =>
@@ -2004,7 +2150,7 @@ namespace SmartHealthMonitoring.Migrations
                         {
                             Id = 1,
                             CreatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "dr.an@smarthealth.vn",
+                            Email = "    ",
                             FullName = "Nguyễn Văn An",
                             IsDeleted = false,
                             PasswordHash = "hash123",
@@ -2495,6 +2641,18 @@ namespace SmartHealthMonitoring.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SmartHealthMonitoring.Models.PatientHabit", b =>
+                {
+                    b.HasOne("SmartHealthMonitoring.Models.Patient", "Patient")
+                        .WithOne("PatientHabit")
+                        .HasForeignKey("SmartHealthMonitoring.Models.PatientHabit", "PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_PatientHabit_Patient");
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("SmartHealthMonitoring.Models.PatientThreshold", b =>
                 {
                     b.HasOne("SmartHealthMonitoring.Models.Patient", "Patient")
@@ -2508,7 +2666,7 @@ namespace SmartHealthMonitoring.Migrations
                         .WithMany()
                         .HasForeignKey("UpdatedByDoctorId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("FK__PatientTh__Docto");
+                        .HasConstraintName("FK_PatientThreshold_Doctor");
 
                     b.Navigation("Patient");
 
@@ -2625,6 +2783,8 @@ namespace SmartHealthMonitoring.Migrations
                     b.Navigation("DailyVitalLogs");
 
                     b.Navigation("EmailNotifications");
+
+                    b.Navigation("PatientHabit");
 
                     b.Navigation("PatientThreshold");
 

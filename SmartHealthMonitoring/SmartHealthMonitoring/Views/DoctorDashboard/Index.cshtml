@@ -1,4 +1,4 @@
-﻿@model SmartHealthMonitoring.Common.PagedResult<SmartHealthMonitoring.ViewModels.PatientListViewModel>
+@model SmartHealthMonitoring.Common.PagedResult<SmartHealthMonitoring.ViewModels.PatientListViewModel>
 @{
     ViewData["Title"] = "Bảng điều khiển Bác sĩ";
 }
@@ -54,12 +54,53 @@
 </style>
 
 <div class="container pt-5 mt-4 pb-5 doc-container">
+    @* ─── Banner cảnh báo chưa xử lý (hiện khi vừa đăng nhập) ─── *@
+    @if (ViewBag.UnresolvedAlertCount != null && (int)ViewBag.UnresolvedAlertCount > 0)
+    {
+        <div class="alert border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center gap-3"
+             style="background: linear-gradient(135deg, #fee2e2, #fecaca); border-left: 4px solid #ef4444 !important;">
+            <div style="width:44px;height:44px;background:#ef4444;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-exclamation-triangle text-white fs-5"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-danger fs-6">Cảnh báo chưa được xử lý!</div>
+                <div class="text-danger small">Hệ thống đang có <strong>@ViewBag.UnresolvedAlertCount</strong> cảnh báo AI cần bác sĩ tiếp nhận và xử lý khẩn cấp.</div>
+            </div>
+            <a asp-controller="WarningAlert" asp-action="Dashboard" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold flex-shrink-0">
+                <i class="fas fa-bell me-1"></i> Xem ngay
+            </a>
+        </div>
+    }
+
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
             <h3 class="fw-bold text-dark mb-1">Danh sách Bệnh nhân</h3>
             <p class="text-muted small mb-0">Quản lý và theo dõi chỉ số sức khỏe của bệnh nhân được phân công</p>
         </div>
+
+        @* ─── Widget Ca Trực ─── *@
+        <div class="card border-0 shadow-sm rounded-4 px-4 py-3 d-flex flex-row align-items-center gap-3" style="min-width:260px;">
+            <div id="shiftIconWrapper"
+                 style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                        background:@((bool)(ViewBag.IsOnShift ?? false) ? "#dcfce7" : "#f1f5f9");">
+                <i id="shiftIcon" class="fas @((bool)(ViewBag.IsOnShift ?? false) ? "fa-user-md text-success" : "fa-moon text-secondary") fs-5"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-dark small mb-0">Ca trực của tôi</div>
+                <div id="shiftBadge" class="badge rounded-pill px-2 mt-1"
+                     style="background:@((bool)(ViewBag.IsOnShift ?? false) ? "#dcfce7" : "#f1f5f9");
+                            color:@((bool)(ViewBag.IsOnShift ?? false) ? "#16a34a" : "#64748b"); font-size:0.72rem;">
+                    @((bool)(ViewBag.IsOnShift ?? false) ? "● Đang trực" : "○ Ngoài ca")
+                </div>
+            </div>
+            <div class="form-check form-switch mb-0 ms-2">
+                <input class="form-check-input" type="checkbox" role="switch"
+                       id="shiftToggle" style="width:2.4rem;height:1.2rem;cursor:pointer;"
+                       @((bool)(ViewBag.IsOnShift ?? false) ? "checked" : "")>
+            </div>
+        </div>
     </div>
+
 
     @if (TempData["Error"] != null)
     {
@@ -151,3 +192,58 @@
         }
     </div>
 </div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggle      = document.getElementById('shiftToggle');
+        const badge       = document.getElementById('shiftBadge');
+        const iconEl      = document.getElementById('shiftIcon');
+        const iconWrapper = document.getElementById('shiftIconWrapper');
+        if (!toggle) return;
+
+        toggle.addEventListener('change', async function () {
+            toggle.disabled = true;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+            try {
+                const resp = await fetch('/DoctorDashboard/ToggleShift', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: `__RequestVerificationToken=${encodeURIComponent(token)}`
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    if (data.isOnShift) {
+                        badge.textContent       = '● Đang trực';
+                        badge.style.background  = '#dcfce7';
+                        badge.style.color       = '#16a34a';
+                        iconWrapper.style.background = '#dcfce7';
+                        iconEl.className        = 'fas fa-user-md text-success fs-5';
+                    } else {
+                        badge.textContent       = '○ Ngoài ca';
+                        badge.style.background  = '#f1f5f9';
+                        badge.style.color       = '#64748b';
+                        iconWrapper.style.background = '#f1f5f9';
+                        iconEl.className        = 'fas fa-moon text-secondary fs-5';
+                    }
+                } else {
+                    // Nếu lỗi thì revert toggle
+                    toggle.checked = !toggle.checked;
+                    alert(data.message);
+                }
+            } catch {
+                toggle.checked = !toggle.checked;
+                alert('Lỗi kết nối. Vui lòng thử lại.');
+            } finally {
+                toggle.disabled = false;
+            }
+        });
+    });
+</script>
+}

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using SmartHealthMonitoring.Hubs;
-using SmartHealthMonitoring.Services;
+using SmartHealthMonitoring.Interfaces;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;

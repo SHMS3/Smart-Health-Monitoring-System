@@ -1,0 +1,206 @@
+@model SmartHealthMonitoring.Models.HealthNewsPost
+@{
+    ViewData["Title"] = Model.Title;
+    var relatedNews = ViewBag.RelatedNews as List<SmartHealthMonitoring.Models.HealthNewsPost>;
+}
+
+<style>
+    body {
+        background-color: #f8fafc;
+    }
+    
+    /* LEFT COLUMN - MAIN ARTICLE */
+    .article-container-new {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+    .article-header {
+        margin-bottom: 25px;
+        text-align: left;
+    }
+    .article-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 800;
+        font-size: 2rem;
+        color: #1a2340;
+        margin-bottom: 16px;
+        line-height: 1.35;
+    }
+    .article-meta {
+        color: #8a9bb0;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .article-badge {
+        background-color: #fce4e4;
+        color: #d32f2f;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        display: inline-block;
+        margin-bottom: 12px;
+    }
+    .article-thumbnail {
+        width: 100%;
+        height: auto;
+        max-height: 450px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    .article-content {
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: #404f60;
+    }
+    .article-content h2, .article-content h3 {
+        color: #1a2340;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        font-weight: 700;
+    }
+    .article-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        color: #1a73c8;
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 24px;
+        transition: color 0.2s;
+    }
+    .btn-back:hover {
+        color: #135fa5;
+        text-decoration: underline;
+    }
+
+    /* RIGHT COLUMN - RELATED NEWS */
+    .related-news-wrapper {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        position: sticky;
+        top: 20px;
+    }
+    .related-news-header {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #1a2340;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #f0f4f8;
+    }
+    .related-news-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .related-news-card {
+        display: flex;
+        gap: 12px;
+        text-decoration: none;
+        align-items: flex-start;
+        transition: transform 0.2s;
+    }
+    .related-news-card:hover {
+        transform: translateX(5px);
+    }
+    .related-news-img {
+        width: 80px;
+        height: 60px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    .related-news-content {
+        flex-grow: 1;
+    }
+    .related-news-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1a2340;
+        line-height: 1.4;
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .related-news-date {
+        font-size: 0.75rem;
+        color: #8a9bb0;
+    }
+
+    @@media(max-width: 991px) {
+        .related-news-wrapper {
+            margin-top: 30px;
+            position: static;
+        }
+    }
+</style>
+
+<div class="container container-xl py-5">
+    <a asp-action="News" class="btn-back"><i class="fas fa-arrow-left me-2"></i> Quay lại danh sách tin tức</a>
+    
+    <div class="row g-4">
+        <!-- Cột trái (Bài viết chính) -->
+        <div class="col-lg-8">
+            <div class="article-container-new">
+                <div class="article-header">
+                    <span class="article-badge">TIN TỨC</span>
+                    <h1 class="article-title">@Model.Title</h1>
+                    <div class="article-meta">
+                        <span><i class="fas fa-calendar-alt me-1"></i> @Model.PublishedAt?.ToString("dd/MM/yyyy HH:mm")</span>
+                        <span><i class="fas fa-user-edit me-1"></i> Quản trị viên</span>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.ThumbnailUrl))
+                {
+                    <img src="@Model.ThumbnailUrl" class="article-thumbnail" alt="@Model.Title" />
+                }
+
+                <div class="article-content">
+                    @Html.Raw(Model.Content)
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải (Tin tức liên quan) -->
+        <div class="col-lg-4">
+            <div class="related-news-wrapper">
+                <h3 class="related-news-header">Tin tức liên quan</h3>
+                @if (relatedNews != null && relatedNews.Any())
+                {
+                    <div class="related-news-list">
+                        @foreach (var item in relatedNews)
+                        {
+                            <a asp-action="NewsDetail" asp-route-id="@item.Id" class="related-news-card">
+                                <img src="@(string.IsNullOrEmpty(item.ThumbnailUrl) ? "/images/banner.jpg" : item.ThumbnailUrl)" class="related-news-img" alt="@item.Title" />
+                                <div class="related-news-content">
+                                    <div class="related-news-title">@item.Title</div>
+                                    <div class="related-news-date"><i class="far fa-clock me-1"></i> @item.PublishedAt?.ToString("dd/MM/yyyy")</div>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted" style="font-size: 0.85rem;">Chưa có bài viết liên quan.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

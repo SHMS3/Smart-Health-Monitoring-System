@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using SmartHealthMonitoring.Interfaces;
 
 namespace SmartHealthMonitoring.Controllers
 {

@@ -17,44 +17,57 @@ namespace SmartHealthMonitoring.Services.AI
         {
             _context = context;
         }
+        public async Task<WarningAlert?> GetByIdAsync(int id)
+        {
+            return await _context.WarningAlerts
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        }
 
-        public async Task<bool> ClaimAlertAsync(int alertId, int doctorId)
+        public async Task<ServiceResult> ClaimAlertAsync(
+      int alertId,
+      int doctorId)
         {
             var alert = await _context.WarningAlerts
-                .FirstOrDefaultAsync(x => x.Id == alertId && !x.IsDeleted);
+                .FirstOrDefaultAsync(x =>
+                    x.Id == alertId &&
+                    !x.IsDeleted);
 
             if (alert == null)
             {
-                return false;
+                return ServiceResult.Fail(
+                    "Cảnh báo không tồn tại.");
             }
 
-            // đã có người claim
             if (alert.Status != 0)
             {
-                return false;
+                return ServiceResult.Fail(
+                    "Cảnh báo đã được bác sĩ khác tiếp nhận.");
             }
 
-            // update
             alert.ClaimedByDoctorId = doctorId;
-
             alert.ClaimedAt = DateTime.Now;
-
             alert.Status = 1;
 
             try
             {
                 await _context.SaveChangesAsync();
-                return true;
 
+                return ServiceResult.Ok(
+                    "Tiếp nhận cảnh báo thành công.");
             }
             catch (DbUpdateConcurrencyException)
             {
-                // người khác claim trước
-                return false;
+                return ServiceResult.Fail(
+                    "Cảnh báo đã được bác sĩ khác tiếp nhận.");
+            }
+            catch
+            {
+                return ServiceResult.Fail(
+                    "Có lỗi xảy ra khi tiếp nhận cảnh báo.");
             }
         }
 
-       
+
 
         public async Task<List<WarningAlert>> GetAlertsAsync(byte? status, string? keyword, int page, int pageSize)
         {
@@ -115,7 +128,10 @@ namespace SmartHealthMonitoring.Services.AI
             return await query.CountAsync();
         }
 
-        public async Task<bool> ResolveAlertAsync(int alertId, int doctorId, string resolutionNote)
+        public async Task<ServiceResult> ResolveAlertAsync(
+    int alertId,
+    int doctorId,
+    string resolutionNote)
         {
             var alert = await _context.WarningAlerts
                 .FirstOrDefaultAsync(x =>
@@ -124,42 +140,45 @@ namespace SmartHealthMonitoring.Services.AI
 
             if (alert == null)
             {
-                return false;
+                return ServiceResult.Fail(
+                    "Cảnh báo không tồn tại.");
             }
 
-            // phải đang processing
             if (alert.Status != 1)
             {
-                return false;
+                return ServiceResult.Fail(
+                    "Cảnh báo chưa được tiếp nhận hoặc đã xử lý.");
             }
 
-            // chỉ doctor đã claim mới resolve được
             if (alert.ClaimedByDoctorId != doctorId)
             {
-                return false;
+                return ServiceResult.Fail(
+                    "Bạn không phải bác sĩ đang xử lý cảnh báo này.");
             }
 
             alert.Status = 2;
-
             alert.ResolutionNote = resolutionNote;
 
             try
             {
                 await _context.SaveChangesAsync();
 
-                return true;
+                return ServiceResult.Ok(
+                    "Xử lý cảnh báo thành công.");
             }
             catch
             {
-                return false;
+                return ServiceResult.Fail(
+                    "Có lỗi xảy ra khi cập nhật cảnh báo.");
             }
         }
-
         public async Task<WarningAlertDetailViewModel?> GetDetailAsync(int id)
         {
             var alert = await _context.WarningAlerts
                 .Include(x => x.Patient)
                     .ThenInclude(x => x.User)
+                .Include(x => x.Patient)
+                     .ThenInclude(x => x.PatientThreshold)
 
                 .Include(x => x.Patient)
                     .ThenInclude(x => x.ClinicalRecords)
@@ -200,6 +219,17 @@ namespace SmartHealthMonitoring.Services.AI
             .ToList()
             };
         }
-
+        public async Task<WarningAlert?> GetAlertForResolveAsync(int id)
+        {
+            return await _context.WarningAlerts
+                .Include(x => x.Patient)
+                    .ThenInclude(p => p.User)
+                .Include(x => x.Patient)
+                    .ThenInclude(p => p.PatientThreshold)
+                .Include(x => x.ClaimedByDoctor)
+                    .ThenInclude(d => d.User)
+                .Include(x => x.Prediction)
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        }
     }
 }

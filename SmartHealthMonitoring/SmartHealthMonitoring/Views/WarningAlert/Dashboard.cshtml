@@ -572,41 +572,5 @@
 
 //Resolve
 
-$(document).on(
-    'submit',
-    '.resolve-form',
-    function (e)
-{
-    e.preventDefault();
 
-    let form = $(this);
-
-    $.ajax({
-
-        url: '/WarningAlert/Resolve',
-
-        type: 'POST',
-
-        data: form.serialize(),
-
-        success: function (res)
-        {
-            alert(res.message);
-
-            if(res.success)
-            {
-                loadAlerts(
-                    currentStatus,
-                    $('#keyword').val(),
-                    currentPage);
-            }
-        },
-
-        error: function ()
-        {
-            alert('Có lỗi xảy ra');
-        }
-    });
-
-});
 </script>   

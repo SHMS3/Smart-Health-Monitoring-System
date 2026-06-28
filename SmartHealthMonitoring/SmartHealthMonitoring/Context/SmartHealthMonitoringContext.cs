@@ -8,6 +8,7 @@ namespace SmartHealthMonitoring.Context;
 public partial class SmartHealthMonitoringContext : DbContext
 {
     public SmartHealthMonitoringContext()
+
     {
     }
 
@@ -38,12 +39,15 @@ public partial class SmartHealthMonitoringContext : DbContext
 
     public virtual DbSet<WarningAlert> WarningAlerts { get; set; }
     public virtual DbSet<PatientThreshold> PatientThresholds { get; set; }
+    public virtual DbSet<PatientHabit> PatientHabits { get; set; }
 
     public virtual DbSet<StandardThreshold> StandardThresholds { get; set; }
 
     public virtual DbSet<TelemedicineChatMessage> TelemedicineChatMessages { get; set; }
 
     public virtual DbSet<TelemedicineChatSession> TelemedicineChatSessions { get; set; }
+
+    public virtual DbSet<HealthNewsPost> HealthNewsPosts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -328,7 +332,23 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .WithMany() // Không cần khai báo Collection ở Doctor cho gọn
                 .HasForeignKey(d => d.UpdatedByDoctorId)
                 .OnDelete(DeleteBehavior.SetNull) // Nếu bác sĩ bị xóa, giữ lại ngưỡng nhưng set null
-                .HasConstraintName("FK__PatientTh__Docto");
+                .HasConstraintName("FK_PatientThreshold_Doctor");
+        });
+
+        modelBuilder.Entity<PatientHabit>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_PatientHabits");
+
+            entity.ToTable("PatientHabit");
+
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
+
+            // Quan hệ 1-1 với Patient
+            entity.HasOne(d => d.Patient)
+                .WithOne(p => p.PatientHabit)
+                .HasForeignKey<PatientHabit>(d => d.PatientId)
+                .OnDelete(DeleteBehavior.Cascade) // Nếu xóa bệnh nhân thì xóa luôn thói quen
+                .HasConstraintName("FK_PatientHabit_Patient");
         });
 
         modelBuilder.Entity<StandardThreshold>(entity =>
@@ -699,6 +719,19 @@ public partial class SmartHealthMonitoringContext : DbContext
             // Index tối ưu truy vấn lịch sử chat theo session
             entity.HasIndex(e => new { e.SessionId, e.SentAt })
                 .HasDatabaseName("IX_TelemedicineChat_Session_Time");
+        });
+
+        modelBuilder.Entity<HealthNewsPost>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("HealthNewsPosts");
+            entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.Summary).HasMaxLength(1000);
+            entity.Property(e => e.Source).HasMaxLength(50).HasDefaultValue("Manual");
+            entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Draft");
+            entity.Property(e => e.ThumbnailUrl).HasMaxLength(500);
+            entity.Property(e => e.AuthorName).HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
-using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.Services.AI;
 
 namespace SmartHealthMonitoring.Workers.AI;
@@ -9,6 +9,7 @@ namespace SmartHealthMonitoring.Workers.AI;
 /// <summary>
 /// Background Worker chạy định kỳ, quét DailyVitalLogs và ClinicalRecords chưa được dự đoán,
 /// gọi AI prediction service và tạo WarningAlert khi RiskLevel >= 2.
+/// Khi không có bác sĩ nào đang trực (IsOnShift=true), kích hoạt Báo động đỏ toàn trạm.
 /// </summary>
 public class AiPredictionWorker : BackgroundService
 {
@@ -45,8 +46,9 @@ public class AiPredictionWorker : BackgroundService
     private async Task DoWorkAsync(CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
-        var aiService = scope.ServiceProvider.GetRequiredService<IAiPredictionService>();
+        var dbContext  = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
+        var aiService  = scope.ServiceProvider.GetRequiredService<IAiPredictionService>();
+        var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
         var emailTriggerService = scope.ServiceProvider.GetRequiredService<IEmailTriggerService>();
 
         int successCount = 0;
@@ -245,6 +247,11 @@ public class AiPredictionWorker : BackgroundService
                         _logger.LogWarning(
                             "[LUONG 1] => TAO CANH BAO MOI (RiskLevel={Level}, RiskScore={Score:F4}) cho BenhNhan={PatientId}",
                             prediction.RiskLevel, (double)prediction.RiskScore, log.PatientId);
+
+                        // KIEM TRA CA TRUC: neu khong co bac si nao online -> Thong bao khan cap cho benh nhan
+                        await NotifyPatientIfNoDoctorOnShiftAsync(
+                            dbContext, emailService, log.PatientId,
+                            prediction.RiskScore, prediction.RiskLevel, stoppingToken);
                     }
                     else
                     {
@@ -383,6 +390,11 @@ public class AiPredictionWorker : BackgroundService
                         _logger.LogWarning(
                             "[LUONG 2] => TAO CANH BAO MOI (RiskLevel={Level}, RiskScore={Score:F4}) cho BenhNhan={PatientId}",
                             prediction.RiskLevel, (double)prediction.RiskScore, record.PatientId);
+
+                        // KIEM TRA CA TRUC: neu khong co bac si nao online -> Thong bao khan cap cho benh nhan
+                        await NotifyPatientIfNoDoctorOnShiftAsync(
+                            dbContext, emailService, record.PatientId,
+                            prediction.RiskScore, prediction.RiskLevel, stoppingToken);
                     }
                     else
                     {
@@ -451,5 +463,101 @@ public class AiPredictionWorker : BackgroundService
             "║  Alert moi  : {AlertCount,-6}                                 ║\n" +
             "╚══════════════════════════════════════════════════════╝",
             successCount, total, pendingDailyLogs.Count, pendingClinicalRecords.Count, alertCount);
+    }
+
+    /// <summary>
+    /// Kiem tra co bac si nao dang truc khong.
+    /// Neu khong co ai: gui email khan cap cho benh nhan yeu cau goi 115 di cap cuu.
+    /// </summary>
+    private async Task NotifyPatientIfNoDoctorOnShiftAsync(
+        SmartHealthMonitoringContext dbContext,
+        IEmailService emailService,
+        int patientId,
+        decimal riskScore,
+        byte riskLevel,
+        CancellationToken stoppingToken)
+    {
+        bool anyDoctorOnShift = await dbContext.Doctors
+            .AnyAsync(d => d.IsOnShift && !d.IsDeleted, stoppingToken);
+
+        if (anyDoctorOnShift)
+        {
+            _logger.LogInformation("[CANH BAO] Da co bac si dang truc. Khong can gui thong bao cho benh nhan.");
+            return;
+        }
+
+        // Lay thong tin benh nhan de gui email
+        var patient = await dbContext.Patients
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.Id == patientId, stoppingToken);
+
+        if (patient == null || patient.User == null || string.IsNullOrEmpty(patient.User.Email))
+        {
+            _logger.LogWarning("[BAO DONG DO] Khong tim thay email cua benh nhan {PatientId} de gui thong bao cap cuu!", patientId);
+            return;
+        }
+
+        string patientEmail = patient.User.Email;
+        string patientName = patient.User.FullName;
+        string flaggedTime = DateTime.Now.ToString("HH:mm dd/MM/yyyy");
+
+        _logger.LogWarning(
+            "[BAO DONG DO] KHONG CO BAC SI NAO DANG TRUC! " +
+            "Bat dau gui email yeu cau di cap cuu 115 cho BenhNhan={PatientId} ({Email}).",
+            patientId, patientEmail);
+
+        string subject = $"[KHẨN CẤP] CẢNH BÁO SỨC KHỎE NGUY HIỂM - YÊU CẦU ĐI CẤP CỨU NGAY!";
+        string body = $"""
+            <!DOCTYPE html><html><body style='font-family:Arial,sans-serif;background:#f8f9fa;padding:20px'>
+            <div style='max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,.1)'>
+              <div style='background:linear-gradient(135deg,#dc2626,#b91c1c);padding:30px 24px;text-align:center'>
+                <div style='font-size:48px'>🚑</div>
+                <h2 style='color:#fff;margin:12px 0 4px'>CẢNH BÁO Y TẾ KHẨN CẤP</h2>
+                <p style='color:#fecaca;margin:0;font-size:15px'>Trạng thái sức khỏe nguy hiểm - Cần can thiệp y tế lập tức</p>
+              </div>
+              <div style='padding:28px 24px'>
+                <p style='font-size:16px;color:#1f2937'>Kính gửi <strong>{patientName}</strong>,</p>
+                <p style='font-size:16px;color:#374151;line-height:1.6'>
+                  Hệ thống Trí tuệ Nhân tạo (AI) của chúng tôi vừa phân tích các chỉ số sức khỏe bạn gửi lúc <strong>{flaggedTime}</strong> 
+                  và phát hiện các dấu hiệu <strong>CỰC KỲ NGUY HIỂM</strong> có nguy cơ đe dọa trực tiếp đến tính mạng.
+                </p>
+                
+                <div style='background:#fff1f2;border-left:4px solid #e11d48;padding:16px;margin:24px 0;border-radius:0 8px 8px 0'>
+                  <h3 style='margin:0 0 8px;color:#e11d48;font-size:18px'>⚠️ THÔNG BÁO QUAN TRỌNG:</h3>
+                  <p style='margin:0;color:#881337;font-size:15px;line-height:1.5'>
+                    Hiện tại phòng khám trực tuyến <strong>ĐANG NGOÀI GIỜ LÀM VIỆC</strong> và không có Bác sĩ trực ban để hỗ trợ ngay lập tức.
+                  </p>
+                </div>
+
+                <h3 style='color:#1f2937;margin-bottom:12px'>HƯỚNG DẪN XỬ TRÍ NGAY LẬP TỨC:</h3>
+                <ul style='color:#dc2626;font-size:16px;line-height:1.7;font-weight:bold;margin-bottom:24px'>
+                  <li>KHÔNG chờ đợi bác sĩ phản hồi trên ứng dụng!</li>
+                  <li>GỌI NGAY CHO CẤP CỨU 115.</li>
+                  <li>HOẶC nhờ người nhà đưa đến Cơ sở Y tế / Bệnh viện gần nhất NGAY LẬP TỨC.</li>
+                </ul>
+
+                <p style='color:#4b5563;font-size:14px;font-style:italic'>
+                  * Cảnh báo y tế này đã được lưu vào hồ sơ của bạn. Bác sĩ của chúng tôi sẽ liên hệ lại với bạn vào ca làm việc tiếp theo để theo dõi tiến triển.
+                </p>
+              </div>
+              <div style='background:#f9fafb;padding:16px 24px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6'>
+                Smart Health Monitoring System - Tin nhắn cảnh báo tự động sinh ra bởi AI.
+              </div>
+            </div></body></html>
+            """;
+
+        // Fire and Forget - khong block Worker
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await emailService.SendEmailAsync(patientEmail, subject, body);
+                _logger.LogInformation("[BAO DONG DO] Đã gửi email cấp cứu 115 thành công tới bệnh nhân.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[BAO DONG DO] Loi khi gui email cap cuu toi benh nhan {Email}", patientEmail);
+            }
+        });
     }
 }
