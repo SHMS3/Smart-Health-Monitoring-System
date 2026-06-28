@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.ViewModels;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,8 +21,14 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(byte? status, string? emailType, DateTime? fromDate, DateTime? toDate, string? keyword)
+        public async Task<IActionResult> Index(byte? status, string? emailType, DateTime? fromDate, DateTime? toDate, string? keyword, int? patientId, string? sender, int page = 1)
         {
+            const int pageSize = 10;
+            var today = DateTime.Today;
+            fromDate ??= today;
+            toDate ??= today;
+            page = Math.Max(page, 1);
+
             var query = _context.EmailNotifications
                 .Include(e => e.Patient).ThenInclude(p => p.User)
                 .AsQueryable();
@@ -33,6 +41,22 @@ namespace SmartHealthMonitoring.Controllers
 
             if (status.HasValue)
                 query = query.Where(e => e.Status == status.Value);
+
+            if (patientId.HasValue)
+                query = query.Where(e => e.PatientId == patientId.Value);
+
+            if (!string.IsNullOrWhiteSpace(sender))
+            {
+                if (sender == "system")
+                {
+                    query = query.Where(e => e.SentByDoctorId == null);
+                }
+                else if (sender.StartsWith("doctor:", StringComparison.OrdinalIgnoreCase) &&
+                         int.TryParse(sender.Substring("doctor:".Length), out var senderDoctorId))
+                {
+                    query = query.Where(e => e.SentByDoctorId == senderDoctorId);
+                }
+            }
 
             if (fromDate.HasValue)
                 query = query.Where(e => e.CreatedAt >= fromDate.Value.Date);
@@ -48,8 +72,16 @@ namespace SmartHealthMonitoring.Controllers
                     query = query.Where(e => e.Subject.Contains("CẢNH BÁO") || e.Subject.Contains("Cảnh báo") || e.Subject.Contains("cảnh báo"));
             }
 
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            if (totalPages > 0 && page > totalPages)
+                page = totalPages;
+
             var emailsList = await query
                 .OrderByDescending(e => e.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
             // Load doctor names (SentByDoctorId → Doctor → User.FullName)
@@ -98,6 +130,36 @@ namespace SmartHealthMonitoring.Controllers
                 ByDoctor = statsAll.Count(e => e.SentByDoctorId != null)
             };
 
+            var patientOptions = await _context.EmailNotifications
+                .Select(e => new
+                {
+                    e.PatientId,
+                    PatientName = e.Patient.User.FullName ?? e.ToEmail
+                })
+                .Distinct()
+                .OrderBy(e => e.PatientName)
+                .ToListAsync();
+
+            var senderDoctorIds = await _context.EmailNotifications
+                .Where(e => e.SentByDoctorId.HasValue)
+                .Select(e => e.SentByDoctorId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            var senderDoctors = await _context.Doctors
+                .Include(d => d.User)
+                .Where(d => senderDoctorIds.Contains(d.Id))
+                .OrderBy(d => d.User!.FullName)
+                .Select(d => new
+                {
+                    d.Id,
+                    DoctorName = d.User != null ? d.User.FullName : "Bác sĩ"
+                })
+                .ToListAsync();
+
+            var hasSystemSender = await _context.EmailNotifications
+                .AnyAsync(e => e.SentByDoctorId == null);
+
             var viewModel = new EmailHistoryIndexViewModel
             {
                 Emails = dtos,
@@ -105,8 +167,44 @@ namespace SmartHealthMonitoring.Controllers
                 FilterEmailType = emailType,
                 FromDate = fromDate,
                 ToDate = toDate,
+                FilterKeyword = keyword,
+                FilterPatientId = patientId,
+                FilterSender = sender,
+                PatientOptions = new List<SelectListItem>
+                {
+                    new SelectListItem { Value = "", Text = "Bệnh nhân" }
+                },
+                SenderOptions = new List<SelectListItem>
+                {
+                    new SelectListItem { Value = "", Text = "Người gửi" }
+                },
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = totalPages,
                 Stats = stats
             };
+
+            viewModel.PatientOptions.AddRange(patientOptions.Select(p => new SelectListItem
+            {
+                Value = p.PatientId.ToString(),
+                Text = p.PatientName
+            }));
+
+            if (hasSystemSender)
+            {
+                viewModel.SenderOptions.Add(new SelectListItem
+                {
+                    Value = "system",
+                    Text = "Hệ thống tự động"
+                });
+            }
+
+            viewModel.SenderOptions.AddRange(senderDoctors.Select(d => new SelectListItem
+            {
+                Value = $"doctor:{d.Id}",
+                Text = d.DoctorName
+            }));
 
             return View(viewModel);
         }
