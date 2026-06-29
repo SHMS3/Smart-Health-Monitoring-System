@@ -122,7 +122,7 @@
                         </td>
 
                         <td>
-                            <a asp-action="Detail"
+                            <a asp-action="Details"
                                asp-route-id="@item.Id"
                                class="btn btn-sm btn-outline-primary mb-2">
 
@@ -133,6 +133,7 @@
 
                             <br />
 
+                            
                             @if (item.Status == 0)
                             {
                                 <form class="claim-form">
@@ -142,6 +143,7 @@
                                     <input type="hidden"
                                            name="id"
                                            value="@item.Id" />
+
                                     <button type="submit"
                                             class="claim-btn">
 
@@ -154,110 +156,35 @@
                             else if (item.Status == 1 &&
                             item.ClaimedByDoctorId == (int?)ViewData["DoctorId"])
                             {
-                                <form class="resolve-form">
+                                <a asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-sm btn-outline-primary">
 
-                                    @Html.AntiForgeryToken()
+                                    <i class="fas fa-eye"></i>
+                                    Chi tiết
 
-                                    <input type="hidden"
-                                           name="id"
-                                           value="@item.Id" />
-
-                                    <textarea name="resolutionNote"
-                                  class="resolve-input"
-                                  placeholder="Nhập ghi chú xử lý..."
-                                  required></textarea>
-
-                                    <!-- Collapsible Threshold Update section -->
-                                    <div class="mt-2 text-start">
-                                        <button class="btn btn-outline-secondary btn-sm w-100 py-1" type="button" data-bs-toggle="collapse" data-bs-target="#thresholdCollapse_@item.Id" aria-expanded="false" aria-controls="thresholdCollapse_@item.Id" style="font-size: 0.75rem; border-radius: 6px;">
-                                            <i class="fas fa-sliders-h me-1"></i> Cập nhật ngưỡng (Tùy chọn)
-                                        </button>
-                                        <div class="collapse" id="thresholdCollapse_@item.Id">
-                                            <div class="p-2 mt-2 border rounded bg-light" style="font-size: 0.75rem; min-width: 240px; line-height: 1.2;">
-                                                <div class="row g-2">
-                                                    <div class="col-12 text-muted fw-bold border-bottom pb-1 mb-1" style="font-size: 0.7rem;">HA Tâm Thu (mmHg)</div>
-                                                    <div class="col-6">
-                                                        <label class="form-label mb-0 text-secondary" style="font-size: 0.65rem;">Cảnh báo</label>
-                                                        <input type="number" name="systolicBpWarning" class="form-control form-control-sm p-1" placeholder="VD: 130" value="@(item.Patient.PatientThreshold?.SystolicBpWarning)" style="font-size: 0.75rem; height: auto;" />
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label class="form-label mb-0 text-secondary" style="font-size: 0.65rem;">Nguy hiểm</label>
-                                                        <input type="number" name="systolicBpDanger" class="form-control form-control-sm p-1" placeholder="VD: 140" value="@(item.Patient.PatientThreshold?.SystolicBpDanger)" style="font-size: 0.75rem; height: auto;" />
-                                                    </div>
-                                                    
-                                                    <div class="col-12 text-muted fw-bold border-bottom pb-1 mb-1 mt-2" style="font-size: 0.7rem;">HA Tâm Trương (mmHg)</div>
-                                                    <div class="col-6">
-                                                        <label class="form-label mb-0 text-secondary" style="font-size: 0.65rem;">Cảnh báo</label>
-                                                        <input type="number" name="diastolicBpWarning" class="form-control form-control-sm p-1" placeholder="VD: 80" value="@(item.Patient.PatientThreshold?.DiastolicBpWarning)" style="font-size: 0.75rem; height: auto;" />
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label class="form-label mb-0 text-secondary" style="font-size: 0.65rem;">Nguy hiểm</label>
-                                                        <input type="number" name="diastolicBpDanger" class="form-control form-control-sm p-1" placeholder="VD: 90" value="@(item.Patient.PatientThreshold?.DiastolicBpDanger)" style="font-size: 0.75rem; height: auto;" />
-                                                    </div>
-                                                    
-                                                    <div class="col-12 text-muted fw-bold border-bottom pb-1 mb-1 mt-2" style="font-size: 0.7rem;">Nhịp tim Thấp (bpm)</div>
-                                                    <div class="col-6">
-                                                        <label class="form-label mb-0 text-secondary" style="font-size: 0.65rem;">Nguy hiểm</label>
-                                                        <input type="number" name="heartRateDangerMin" class="form-control form-control-sm p-1" placeholder="VD: 50" value="@(item.Patient.PatientThreshold?.HeartRateDangerMin)" style="font-size: 0.75rem; height: auto;" />
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label class="form-label mb-0 text-secondary" style="font-size: 0.65rem;">Cảnh báo</label>
-                                                        <input type="number" name="heartRateWarningMin" class="form-control form-control-sm p-1" placeholder="VD: 60" value="@(item.Patient.PatientThreshold?.HeartRateWarningMin)" style="font-size: 0.75rem; height: auto;" />
-                                                    </div>
-                                                    
-                                                    <div class="col-12 text-muted fw-bold border-bottom pb-1 mb-1 mt-2" style="font-size: 0.7rem;">Nhịp tim Cao (bpm)</div>
-                                                    <div class="col-6">
-                                                        <label class="form-label mb-0 text-secondary" style="font-size: 0.65rem;">Cảnh báo</label>
-                                                        <input type="number" name="heartRateWarningMax" class="form-control form-control-sm p-1" placeholder="VD: 100" value="@(item.Patient.PatientThreshold?.HeartRateWarningMax)" style="font-size: 0.75rem; height: auto;" />
-                                                    </div>
-                                                    <div class="col-6">
-                                                        <label class="form-label mb-0 text-secondary" style="font-size: 0.65rem;">Nguy hiểm</label>
-                                                        <input type="number" name="heartRateDangerMax" class="form-control form-control-sm p-1" placeholder="VD: 120" value="@(item.Patient.PatientThreshold?.HeartRateDangerMax)" style="font-size: 0.75rem; height: auto;" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-check mt-2 mb-2">
-
-                                        <input class="form-check-input"
-                                               type="checkbox"
-                                               name="sendEmailInvitation"
-                                               value="true"
-                                               id="email_@item.Id"
-                                               checked />
-
-                                        <label class="form-check-label"
-                                               for="email_@item.Id">
-
-                                            Gửi email mời tái khám
-
-                                        </label>
-
-                                    </div>
-
-                                    <button type="submit"
-                                            class="resolve-btn">
-
-                                        Hoàn tất
-
-                                    </button>
-
-                                </form>
+                                </a>
                             }
                             else if (item.Status == 1)
                             {
                                 <span class="claimed-text">
+
                                     Đang được bác sĩ khác xử lý
+
                                 </span>
                             }
                             else
                             {
                                 <span class="status-badge status-resolved">
+
                                     Hoàn tất
+
                                 </span>
                             }
+                            
+
+                        </td>
+
 
                         </td>
 
