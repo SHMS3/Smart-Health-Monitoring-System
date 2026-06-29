@@ -154,19 +154,37 @@
         <div>
             @if (User.IsInRole("1"))
             {
-                <a asp-controller="ClinicalExam"
-                   asp-action="Create"
-                   asp-route-patientId="@Model.PatientId"
-                   class="btn btn-add-record me-2">
-                    <i class="fas fa-notes-medical me-1"></i> Thêm mới Hồ sơ
-                </a>
+                @if (Model.HasPaidPaymentToday)
+                {
+                    <a asp-controller="ClinicalExam"
+                       asp-action="Create"
+                       asp-route-patientId="@Model.PatientId"
+                       class="btn btn-add-record me-2">
+                        <i class="fas fa-notes-medical me-1"></i> Thêm mới Hồ sơ
+                    </a>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary me-2" onclick="Swal.fire('Chưa thanh toán', 'Vui lòng yêu cầu bệnh nhân thanh toán phí dịch vụ tại quầy lễ tân trước khi thêm hồ sơ mới.', 'warning')">
+                        <i class="fas fa-notes-medical me-1"></i> Thêm mới Hồ sơ
+                    </button>
+                }
 
-                <a asp-controller="ClinicalExam"
-                   asp-action="SettingPatientThreshold"
-                   asp-route-patientId="@Model.PatientId"
-                   class="btn btn-warning fw-bold text-dark shadow-sm">
-                    <i class="fas fa-cog me-1"></i> Cấu hình ngưỡng
-                </a>
+                @if (Model.Records.TotalCount > 0)
+                {
+                    <a asp-controller="ClinicalExam"
+                       asp-action="SettingPatientThreshold"
+                       asp-route-patientId="@Model.PatientId"
+                       class="btn btn-warning fw-bold text-dark shadow-sm">
+                        <i class="fas fa-cog me-1"></i> Cấu hình ngưỡng
+                    </a>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-warning fw-bold text-dark shadow-sm opacity-50" onclick="Swal.fire('Chưa có hồ sơ', 'Bệnh nhân cần có ít nhất một hồ sơ bệnh án trước khi cấu hình ngưỡng.', 'info')">
+                        <i class="fas fa-cog me-1"></i> Cấu hình ngưỡng
+                    </button>
+                }
             }
         </div>
     </div>
@@ -670,4 +688,8 @@
             </div>
         </div>
     }
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 }

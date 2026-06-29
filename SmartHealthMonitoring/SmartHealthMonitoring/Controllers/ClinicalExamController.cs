@@ -35,9 +35,29 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create(int patientId)
+        public async Task<IActionResult> Create(int patientId)
         {
             var model = new ClinicalExamFormViewModel { PatientId = patientId };
+            
+            // Lấy id bác sĩ
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(userIdString, out int userId))
+            {
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+                if (doctor != null)
+                {
+                    // Check if there is a Paid payment for this patient and doctor today
+                    var today = DateTime.UtcNow.Date;
+                    var hasPaidPayment = await _context.Payments.AnyAsync(p => 
+                        p.PatientId == patientId && 
+                        p.DoctorId == doctor.Id && 
+                        p.Status == "Paid" && 
+                        p.CreatedAt >= today);
+
+                    ViewBag.CanFetchData = hasPaidPayment;
+                }
+            }
+
             return View(model);
         }
 

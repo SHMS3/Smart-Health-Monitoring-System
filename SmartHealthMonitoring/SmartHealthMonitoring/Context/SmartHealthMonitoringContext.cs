@@ -49,6 +49,10 @@ public partial class SmartHealthMonitoringContext : DbContext
 
     public virtual DbSet<HealthNewsPost> HealthNewsPosts { get; set; }
 
+    public virtual DbSet<Service> Services { get; set; }
+    public virtual DbSet<Payment> Payments { get; set; }
+    public virtual DbSet<PaymentDetail> PaymentDetails { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         // Để trống hàm này, không hardcode chuỗi kết nối ở đây nữa
@@ -732,6 +736,28 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.Property(e => e.ThumbnailUrl).HasMaxLength(500);
             entity.Property(e => e.AuthorName).HasMaxLength(100);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+        });
+
+        modelBuilder.Entity<Service>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("Services");
+        });
+
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("Payments");
+            entity.HasOne(d => d.Doctor).WithMany().HasForeignKey(d => d.DoctorId).OnDelete(DeleteBehavior.NoAction);
+            entity.HasOne(d => d.Patient).WithMany().HasForeignKey(d => d.PatientId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<PaymentDetail>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("PaymentDetails");
+            entity.HasOne(d => d.Payment).WithMany(p => p.PaymentDetails).HasForeignKey(d => d.PaymentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.Service).WithMany(p => p.PaymentDetails).HasForeignKey(d => d.ServiceId).OnDelete(DeleteBehavior.NoAction);
         });
 
         OnModelCreatingPartial(modelBuilder);

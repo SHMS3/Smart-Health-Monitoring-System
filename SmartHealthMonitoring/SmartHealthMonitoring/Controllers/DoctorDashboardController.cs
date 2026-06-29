@@ -168,5 +168,74 @@ namespace SmartHealthMonitoring.Controllers
 
             return View(model);
         }
+        [HttpGet]
+        public async Task<IActionResult> GetServices()
+        {
+            var services = await _context.Services
+                .Where(s => s.IsActive)
+                .Select(s => new { s.Id, s.Name, s.Price, s.Description })
+                .ToListAsync();
+            return Json(new { success = true, data = services });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentRequest request)
+        {
+            try
+            {
+                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdString, out int userId))
+                    return Json(new { success = false, message = "Không xác định được tài khoản bác sĩ." });
+
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+                if (doctor == null)
+                    return Json(new { success = false, message = "Không tìm thấy hồ sơ bác sĩ." });
+
+                if (request.ServiceIds == null || !request.ServiceIds.Any())
+                    return Json(new { success = false, message = "Vui lòng chọn ít nhất một dịch vụ." });
+
+                var services = await _context.Services
+                    .Where(s => request.ServiceIds.Contains(s.Id) && s.IsActive)
+                    .ToListAsync();
+
+                if (!services.Any())
+                    return Json(new { success = false, message = "Các dịch vụ đã chọn không hợp lệ." });
+
+                var payment = new Payment
+                {
+                    PatientId = request.PatientId,
+                    DoctorId = doctor.Id,
+                    TotalAmount = services.Sum(s => s.Price),
+                    Status = "Pending",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Payments.Add(payment);
+                await _context.SaveChangesAsync();
+
+                var paymentDetails = services.Select(s => new PaymentDetail
+                {
+                    PaymentId = payment.Id,
+                    ServiceId = s.Id,
+                    PriceAtTime = s.Price
+                }).ToList();
+
+                _context.PaymentDetails.AddRange(paymentDetails);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Đã gửi yêu cầu thanh toán thành công." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi khi tạo yêu cầu thanh toán: " + ex.Message });
+            }
+        }
+    }
+
+    public class CreatePaymentRequest
+    {
+        public int PatientId { get; set; }
+        public List<int> ServiceIds { get; set; } = new List<int>();
     }
 }

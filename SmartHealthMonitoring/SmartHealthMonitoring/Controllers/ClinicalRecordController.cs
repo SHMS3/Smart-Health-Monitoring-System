@@ -158,6 +158,13 @@ namespace SmartHealthMonitoring.Controllers
                     .ToListAsync();
 
                 // ========================================================
+                // Kiểm tra trạng thái thanh toán hôm nay
+                // ========================================================
+                var todayDate = DateTime.UtcNow.Date;
+                bool hasPaidPaymentToday = await _context.Payments
+                    .AnyAsync(p => p.PatientId == patient.Id && p.Status == "Paid" && p.CreatedAt.Date == todayDate);
+
+                // ========================================================
                 // Gói toàn bộ dữ liệu vào ViewModel chung
                 // ========================================================
                 var viewModel = new PatientRecordIndexViewModel
@@ -182,7 +189,8 @@ namespace SmartHealthMonitoring.Controllers
                         Page = diaryPage,
                         PageSize = diaryPageSize
                     },
-                    
+
+                    HasPaidPaymentToday = hasPaidPaymentToday,
                     SearchDate = searchDate,
                     ActiveTab = activeTab
                 };

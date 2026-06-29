@@ -1,0 +1,103 @@
+@model SmartHealthMonitoring.Common.PagedResult<SmartHealthMonitoring.Models.Payment>
+@{
+    ViewData["Title"] = "Quản lý Thanh toán";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold mb-0">Danh sách yêu cầu thanh toán</h3>
+    <form method="get" class="d-flex gap-2 align-items-center">
+        <label class="text-muted small fw-bold mb-0 text-nowrap">Trạng thái:</label>
+        <select name="status" class="form-select rounded-pill px-3" style="width: 180px;" onchange="this.form.submit()">
+            @if(ViewBag.CurrentStatus == "All") { <option value="All" selected>Tất cả</option> } else { <option value="All">Tất cả</option> }
+            @if(ViewBag.CurrentStatus == "Pending") { <option value="Pending" selected>Chờ thanh toán</option> } else { <option value="Pending">Chờ thanh toán</option> }
+            @if(ViewBag.CurrentStatus == "Paid") { <option value="Paid" selected>Đã thanh toán</option> } else { <option value="Paid">Đã thanh toán</option> }
+        </select>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Mã Phiếu</th>
+                        <th>Bệnh nhân</th>
+                        <th>Bác sĩ yêu cầu</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Thời gian tạo</th>
+                        <th class="text-end pe-4">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Items.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">Không có yêu cầu thanh toán nào.</td>
+                        </tr>
+                    }
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold">#@item.Id.ToString("D5")</td>
+                            <td>@item.Patient.User.FullName</td>
+                            <td>Bs. @item.Doctor.User.FullName</td>
+                            <td class="text-danger fw-bold">@item.TotalAmount.ToString("N0") đ</td>
+                            <td>
+                                @if (item.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                                }
+                                else if (item.Status == "Paid")
+                                {
+                                    <span class="badge bg-success">Đã thanh toán</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@item.Status</span>
+                                }
+                            </td>
+                            <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end pe-4">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary rounded-pill px-3 me-1">Chi tiết</a>
+                                @if (item.Status == "Pending")
+                                {
+                                    <a asp-action="Checkout" asp-route-id="@item.Id" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold">
+                                        <i class="fas fa-cash-register me-1"></i>Thu tiền
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white border-top-0 rounded-bottom-4 py-3 px-4 d-flex justify-content-between align-items-center">
+            <span class="text-muted small">
+                Hiển thị trang <strong>@Model.Page</strong> / @Model.TotalPages (Tổng số: <strong>@Model.TotalCount</strong> phiếu)
+            </span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                        <a class="page-link rounded-start-pill px-3" asp-action="Index" asp-route-status="@ViewBag.CurrentStatus" asp-route-page="@(Model.Page - 1)">Trước</a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link px-3" asp-action="Index" asp-route-status="@ViewBag.CurrentStatus" asp-route-page="@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link rounded-end-pill px-3" asp-action="Index" asp-route-status="@ViewBag.CurrentStatus" asp-route-page="@(Model.Page + 1)">Sau</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
