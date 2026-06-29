@@ -1,6 +1,12 @@
 @model SmartHealthMonitoring.ViewModels.ClinicalExamFormViewModel
 @{
     ViewData["Title"] = "Nhập Phiếu Khám Lâm Sàng";
+
+    // Lấy danh sách tên gói đã thanh toán từ ViewBag (lowercase)
+    var purchasedServices = (ViewBag.PurchasedServices as List<string>) ?? new List<string>();
+    bool hasBpPackage    = purchasedServices.Any(s => s.Contains("huyết áp"));
+    bool hasBloodPackage = purchasedServices.Any(s => s.Contains("huyết học"));
+    bool hasEcgPackage   = purchasedServices.Any(s => s.Contains("điện tâm đồ") || s.Contains("mạch vành"));
 }
 
 @section Styles {
@@ -45,17 +51,9 @@
         }
 
         @@keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
-            }
-
-            70% {
-                box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-            }
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
         }
 
         .btn-lis-fetch {
@@ -72,14 +70,47 @@
                 color: white;
             }
 
+        /* ─── Gói chưa thanh toán ────────────────────────────────────── */
         .form-section {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 16px;
             padding: 24px;
             height: 100%;
+            position: relative;
+            transition: all 0.2s;
         }
 
+        .form-section.locked {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            opacity: 0.72;
+        }
+
+        .form-section.locked .form-control,
+        .form-section.locked .form-select {
+            background-color: #e2e8f0 !important;
+            color: #94a3b8 !important;
+            cursor: not-allowed !important;
+        }
+
+        .locked-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #f43f5e;
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.03em;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ─── Chung ─────────────────────────────────────────────────── */
         .section-title {
             font-size: 1rem;
             font-weight: 700;
@@ -100,20 +131,9 @@
             font-size: 0.9rem;
         }
 
-        .bg-red-soft {
-            background: #fee2e2;
-            color: #ef4444;
-        }
-
-        .bg-blue-soft {
-            background: #e0f2fe;
-            color: #0ea5e9;
-        }
-
-        .bg-purple-soft {
-            background: #f3e8ff;
-            color: #8b5cf6;
-        }
+        .bg-red-soft    { background: #fee2e2; color: #ef4444; }
+        .bg-blue-soft   { background: #e0f2fe; color: #0ea5e9; }
+        .bg-purple-soft { background: #f3e8ff; color: #8b5cf6; }
 
         .form-control:read-only, .form-select:disabled {
             background-color: #f1f5f9;
@@ -155,9 +175,20 @@
                 <input type="hidden" id="patientIdHidden" name="PatientId" value="@Model.PatientId" />
                 <input type="hidden" id="ecgImageUrlHidden" asp-for="EcgImageUrl" />
 
+                @* Truyền thông tin gói mua xuống JS *@
+                <input type="hidden" id="hasBpPackage"    value="@hasBpPackage.ToString().ToLower()" />
+                <input type="hidden" id="hasBloodPackage" value="@hasBloodPackage.ToString().ToLower()" />
+                <input type="hidden" id="hasEcgPackage"   value="@hasEcgPackage.ToString().ToLower()" />
+
                 <div class="row g-4 mb-4">
+
+                    @* ─── GÓI 1: Huyết áp & Triệu chứng ─────────────────── *@
                     <div class="col-lg-4">
-                        <div class="form-section">
+                        <div class="form-section @(!hasBpPackage ? "locked" : "")">
+                            @if (!hasBpPackage)
+                            {
+                                <div class="locked-badge"><i class="fas fa-lock"></i> Chưa thanh toán</div>
+                            }
                             <div class="section-title">
                                 <div class="section-icon bg-red-soft"><i class="fas fa-heartbeat"></i></div>
                                 Huyết áp & Triệu chứng
@@ -165,7 +196,7 @@
 
                             <div class="mb-3">
                                 <label asp-for="ChestPainType" class="custom-label">Loại đau ngực (Chest Pain Type)</label>
-                                <select asp-for="ChestPainType" class="form-select shadow-sm auto-field" disabled>
+                                <select asp-for="ChestPainType" class="form-select shadow-sm auto-field bp-field" disabled>
                                     <option value="">-- Trống --</option>
                                     <option value="0">Typical Angina (TA)</option>
                                     <option value="1">Atypical Angina (ATA)</option>
@@ -177,7 +208,7 @@
 
                             <div class="mb-3">
                                 <label asp-for="ExerciseAngina" class="custom-label">Đau ngực gắng sức (Exercise Angina)</label>
-                                <select asp-for="ExerciseAngina" class="form-select shadow-sm auto-field" disabled>
+                                <select asp-for="ExerciseAngina" class="form-select shadow-sm auto-field bp-field" disabled>
                                     <option value="">-- Trống --</option>
                                     <option value="0">Không (No)</option>
                                     <option value="1">Có (Yes)</option>
@@ -187,20 +218,25 @@
 
                             <div class="mb-3">
                                 <label asp-for="RestingBP" class="custom-label">Huyết áp nghỉ (Resting BP - mmHg)</label>
-                                <input asp-for="RestingBP" type="number" class="form-control shadow-sm auto-field" placeholder="Chờ đồng bộ..." readonly />
+                                <input asp-for="RestingBP" type="number" class="form-control shadow-sm auto-field bp-field" placeholder="Chờ đồng bộ..." readonly />
                                 <span asp-validation-for="RestingBP" class="text-danger small fw-medium mt-1 d-block"></span>
                             </div>
 
                             <div class="mb-0">
                                 <label asp-for="MaxHeartRate" class="custom-label">Nhịp tim tối đa (Max Heart Rate)</label>
-                                <input asp-for="MaxHeartRate" type="number" class="form-control shadow-sm auto-field" placeholder="Chờ đồng bộ..." readonly />
+                                <input asp-for="MaxHeartRate" type="number" class="form-control shadow-sm auto-field bp-field" placeholder="Chờ đồng bộ..." readonly />
                                 <span asp-validation-for="MaxHeartRate" class="text-danger small fw-medium mt-1 d-block"></span>
                             </div>
                         </div>
                     </div>
 
+                    @* ─── GÓI 2: Phân tích Huyết học ───────────────────────── *@
                     <div class="col-lg-4">
-                        <div class="form-section">
+                        <div class="form-section @(!hasBloodPackage ? "locked" : "")">
+                            @if (!hasBloodPackage)
+                            {
+                                <div class="locked-badge"><i class="fas fa-lock"></i> Chưa thanh toán</div>
+                            }
                             <div class="section-title">
                                 <div class="section-icon bg-blue-soft"><i class="fas fa-tint"></i></div>
                                 Phân tích Huyết học
@@ -208,13 +244,13 @@
 
                             <div class="mb-3">
                                 <label asp-for="Cholesterol" class="custom-label">Cholesterol (mg/dl)</label>
-                                <input asp-for="Cholesterol" type="number" class="form-control shadow-sm auto-field" placeholder="Chờ đồng bộ..." readonly />
+                                <input asp-for="Cholesterol" type="number" class="form-control shadow-sm auto-field blood-field" placeholder="Chờ đồng bộ..." readonly />
                                 <span asp-validation-for="Cholesterol" class="text-danger small fw-medium mt-1 d-block"></span>
                             </div>
 
                             <div class="mb-0">
                                 <label asp-for="FastingBS" class="custom-label">Đường huyết đói > 120 mg/dl</label>
-                                <select asp-for="FastingBS" class="form-select shadow-sm auto-field" disabled>
+                                <select asp-for="FastingBS" class="form-select shadow-sm auto-field blood-field" disabled>
                                     <option value="">-- Trống --</option>
                                     <option value="0">Bình thường (False)</option>
                                     <option value="1">Cao (True)</option>
@@ -224,8 +260,13 @@
                         </div>
                     </div>
 
+                    @* ─── GÓI 3: Điện tâm đồ & Mạch vành ───────────────────── *@
                     <div class="col-lg-4">
-                        <div class="form-section">
+                        <div class="form-section @(!hasEcgPackage ? "locked" : "")">
+                            @if (!hasEcgPackage)
+                            {
+                                <div class="locked-badge"><i class="fas fa-lock"></i> Chưa thanh toán</div>
+                            }
                             <div class="section-title">
                                 <div class="section-icon bg-purple-soft"><i class="fas fa-wave-square"></i></div>
                                 Điện tâm đồ & Mạch vành
@@ -233,7 +274,7 @@
 
                             <div class="mb-3">
                                 <label asp-for="RestECG" class="custom-label">Điện tâm đồ nghỉ (Rest ECG)</label>
-                                <select asp-for="RestECG" class="form-select shadow-sm auto-field" disabled>
+                                <select asp-for="RestECG" class="form-select shadow-sm auto-field ecg-field" disabled>
                                     <option value="">-- Trống --</option>
                                     <option value="0">Normal</option>
                                     <option value="1">ST-T Abnormality</option>
@@ -245,7 +286,7 @@
                             <div class="row">
                                 <div class="col-6 mb-3">
                                     <label asp-for="STSlope" class="custom-label">Độ dốc ST</label>
-                                    <select asp-for="STSlope" class="form-select shadow-sm auto-field" disabled>
+                                    <select asp-for="STSlope" class="form-select shadow-sm auto-field ecg-field" disabled>
                                         <option value="">-- Trống --</option>
                                         <option value="1">Upsloping</option>
                                         <option value="2">Flat</option>
@@ -255,7 +296,7 @@
                                 </div>
                                 <div class="col-6 mb-3">
                                     <label asp-for="OldPeak" class="custom-label">Oldpeak</label>
-                                    <input asp-for="OldPeak" type="number" step="0.1" class="form-control shadow-sm auto-field" placeholder="..." readonly />
+                                    <input asp-for="OldPeak" type="number" step="0.1" class="form-control shadow-sm auto-field ecg-field" placeholder="..." readonly />
                                     <span asp-validation-for="OldPeak" class="text-danger small fw-medium mt-1 d-block"></span>
                                 </div>
                             </div>
@@ -263,7 +304,7 @@
                             <div class="row">
                                 <div class="col-6 mb-0">
                                     <label asp-for="MajorVessels" class="custom-label">Mạch chính</label>
-                                    <select asp-for="MajorVessels" class="form-select shadow-sm auto-field" disabled>
+                                    <select asp-for="MajorVessels" class="form-select shadow-sm auto-field ecg-field" disabled>
                                         <option value="">--</option>
                                         <option value="0">0</option>
                                         <option value="1">1</option>
@@ -274,7 +315,7 @@
                                 </div>
                                 <div class="col-6 mb-0">
                                     <label asp-for="ThalResult" class="custom-label">Khuyết tật Thal</label>
-                                    <select asp-for="ThalResult" class="form-select shadow-sm auto-field" disabled>
+                                    <select asp-for="ThalResult" class="form-select shadow-sm auto-field ecg-field" disabled>
                                         <option value="">--</option>
                                         <option value="1">Normal</option>
                                         <option value="2">Fixed Defect</option>
@@ -366,41 +407,69 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const btnFetch = document.getElementById('btnFetchWebhook');
+            const btnFetch  = document.getElementById('btnFetchWebhook');
             const btnSubmit = document.getElementById('btnSubmitForm');
             const patientId = document.getElementById('patientIdHidden').value;
-            const form = document.getElementById('clinicalForm');
-            const badge = document.getElementById('lisStatusBadge');
+            const form      = document.getElementById('clinicalForm');
+            const badge     = document.getElementById('lisStatusBadge');
             const badgeText = document.getElementById('lisStatusText');
 
             const ecgPreviewContainer = document.getElementById('ecgPreviewContainer');
-            const ecgPreviewImage = document.getElementById('ecgPreviewImage');
-            const ecgPreviewLink = document.getElementById('ecgPreviewLink');
-            const ecgImageUrlHidden = document.getElementById('ecgImageUrlHidden');
+            const ecgPreviewImage     = document.getElementById('ecgPreviewImage');
+            const ecgPreviewLink      = document.getElementById('ecgPreviewLink');
+            const ecgImageUrlHidden   = document.getElementById('ecgImageUrlHidden');
 
-            // --- THÊM LOGIC: Tự động giữ nguyên form & ảnh nếu bị lỗi Validation ---
-            const hasValidationErrors = @((!ViewData.ModelState.IsValid).ToString().ToLower());
+            // ── Đọc trạng thái gói dịch vụ ─────────────────────────────────────
+            const hasBpPackage    = document.getElementById('hasBpPackage').value    === 'true';
+            const hasBloodPackage = document.getElementById('hasBloodPackage').value === 'true';
+            const hasEcgPackage   = document.getElementById('hasEcgPackage').value   === 'true';
 
-            if (hasValidationErrors) {
-                document.querySelectorAll('.auto-field').forEach(el => {
+            // ── Helper: Unlock các field theo gói ───────────────────────────────
+            function unlockPaidFields() {
+                if (hasBpPackage) {
+                    document.querySelectorAll('.bp-field').forEach(el => {
+                        el.removeAttribute('readonly');
+                        el.removeAttribute('disabled');
+                    });
+                }
+                if (hasBloodPackage) {
+                    document.querySelectorAll('.blood-field').forEach(el => {
+                        el.removeAttribute('readonly');
+                        el.removeAttribute('disabled');
+                    });
+                }
+                if (hasEcgPackage) {
+                    document.querySelectorAll('.ecg-field').forEach(el => {
+                        el.removeAttribute('readonly');
+                        el.removeAttribute('disabled');
+                    });
+                }
+                // Luôn unlock phần đính kèm
+                document.querySelectorAll('.auto-field:not(.bp-field):not(.blood-field):not(.ecg-field)').forEach(el => {
                     el.removeAttribute('readonly');
                     el.removeAttribute('disabled');
                 });
+            }
+
+            // ── THÊM LOGIC: Tự động giữ nguyên form & ảnh nếu bị lỗi Validation ─
+            const hasValidationErrors = @((!ViewData.ModelState.IsValid).ToString().ToLower());
+
+            if (hasValidationErrors) {
+                unlockPaidFields();
                 btnSubmit.removeAttribute('disabled');
                 badge.classList.add('success');
                 badgeText.textContent = 'Bác sĩ đang chỉnh sửa dữ liệu';
                 btnFetch.innerHTML = '<i class="fas fa-edit me-2"></i> Chỉnh sửa thủ công';
                 btnFetch.classList.replace('btn-lis-fetch', 'btn-warning');
 
-                // Nếu trong Hidden input có sẵn URL (do lần Post trước gửi lên), hiển thị lại ảnh
                 if (ecgImageUrlHidden.value) {
-                    ecgPreviewImage.src = ecgImageUrlHidden.value;
-                    ecgPreviewLink.href = ecgImageUrlHidden.value;
+                    ecgPreviewImage.src  = ecgImageUrlHidden.value;
+                    ecgPreviewLink.href  = ecgImageUrlHidden.value;
                     ecgPreviewContainer.style.display = 'block';
                 }
             }
 
-            // Kéo dữ liệu từ Webhook
+            // ── Kéo dữ liệu từ Webhook ──────────────────────────────────────────
             const canFetchData = @((ViewBag.CanFetchData == true).ToString().ToLower());
 
             btnFetch.addEventListener('click', function () {
@@ -420,40 +489,38 @@
                         return response.json();
                     })
                     .then(data => {
-                        // Autofill Form
-                        document.getElementById('ChestPainType').value = data.chestPainType;
-                        document.getElementById('RestingBP').value = data.restingBP;
-                        document.getElementById('Cholesterol').value = data.cholesterol;
-                        document.getElementById('FastingBS').value = data.fastingBS;
-                        document.getElementById('RestECG').value = data.restECG;
-                        document.getElementById('MaxHeartRate').value = data.maxHeartRate;
-                        document.getElementById('ExerciseAngina').value = data.exerciseAngina;
-                        document.getElementById('OldPeak').value = data.oldPeak;
-                        document.getElementById('STSlope').value = data.stSlope;
-                        document.getElementById('MajorVessels').value = data.majorVessels;
-                        document.getElementById('ThalResult').value = data.thalResult;
+                        // Chỉ autofill những gói đã mua
+                        if (hasBpPackage) {
+                            document.getElementById('ChestPainType').value  = data.chestPainType  ?? '';
+                            document.getElementById('RestingBP').value      = data.restingBP      ?? '';
+                            document.getElementById('MaxHeartRate').value   = data.maxHeartRate   ?? '';
+                            document.getElementById('ExerciseAngina').value = data.exerciseAngina ?? '';
+                        }
+                        if (hasBloodPackage) {
+                            document.getElementById('Cholesterol').value = data.cholesterol ?? '';
+                            document.getElementById('FastingBS').value   = data.fastingBS   ?? '';
+                        }
+                        if (hasEcgPackage) {
+                            document.getElementById('RestECG').value      = data.restECG      ?? '';
+                            document.getElementById('OldPeak').value      = data.oldPeak      ?? '';
+                            document.getElementById('STSlope').value      = data.stSlope      ?? '';
+                            document.getElementById('MajorVessels').value = data.majorVessels ?? '';
+                            document.getElementById('ThalResult').value   = data.thalResult   ?? '';
+                        }
 
-                        // Gán link ảnh vào thẻ input ẩn và lập tức HIỂN THỊ PREVIEW
-                        if (data.ecgImageUrl) {
+                        // ECG Image
+                        if (data.ecgImageUrl && hasEcgPackage) {
                             ecgImageUrlHidden.value = data.ecgImageUrl;
-
-                            // Gắn source vào thẻ img và a
-                            ecgPreviewImage.src = data.ecgImageUrl;
-                            ecgPreviewLink.href = data.ecgImageUrl;
-
-                            // Hiện container chứa ảnh lên
+                            ecgPreviewImage.src     = data.ecgImageUrl;
+                            ecgPreviewLink.href     = data.ecgImageUrl;
                             ecgPreviewContainer.style.display = 'block';
                         }
 
-                        // Unlock form fields (Bao gồm cả thẻ input file)
-                        document.querySelectorAll('.auto-field').forEach(el => {
-                            el.removeAttribute('readonly');
-                            el.removeAttribute('disabled');
-                        });
+                        // Unlock đúng những nhóm đã mua
+                        unlockPaidFields();
 
                         btnSubmit.removeAttribute('disabled');
 
-                        // Update UI Status
                         btnFetch.innerHTML = '<i class="fas fa-check-double me-2"></i> Đã đồng bộ thành công';
                         btnFetch.classList.replace('btn-lis-fetch', 'btn-success');
                         badge.classList.add('success');
@@ -470,7 +537,7 @@
                     });
             });
 
-            // Toggle trạng thái con mắt
+            // ── Toggle con mắt ───────────────────────────────────────────────────
             const toggleView = document.getElementById('IsViewForPatient');
             const viewBadge  = document.getElementById('viewStatusBadge');
 
@@ -485,13 +552,13 @@
             }
             toggleView.addEventListener('change', updateViewBadge);
 
-            // Mở khóa disable trước khi submit để C# nhận được data và chống Double Click
+            // ── Mở khóa disable trước khi submit ────────────────────────────────
             form.addEventListener('submit', function() {
-                // 1. Disable nút lưu để tránh click đúp
                 btnSubmit.disabled = true;
                 btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Đang xử lý...';
 
-                // 2. Mở khóa các trường bị disable để gửi data
+                // Chỉ mở khóa những gói đã mua trước khi gửi form
+                // (những gói chưa mua để nguyên disabled → không gửi lên → C# dùng fallback)
                 document.querySelectorAll('.auto-field').forEach(el => {
                     el.removeAttribute('disabled');
                 });
