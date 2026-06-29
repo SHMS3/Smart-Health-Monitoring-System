@@ -90,43 +90,43 @@ public class AnfisExplainabilityService : IAnfisExplainabilityService
                 protective.Add($"Cholesterol máu trong giới hạn an toàn ({r.Cholesterol} mg/dL)");
 
             // --- Nhịp tim tối đa khi gắng sức ---
-            if (r.MaxHeartRate < MaxHrDanger)
+            if (r.MaxHeartRate.HasValue && r.MaxHeartRate < MaxHrDanger)
                 reasons.Add($"Nhịp tim tối đa đạt được khi gắng sức thấp ({r.MaxHeartRate} bpm < {MaxHrDanger} bpm) - dấu hiệu kém thích nghi tim mạch");
-            else
+            else if (r.MaxHeartRate.HasValue)
                 protective.Add($"Nhịp tim tối đa khi gắng sức đạt mức bình thường ({r.MaxHeartRate} bpm)");
 
             // --- Đau ngực ---
-            if (r.ChestPainType >= 1)
-                reasons.Add($"Bệnh nhân có biểu hiện {ChestPainDesc.GetValueOrDefault(r.ChestPainType, $"đau ngực (loại {r.ChestPainType})")}");
+            if (r.ChestPainType.HasValue && r.ChestPainType >= 1)
+                reasons.Add($"Bệnh nhân có biểu hiện {ChestPainDesc.GetValueOrDefault(r.ChestPainType.Value, $"đau ngực (loại {r.ChestPainType})")}");
 
             // --- Exercise Angina (đau thắt ngực khi gắng sức) ---
             if (r.ExerciseAngina == 1)
                 reasons.Add("Xuất hiện đau thắt ngực khi gắng sức (Exercise-Induced Angina) - dấu hiệu thiếu máu cơ tim đặc trưng");
 
             // --- ST Depression (OldPeak) ---
-            if ((double)r.OldPeak >= OldPeakDanger)
+            if (r.OldPeak.HasValue && (double)r.OldPeak.Value >= OldPeakDanger)
                 reasons.Add($"Chỉ số ST Depression (OldPeak) bất thường ({r.OldPeak:F1} mm ≥ {OldPeakDanger} mm) - nguy cơ thiếu máu cơ tim khi gắng sức");
-            else if ((double)r.OldPeak > 0)
+            else if (r.OldPeak.HasValue && (double)r.OldPeak.Value > 0)
                 protective.Add($"Chỉ số ST Depression ở mức nhẹ ({r.OldPeak:F1} mm)");
 
             // --- ST Slope ---
-            if (r.Stslope == 0 || r.Stslope == 1)
-                reasons.Add($"Hình thái sóng ST bất thường: {SlopePolarityDesc.GetValueOrDefault(r.Stslope, $"Slope={r.Stslope}")}");
-            else
+            if (r.Stslope.HasValue && (r.Stslope == 0 || r.Stslope == 1))
+                reasons.Add($"Hình thái sóng ST bất thường: {SlopePolarityDesc.GetValueOrDefault(r.Stslope.Value, $"Slope={r.Stslope}")}");
+            else if (r.Stslope.HasValue)
                 protective.Add($"Hình thái sóng ST bình thường (đi lên - Up Slope)");
 
             // --- Số mạch vành bị ảnh hưởng ---
-            if (r.MajorVessels >= 1)
+            if (r.MajorVessels.HasValue && r.MajorVessels >= 1)
                 reasons.Add($"Phát hiện {r.MajorVessels} mạch vành lớn bị thu hẹp qua chụp mạch vành (Fluoroscopy)");
 
             // --- Thalassemia / Tưới máu cơ tim ---
-            if (r.ThalResult == 2 || r.ThalResult == 3)
-                reasons.Add($"Kết quả kiểm tra tưới máu cơ tim (Thalassemia): {ThalDesc.GetValueOrDefault(r.ThalResult, $"loại {r.ThalResult}")}");
+            if (r.ThalResult.HasValue && (r.ThalResult == 2 || r.ThalResult == 3))
+                reasons.Add($"Kết quả kiểm tra tưới máu cơ tim (Thalassemia): {ThalDesc.GetValueOrDefault(r.ThalResult.Value, $"loại {r.ThalResult}")}");
 
             // --- Đường huyết lúc đói ---
-            if (r.FastingBs == 1)
+            if (r.FastingBs.HasValue && r.FastingBs == 1)
                 reasons.Add("Đường huyết lúc đói > 120 mg/dL (dấu hiệu tiểu đường hoặc tiền tiểu đường - yếu tố nguy cơ tim mạch)");
-            else
+            else if (r.FastingBs.HasValue)
                 protective.Add("Đường huyết lúc đói trong ngưỡng bình thường");
         }
 
