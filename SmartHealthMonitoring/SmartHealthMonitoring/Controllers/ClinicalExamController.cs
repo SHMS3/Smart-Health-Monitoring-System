@@ -38,7 +38,7 @@ namespace SmartHealthMonitoring.Controllers
         public async Task<IActionResult> Create(int patientId)
         {
             var model = new ClinicalExamFormViewModel { PatientId = patientId };
-            
+
             // Lấy id bác sĩ
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdString, out int userId))
@@ -46,17 +46,44 @@ namespace SmartHealthMonitoring.Controllers
                 var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
                 if (doctor != null)
                 {
-                    // Check if there is a Paid payment for this patient and doctor today
                     var today = DateTime.UtcNow.Date;
-                    var hasPaidPayment = await _context.Payments.AnyAsync(p => 
-                        p.PatientId == patientId && 
-                        p.DoctorId == doctor.Id && 
-                        p.Status == "Paid" && 
-                        p.CreatedAt >= today);
 
-                    ViewBag.CanFetchData = hasPaidPayment;
+                    // Lấy tất cả thanh toán Paid trong ngày hôm nay của bác sĩ này cho bệnh nhân này
+                    var paidPayments = await _context.Payments
+                        .Include(p => p.PaymentDetails)
+                            .ThenInclude(pd => pd.Service)
+                        .Where(p =>
+                            p.PatientId == patientId &&
+                            p.DoctorId == doctor.Id &&
+                            p.Status == "Paid" &&
+                            p.CreatedAt >= today)
+                        .OrderBy(p => p.PaidAt)
+                        .ToListAsync();
+
+                    // Đếm số lượng hồ sơ đã tạo trong ngày hôm nay
+                    int recordsCount = await _context.ClinicalRecords
+                        .CountAsync(r => r.PatientId == patientId && r.DoctorId == doctor.Id && r.VisitDate >= today && !r.IsDeleted);
+
+                    // 1 lần thanh toán = 1 hồ sơ. Lấy thanh toán chưa được sử dụng
+                    Payment? availablePayment = null;
+                    if (recordsCount < paidPayments.Count)
+                    {
+                        availablePayment = paidPayments[recordsCount];
+                    }
+
+                    ViewBag.CanFetchData = availablePayment != null;
+
+                    // Lấy danh sách tên dịch vụ đã thanh toán (lowercase để so sánh dễ ở JS)
+                    var purchasedServiceNames = availablePayment?.PaymentDetails
+                        .Select(pd => pd.Service.Name.ToLower())
+                        .ToList() ?? new List<string>();
+
+                    ViewBag.PurchasedServices = purchasedServiceNames;
                 }
             }
+
+            // Đảm bảo luôn có giá trị mặc định tránh null ở Razor
+            ViewBag.PurchasedServices ??= new List<string>();
 
             return View(model);
         }
@@ -65,17 +92,91 @@ namespace SmartHealthMonitoring.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ClinicalExamFormViewModel model)
         {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                TempData["Error"] = "Không thể xác thực danh tính. Vui lòng đăng nhập lại.";
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+
+            if (doctor == null)
+            {
+                TempData["Error"] = "Tài khoản của bạn không có hồ sơ Bác sĩ hợp lệ.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var today = DateTime.UtcNow.Date;
+            
+            // Lấy tất cả thanh toán Paid trong ngày hôm nay của bác sĩ này cho bệnh nhân này
+            var paidPayments = await _context.Payments
+                .Include(p => p.PaymentDetails)
+                    .ThenInclude(pd => pd.Service)
+                .Where(p =>
+                    p.PatientId == model.PatientId &&
+                    p.DoctorId == doctor.Id &&
+                    p.Status == "Paid" &&
+                    p.CreatedAt >= today)
+                .OrderBy(p => p.PaidAt)
+                .ToListAsync();
+
+            // Đếm số lượng hồ sơ đã tạo trong ngày hôm nay
+            int recordsCount = await _context.ClinicalRecords
+                .CountAsync(r => r.PatientId == model.PatientId && r.DoctorId == doctor.Id && r.VisitDate >= today && !r.IsDeleted);
+
+            Payment? availablePayment = null;
+            if (recordsCount < paidPayments.Count)
+            {
+                availablePayment = paidPayments[recordsCount];
+            }
+
+            var purchasedServiceNames = availablePayment?.PaymentDetails
+                .Select(pd => pd.Service.Name.ToLower())
+                .ToList() ?? new List<string>();
+
+            bool hasBpPackage = purchasedServiceNames.Any(s => s.Contains("huyết áp"));
+            bool hasBloodPackage = purchasedServiceNames.Any(s => s.Contains("huyết học"));
+            bool hasEcgPackage = purchasedServiceNames.Any(s => s.Contains("điện tâm đồ") || s.Contains("mạch vành"));
+
+            if (!hasBpPackage)
+            {
+                ModelState.Remove(nameof(model.ChestPainType));
+                ModelState.Remove(nameof(model.ExerciseAngina));
+                ModelState.Remove(nameof(model.RestingBP));
+                ModelState.Remove(nameof(model.MaxHeartRate));
+            }
+
+            if (!hasBloodPackage)
+            {
+                ModelState.Remove(nameof(model.Cholesterol));
+                ModelState.Remove(nameof(model.FastingBS));
+            }
+
+            if (!hasEcgPackage)
+            {
+                ModelState.Remove(nameof(model.RestECG));
+                ModelState.Remove(nameof(model.STSlope));
+                ModelState.Remove(nameof(model.OldPeak));
+                ModelState.Remove(nameof(model.MajorVessels));
+                ModelState.Remove(nameof(model.ThalResult));
+            }
+
             // 1. Kiểm tra Lớp 1 (Các ngưỡng Range từ ViewModel)
             if (!ModelState.IsValid)
             {
+                ViewBag.CanFetchData = availablePayment != null;
+                ViewBag.PurchasedServices = purchasedServiceNames;
                 TempData["Error"] = "Hệ thống phát hiện dữ liệu máy đo bất thường. Vui lòng rà soát lại các ô báo đỏ!";
                 return View(model);
             }
 
             // 2. Kiểm tra Lớp 2 (Nghiệp vụ Y khoa chéo)
             // Ví dụ: Bắt ngoại lệ nếu Huyết áp tâm thu < Nhịp tim (Dấu hiệu máy đo hỏng nặng)
-            if (model.RestingBP < model.MaxHeartRate && model.RestingBP < 80)
+            if (hasBpPackage && model.RestingBP < model.MaxHeartRate && model.RestingBP < 80)
             {
+                ViewBag.CanFetchData = availablePayment != null;
+                ViewBag.PurchasedServices = purchasedServiceNames;
                 ModelState.AddModelError("RestingBP", "Ngoại lệ lâm sàng: Huyết áp không thể thấp hơn Nhịp tim tối đa trong trường hợp này. Yêu cầu đo lại!");
                 TempData["Error"] = "Cảnh báo: Phát hiện sự bất hợp lý giữa các chỉ số Sinh hiệu!";
                 return View(model);
@@ -83,20 +184,6 @@ namespace SmartHealthMonitoring.Controllers
 
             try
             {
-                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    TempData["Error"] = "Không thể xác thực danh tính. Vui lòng đăng nhập lại.";
-                    return RedirectToAction("Login", "Auth");
-                }
-
-                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
-
-                if (doctor == null)
-                {
-                    TempData["Error"] = "Tài khoản của bạn không có hồ sơ Bác sĩ hợp lệ.";
-                    return RedirectToAction("Index", "Home");
-                }
 
                 if (model.AttachmentFile != null && model.AttachmentFile.Length > 0)
                 {
@@ -115,25 +202,34 @@ namespace SmartHealthMonitoring.Controllers
                     }
                 }
 
+                // ── Lấy thông tin patient cho audit log ──────────────────────────────
+                var patient = await _context.Patients
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.Id == model.PatientId && !p.IsDeleted);
+
+
+                // ── Lưu ClinicalRecord với NULL cho các gói chưa thanh toán ─────────────────
+                // Các chỉ số không được mua giữ nguyên là null (không gán fallback).
+                // Fallback chỉ được tính toán ON-THE-FLY bởi AiPredictionService khi phân tích.
                 var record = new ClinicalRecord
                 {
-                    PatientId = model.PatientId,
-                    DoctorId = doctor.Id,
-                    VisitDate = DateTime.Now,
-                    ChestPainType = model.ChestPainType,
-                    RestingBp = model.RestingBP,
-                    Cholesterol = model.Cholesterol,
-                    FastingBs = model.FastingBS,
-                    RestEcg = model.RestECG,
-                    MaxHeartRate = model.MaxHeartRate,
-                    ExerciseAngina = model.ExerciseAngina,
-                    OldPeak = model.OldPeak,
-                    Stslope = model.STSlope,
-                    MajorVessels = model.MajorVessels,
-                    ThalResult = model.ThalResult,
-                    EcgImageUrl = model.EcgImageUrl,
-                    AttachmentUrl = model.AttachmentUrl,
-                    IsDeleted = false,
+                    PatientId      = model.PatientId,
+                    DoctorId       = doctor.Id,
+                    VisitDate      = DateTime.Now,
+                    ChestPainType  = model.ChestPainType,   // null nếu gói BP chưa mua
+                    RestingBp      = model.RestingBP,       // null nếu gói BP chưa mua
+                    Cholesterol    = model.Cholesterol,     // null nếu gói Huyết học chưa mua
+                    FastingBs      = model.FastingBS,       // null nếu gói Huyết học chưa mua
+                    RestEcg        = model.RestECG,         // null nếu gói ECG chưa mua
+                    MaxHeartRate   = model.MaxHeartRate,    // null nếu gói BP chưa mua
+                    ExerciseAngina = model.ExerciseAngina,  // null nếu gói BP chưa mua
+                    OldPeak        = model.OldPeak,         // null nếu gói ECG chưa mua
+                    Stslope        = model.STSlope,         // null nếu gói ECG chưa mua
+                    MajorVessels   = model.MajorVessels,    // null nếu gói ECG chưa mua
+                    ThalResult     = model.ThalResult,      // null nếu gói ECG chưa mua
+                    EcgImageUrl    = model.EcgImageUrl,
+                    AttachmentUrl  = model.AttachmentUrl,
+                    IsDeleted      = false,
                     IsViewForPatient = model.IsViewForPatient
                 };
 
@@ -142,9 +238,7 @@ namespace SmartHealthMonitoring.Controllers
 
                 _cache.Remove($"LabResult_{model.PatientId}");
 
-                var patient = await _context.Patients
-                    .Include(p => p.User)
-                    .FirstOrDefaultAsync(p => p.Id == model.PatientId);
+                // patient đã được fetch ở trên để tính fallback, dùng lại ở đây
 
                 await _auditLogService.LogAsync(
                     "Create",
@@ -413,6 +507,38 @@ namespace SmartHealthMonitoring.Controllers
                 .ToListAsync();
 
             return Json(list);
+        }
+
+        // =============================================
+        // HELPERS: Fallback sinh lý theo tuổi & giới
+        // Tham chiếu: ACC/AHA 2017, NCEP-ATP III, Haskell-Fox
+        // =============================================
+
+        /// <summary>Huyết áp tâm thu nghỉ bình thường (mmHg) theo tuổi và giới tính.</summary>
+        private static float GetNormalRestingBP(int age, float sex)
+        {
+            // sex: 1 = Nam, 0 = Nữ
+            return sex >= 1f
+                ? age switch { < 30 => 115f, < 40 => 120f, < 50 => 124f, < 60 => 128f, < 70 => 132f, _ => 136f }
+                : age switch { < 30 => 110f, < 40 => 114f, < 50 => 118f, < 60 => 128f, < 70 => 134f, _ => 138f };
+        }
+
+        /// <summary>
+        /// Nhịp tim tối đa lý thuyết khi gắng sức (bpm) theo tuổi và giới tính.
+        /// Công thức: Haskell-Fox (220 − age), hiệu chỉnh nữ +5 bpm.
+        /// </summary>
+        private static float GetNormalMaxHR(int age, float sex)
+        {
+            float hr = (220f - age) + (sex >= 1f ? 0f : 5f);
+            return Math.Clamp(hr, 100f, 200f);
+        }
+
+        /// <summary>Cholesterol toàn phần bình thường (mg/dL) theo tuổi và giới tính (NCEP-ATP III).</summary>
+        private static float GetNormalCholesterol(int age, float sex)
+        {
+            return sex >= 1f // Nam
+                ? age switch { < 30 => 180f, < 40 => 195f, < 50 => 210f, < 60 => 220f, < 70 => 215f, _ => 210f }
+                : age switch { < 30 => 170f, < 40 => 185f, < 50 => 200f, < 60 => 230f, < 70 => 240f, _ => 235f };
         }
     }
 }

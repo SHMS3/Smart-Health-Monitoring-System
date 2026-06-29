@@ -89,13 +89,13 @@ namespace SmartHealthMonitoring.Services
             }).Select(p => p.Id).ToList();
 
             var records40to50 = records.Where(r => patients40to50Ids.Contains(r.PatientId)).ToList();
-            double avgCholesterol = records40to50.Any() ? records40to50.Average(r => r.Cholesterol) : 0;
+            double avgCholesterol = records40to50.Any() ? records40to50.Where(r => r.Cholesterol.HasValue).Average(r => (double)r.Cholesterol!.Value) : 0;
 
             // FastingBs > 120mg/dl rate
             double highFastingBsRate = 0;
             if (records.Any())
             {
-                int highCount = records.Count(r => r.FastingBs == 1);
+                int highCount = records.Count(r => r.FastingBs.HasValue && r.FastingBs.Value == 1);
                 highFastingBsRate = (double)highCount / records.Count * 100;
             }
 
