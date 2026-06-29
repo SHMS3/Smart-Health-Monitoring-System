@@ -153,10 +153,16 @@ namespace SmartHealthMonitoring.Controllers
         // SePay gửi POST khi có giao dịch khớp nội dung
         [HttpPost]
         [AllowAnonymous] // Webhook từ SePay không mang cookie auth
+        [IgnoreAntiforgeryToken] // Bỏ qua check CSRF token cho webhook
         public async Task<IActionResult> SepayWebhook([FromBody] SepayWebhookPayload payload)
         {
             if (payload == null || string.IsNullOrEmpty(payload.Content))
-                return Ok(new { success = false });
+            {
+                Console.WriteLine("SepayWebhook: Payload is null or Content is empty.");
+                return Ok(new { success = false, message = "Empty payload" });
+            }
+
+            Console.WriteLine($"SepayWebhook RECEIVED: Amount={payload.TransferAmount}, Content={payload.Content}");
 
             // Tìm phiếu theo nội dung chuyển khoản "THANHTOAN HD00001"
             var content = payload.Content.ToUpper();
