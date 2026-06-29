@@ -333,6 +333,7 @@ namespace SmartHealthMonitoring.Controllers
 
             return role switch
             {
+                3 => RedirectToAction("Index", "Receptionist"),
                 2 => RedirectToAction("Index", "AdminDashboard"),
                 1 => RedirectToAction("Index", "DoctorDashboard"), 
                 _ => RedirectToAction("Index", "Home") 
