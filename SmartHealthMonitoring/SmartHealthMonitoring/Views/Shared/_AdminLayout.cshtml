@@ -360,6 +360,10 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
+    @{
+        var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+        var action = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+    }
 
     <!-- Sidebar -->
     <div class="sidebar">
