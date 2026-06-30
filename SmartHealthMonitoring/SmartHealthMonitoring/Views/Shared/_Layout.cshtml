@@ -422,6 +422,36 @@
             .header-main .container-xl { flex-wrap: wrap; gap: 10px; }
         }
 
+        /* Custom Dropdown in Navbar */
+        .main-nav .dropdown-menu {
+            background-color: var(--cl-blue-nav);
+            border: 1px solid rgba(255,255,255,.15);
+            margin-top: 0;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 6px 16px rgba(0,0,0,.2);
+            padding: 8px 0;
+        }
+        .main-nav .dropdown-item {
+            color: rgba(255,255,255,.9);
+            padding: 10px 18px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .main-nav .dropdown-item i { width: 16px; text-align: center; font-size: 0.85rem; }
+        .main-nav .dropdown-item:hover, .main-nav .dropdown-item.active, .main-nav .dropdown-item:focus {
+            background: rgba(255,255,255,.15);
+            color: #ffd700 !important;
+        }
+        @@media (min-width: 992px) {
+            .main-nav .nav-item.dropdown:hover .dropdown-menu {
+                display: block;
+            }
+        }
+
         /* Unified Support Hub */
         .sh-hub-container {
             position: fixed;
@@ -738,78 +768,113 @@
 
                 @if (isDoc)
                 {
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="DoctorDashboard" && action!="WaitingList" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="Index">
-                            <i class="fas fa-users"></i> Bệnh nhân
+                    <li class="nav-item dropdown">
+                        <a class="nav-link-cl dropdown-toggle @(ctrl=="DoctorDashboard" || (ctrl=="Appointment" && action=="DoctorQueue") ? "active" : "")" href="#" id="navDropdownDocPatient" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-users"></i> Quản lý bệnh nhân
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="navDropdownDocPatient">
+                            <li>
+                                <a class="dropdown-item @(ctrl=="DoctorDashboard" && action!="WaitingList" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="Index">
+                                    <i class="fas fa-user"></i> Bệnh nhân
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ctrl=="DoctorDashboard" && action=="WaitingList" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="WaitingList">
+                                    <i class="fas fa-list-ol"></i> Danh sách chờ khám
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ctrl=="Appointment" && action=="DoctorQueue" ? "active" : "")" asp-controller="Appointment" asp-action="DoctorQueue">
+                                    <i class="fas fa-clipboard-list"></i> Hàng đợi khám
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="DoctorDashboard" && action=="WaitingList" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="WaitingList">
-                            <i class="fas fa-list-ol"></i> Danh sách chờ khám
+                    <li class="nav-item dropdown">
+                        <a class="nav-link-cl dropdown-toggle @(ctrl=="WarningAlert" || ctrl=="EmailNotification" ? "active" : "")" href="#" id="navDropdownDocSystem" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i> Hệ thống & Cảnh báo
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="WarningAlert" ? "active" : "")" asp-controller="WarningAlert" asp-action="Dashboard">
-                            <i class="fas fa-robot"></i> Cảnh báo AI
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="EmailNotification" ? "active" : "")" asp-controller="EmailNotification" asp-action="Index">
-                            <i class="fas fa-envelope"></i> Lịch sử Email
-                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navDropdownDocSystem">
+                            <li>
+                                <a class="dropdown-item @(ctrl=="WarningAlert" ? "active" : "")" asp-controller="WarningAlert" asp-action="Dashboard">
+                                    <i class="fas fa-robot"></i> Cảnh báo AI
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ctrl=="EmailNotification" ? "active" : "")" asp-controller="EmailNotification" asp-action="Index">
+                                    <i class="fas fa-envelope"></i> Lịch sử Email
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link-cl @(ctrl=="DoctorSchedule" ? "active" : "")" asp-controller="DoctorSchedule" asp-action="Index">
                             <i class="fas fa-calendar-plus"></i> Cấu hình lịch
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="Appointment" && action=="DoctorQueue" ? "active" : "")" asp-controller="Appointment" asp-action="DoctorQueue">
-                            <i class="fas fa-clipboard-list"></i> Hàng đợi khám
-                        </a>
-                    </li>
                 }
                 else if (isPat)
                 {
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="Patient" && action=="Index" ? "active" : "")" asp-controller="Patient" asp-action="Index">
-                            <i class="fas fa-book-medical"></i> Sổ tay hằng ngày
+                    <li class="nav-item dropdown">
+                        <a class="nav-link-cl dropdown-toggle @(ctrl=="Patient" && (action=="Index" || action=="Tracker") || (ctrl=="Home" && action=="Habits") ? "active" : "")" href="#" id="navDropdownHealth" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-heartbeat"></i> Theo dõi sức khỏe
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="navDropdownHealth">
+                            <li>
+                                <a class="dropdown-item @(ctrl=="Patient" && action=="Index" ? "active" : "")" asp-controller="Patient" asp-action="Index">
+                                    <i class="fas fa-book-medical"></i> Sổ tay hằng ngày
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ctrl=="Home" && action=="Habits" ? "active" : "")" asp-controller="Home" asp-action="Habits">
+                                    <i class="fas fa-notes-medical"></i> Thói quen hằng ngày
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ctrl=="Patient" && action=="Tracker" ? "active" : "")" asp-controller="Patient" asp-action="Tracker">
+                                    <i class="fas fa-chart-line"></i> Biểu đồ sức khỏe
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="Home" && action=="Habits" ? "active" : "")" asp-controller="Home" asp-action="Habits">
-                            <i class="fas fa-heartbeat"></i> Thói quen hằng ngày
+                    <li class="nav-item dropdown">
+                        <a class="nav-link-cl dropdown-toggle @(ctrl=="ClinicalRecord" || ctrl=="Chatbot" ? "active" : "")" href="#" id="navDropdownRecord" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-folder-open"></i> Hồ sơ & Lịch sử
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="navDropdownRecord">
+                            <li>
+                                <a class="dropdown-item @(ctrl=="ClinicalRecord" ? "active" : "")" asp-controller="ClinicalRecord" asp-action="MyRecords">
+                                    <i class="fas fa-file-medical"></i> Hồ sơ bệnh án
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ctrl=="Chatbot" ? "active" : "")" asp-controller="Chatbot" asp-action="History">
+                                    <i class="fas fa-comments"></i> Lịch sử Chat
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="Patient" && action=="Tracker" ? "active" : "")" asp-controller="Patient" asp-action="Tracker">
-                            <i class="fas fa-chart-line"></i> Biểu đồ sức khỏe
+                    <li class="nav-item dropdown">
+                        <a class="nav-link-cl dropdown-toggle @(ctrl=="Appointment" || ctrl=="EmergencyContact" ? "active" : "")" href="#" id="navDropdownService" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-stethoscope"></i> Dịch vụ y tế
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="ClinicalRecord" ? "active" : "")" asp-controller="ClinicalRecord" asp-action="MyRecords">
-                            <i class="fas fa-file-medical"></i> Hồ sơ bệnh án
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="EmergencyContact" ? "active" : "")" asp-controller="EmergencyContact" asp-action="Index">
-                            <i class="fas fa-user-shield"></i> Liên hệ khẩn cấp
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="Chatbot" ? "active" : "")" asp-controller="Chatbot" asp-action="History">
-                            <i class="fas fa-comments"></i> Lịch sử Chat
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="Appointment" && action=="FindDoctor" ? "active" : "")" asp-controller="Appointment" asp-action="FindDoctor">
-                            <i class="fas fa-calendar-check"></i> Đặt lịch khám
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="Appointment" && action=="MyAppointments" ? "active" : "")" asp-controller="Appointment" asp-action="MyAppointments">
-                            <i class="fas fa-list-alt"></i> Lịch hẹn của tôi
-                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navDropdownService">
+                            <li>
+                                <a class="dropdown-item @(ctrl=="Appointment" && action=="FindDoctor" ? "active" : "")" asp-controller="Appointment" asp-action="FindDoctor">
+                                    <i class="fas fa-calendar-check"></i> Đặt lịch khám
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ctrl=="Appointment" && action=="MyAppointments" ? "active" : "")" asp-controller="Appointment" asp-action="MyAppointments">
+                                    <i class="fas fa-list-alt"></i> Lịch hẹn của tôi
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item @(ctrl=="EmergencyContact" ? "active" : "")" asp-controller="EmergencyContact" asp-action="Index">
+                                    <i class="fas fa-user-shield"></i> Liên hệ khẩn cấp
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 }
                 <li class="nav-item">

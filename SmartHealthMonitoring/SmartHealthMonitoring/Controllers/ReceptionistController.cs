@@ -22,8 +22,8 @@ namespace SmartHealthMonitoring.Controllers
 
         // ─── Cấu hình VietQR của phòng khám ───────────────────────────────────────
         // Thay bằng thông tin ngân hàng thực của phòng khám
-        private const string BANK_ID      = "MB";          // Mã ngân hàng (MBBank)
-        private const string ACCOUNT_NO   = "1508200456788";  // Số tài khoản
+        private const string BANK_ID = "MB";          // Mã ngân hàng (MBBank)
+        private const string ACCOUNT_NO = "1508200456788";  // Số tài khoản
         private const string ACCOUNT_NAME = "PHAM THE SON"; // Tên chủ TK
         // ────────────────────────────────────────────────────────────────────────────
 
@@ -99,9 +99,9 @@ namespace SmartHealthMonitoring.Controllers
             // Tạo nội dung chuyển khoản cố định theo mã phiếu
             var transferContent = $"THANHTOAN HD{payment.Id:D5}";
 
-            ViewBag.BankId        = BANK_ID;
-            ViewBag.AccountNo     = ACCOUNT_NO;
-            ViewBag.AccountName   = ACCOUNT_NAME;
+            ViewBag.BankId = BANK_ID;
+            ViewBag.AccountNo = ACCOUNT_NO;
+            ViewBag.AccountName = ACCOUNT_NAME;
             ViewBag.TransferContent = transferContent;
 
             // Build VietQR image URL (quick link, không cần API key)
@@ -126,8 +126,8 @@ namespace SmartHealthMonitoring.Controllers
             if (payment.Status != "Pending")
                 return Json(new { success = false, message = "Phiếu này đã được xử lý" });
 
-            payment.Status        = "Paid";
-            payment.PaidAt        = DateTime.UtcNow;
+            payment.Status = "Paid";
+            payment.PaidAt = DateTime.UtcNow;
             payment.PaymentMethod = "Cash";
 
             await _context.SaveChangesAsync();
@@ -181,8 +181,8 @@ namespace SmartHealthMonitoring.Controllers
                 var expectedContent = $"THANHTOAN HD{pmt.Id:D5}";
                 if (content.Contains(expectedContent.ToUpper()))
                 {
-                    pmt.Status        = "Paid";
-                    pmt.PaidAt        = DateTime.UtcNow;
+                    pmt.Status = "Paid";
+                    pmt.PaidAt = DateTime.UtcNow;
                     pmt.PaymentMethod = "QR";
                     await _context.SaveChangesAsync();
                     return Ok(new { success = true, paymentId = pmt.Id });
@@ -203,7 +203,7 @@ namespace SmartHealthMonitoring.Controllers
             if (!string.IsNullOrEmpty(search))
             {
                 var lowerSearch = search.ToLower();
-                query = query.Where(p => 
+                query = query.Where(p =>
                     (p.User.FullName != null && p.User.FullName.ToLower().Contains(lowerSearch)) ||
                     (p.Phone != null && p.Phone.Contains(search)) ||
                     (p.User.Email != null && p.User.Email.ToLower().Contains(lowerSearch)) ||
@@ -309,7 +309,7 @@ namespace SmartHealthMonitoring.Controllers
 
                 _context.Patients.Add(patient);
                 await _context.SaveChangesAsync();
-                
+
                 await transaction.CommitAsync();
 
                 // Send email to patient
@@ -410,7 +410,6 @@ namespace SmartHealthMonitoring.Controllers
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
-
     // DTO cho SePay webhook
     public class SepayWebhookPayload
     {
