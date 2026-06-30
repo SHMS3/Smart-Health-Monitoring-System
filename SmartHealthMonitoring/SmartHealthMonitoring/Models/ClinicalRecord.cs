@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SmartHealthMonitoring.Models;
@@ -13,27 +13,38 @@ public partial class ClinicalRecord
 
     public DateTime VisitDate { get; set; }
 
-    public byte ChestPainType { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói BP/Tim mạch)</summary>
+    public byte? ChestPainType { get; set; }
 
-    public short RestingBp { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói BP/Tim mạch)</summary>
+    public short? RestingBp { get; set; }
 
-    public short Cholesterol { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói Huyết học)</summary>
+    public short? Cholesterol { get; set; }
 
-    public byte FastingBs { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói Huyết học)</summary>
+    public byte? FastingBs { get; set; }
 
-    public byte RestEcg { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói Điện tâm đồ)</summary>
+    public byte? RestEcg { get; set; }
 
-    public short MaxHeartRate { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói BP/Tim mạch)</summary>
+    public short? MaxHeartRate { get; set; }
 
-    public byte ExerciseAngina { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói BP/Tim mạch)</summary>
+    public byte? ExerciseAngina { get; set; }
 
-    public decimal OldPeak { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói Điện tâm đồ)</summary>
+    public decimal? OldPeak { get; set; }
 
-    public byte Stslope { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói Điện tâm đồ)</summary>
+    public byte? Stslope { get; set; }
 
-    public byte MajorVessels { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói Điện tâm đồ)</summary>
+    public byte? MajorVessels { get; set; }
 
-    public byte ThalResult { get; set; }
+    /// <summary>Nullable: chỉ lưu khi bác sĩ thực sự đo (gói Điện tâm đồ)</summary>
+    public byte? ThalResult { get; set; }
 
     public bool IsDeleted { get; set; }
 
