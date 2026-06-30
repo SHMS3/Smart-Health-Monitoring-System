@@ -28,18 +28,25 @@ public class AiPredictionWorker : BackgroundService
     {
         _logger.LogInformation("AiPredictionWorker bat dau chay.");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await DoWorkAsync(stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Loi xay ra trong qua trinh chay AiPredictionWorker.");
-            }
+                try
+                {
+                    await DoWorkAsync(stoppingToken);
+                }
+                catch (Exception ex) when (ex is not TaskCanceledException)
+                {
+                    _logger.LogError(ex, "Loi xay ra trong qua trinh chay AiPredictionWorker.");
+                }
 
-            await Task.Delay(_period, stoppingToken);
+                await Task.Delay(_period, stoppingToken);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            _logger.LogInformation("AiPredictionWorker dang dung lai do he thong tat.");
         }
     }
 

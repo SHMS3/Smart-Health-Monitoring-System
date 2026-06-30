@@ -819,16 +819,7 @@
                     </a>
                 </li>
 
-                @if (User.Identity != null && User.Identity.IsAuthenticated)
-                {
-                    <li class="nav-item ms-auto">
-                        <div class="nav-user-wrap">
-                            <div class="nav-user-avatar"><i class="fas fa-user"></i></div>
-                            @{ var fn = User.FindFirst("FullName")?.Value ?? "Người dùng"; }
-                            <span class="nav-user-name d-none d-lg-block">@fn</span>
-                        </div>
-                    </li>
-                }
+            
             </ul>
         </div>
     </nav>

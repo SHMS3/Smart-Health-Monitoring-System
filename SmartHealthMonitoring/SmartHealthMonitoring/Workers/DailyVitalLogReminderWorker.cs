@@ -31,18 +31,25 @@ namespace SmartHealthMonitoring.Workers
         {
             _logger.LogInformation("DailyVitalLogReminderWorker bắt đầu chạy.");
 
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                try
+                while (!stoppingToken.IsCancellationRequested)
                 {
-                    await CheckAndSendRemindersAsync(stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Lỗi xảy ra trong quá trình chạy DailyVitalLogReminderWorker.");
-                }
+                    try
+                    {
+                        await CheckAndSendRemindersAsync(stoppingToken);
+                    }
+                    catch (Exception ex) when (ex is not TaskCanceledException)
+                    {
+                        _logger.LogError(ex, "Lỗi xảy ra trong quá trình chạy DailyVitalLogReminderWorker.");
+                    }
 
-                await Task.Delay(_period, stoppingToken);
+                    await Task.Delay(_period, stoppingToken);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                _logger.LogInformation("DailyVitalLogReminderWorker đang dừng lại do hệ thống tắt.");
             }
         }
 
