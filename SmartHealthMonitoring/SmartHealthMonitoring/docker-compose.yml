@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  web:
+    image: pot-system-web:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pot_system_app
+    restart: always
+    ports:
+      - "5000:8080" # Maps host port 5000 to container port 8080
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - TZ=Asia/Ho_Chi_Minh
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: pot_system_db
+    restart: always
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrongPassword123! # Change this to a very strong password!
+    ports:
+      - "1433:1433" # Expose for backup/migration if needed, otherwise safe to hide
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+volumes:
+  mssql_data:
