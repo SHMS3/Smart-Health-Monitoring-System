@@ -377,14 +377,27 @@
         <div class="d-flex flex-column gap-1 mt-4">
             @if (User.IsInRole("2"))
             {
-                <a asp-controller="AdminDashboard" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-chart-pie me-3"></i>Tổng quan</a>
-                <a asp-controller="AdminDashboard" asp-action="PatientStatistics" class="nav-link text-decoration-none"><i class="fas fa-chart-line me-3"></i>Thống kê Lâm sàng</a>
-                <a asp-controller="AdminDashboard" asp-action="HabitStatistics" class="nav-link text-decoration-none"><i class="fas fa-heartbeat me-3"></i>Thống kê Thói quen</a>
-                <a asp-controller="AdminNews" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-newspaper me-3"></i>Quản lý Tin tức</a>
-                <a asp-controller="AdminDoctor" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-user-md me-3"></i>Quản lý Bác sĩ</a>
-                <a asp-controller="AdminPatient" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-users me-3"></i>Quản lý Bệnh nhân</a>
-                <a asp-controller="StandardThreshold" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-sliders me-3"></i>Ngưỡng Chuẩn Y Tế</a>
-                <a asp-controller="AdminAuditLog" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-clipboard-list me-3"></i>Nhật ký hoạt động</a>
+                <a asp-controller="AdminDashboard" asp-action="Index" class="nav-item-link @(controller == "AdminDashboard" && action == "Index" ? "active" : "")">
+                    <i class="fas fa-th-large"></i> Tổng quan
+                </a>
+                <a asp-controller="AdminDashboard" asp-action="PatientStatistics" class="nav-item-link @(controller == "AdminDashboard" && action == "PatientStatistics" ? "active" : "")">
+                    <i class="fas fa-chart-area"></i> Thống kê Lâm sàng
+                </a>
+                <a asp-controller="AdminDoctor" asp-action="Index" class="nav-item-link @(controller == "AdminDoctor" ? "active" : "")">
+                    <i class="fas fa-user-md"></i> Quản lý Bác sĩ
+                </a>
+                <a asp-controller="AdminPatient" asp-action="Index" class="nav-item-link @(controller == "AdminPatient" ? "active" : "")">
+                    <i class="fas fa-users"></i> Quản lý Bệnh nhân
+                </a>
+                <a asp-controller="StandardThreshold" asp-action="Index" class="nav-item-link @(controller == "StandardThreshold" ? "active" : "")">
+                    <i class="fas fa-sliders-h"></i> Ngưỡng Chuẩn Y Tế
+                </a>
+                <a asp-controller="AdminAuditLog" asp-action="Index" class="nav-item-link @(controller == "AdminAuditLog" ? "active" : "")">
+                    <i class="fas fa-clipboard-check"></i> Nhật ký hoạt động
+                </a>
+                <a asp-controller="AdminEmailTemplate" asp-action="Index" class="nav-item-link @(controller == "AdminEmailTemplate" ? "active" : "")">
+                    <i class="fas fa-envelope-open-text"></i> Mẫu Email
+                </a>
             }
             @if (User.IsInRole("3") || User.IsInRole("2"))
             {
@@ -393,27 +406,7 @@
             }
 
 
-            <a asp-controller="AdminDashboard" asp-action="Index" class="nav-item-link @(controller == "AdminDashboard" && action == "Index" ? "active" : "")">
-                <i class="fas fa-th-large"></i> Tổng quan
-            </a>
-            <a asp-controller="AdminDashboard" asp-action="PatientStatistics" class="nav-item-link @(controller == "AdminDashboard" && action == "PatientStatistics" ? "active" : "")">
-                <i class="fas fa-chart-area"></i> Thống kê Lâm sàng
-            </a>
-            <a asp-controller="AdminDoctor" asp-action="Index" class="nav-item-link @(controller == "AdminDoctor" ? "active" : "")">
-                <i class="fas fa-user-md"></i> Quản lý Bác sĩ
-            </a>
-            <a asp-controller="AdminPatient" asp-action="Index" class="nav-item-link @(controller == "AdminPatient" ? "active" : "")">
-                <i class="fas fa-users"></i> Quản lý Bệnh nhân
-            </a>
-            <a asp-controller="StandardThreshold" asp-action="Index" class="nav-item-link @(controller == "StandardThreshold" ? "active" : "")">
-                <i class="fas fa-sliders-h"></i> Ngưỡng Chuẩn Y Tế
-            </a>
-            <a asp-controller="AdminAuditLog" asp-action="Index" class="nav-item-link @(controller == "AdminAuditLog" ? "active" : "")">
-                <i class="fas fa-clipboard-check"></i> Nhật ký hoạt động
-            </a>
-            <a asp-controller="AdminEmailTemplate" asp-action="Index" class="nav-item-link @(controller == "AdminEmailTemplate" ? "active" : "")">
-                <i class="fas fa-envelope-open-text"></i> Mẫu Email
-            </a>
+         
         </div>
 
         <div class="sidebar-footer">
