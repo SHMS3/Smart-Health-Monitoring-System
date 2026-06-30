@@ -93,6 +93,34 @@ public class PatientUiSettingsService : IPatientUiSettingsService
             FooterSubtitle = model.FooterSubtitle,
             FooterDescription = model.FooterDescription,
             FooterLicenseText = model.FooterLicenseText,
+            FooterBottomText = model.FooterBottomText,
+            FooterSocialLinks = model.FooterSocialLinks.Select(link => new PatientFooterLink
+            {
+                Label = link.Label,
+                IconClass = link.IconClass,
+                Url = link.Url
+            }).ToList(),
+            FooterSections = model.FooterSections.Select(section => new PatientFooterSection
+            {
+                Title = section.Title,
+                IconClass = section.IconClass,
+                DisplayType = section.DisplayType,
+                MapEmbedUrl = section.MapEmbedUrl,
+                Items = section.Items.Select(item => new PatientFooterItem
+                {
+                    Label = item.Label,
+                    Value = item.Value,
+                    IconClass = item.IconClass,
+                    Url = item.Url,
+                    Highlight = item.Highlight
+                }).ToList()
+            }).ToList(),
+            FooterBottomLinks = model.FooterBottomLinks.Select(link => new PatientFooterLink
+            {
+                Label = link.Label,
+                IconClass = link.IconClass,
+                Url = link.Url
+            }).ToList(),
             ShowTopInfoBar = model.ShowTopInfoBar,
             ShowAiChatbot = model.ShowAiChatbot,
             ShowSupportHub = model.ShowSupportHub,
@@ -180,8 +208,143 @@ public class PatientUiSettingsService : IPatientUiSettingsService
         settings.FooterSubtitle = TrimOrDefault(settings.FooterSubtitle, defaults.FooterSubtitle, 80);
         settings.FooterDescription = TrimOrDefault(settings.FooterDescription, defaults.FooterDescription, 260);
         settings.FooterLicenseText = TrimOrDefault(settings.FooterLicenseText, defaults.FooterLicenseText, 180);
+        settings.FooterBottomText = TrimOrDefault(settings.FooterBottomText, defaults.FooterBottomText, 180);
+        settings.FooterSocialLinks = NormalizeFooterLinks(settings.FooterSocialLinks, defaults.FooterSocialLinks, 8);
+        settings.FooterSections = NormalizeFooterSections(settings.FooterSections, defaults.FooterSections);
+        settings.FooterBottomLinks = NormalizeFooterLinks(settings.FooterBottomLinks, defaults.FooterBottomLinks, 6);
 
         return settings;
+    }
+
+    private static List<PatientFooterSection> NormalizeFooterSections(
+        List<PatientFooterSection>? sections,
+        List<PatientFooterSection> fallback)
+    {
+        if (sections == null)
+        {
+            return fallback;
+        }
+
+        var normalized = sections
+            .Where(section =>
+                !string.IsNullOrWhiteSpace(section.Title)
+                || !string.IsNullOrWhiteSpace(section.MapEmbedUrl)
+                || (section.Items?.Any(item => !string.IsNullOrWhiteSpace(item.Label) || !string.IsNullOrWhiteSpace(item.Value)) ?? false))
+            .Take(6)
+            .Select(section =>
+            {
+                var displayType = NormalizeDisplayType(section.DisplayType);
+                return new PatientFooterSection
+                {
+                    Title = TrimOrDefault(section.Title, "Footer", 80),
+                    IconClass = NormalizeFooterIcon(section.IconClass, "fas fa-circle-info"),
+                    DisplayType = displayType,
+                    MapEmbedUrl = displayType == PatientFooterSectionDisplayTypes.Map
+                        ? NormalizeMapUrl(section.MapEmbedUrl)
+                        : string.Empty,
+                    Items = NormalizeFooterItems(section.Items, displayType)
+                };
+            })
+            .ToList();
+
+        return normalized;
+    }
+
+    private static List<PatientFooterItem> NormalizeFooterItems(List<PatientFooterItem>? items, string displayType)
+    {
+        if (displayType == PatientFooterSectionDisplayTypes.Map)
+        {
+            return new List<PatientFooterItem>();
+        }
+
+        return (items ?? new List<PatientFooterItem>())
+            .Where(item => !string.IsNullOrWhiteSpace(item.Label) || !string.IsNullOrWhiteSpace(item.Value))
+            .Take(12)
+            .Select(item => new PatientFooterItem
+            {
+                Label = TrimOrDefault(item.Label, string.Empty, 80),
+                Value = TrimOrDefault(item.Value, string.Empty, 180),
+                IconClass = NormalizeFooterIcon(item.IconClass, "fas fa-circle"),
+                Url = NormalizeLinkUrl(item.Url),
+                Highlight = item.Highlight
+            })
+            .ToList();
+    }
+
+    private static List<PatientFooterLink> NormalizeFooterLinks(
+        List<PatientFooterLink>? links,
+        List<PatientFooterLink> fallback,
+        int maxCount)
+    {
+        if (links == null)
+        {
+            return fallback;
+        }
+
+        var normalized = links
+            .Where(link => !string.IsNullOrWhiteSpace(link.Label) || !string.IsNullOrWhiteSpace(link.Url))
+            .Take(maxCount)
+            .Select(link => new PatientFooterLink
+            {
+                Label = TrimOrDefault(link.Label, "Link", 80),
+                IconClass = NormalizeFooterIcon(link.IconClass, "fas fa-link"),
+                Url = NormalizeLinkUrl(link.Url)
+            })
+            .ToList();
+
+        return normalized;
+    }
+
+    private static string NormalizeDisplayType(string? value)
+    {
+        return value switch
+        {
+            PatientFooterSectionDisplayTypes.Schedule => PatientFooterSectionDisplayTypes.Schedule,
+            PatientFooterSectionDisplayTypes.Map => PatientFooterSectionDisplayTypes.Map,
+            _ => PatientFooterSectionDisplayTypes.Contact
+        };
+    }
+
+    private static string NormalizeFooterIcon(string? value, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        var normalized = value.Trim();
+        return PatientUiSettingsViewModel.AllowedFooterIcons.Contains(normalized) ? normalized : fallback;
+    }
+
+    private static string NormalizeLinkUrl(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "#";
+        }
+
+        var normalized = value.Trim();
+        if (normalized.StartsWith("#") || normalized.StartsWith("/") || normalized.StartsWith("tel:", StringComparison.OrdinalIgnoreCase) || normalized.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+        {
+            return normalized;
+        }
+
+        return Uri.TryCreate(normalized, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+            ? normalized
+            : "#";
+    }
+
+    private static string NormalizeMapUrl(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var normalized = value.Trim();
+        return Uri.TryCreate(normalized, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps
+            ? normalized
+            : string.Empty;
     }
 
     private static string TrimOrDefault(string? value, string fallback, int maxLength)

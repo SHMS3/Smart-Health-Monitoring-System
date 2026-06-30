@@ -17,6 +17,25 @@ public class PatientUiSettingsViewModel
         "fas fa-shield-heart"
     };
 
+    public static readonly string[] AllowedFooterIcons =
+    {
+        "fas fa-clock",
+        "fas fa-map-marker-alt",
+        "fas fa-map",
+        "fas fa-phone-alt",
+        "fas fa-envelope",
+        "fas fa-globe",
+        "fas fa-calendar-days",
+        "fas fa-circle-info",
+        "fas fa-circle",
+        "fas fa-link",
+        "fab fa-facebook-f",
+        "fab fa-instagram",
+        "fab fa-youtube",
+        "fab fa-tiktok",
+        "fab fa-linkedin-in"
+    };
+
     [Required(ErrorMessage = "Vui lòng nhập tên thương hiệu.")]
     [MaxLength(80, ErrorMessage = "Tên thương hiệu không được vượt quá 80 ký tự.")]
     public string BrandName { get; set; } = string.Empty;
@@ -140,6 +159,16 @@ public class PatientUiSettingsViewModel
     [MaxLength(180, ErrorMessage = "Dòng pháp lý không được vượt quá 180 ký tự.")]
     public string FooterLicenseText { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Vui lòng nhập dòng cuối footer.")]
+    [MaxLength(180, ErrorMessage = "Dòng cuối footer không được vượt quá 180 ký tự.")]
+    public string FooterBottomText { get; set; } = string.Empty;
+
+    public List<PatientFooterLinkViewModel> FooterSocialLinks { get; set; } = new();
+
+    public List<PatientFooterSectionViewModel> FooterSections { get; set; } = new();
+
+    public List<PatientFooterLinkViewModel> FooterBottomLinks { get; set; } = new();
+
     public bool ShowTopInfoBar { get; set; }
 
     public bool ShowAiChatbot { get; set; }
@@ -187,6 +216,10 @@ public class PatientUiSettingsViewModel
             FooterSubtitle = settings.FooterSubtitle,
             FooterDescription = settings.FooterDescription,
             FooterLicenseText = settings.FooterLicenseText,
+            FooterBottomText = settings.FooterBottomText,
+            FooterSocialLinks = settings.FooterSocialLinks.Select(PatientFooterLinkViewModel.FromModel).ToList(),
+            FooterSections = settings.FooterSections.Select(PatientFooterSectionViewModel.FromModel).ToList(),
+            FooterBottomLinks = settings.FooterBottomLinks.Select(PatientFooterLinkViewModel.FromModel).ToList(),
             ShowTopInfoBar = settings.ShowTopInfoBar,
             ShowAiChatbot = settings.ShowAiChatbot,
             ShowSupportHub = settings.ShowSupportHub,
@@ -199,6 +232,14 @@ public class PatientUiSettingsViewModel
     public void EnsureOptions()
     {
         LogoIconOptions = BuildLogoIconOptions(LogoIcon);
+        FooterSocialLinks ??= new();
+        FooterSections ??= new();
+        FooterBottomLinks ??= new();
+
+        foreach (var section in FooterSections)
+        {
+            section.Items ??= new();
+        }
     }
 
     private static List<SelectListItem> BuildLogoIconOptions(string selectedIcon)
@@ -221,5 +262,85 @@ public class PatientUiSettingsViewModel
                 Selected = icon == selectedIcon
             })
             .ToList();
+    }
+}
+
+public class PatientFooterSectionViewModel
+{
+    [MaxLength(80)]
+    public string Title { get; set; } = string.Empty;
+
+    [MaxLength(40)]
+    public string IconClass { get; set; } = "fas fa-circle-info";
+
+    [MaxLength(20)]
+    public string DisplayType { get; set; } = PatientFooterSectionDisplayTypes.Contact;
+
+    [MaxLength(700)]
+    public string MapEmbedUrl { get; set; } = string.Empty;
+
+    public List<PatientFooterItemViewModel> Items { get; set; } = new();
+
+    public static PatientFooterSectionViewModel FromModel(PatientFooterSection section)
+    {
+        return new PatientFooterSectionViewModel
+        {
+            Title = section.Title,
+            IconClass = section.IconClass,
+            DisplayType = section.DisplayType,
+            MapEmbedUrl = section.MapEmbedUrl,
+            Items = section.Items.Select(PatientFooterItemViewModel.FromModel).ToList()
+        };
+    }
+}
+
+public class PatientFooterItemViewModel
+{
+    [MaxLength(80)]
+    public string Label { get; set; } = string.Empty;
+
+    [MaxLength(180)]
+    public string Value { get; set; } = string.Empty;
+
+    [MaxLength(40)]
+    public string IconClass { get; set; } = "fas fa-circle";
+
+    [MaxLength(500)]
+    public string Url { get; set; } = string.Empty;
+
+    public bool Highlight { get; set; }
+
+    public static PatientFooterItemViewModel FromModel(PatientFooterItem item)
+    {
+        return new PatientFooterItemViewModel
+        {
+            Label = item.Label,
+            Value = item.Value,
+            IconClass = item.IconClass,
+            Url = item.Url,
+            Highlight = item.Highlight
+        };
+    }
+}
+
+public class PatientFooterLinkViewModel
+{
+    [MaxLength(80)]
+    public string Label { get; set; } = string.Empty;
+
+    [MaxLength(40)]
+    public string IconClass { get; set; } = "fas fa-link";
+
+    [MaxLength(500)]
+    public string Url { get; set; } = "#";
+
+    public static PatientFooterLinkViewModel FromModel(PatientFooterLink link)
+    {
+        return new PatientFooterLinkViewModel
+        {
+            Label = link.Label,
+            IconClass = link.IconClass,
+            Url = link.Url
+        };
     }
 }

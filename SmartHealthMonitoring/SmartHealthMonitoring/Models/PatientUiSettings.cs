@@ -64,6 +64,14 @@ public class PatientUiSettings
 
     public string FooterLicenseText { get; set; } = "Giấy phép số 47/GP-TTĐT, ngày 20 tháng 01 năm 2017";
 
+    public string FooterBottomText { get; set; } = "© 2026 SmartHealth. Bảo lưu mọi quyền.";
+
+    public List<PatientFooterLink> FooterSocialLinks { get; set; } = CreateDefaultFooterSocialLinks();
+
+    public List<PatientFooterSection> FooterSections { get; set; } = CreateDefaultFooterSections();
+
+    public List<PatientFooterLink> FooterBottomLinks { get; set; } = CreateDefaultFooterBottomLinks();
+
     public bool ShowTopInfoBar { get; set; } = true;
 
     public bool ShowAiChatbot { get; set; } = true;
@@ -73,4 +81,108 @@ public class PatientUiSettings
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public string? UpdatedByAdminName { get; set; }
+
+    private static List<PatientFooterLink> CreateDefaultFooterSocialLinks()
+    {
+        return new List<PatientFooterLink>
+        {
+            new() { Label = "Facebook", IconClass = "fab fa-facebook-f", Url = "#" },
+            new() { Label = "Instagram", IconClass = "fab fa-instagram", Url = "#" },
+            new() { Label = "YouTube", IconClass = "fab fa-youtube", Url = "#" },
+            new() { Label = "Email", IconClass = "fas fa-envelope", Url = "mailto:contact@smarthealth.vn" }
+        };
+    }
+
+    private static List<PatientFooterLink> CreateDefaultFooterBottomLinks()
+    {
+        return new List<PatientFooterLink>
+        {
+            new() { Label = "Điều khoản", Url = "#" },
+            new() { Label = "Bảo mật", Url = "#" }
+        };
+    }
+
+    private static List<PatientFooterSection> CreateDefaultFooterSections()
+    {
+        return new List<PatientFooterSection>
+        {
+            new()
+            {
+                Title = "Lịch làm việc",
+                IconClass = "fas fa-clock",
+                DisplayType = PatientFooterSectionDisplayTypes.Schedule,
+                Items = new List<PatientFooterItem>
+                {
+                    new() { Label = "Thứ 2 - Thứ 7", Value = "08:00 - 17:00" },
+                    new() { Label = "Chuyên khoa Tim mạch", Value = "08:00 - 12:00" },
+                    new() { Label = "Thứ 2 - Thứ 6", Value = "17:00 - 20:00" },
+                    new() { Label = "Chủ nhật", Value = "Nghỉ", Highlight = true },
+                    new() { Label = "Hotline 24/7", Value = "0999 999 999", IconClass = "fas fa-phone-alt", Highlight = true }
+                }
+            },
+            new()
+            {
+                Title = "Liên hệ",
+                IconClass = "fas fa-map-marker-alt",
+                DisplayType = PatientFooterSectionDisplayTypes.Contact,
+                Items = new List<PatientFooterItem>
+                {
+                    new() { Label = "Địa chỉ", Value = "Đại học FPT, TP. Hồ Chí Minh", IconClass = "fas fa-map-marker-alt" },
+                    new() { Label = "Hotline", Value = "0999 999 999 - Hotline 24/7", IconClass = "fas fa-phone-alt", Url = "tel:0999999999" },
+                    new() { Label = "Email", Value = "contact@smarthealth.vn", IconClass = "fas fa-envelope", Url = "mailto:contact@smarthealth.vn" },
+                    new() { Label = "Website", Value = "www.smarthealth.vn", IconClass = "fas fa-globe", Url = "#" },
+                    new() { Label = "Trạng thái", Value = "Hệ thống đang hoạt động ổn định", IconClass = "fas fa-circle", Highlight = true }
+                }
+            },
+            new()
+            {
+                Title = "Bản đồ",
+                IconClass = "fas fa-map",
+                DisplayType = PatientFooterSectionDisplayTypes.Map,
+                MapEmbedUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4482!2d106.8!3d10.85!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDUxJzAwLjAiTiAxMDbCsDQ4JzAwLjAiRQ!5e0!3m2!1svi!2svn!4v1234567890"
+            }
+        };
+    }
+}
+
+public static class PatientFooterSectionDisplayTypes
+{
+    public const string Schedule = "schedule";
+    public const string Contact = "contact";
+    public const string Map = "map";
+}
+
+public class PatientFooterSection
+{
+    public string Title { get; set; } = string.Empty;
+
+    public string IconClass { get; set; } = "fas fa-circle";
+
+    public string DisplayType { get; set; } = PatientFooterSectionDisplayTypes.Contact;
+
+    public string MapEmbedUrl { get; set; } = string.Empty;
+
+    public List<PatientFooterItem> Items { get; set; } = new();
+}
+
+public class PatientFooterItem
+{
+    public string Label { get; set; } = string.Empty;
+
+    public string Value { get; set; } = string.Empty;
+
+    public string IconClass { get; set; } = "fas fa-circle";
+
+    public string Url { get; set; } = string.Empty;
+
+    public bool Highlight { get; set; }
+}
+
+public class PatientFooterLink
+{
+    public string Label { get; set; } = string.Empty;
+
+    public string IconClass { get; set; } = "fas fa-link";
+
+    public string Url { get; set; } = "#";
 }

@@ -3,6 +3,7 @@
     var patientUi = await PatientUiSettingsService.GetSettingsAsync();
     var patientUiHotlineDigits = new string((patientUi.HotlinePhone ?? string.Empty).Where(char.IsDigit).ToArray());
     var patientUiHotlineHref = string.IsNullOrWhiteSpace(patientUiHotlineDigits) ? "tel:0999999999" : $"tel:{patientUiHotlineDigits}";
+    var patientUiFooterBottomText = (patientUi.FooterBottomText ?? string.Empty).Replace("{BrandName}", patientUi.BrandName);
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -240,6 +241,19 @@
         }
         .footer-contact-item i { color: rgba(255,255,255,.5); margin-top: 2px; width: 14px; text-align: center; }
         .footer-contact-item span { color: rgba(255,255,255,.8); line-height: 1.5; }
+        .footer-contact-item a { color: rgba(255,255,255,.82); text-decoration: none; line-height: 1.5; }
+        .footer-contact-item a:hover { color: #fff; }
+        .footer-map-frame {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,.15);
+        }
+        .footer-map-frame iframe { display: block; width: 100%; height: 150px; border: 0; }
+        .footer-link-bottom {
+            color: rgba(255,255,255,.5);
+            text-decoration: none;
+        }
+        .footer-link-bottom:hover { color: rgba(255,255,255,.85); }
         .footer-bottom {
             background: rgba(0,0,0,.15);
             padding: 14px 0;
@@ -912,8 +926,6 @@
     <footer class="footer-cl">
         <div class="container container-xl">
             <div class="row gy-4 pb-4">
-
-                <!-- Cột 1: Logo + mô tả -->
                 <div class="col-lg-3 col-md-6">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <div class="brand-logo-icon" style="width:40px;height:40px;font-size:1.1rem;"><i class="@patientUi.LogoIcon"></i></div>
@@ -922,89 +934,81 @@
                             <div class="footer-logo-sub">@patientUi.FooterSubtitle</div>
                         </div>
                     </div>
-                    <p class="footer-desc">
-                        @patientUi.FooterDescription
-                    </p>
-                    <p style="font-size:0.75rem;color:rgba(255,255,255,.5);margin-top:8px;">
-                        @patientUi.FooterLicenseText
-                    </p>
-                    <div class="footer-social mt-3">
-                        <a href="#"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
-                        <a href="#"><i class="fas fa-envelope"></i></a>
-                    </div>
-                </div>
-
-                <!-- Cột 2: Lịch làm việc -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="footer-col-title"><i class="fas fa-clock me-1"></i>Lịch làm việc</div>
-                    <div class="footer-schedule-row">
-                        <span class="day">Thứ 2 – Thứ 7</span>
-                        <span class="time">08:00 – 17:00</span>
-                    </div>
-                    <div class="footer-schedule-row">
-                        <span class="day">Chuyên khoa Tim mạch</span>
-                        <span class="time">08:00 – 12:00</span>
-                    </div>
-                    <div class="footer-schedule-row">
-                        <span class="day">Thứ 2 – Thứ 6</span>
-                        <span class="time">17:00 – 20:00</span>
-                    </div>
-                    <div class="footer-schedule-row">
-                        <span class="day">Chủ nhật</span>
-                        <span class="time" style="color:#fbbf24;">Nghỉ</span>
-                    </div>
-                    <div class="footer-schedule-row mt-2">
-                        <span class="day"><i class="fas fa-phone-alt me-1"></i>@patientUi.HotlineLabel</span>
-                        <span class="time" style="color:#fbbf24;">@patientUi.HotlinePhone</span>
-                    </div>
-                </div>
-
-                <!-- Cột 3: Liên hệ -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="footer-col-title"><i class="fas fa-map-marker-alt me-1"></i>Liên hệ</div>
-                    <div class="footer-contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>@patientUi.Address</span>
-                    </div>
-                    <div class="footer-contact-item">
-                        <i class="fas fa-phone-alt"></i>
-                        <span>@patientUi.HotlinePhone — @patientUi.HotlineLabel</span>
-                    </div>
-                    <div class="footer-contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <span>@patientUi.ContactEmail</span>
-                    </div>
-                    <div class="footer-contact-item">
-                        <i class="fas fa-globe"></i>
-                        <span>www.smarthealth.vn</span>
-                    </div>
-                    <div class="mt-3">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <div class="spinner-grow text-success spinner-grow-sm" role="status" style="width:8px;height:8px;"></div>
-                            <span style="font-size:0.76rem;color:rgba(255,255,255,.8);">Hệ thống đang hoạt động ổn định</span>
+                    <p class="footer-desc">@patientUi.FooterDescription</p>
+                    @if (!string.IsNullOrWhiteSpace(patientUi.FooterLicenseText))
+                    {
+                        <p style="font-size:0.75rem;color:rgba(255,255,255,.5);margin-top:8px;">
+                            @patientUi.FooterLicenseText
+                        </p>
+                    }
+                    @if (patientUi.FooterSocialLinks.Any())
+                    {
+                        <div class="footer-social mt-3">
+                            @foreach (var link in patientUi.FooterSocialLinks)
+                            {
+                                <a href="@link.Url" aria-label="@link.Label"><i class="@link.IconClass"></i></a>
+                            }
                         </div>
-                    </div>
+                    }
                 </div>
 
-                <!-- Cột 4: Bản đồ -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="footer-col-title"><i class="fas fa-map me-1"></i>Bản đồ</div>
-                    <div style="border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.15);">
-                        <iframe
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4482!2d106.8!3d10.85!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDUxJzAwLjAiTiAxMDbCsDQ4JzAwLjAiRQ!5e0!3m2!1svi!2svn!4v1234567890"
-                            width="100%" height="150" style="border:0;" allowfullscreen="" loading="lazy">
-                        </iframe>
-                    </div>
-                </div>
+                @foreach (var footerSection in patientUi.FooterSections)
+                {
+                    <div class="col-lg-3 col-md-6 footer-dynamic-section" data-footer-section-type="@footerSection.DisplayType">
+                        <div class="footer-col-title"><i class="@footerSection.IconClass me-1"></i>@footerSection.Title</div>
 
+                        @if (footerSection.DisplayType == PatientFooterSectionDisplayTypes.Map)
+                        {
+                            @if (!string.IsNullOrWhiteSpace(footerSection.MapEmbedUrl))
+                            {
+                                <div class="footer-map-frame">
+                                    <iframe src="@footerSection.MapEmbedUrl" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                </div>
+                            }
+                        }
+                        else if (footerSection.DisplayType == PatientFooterSectionDisplayTypes.Schedule)
+                        {
+                            @foreach (var item in footerSection.Items)
+                            {
+                                <div class="footer-schedule-row">
+                                    <span class="day">
+                                        @if (!string.IsNullOrWhiteSpace(item.IconClass) && item.IconClass != "fas fa-circle")
+                                        {
+                                            <i class="@item.IconClass me-1"></i>
+                                        }
+                                        @item.Label
+                                    </span>
+                                    <span class="time" style="@(item.Highlight ? "color:#fbbf24;" : null)">@item.Value</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            @foreach (var item in footerSection.Items)
+                            {
+                                <div class="footer-contact-item">
+                                    <i class="@item.IconClass" style="@(item.Highlight ? "color:#22c55e;" : null)"></i>
+                                    @if (!string.IsNullOrWhiteSpace(item.Url) && item.Url != "#")
+                                    {
+                                        <a href="@item.Url">@(string.IsNullOrWhiteSpace(item.Value) ? item.Label : item.Value)</a>
+                                    }
+                                    else
+                                    {
+                                        <span style="@(item.Highlight ? "color:rgba(255,255,255,.9);" : null)">@(string.IsNullOrWhiteSpace(item.Value) ? item.Label : item.Value)</span>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                }
             </div>
         </div>
         <div class="footer-bottom">
-            © 2026 @patientUi.BrandName. Bảo lưu mọi quyền.
-            &nbsp;|&nbsp; <a href="#" style="color:rgba(255,255,255,.5);">Điều khoản</a>
-            &nbsp;|&nbsp; <a href="#" style="color:rgba(255,255,255,.5);">Bảo mật</a>
+            @patientUiFooterBottomText
+            @foreach (var link in patientUi.FooterBottomLinks)
+            {
+                <span>&nbsp;|&nbsp;</span><a href="@link.Url" class="footer-link-bottom">@link.Label</a>
+            }
         </div>
     </footer>
 

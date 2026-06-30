@@ -30,9 +30,139 @@
   "FooterSubtitle": "Theo d\u00F5i Tim m\u1EA1ch AI",
   "FooterDescription": "H\u1EC7 th\u1ED1ng theo d\u00F5i s\u1EE9c kh\u1ECFe tim m\u1EA1ch th\u00F4ng minh. Ph\u00E1t hi\u1EC7n s\u1EDBm nguy c\u01A1 v\u00E0 nh\u1EADn c\u1EA3nh b\u00E1o k\u1ECBp th\u1EDDi t\u1EEB AI.",
   "FooterLicenseText": "Gi\u1EA5y ph\u00E9p s\u1ED1 47/GP-TT\u0110T, ng\u00E0y 20 th\u00E1ng 01 n\u0103m 2017",
+  "FooterBottomText": "\u00A9 2026 SmartHealth. B\u1EA3o l\u01B0u m\u1ECDi quy\u1EC1n.",
+  "FooterSocialLinks": [
+    {
+      "Label": "Facebook",
+      "IconClass": "fab fa-facebook-f",
+      "Url": "#"
+    },
+    {
+      "Label": "Instagram",
+      "IconClass": "fab fa-instagram",
+      "Url": "#"
+    },
+    {
+      "Label": "YouTube",
+      "IconClass": "fab fa-youtube",
+      "Url": "#"
+    },
+    {
+      "Label": "Email",
+      "IconClass": "fas fa-envelope",
+      "Url": "mailto:contact@smarthealth.vn"
+    }
+  ],
+  "FooterSections": [
+    {
+      "Title": "L\u1ECBch l\u00E0m vi\u1EC7c",
+      "IconClass": "fas fa-clock",
+      "DisplayType": "schedule",
+      "MapEmbedUrl": "",
+      "Items": [
+        {
+          "Label": "Th\u1EE9 2 - Th\u1EE9 7",
+          "Value": "08:00 - 17:00",
+          "IconClass": "fas fa-circle",
+          "Url": "",
+          "Highlight": false
+        },
+        {
+          "Label": "Chuy\u00EAn khoa Tim m\u1EA1ch",
+          "Value": "08:00 - 12:00",
+          "IconClass": "fas fa-circle",
+          "Url": "",
+          "Highlight": false
+        },
+        {
+          "Label": "Th\u1EE9 2 - Th\u1EE9 6",
+          "Value": "17:00 - 20:00",
+          "IconClass": "fas fa-circle",
+          "Url": "",
+          "Highlight": false
+        },
+        {
+          "Label": "Ch\u1EE7 nh\u1EADt",
+          "Value": "Ngh\u1EC9",
+          "IconClass": "fas fa-circle",
+          "Url": "",
+          "Highlight": true
+        },
+        {
+          "Label": "Hotline 24/7",
+          "Value": "0999 999 999",
+          "IconClass": "fas fa-phone-alt",
+          "Url": "",
+          "Highlight": true
+        }
+      ]
+    },
+    {
+      "Title": "Li\u00EAn h\u1EC7",
+      "IconClass": "fas fa-map-marker-alt",
+      "DisplayType": "contact",
+      "MapEmbedUrl": "",
+      "Items": [
+        {
+          "Label": "\u0110\u1ECBa ch\u1EC9",
+          "Value": "\u0110\u1EA1i h\u1ECDc FPT, TP. H\u1ED3 Ch\u00ED Minh",
+          "IconClass": "fas fa-map-marker-alt",
+          "Url": "",
+          "Highlight": false
+        },
+        {
+          "Label": "Hotline",
+          "Value": "0999 999 999 - Hotline 24/7",
+          "IconClass": "fas fa-phone-alt",
+          "Url": "tel:0999999999",
+          "Highlight": false
+        },
+        {
+          "Label": "Email",
+          "Value": "contact@smarthealth.vn",
+          "IconClass": "fas fa-envelope",
+          "Url": "mailto:contact@smarthealth.vn",
+          "Highlight": false
+        },
+        {
+          "Label": "Website",
+          "Value": "www.smarthealth.vn",
+          "IconClass": "fas fa-globe",
+          "Url": "#",
+          "Highlight": false
+        },
+        {
+          "Label": "Tr\u1EA1ng th\u00E1i",
+          "Value": "H\u1EC7 th\u1ED1ng \u0111ang ho\u1EA1t \u0111\u1ED9ng \u1ED5n \u0111\u1ECBnh",
+          "IconClass": "fas fa-circle",
+          "Url": "",
+          "Highlight": true
+        }
+      ]
+    },
+    {
+      "Title": "B\u1EA3n \u0111\u1ED3",
+      "IconClass": "fas fa-map",
+      "DisplayType": "map",
+      "MapEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4482!2d106.8!3d10.85!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDUxJzAwLjAiTiAxMDbCsDQ4JzAwLjAiRQ!5e0!3m2!1svi!2svn!4v1234567890",
+      "Items": []
+    }
+  ],
+  "FooterBottomLinks": [
+    {
+      "Label": "\u0110i\u1EC1u kho\u1EA3n",
+      "IconClass": "fas fa-link",
+      "Url": "#"
+    },
+    {
+      "Label": "B\u1EA3o m\u1EADt",
+      "IconClass": "fas fa-link",
+      "Url": "#"
+    }
+  ],
   "ShowTopInfoBar": true,
   "ShowAiChatbot": true,
   "ShowSupportHub": true,
-  "UpdatedAt": "2026-06-30T13:34:17.4905871Z",
+  "UpdatedAt": "2026-06-30T14:00:13.021899Z",
   "UpdatedByAdminName": "Tr\u1EA7n Th\u1ECB B\u00ECnh"
 }

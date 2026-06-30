@@ -2,6 +2,30 @@
 
 @{
     Layout = "_AdminLayout";
+    var footerIconOptions = new List<(string Value, string Label)>
+    {
+        ("fas fa-clock", "Đồng hồ"),
+        ("fas fa-map-marker-alt", "Vị trí"),
+        ("fas fa-map", "Bản đồ"),
+        ("fas fa-phone-alt", "Điện thoại"),
+        ("fas fa-envelope", "Email"),
+        ("fas fa-globe", "Website"),
+        ("fas fa-calendar-days", "Lịch"),
+        ("fas fa-circle-info", "Thông tin"),
+        ("fas fa-circle", "Chấm trạng thái"),
+        ("fas fa-link", "Liên kết"),
+        ("fab fa-facebook-f", "Facebook"),
+        ("fab fa-instagram", "Instagram"),
+        ("fab fa-youtube", "YouTube"),
+        ("fab fa-tiktok", "TikTok"),
+        ("fab fa-linkedin-in", "LinkedIn")
+    };
+    var footerDisplayTypes = new List<(string Value, string Label)>
+    {
+        (SmartHealthMonitoring.Models.PatientFooterSectionDisplayTypes.Contact, "Danh sách thông tin"),
+        (SmartHealthMonitoring.Models.PatientFooterSectionDisplayTypes.Schedule, "Lịch / hai cột"),
+        (SmartHealthMonitoring.Models.PatientFooterSectionDisplayTypes.Map, "Bản đồ")
+    };
     ViewData["Title"] = "Trang chủ & Footer";
 }
 
@@ -125,6 +149,103 @@
             width: 52px;
             min-height: 46px;
             padding: 4px;
+        }
+
+        .footer-builder {
+            display: grid;
+            gap: 16px;
+        }
+
+        .footer-builder-group {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #f8fafc;
+            padding: 16px;
+        }
+
+        .footer-builder-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .footer-builder-title {
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .footer-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .footer-link-row,
+        .footer-item-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .footer-item-row {
+            grid-template-columns: 1fr 1.25fr 1fr 1fr auto auto;
+        }
+
+        .footer-section-card {
+            border: 1.5px solid #dbeafe;
+            border-radius: 14px;
+            background: #fff;
+            padding: 16px;
+        }
+
+        .footer-section-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .footer-map-field {
+            margin-bottom: 12px;
+        }
+
+        .ui-mini-btn {
+            border: 0;
+            border-radius: 10px;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-weight: 800;
+            padding: 9px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .ui-icon-btn {
+            width: 42px;
+            height: 42px;
+            border: 0;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .footer-highlight-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 42px;
+            font-weight: 700;
+            color: #475569;
         }
 
         .ui-actions {
@@ -530,6 +651,175 @@
                         </div>
                     </div>
 
+                    <div class="footer-builder mt-4">
+                        <div class="footer-builder-group">
+                            <div class="footer-builder-head">
+                                <div class="footer-builder-title">Link mạng xã hội</div>
+                                <button type="button" class="ui-mini-btn" data-add-footer-link="FooterSocialLinks">
+                                    <i class="fas fa-plus"></i>
+                                    Thêm link
+                                </button>
+                            </div>
+                            <div class="footer-list" data-footer-list="FooterSocialLinks">
+                                @for (var i = 0; i < Model.FooterSocialLinks.Count; i++)
+                                {
+                                    <div class="footer-link-row" data-footer-link-row>
+                                        <div class="ui-field">
+                                            <label>Tên link</label>
+                                            <input name="FooterSocialLinks[@i].Label" value="@Model.FooterSocialLinks[i].Label" class="form-control ui-input" />
+                                        </div>
+                                        <div class="ui-field">
+                                            <label>Icon</label>
+                                            <select name="FooterSocialLinks[@i].IconClass" class="form-select ui-input">
+                                                @foreach (var icon in footerIconOptions)
+                                                {
+                                                    <option value="@icon.Value" selected="@(Model.FooterSocialLinks[i].IconClass == icon.Value ? "selected" : null)">@icon.Label</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="ui-field">
+                                            <label>Đường dẫn</label>
+                                            <input name="FooterSocialLinks[@i].Url" value="@Model.FooterSocialLinks[i].Url" class="form-control ui-input" />
+                                        </div>
+                                        <button type="button" class="ui-icon-btn" data-remove-row title="Xóa link"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="footer-builder-group">
+                            <div class="footer-builder-head">
+                                <div class="footer-builder-title">Các khối nội dung footer</div>
+                                <button type="button" class="ui-mini-btn" data-add-footer-section>
+                                    <i class="fas fa-plus"></i>
+                                    Thêm khối
+                                </button>
+                            </div>
+                            <div class="footer-list" data-footer-sections>
+                                @for (var sectionIndex = 0; sectionIndex < Model.FooterSections.Count; sectionIndex++)
+                                {
+                                    var footerSection = Model.FooterSections[sectionIndex];
+                                    <div class="footer-section-card" data-footer-section>
+                                        <div class="footer-builder-head">
+                                            <div class="footer-builder-title">Khối footer</div>
+                                            <button type="button" class="ui-icon-btn" data-remove-section title="Xóa khối"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                        <div class="footer-section-controls">
+                                            <div class="ui-field">
+                                                <label>Tiêu đề khối</label>
+                                                <input name="FooterSections[@(sectionIndex)].Title" value="@footerSection.Title" class="form-control ui-input" />
+                                            </div>
+                                            <div class="ui-field">
+                                                <label>Icon tiêu đề</label>
+                                                <select name="FooterSections[@(sectionIndex)].IconClass" class="form-select ui-input">
+                                                    @foreach (var icon in footerIconOptions)
+                                                    {
+                                                        <option value="@icon.Value" selected="@(footerSection.IconClass == icon.Value ? "selected" : null)">@icon.Label</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="ui-field">
+                                                <label>Kiểu hiển thị</label>
+                                                <select name="FooterSections[@(sectionIndex)].DisplayType" class="form-select ui-input" data-section-type>
+                                                    @foreach (var type in footerDisplayTypes)
+                                                    {
+                                                        <option value="@type.Value" selected="@(footerSection.DisplayType == type.Value ? "selected" : null)">@type.Label</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="ui-field footer-map-field" data-map-field>
+                                            <label>Google Maps embed URL</label>
+                                            <input name="FooterSections[@(sectionIndex)].MapEmbedUrl" value="@footerSection.MapEmbedUrl" class="form-control ui-input" />
+                                        </div>
+                                        <div class="footer-builder-head">
+                                            <div class="footer-builder-title">Mục trong khối</div>
+                                            <button type="button" class="ui-mini-btn" data-add-footer-item>
+                                                <i class="fas fa-plus"></i>
+                                                Thêm mục
+                                            </button>
+                                        </div>
+                                        <div class="footer-list" data-footer-items>
+                                            @for (var itemIndex = 0; itemIndex < footerSection.Items.Count; itemIndex++)
+                                            {
+                                                var item = footerSection.Items[itemIndex];
+                                                <div class="footer-item-row" data-footer-item-row>
+                                                    <div class="ui-field">
+                                                        <label>Nhãn</label>
+                                                        <input name="FooterSections[@(sectionIndex)].Items[@(itemIndex)].Label" value="@item.Label" class="form-control ui-input" />
+                                                    </div>
+                                                    <div class="ui-field">
+                                                        <label>Nội dung</label>
+                                                        <input name="FooterSections[@(sectionIndex)].Items[@(itemIndex)].Value" value="@item.Value" class="form-control ui-input" />
+                                                    </div>
+                                                    <div class="ui-field">
+                                                        <label>Icon</label>
+                                                        <select name="FooterSections[@(sectionIndex)].Items[@(itemIndex)].IconClass" class="form-select ui-input">
+                                                            @foreach (var icon in footerIconOptions)
+                                                            {
+                                                                <option value="@icon.Value" selected="@(item.IconClass == icon.Value ? "selected" : null)">@icon.Label</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    <div class="ui-field">
+                                                        <label>Link</label>
+                                                        <input name="FooterSections[@(sectionIndex)].Items[@(itemIndex)].Url" value="@item.Url" class="form-control ui-input" />
+                                                    </div>
+                                                    <label class="footer-highlight-check">
+                                                        <input type="checkbox" name="FooterSections[@(sectionIndex)].Items[@(itemIndex)].Highlight" value="true" @(item.Highlight ? "checked" : "") />
+                                                        Nhấn
+                                                    </label>
+                                                    <input type="hidden" name="FooterSections[@(sectionIndex)].Items[@(itemIndex)].Highlight" value="false" />
+                                                    <button type="button" class="ui-icon-btn" data-remove-row title="Xóa mục"><i class="fas fa-trash"></i></button>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="footer-builder-group">
+                            <div class="footer-builder-head">
+                                <div class="footer-builder-title">Dòng cuối footer</div>
+                                <button type="button" class="ui-mini-btn" data-add-footer-link="FooterBottomLinks">
+                                    <i class="fas fa-plus"></i>
+                                    Thêm link cuối
+                                </button>
+                            </div>
+                            <div class="ui-field mb-3">
+                                <label asp-for="FooterBottomText">Nội dung dòng cuối</label>
+                                <input asp-for="FooterBottomText" class="form-control ui-input" />
+                                <span asp-validation-for="FooterBottomText"></span>
+                            </div>
+                            <div class="footer-list" data-footer-list="FooterBottomLinks">
+                                @for (var i = 0; i < Model.FooterBottomLinks.Count; i++)
+                                {
+                                    <div class="footer-link-row" data-footer-link-row>
+                                        <div class="ui-field">
+                                            <label>Tên link</label>
+                                            <input name="FooterBottomLinks[@i].Label" value="@Model.FooterBottomLinks[i].Label" class="form-control ui-input" />
+                                        </div>
+                                        <div class="ui-field">
+                                            <label>Icon</label>
+                                            <select name="FooterBottomLinks[@i].IconClass" class="form-select ui-input">
+                                                @foreach (var icon in footerIconOptions)
+                                                {
+                                                    <option value="@icon.Value" selected="@(Model.FooterBottomLinks[i].IconClass == icon.Value ? "selected" : null)">@icon.Label</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="ui-field">
+                                            <label>Đường dẫn</label>
+                                            <input name="FooterBottomLinks[@i].Url" value="@Model.FooterBottomLinks[i].Url" class="form-control ui-input" />
+                                        </div>
+                                        <button type="button" class="ui-icon-btn" data-remove-row title="Xóa link"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="ui-actions">
                         <button type="submit" class="ui-primary-btn">
                             <i class="fas fa-save"></i>
@@ -647,6 +937,284 @@
                 return style;
             }
 
+            const footerIconOptions = [
+                ['fas fa-clock', 'Đồng hồ'],
+                ['fas fa-map-marker-alt', 'Vị trí'],
+                ['fas fa-map', 'Bản đồ'],
+                ['fas fa-phone-alt', 'Điện thoại'],
+                ['fas fa-envelope', 'Email'],
+                ['fas fa-globe', 'Website'],
+                ['fas fa-calendar-days', 'Lịch'],
+                ['fas fa-circle-info', 'Thông tin'],
+                ['fas fa-circle', 'Chấm trạng thái'],
+                ['fas fa-link', 'Liên kết'],
+                ['fab fa-facebook-f', 'Facebook'],
+                ['fab fa-instagram', 'Instagram'],
+                ['fab fa-youtube', 'YouTube'],
+                ['fab fa-tiktok', 'TikTok'],
+                ['fab fa-linkedin-in', 'LinkedIn']
+            ];
+
+            const footerDisplayTypes = [
+                ['contact', 'Danh sách thông tin'],
+                ['schedule', 'Lịch / hai cột'],
+                ['map', 'Bản đồ']
+            ];
+
+            function optionHtml(options, selected) {
+                return options.map(([value, label]) => `<option value="${value}" ${value === selected ? 'selected' : ''}>${label}</option>`).join('');
+            }
+
+            function createFooterLinkRow(listName) {
+                return `
+                    <div class="footer-link-row" data-footer-link-row>
+                        <div class="ui-field">
+                            <label>Tên link</label>
+                            <input name="${listName}[0].Label" class="form-control ui-input" />
+                        </div>
+                        <div class="ui-field">
+                            <label>Icon</label>
+                            <select name="${listName}[0].IconClass" class="form-select ui-input">${optionHtml(footerIconOptions, 'fas fa-link')}</select>
+                        </div>
+                        <div class="ui-field">
+                            <label>Đường dẫn</label>
+                            <input name="${listName}[0].Url" value="#" class="form-control ui-input" />
+                        </div>
+                        <button type="button" class="ui-icon-btn" data-remove-row title="Xóa link"><i class="fas fa-trash"></i></button>
+                    </div>`;
+            }
+
+            function createFooterItemRow(sectionIndex) {
+                return `
+                    <div class="footer-item-row" data-footer-item-row>
+                        <div class="ui-field">
+                            <label>Nhãn</label>
+                            <input name="FooterSections[${sectionIndex}].Items[0].Label" class="form-control ui-input" />
+                        </div>
+                        <div class="ui-field">
+                            <label>Nội dung</label>
+                            <input name="FooterSections[${sectionIndex}].Items[0].Value" class="form-control ui-input" />
+                        </div>
+                        <div class="ui-field">
+                            <label>Icon</label>
+                            <select name="FooterSections[${sectionIndex}].Items[0].IconClass" class="form-select ui-input">${optionHtml(footerIconOptions, 'fas fa-circle')}</select>
+                        </div>
+                        <div class="ui-field">
+                            <label>Link</label>
+                            <input name="FooterSections[${sectionIndex}].Items[0].Url" class="form-control ui-input" />
+                        </div>
+                        <label class="footer-highlight-check">
+                            <input type="checkbox" name="FooterSections[${sectionIndex}].Items[0].Highlight" value="true" />
+                            Nhấn
+                        </label>
+                        <input type="hidden" name="FooterSections[${sectionIndex}].Items[0].Highlight" value="false" />
+                        <button type="button" class="ui-icon-btn" data-remove-row title="Xóa mục"><i class="fas fa-trash"></i></button>
+                    </div>`;
+            }
+
+            function createFooterSection() {
+                return `
+                    <div class="footer-section-card" data-footer-section>
+                        <div class="footer-builder-head">
+                            <div class="footer-builder-title">Khối footer</div>
+                            <button type="button" class="ui-icon-btn" data-remove-section title="Xóa khối"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="footer-section-controls">
+                            <div class="ui-field">
+                                <label>Tiêu đề khối</label>
+                                <input name="FooterSections[0].Title" class="form-control ui-input" />
+                            </div>
+                            <div class="ui-field">
+                                <label>Icon tiêu đề</label>
+                                <select name="FooterSections[0].IconClass" class="form-select ui-input">${optionHtml(footerIconOptions, 'fas fa-circle-info')}</select>
+                            </div>
+                            <div class="ui-field">
+                                <label>Kiểu hiển thị</label>
+                                <select name="FooterSections[0].DisplayType" class="form-select ui-input" data-section-type>${optionHtml(footerDisplayTypes, 'contact')}</select>
+                            </div>
+                        </div>
+                        <div class="ui-field footer-map-field" data-map-field>
+                            <label>Google Maps embed URL</label>
+                            <input name="FooterSections[0].MapEmbedUrl" class="form-control ui-input" />
+                        </div>
+                        <div class="footer-builder-head">
+                            <div class="footer-builder-title">Mục trong khối</div>
+                            <button type="button" class="ui-mini-btn" data-add-footer-item>
+                                <i class="fas fa-plus"></i>
+                                Thêm mục
+                            </button>
+                        </div>
+                        <div class="footer-list" data-footer-items>
+                            ${createFooterItemRow(0)}
+                        </div>
+                    </div>`;
+            }
+
+            function updateSectionMapVisibility(section) {
+                const type = section.querySelector('[data-section-type]')?.value;
+                const mapField = section.querySelector('[data-map-field]');
+                const items = section.querySelector('[data-footer-items]')?.closest('.footer-list');
+                if (mapField) mapField.style.display = type === 'map' ? 'block' : 'none';
+                section.querySelectorAll('[data-add-footer-item], [data-footer-items]').forEach(element => {
+                    element.style.display = type === 'map' ? 'none' : '';
+                });
+            }
+
+            function reindexFooterBuilder() {
+                document.querySelectorAll('[data-footer-list]').forEach(list => {
+                    const listName = list.dataset.footerList;
+                    list.querySelectorAll('[data-footer-link-row]').forEach((row, index) => {
+                        row.querySelector('[name$=".Label"]').name = `${listName}[${index}].Label`;
+                        row.querySelector('[name$=".IconClass"]').name = `${listName}[${index}].IconClass`;
+                        row.querySelector('[name$=".Url"]').name = `${listName}[${index}].Url`;
+                    });
+                });
+
+                document.querySelectorAll('[data-footer-section]').forEach((section, sectionIndex) => {
+                    section.querySelector('[name$=".Title"]').name = `FooterSections[${sectionIndex}].Title`;
+                    section.querySelector('[name$=".IconClass"]').name = `FooterSections[${sectionIndex}].IconClass`;
+                    section.querySelector('[name$=".DisplayType"]').name = `FooterSections[${sectionIndex}].DisplayType`;
+                    section.querySelector('[name$=".MapEmbedUrl"]').name = `FooterSections[${sectionIndex}].MapEmbedUrl`;
+
+                    section.querySelectorAll('[data-footer-item-row]').forEach((row, itemIndex) => {
+                        row.querySelector('[name$=".Label"]').name = `FooterSections[${sectionIndex}].Items[${itemIndex}].Label`;
+                        row.querySelector('[name$=".Value"]').name = `FooterSections[${sectionIndex}].Items[${itemIndex}].Value`;
+                        row.querySelector('[name$=".IconClass"]').name = `FooterSections[${sectionIndex}].Items[${itemIndex}].IconClass`;
+                        row.querySelector('[name$=".Url"]').name = `FooterSections[${sectionIndex}].Items[${itemIndex}].Url`;
+                        row.querySelector('input[type="checkbox"]').name = `FooterSections[${sectionIndex}].Items[${itemIndex}].Highlight`;
+                        row.querySelector('input[type="hidden"]').name = `FooterSections[${sectionIndex}].Items[${itemIndex}].Highlight`;
+                    });
+
+                    updateSectionMapVisibility(section);
+                });
+            }
+
+            function collectFooterLinks(listName) {
+                return Array.from(document.querySelectorAll(`[data-footer-list="${listName}"] [data-footer-link-row]`)).map(row => ({
+                    label: row.querySelector('[name$=".Label"]')?.value || '',
+                    icon: row.querySelector('[name$=".IconClass"]')?.value || 'fas fa-link',
+                    url: row.querySelector('[name$=".Url"]')?.value || '#'
+                })).filter(link => link.label || link.url);
+            }
+
+            function collectFooterSections() {
+                return Array.from(document.querySelectorAll('[data-footer-section]')).map(section => ({
+                    title: section.querySelector('[name$=".Title"]')?.value || '',
+                    icon: section.querySelector('[name$=".IconClass"]')?.value || 'fas fa-circle-info',
+                    type: section.querySelector('[name$=".DisplayType"]')?.value || 'contact',
+                    mapUrl: section.querySelector('[name$=".MapEmbedUrl"]')?.value || '',
+                    items: Array.from(section.querySelectorAll('[data-footer-item-row]')).map(row => ({
+                        label: row.querySelector('[name$=".Label"]')?.value || '',
+                        value: row.querySelector('[name$=".Value"]')?.value || '',
+                        icon: row.querySelector('[name$=".IconClass"]')?.value || 'fas fa-circle',
+                        url: row.querySelector('[name$=".Url"]')?.value || '',
+                        highlight: row.querySelector('input[type="checkbox"]')?.checked || false
+                    })).filter(item => item.label || item.value)
+                })).filter(section => section.title || section.mapUrl || section.items.length);
+            }
+
+            function renderPreviewFooter(doc) {
+                const social = doc.querySelector('.footer-social');
+                if (social) {
+                    social.innerHTML = '';
+                    collectFooterLinks('FooterSocialLinks').forEach(link => {
+                        const anchor = doc.createElement('a');
+                        anchor.href = link.url || '#';
+                        anchor.setAttribute('aria-label', link.label || 'Link');
+                        const icon = doc.createElement('i');
+                        icon.className = link.icon;
+                        anchor.appendChild(icon);
+                        social.appendChild(anchor);
+                    });
+                }
+
+                const row = doc.querySelector('.footer-cl .row.gy-4.pb-4');
+                if (row) {
+                    Array.from(row.querySelectorAll('.footer-dynamic-section')).forEach(section => section.remove());
+
+                    collectFooterSections().forEach(section => {
+                        const col = doc.createElement('div');
+                        col.className = 'col-lg-3 col-md-6 footer-dynamic-section';
+                        const title = doc.createElement('div');
+                        title.className = 'footer-col-title';
+                        const titleIcon = doc.createElement('i');
+                        titleIcon.className = `${section.icon} me-1`;
+                        title.appendChild(titleIcon);
+                        title.append(section.title);
+                        col.appendChild(title);
+
+                        if (section.type === 'map') {
+                            if (section.mapUrl) {
+                                const frame = doc.createElement('div');
+                                frame.className = 'footer-map-frame';
+                                const iframeEl = doc.createElement('iframe');
+                                iframeEl.src = section.mapUrl;
+                                iframeEl.loading = 'lazy';
+                                frame.appendChild(iframeEl);
+                                col.appendChild(frame);
+                            }
+                        } else if (section.type === 'schedule') {
+                            section.items.forEach(item => {
+                                const line = doc.createElement('div');
+                                line.className = 'footer-schedule-row';
+                                const day = doc.createElement('span');
+                                day.className = 'day';
+                                if (item.icon && item.icon !== 'fas fa-circle') {
+                                    const icon = doc.createElement('i');
+                                    icon.className = `${item.icon} me-1`;
+                                    day.appendChild(icon);
+                                }
+                                day.append(item.label);
+                                const time = doc.createElement('span');
+                                time.className = 'time';
+                                if (item.highlight) time.style.color = '#fbbf24';
+                                time.textContent = item.value;
+                                line.append(day, time);
+                                col.appendChild(line);
+                            });
+                        } else {
+                            section.items.forEach(item => {
+                                const line = doc.createElement('div');
+                                line.className = 'footer-contact-item';
+                                const icon = doc.createElement('i');
+                                icon.className = item.icon;
+                                if (item.highlight) icon.style.color = '#22c55e';
+                                line.appendChild(icon);
+                                const text = item.value || item.label;
+                                if (item.url && item.url !== '#') {
+                                    const anchor = doc.createElement('a');
+                                    anchor.href = item.url;
+                                    anchor.textContent = text;
+                                    line.appendChild(anchor);
+                                } else {
+                                    const span = doc.createElement('span');
+                                    span.textContent = text;
+                                    if (item.highlight) span.style.color = 'rgba(255,255,255,.9)';
+                                    line.appendChild(span);
+                                }
+                                col.appendChild(line);
+                            });
+                        }
+
+                        row.appendChild(col);
+                    });
+                }
+
+                const bottom = doc.querySelector('.footer-bottom');
+                if (bottom) {
+                    bottom.innerHTML = '';
+                    bottom.append(byName('FooterBottomText')?.value || '');
+                    collectFooterLinks('FooterBottomLinks').forEach(link => {
+                        bottom.append(' | ');
+                        const anchor = doc.createElement('a');
+                        anchor.href = link.url || '#';
+                        anchor.className = 'footer-link-bottom';
+                        anchor.textContent = link.label || 'Link';
+                        bottom.appendChild(anchor);
+                    });
+                }
+            }
+
             function updatePreview() {
                 const doc = iframe?.contentDocument || iframe?.contentWindow?.document;
                 if (!doc || !doc.documentElement) return;
@@ -699,6 +1267,7 @@
                 setText(doc, '.footer-contact-item:nth-of-type(3) span', byName('ContactEmail')?.value);
                 setText(doc, '.footer-schedule-row.mt-2 .time', byName('HotlinePhone')?.value);
                 setText(doc, '.footer-bottom', `© 2026 ${byName('BrandName')?.value || ''}. Bảo lưu mọi quyền.`);
+                renderPreviewFooter(doc);
             }
 
             function bindImageInput(inputName, previewId, targetKey) {
@@ -714,8 +1283,71 @@
                 });
             }
 
+            document.getElementById('patientUiForm')?.addEventListener('click', event => {
+                const addLinkButton = event.target.closest('[data-add-footer-link]');
+                if (addLinkButton) {
+                    const listName = addLinkButton.dataset.addFooterLink;
+                    const list = document.querySelector(`[data-footer-list="${listName}"]`);
+                    if (list) {
+                        list.insertAdjacentHTML('beforeend', createFooterLinkRow(listName));
+                        reindexFooterBuilder();
+                        updatePreview();
+                    }
+                    return;
+                }
+
+                if (event.target.closest('[data-add-footer-section]')) {
+                    const list = document.querySelector('[data-footer-sections]');
+                    if (list) {
+                        list.insertAdjacentHTML('beforeend', createFooterSection());
+                        reindexFooterBuilder();
+                        updatePreview();
+                    }
+                    return;
+                }
+
+                const addItemButton = event.target.closest('[data-add-footer-item]');
+                if (addItemButton) {
+                    const section = addItemButton.closest('[data-footer-section]');
+                    const sectionIndex = Array.from(document.querySelectorAll('[data-footer-section]')).indexOf(section);
+                    const list = section?.querySelector('[data-footer-items]');
+                    if (list) {
+                        list.insertAdjacentHTML('beforeend', createFooterItemRow(sectionIndex));
+                        reindexFooterBuilder();
+                        updatePreview();
+                    }
+                    return;
+                }
+
+                const removeSectionButton = event.target.closest('[data-remove-section]');
+                if (removeSectionButton) {
+                    removeSectionButton.closest('[data-footer-section]')?.remove();
+                    reindexFooterBuilder();
+                    updatePreview();
+                    return;
+                }
+
+                const removeRowButton = event.target.closest('[data-remove-row]');
+                if (removeRowButton) {
+                    removeRowButton.closest('[data-footer-link-row], [data-footer-item-row]')?.remove();
+                    reindexFooterBuilder();
+                    updatePreview();
+                }
+            });
+
+            document.getElementById('patientUiForm')?.addEventListener('change', event => {
+                const typeSelect = event.target.closest('[data-section-type]');
+                if (typeSelect) {
+                    updateSectionMapVisibility(typeSelect.closest('[data-footer-section]'));
+                }
+                reindexFooterBuilder();
+                updatePreview();
+            });
+
+            document.getElementById('patientUiForm')?.addEventListener('submit', reindexFooterBuilder);
+
             ['PrimaryColor', 'NavigationColor', 'AccentColor', 'BackgroundColor'].forEach(syncColorGroup);
-            document.querySelectorAll('#patientUiForm input, #patientUiForm textarea').forEach(input => {
+            document.querySelectorAll('#patientUiForm input, #patientUiForm textarea, #patientUiForm select').forEach(input => {
                 input.addEventListener('input', updatePreview);
                 input.addEventListener('change', updatePreview);
             });
@@ -739,6 +1371,7 @@
                 });
             });
 
+            reindexFooterBuilder();
             updatePreview();
         })();
     </script>
