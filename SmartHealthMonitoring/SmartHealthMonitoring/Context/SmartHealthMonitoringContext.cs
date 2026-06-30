@@ -54,6 +54,11 @@ public partial class SmartHealthMonitoringContext : DbContext
     public virtual DbSet<PaymentDetail> PaymentDetails { get; set; }
     public virtual DbSet<WaitingPatient> WaitingPatients { get; set; }
 
+    // ── Appointment Booking System ─────────────────────────────────────────────
+    public virtual DbSet<DoctorWorkSchedule> DoctorWorkSchedules { get; set; }
+    public virtual DbSet<AppointmentSlot> AppointmentSlots { get; set; }
+    public virtual DbSet<Appointment> Appointments { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         // Để trống hàm này, không hardcode chuỗi kết nối ở đây nữa
@@ -759,6 +764,75 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.ToTable("PaymentDetails");
             entity.HasOne(d => d.Payment).WithMany(p => p.PaymentDetails).HasForeignKey(d => d.PaymentId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(d => d.Service).WithMany(p => p.PaymentDetails).HasForeignKey(d => d.ServiceId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // ── Appointment Booking System ──────────────────────────────────────────
+        modelBuilder.Entity<DoctorWorkSchedule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("DoctorWorkSchedules");
+            entity.HasOne(d => d.Doctor)
+                  .WithMany(d => d.WorkSchedules)
+                  .HasForeignKey(d => d.DoctorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AppointmentSlot>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("AppointmentSlots");
+
+            // Optimistic Concurrency - SQL Server ROWVERSION
+            entity.Property(e => e.RowVersion)
+                  .IsRowVersion()
+                  .IsConcurrencyToken();
+
+            // Unique: một bác sĩ không thể có 2 slot trùng giờ
+            entity.HasIndex(e => new { e.DoctorId, e.SlotStart })
+                  .IsUnique()
+                  .HasDatabaseName("UX_AppointmentSlot_Doctor_Start");
+
+            entity.Property(e => e.Status)
+                  .HasConversion<int>();
+
+            entity.HasOne(e => e.Doctor)
+                  .WithMany(d => d.AppointmentSlots)
+                  .HasForeignKey(e => e.DoctorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Patient)
+                  .WithMany(p => p.AppointmentSlots)
+                  .HasForeignKey(e => e.PatientId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Appointment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("Appointments");
+
+            entity.Property(e => e.Status)
+                  .HasConversion<int>();
+
+            entity.HasOne(a => a.Slot)
+                  .WithOne(s => s.Appointment)
+                  .HasForeignKey<Appointment>(a => a.SlotId)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(a => a.Patient)
+                  .WithMany(p => p.Appointments)
+                  .HasForeignKey(a => a.PatientId)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(a => a.Doctor)
+                  .WithMany(d => d.Appointments)
+                  .HasForeignKey(a => a.DoctorId)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(a => a.ClinicalRecord)
+                  .WithMany()
+                  .HasForeignKey(a => a.ClinicalRecordId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<WaitingPatient>(entity =>

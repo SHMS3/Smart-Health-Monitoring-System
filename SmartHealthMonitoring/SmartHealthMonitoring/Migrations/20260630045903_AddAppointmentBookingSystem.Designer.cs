@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartHealthMonitoring.Context;
 
@@ -11,9 +12,11 @@ using SmartHealthMonitoring.Context;
 namespace SmartHealthMonitoring.Migrations
 {
     [DbContext(typeof(SmartHealthMonitoringContext))]
-    partial class SmartHealthMonitoringContextModelSnapshot : ModelSnapshot
+    [Migration("20260630045903_AddAppointmentBookingSystem")]
+    partial class AddAppointmentBookingSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2575,46 +2578,6 @@ namespace SmartHealthMonitoring.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SmartHealthMonitoring.Models.WaitingPatient", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("AcceptedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DoctorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ReceptionistId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SequenceNumber")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DoctorId");
-
-                    b.HasIndex("PatientId");
-
-                    b.HasIndex("ReceptionistId");
-
-                    b.ToTable("WaitingPatients", (string)null);
-                });
-
             modelBuilder.Entity("SmartHealthMonitoring.Models.WarningAlert", b =>
                 {
                     b.Property<int>("Id")
@@ -3085,32 +3048,6 @@ namespace SmartHealthMonitoring.Migrations
                     b.Navigation("DoctorUser");
 
                     b.Navigation("PatientUser");
-                });
-
-            modelBuilder.Entity("SmartHealthMonitoring.Models.WaitingPatient", b =>
-                {
-                    b.HasOne("SmartHealthMonitoring.Models.Doctor", "Doctor")
-                        .WithMany()
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("SmartHealthMonitoring.Models.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("SmartHealthMonitoring.Models.User", "Receptionist")
-                        .WithMany()
-                        .HasForeignKey("ReceptionistId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Doctor");
-
-                    b.Navigation("Patient");
-
-                    b.Navigation("Receptionist");
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.WarningAlert", b =>

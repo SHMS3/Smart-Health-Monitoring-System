@@ -758,6 +758,16 @@
                             <i class="fas fa-envelope"></i> Lịch sử Email
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="DoctorSchedule" ? "active" : "")" asp-controller="DoctorSchedule" asp-action="Index">
+                            <i class="fas fa-calendar-plus"></i> Cấu hình lịch
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="Appointment" && action=="DoctorQueue" ? "active" : "")" asp-controller="Appointment" asp-action="DoctorQueue">
+                            <i class="fas fa-clipboard-list"></i> Hàng đợi khám
+                        </a>
+                    </li>
                 }
                 else if (isPat)
                 {
@@ -784,6 +794,16 @@
                     <li class="nav-item">
                         <a class="nav-link-cl @(ctrl=="Chatbot" ? "active" : "")" asp-controller="Chatbot" asp-action="History">
                             <i class="fas fa-comments"></i> Lịch sử Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="Appointment" && action=="FindDoctor" ? "active" : "")" asp-controller="Appointment" asp-action="FindDoctor">
+                            <i class="fas fa-calendar-check"></i> Đặt lịch khám
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="Appointment" && action=="MyAppointments" ? "active" : "")" asp-controller="Appointment" asp-action="MyAppointments">
+                            <i class="fas fa-list-alt"></i> Lịch hẹn của tôi
                         </a>
                     </li>
                 }
