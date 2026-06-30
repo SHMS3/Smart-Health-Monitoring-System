@@ -1,5 +1,7 @@
+@inject SmartHealthMonitoring.Interfaces.IPatientUiSettingsService PatientUiSettingsService
 @{
     ViewData["Title"] = "Trang chủ";
+    var homeUi = await PatientUiSettingsService.GetSettingsAsync();
 }
 
 <style>
@@ -17,7 +19,7 @@
         position: absolute;
         right: 0; top: 0; bottom: 0;
         width: 55%;
-        background: url('/images/banner.jpg?v=3') center/cover no-repeat;
+        background: url('@homeUi.HomeHeroImageUrl') center/cover no-repeat;
         opacity: 0.5;
     }
     .hero-banner::after {
@@ -33,7 +35,7 @@
     }
     .hero-eyebrow {
         font-size: 0.8rem; font-weight: 600;
-        color: #e53935; text-transform: uppercase;
+        color: @homeUi.AccentColor; text-transform: uppercase;
         letter-spacing: 1px; margin-bottom: 6px;
         font-style: italic;
     }
@@ -46,7 +48,7 @@
         margin-bottom: 10px;
     }
     .hero-title .highlight {
-        color: #1a73c8;
+        color: @homeUi.PrimaryColor;
     }
     .hero-price-tag {
         font-family: 'Plus Jakarta Sans', sans-serif;
@@ -57,26 +59,26 @@
         font-family: 'Plus Jakarta Sans', sans-serif;
         font-size: clamp(1.6rem, 3vw, 2.4rem);
         font-weight: 800;
-        color: #1a73c8;
+        color: @homeUi.PrimaryColor;
         margin-bottom: 20px;
     }
     .btn-hero-cta {
         display: inline-flex; align-items: center; gap: 8px;
-        background: #e53935; color: white;
+        background: @homeUi.AccentColor; color: white;
         border: none; border-radius: 6px;
         padding: 12px 28px; font-weight: 700; font-size: 0.9rem;
         text-decoration: none; cursor: pointer;
         transition: all .25s; box-shadow: 0 4px 14px rgba(229,57,53,.3);
     }
-    .btn-hero-cta:hover { background: #c62828; color: white; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(229,57,53,.4); }
+    .btn-hero-cta:hover { background: @homeUi.PrimaryDarkColor; color: white; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(229,57,53,.4); }
     .hero-sub-note {
-        font-size: 0.82rem; color: #1a73c8;
+        font-size: 0.82rem; color: @homeUi.PrimaryColor;
         margin-top: 10px; font-style: italic;
     }
 
     /* ══ STATS BANNER ══ */
     .stats-banner {
-        background: linear-gradient(135deg, #1565c0 0%, #1a73c8 60%, #2196f3 100%);
+        background: linear-gradient(135deg, @homeUi.NavigationColor 0%, @homeUi.PrimaryColor 60%, #2196f3 100%);
         padding: 30px 0;
     }
     .stat-cl { text-align: center; color: white; padding: 0 20px; }
@@ -98,7 +100,7 @@
         text-align: center;
         margin-bottom: 8px;
     }
-    .section-heading span { color: #1a73c8; }
+    .section-heading span { color: @homeUi.PrimaryColor; }
     .section-sub { text-align: center; color: #607080; font-size: 0.9rem; max-width: 560px; margin: 0 auto 40px; line-height: 1.7; }
 
     /* ══ SERVICES / TIỆN ÍCH ══ */
@@ -112,7 +114,7 @@
         text-decoration: none;
         color: inherit;
     }
-    .service-card:hover { border-color: #1a73c8; box-shadow: 0 6px 24px rgba(26,115,200,.12); transform: translateY(-3px); color: inherit; }
+    .service-card:hover { border-color: @homeUi.PrimaryColor; box-shadow: 0 6px 24px rgba(26,115,200,.12); transform: translateY(-3px); color: inherit; }
     .service-icon {
         width: 52px; height: 52px; flex-shrink: 0;
         border-radius: 12px;
@@ -126,7 +128,7 @@
     /* ══ ABOUT / GIỚI THIỆU ══ */
     .about-tag {
         display: inline-block;
-        background: linear-gradient(135deg, #1a73c8, #2196f3);
+        background: linear-gradient(135deg, @homeUi.PrimaryColor, #2196f3);
         color: white; font-size: 0.72rem; font-weight: 600;
         padding: 4px 14px; border-radius: 30px;
         margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
@@ -138,11 +140,11 @@
     }
     .about-desc { font-size: 0.88rem; color: #607080; line-height: 1.75; margin-bottom: 16px; }
     .about-link {
-        color: #1a73c8; font-weight: 600; font-size: 0.88rem;
+        color: @homeUi.PrimaryColor; font-weight: 600; font-size: 0.88rem;
         display: inline-flex; align-items: center; gap: 5px;
         text-decoration: none;
     }
-    .about-link:hover { color: #135fa5; }
+    .about-link:hover { color: @homeUi.PrimaryDarkColor; }
     .about-img-stack { position: relative; }
     .about-img-main {
         border-radius: 14px;
@@ -208,18 +210,18 @@
 
     /* ══ CTA ══ */
     .cta-cl {
-        background: linear-gradient(135deg, #1565c0, #1a73c8);
+        background: linear-gradient(135deg, @homeUi.NavigationColor, @homeUi.PrimaryColor);
         padding: 50px 0; text-align: center;
     }
     .cta-cl h2 { font-family: 'Plus Jakarta Sans',sans-serif; font-size: 1.8rem; font-weight: 800; color: white; margin-bottom: 10px; }
     .cta-cl p  { color: rgba(255,255,255,.8); font-size: 0.92rem; max-width: 480px; margin: 0 auto 24px; line-height: 1.7; }
     .btn-cta-white {
-        background: white; color: #1a73c8;
+        background: white; color: @homeUi.PrimaryColor;
         border: none; border-radius: 6px; padding: 12px 28px;
         font-weight: 700; font-size: 0.9rem; cursor: pointer;
         transition: all .25s; text-decoration: none;
     }
-    .btn-cta-white:hover { background: #e8f4fd; color: #135fa5; transform: translateY(-2px); }
+    .btn-cta-white:hover { background: #e8f4fd; color: @homeUi.PrimaryDarkColor; transform: translateY(-2px); }
     .btn-cta-outline {
         background: transparent; color: white;
         border: 2px solid rgba(255,255,255,.6);
@@ -239,12 +241,12 @@
 <section class="hero-banner">
     <div class="container container-xl">
         <div class="hero-content-wrap" style="max-width:520px;">
-            <p class="hero-eyebrow">Ưu đãi dành riêng cho bệnh nhân</p>
+            <p class="hero-eyebrow">@homeUi.HomeHeroEyebrow</p>
             <h1 class="hero-title">
-                Theo dõi Sức khỏe <span class="highlight">Tim Mạch</span><br>Thông minh cùng AI
+                @homeUi.HomeHeroTitle<br><span class="highlight">@homeUi.HomeHeroHighlight</span>
             </h1>
-            <p class="hero-price-tag">Gói theo dõi hằng ngày</p>
-            <div class="hero-price">Miễn phí<small class="fs-5 fw-normal text-muted"> khi đăng ký</small></div>
+            <p class="hero-price-tag">@homeUi.HomeHeroPriceTag</p>
+            <div class="hero-price">@homeUi.HomeHeroPrice<small class="fs-5 fw-normal text-muted">@homeUi.HomeHeroPriceSuffix</small></div>
             @if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 <a asp-controller="Patient" asp-action="Create" class="btn-hero-cta">
@@ -257,7 +259,7 @@
                     <i class="fas fa-user-plus"></i> Đăng ký miễn phí ngay
                 </a>
             }
-            <p class="hero-sub-note"><i class="fas fa-shield-heart me-1"></i> Được theo dõi bởi bác sĩ chuyên khoa tim mạch</p>
+            <p class="hero-sub-note"><i class="fas fa-shield-heart me-1"></i> @homeUi.HomeHeroNote</p>
         </div>
     </div>
 </section>
@@ -346,7 +348,7 @@
             <!-- Giới thiệu -->
             <div class="col-lg-5">
                 <div class="about-img-stack mb-5">
-                    <img src="/images/about-banner.png" alt="SmartHealth Tim Mạch" class="about-img-main" asp-append-version="true" />
+                    <img src="@homeUi.HomeAboutImageUrl" alt="@homeUi.HomeAboutTitle" class="about-img-main" asp-append-version="true" />
                     <div class="about-img-badge">
                         <i class="fas fa-award" style="color:#1a73c8;font-size:1.2rem;"></i>
                         <div>
@@ -355,10 +357,10 @@
                         </div>
                     </div>
                 </div>
-                <span class="about-tag">Giới thiệu về chúng tôi</span>
-                <h3 class="about-title">Hệ thống SmartHealth<br>Tim Mạch</h3>
+                <span class="about-tag">@homeUi.HomeAboutTag</span>
+                <h3 class="about-title">@homeUi.HomeAboutTitle</h3>
                 <p class="about-desc">
-                    SmartHealth được thành lập với sứ mệnh ứng dụng công nghệ AI trong theo dõi và cảnh báo sức khỏe tim mạch. Đội ngũ bác sĩ chuyên khoa tim mạch kết hợp hệ thống phân tích dữ liệu thông minh giúp phát hiện sớm các nguy cơ và đưa ra can thiệp kịp thời.
+                    @homeUi.HomeAboutDescription
                 </p>
                 <a href="#" class="about-link">Xem thêm <i class="fas fa-arrow-right"></i></a>
             </div>
@@ -699,8 +701,8 @@
 <!-- ══ CTA ══ -->
 <section class="cta-cl">
     <div class="container container-xl">
-        <h2>Bắt đầu theo dõi tim mạch ngay hôm nay</h2>
-        <p>Đăng ký miễn phí và nhận cảnh báo nguy cơ tim mạch từ hệ thống AI 24/7.</p>
+        <h2>@homeUi.HomeCtaTitle</h2>
+        <p>@homeUi.HomeCtaDescription</p>
         <div>
             @if (User.Identity != null && User.Identity.IsAuthenticated)
             {

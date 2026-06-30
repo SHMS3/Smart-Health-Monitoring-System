@@ -1,10 +1,17 @@
+@inject SmartHealthMonitoring.Interfaces.IPatientUiSettingsService PatientUiSettingsService
+@{
+    var patientUi = await PatientUiSettingsService.GetSettingsAsync();
+    var patientUiHotlineDigits = new string((patientUi.HotlinePhone ?? string.Empty).Where(char.IsDigit).ToArray());
+    var patientUiHotlineHref = string.IsNullOrWhiteSpace(patientUiHotlineDigits) ? "tel:0999999999" : $"tel:{patientUiHotlineDigits}";
+    var patientUiFooterBottomText = (patientUi.FooterBottomText ?? string.Empty).Replace("{BrandName}", patientUi.BrandName);
+}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="SmartHealth Tim mạch - Hệ thống theo dõi sức khỏe tim mạch thông minh, cảnh báo sớm bằng AI." />
-    <title>@ViewData["Title"] - SmartHealth Tim Mạch</title>
+    <meta name="description" content="@patientUi.MetaDescription" />
+    <title>@ViewData["Title"] - @patientUi.BrandName</title>
     <link rel="icon" type="image/png" href="~/favicon.png" asp-append-version="true" />
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -14,23 +21,23 @@
 
     <style>
         :root {
-            --cl-blue:      #1a73c8;
-            --cl-blue-dark: #135fa5;
-            --cl-blue-nav:  #1565c0;
-            --cl-red:       #e53935;
+            --cl-blue:      @patientUi.PrimaryColor;
+            --cl-blue-dark: @patientUi.PrimaryDarkColor;
+            --cl-blue-nav:  @patientUi.NavigationColor;
+            --cl-red:       @patientUi.AccentColor;
             --cl-orange:    #f57c00;
-            --cl-bg:        #f4f7fb;
+            --cl-bg:        @patientUi.BackgroundColor;
             --cl-text:      #1a2340;
             --cl-muted:     #607080;
 
             /* Telemedicine & Chat custom properties */
-            --primary:      #0ea5e9;
-            --primary-dark: #0284c7;
+            --primary:      @patientUi.PrimaryColor;
+            --primary-dark: @patientUi.PrimaryDarkColor;
             --secondary:    #6366f1;
             --accent:       #10b981;
             --warn:         #f59e0b;
             --danger:       #ef4444;
-            --grad:         linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+            --grad:         linear-gradient(135deg, @patientUi.PrimaryColor 0%, #6366f1 100%);
             --border:       #e2e8f0;
             --text-sub:     #475569;
             --text-muted:   #94a3b8;
@@ -234,6 +241,19 @@
         }
         .footer-contact-item i { color: rgba(255,255,255,.5); margin-top: 2px; width: 14px; text-align: center; }
         .footer-contact-item span { color: rgba(255,255,255,.8); line-height: 1.5; }
+        .footer-contact-item a { color: rgba(255,255,255,.82); text-decoration: none; line-height: 1.5; }
+        .footer-contact-item a:hover { color: #fff; }
+        .footer-map-frame {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,.15);
+        }
+        .footer-map-frame iframe { display: block; width: 100%; height: 150px; border: 0; }
+        .footer-link-bottom {
+            color: rgba(255,255,255,.5);
+            text-decoration: none;
+        }
+        .footer-link-bottom:hover { color: rgba(255,255,255,.85); }
         .footer-bottom {
             background: rgba(0,0,0,.15);
             padding: 14px 0;
@@ -683,37 +703,40 @@
 <body>
 
     <!-- ── TOP INFO BAR ── -->
-    <div class="top-infobar d-none d-md-block">
-        <div class="container container-xl d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-1">
-                <a href="#"><i class="fab fa-facebook-f me-1"></i></a>
-                <a href="#" class="ms-2"><i class="fab fa-instagram me-1"></i></a>
-                <a href="#" class="ms-2"><i class="fab fa-youtube me-1"></i></a>
-                <a href="#" class="ms-2"><i class="fas fa-envelope me-1"></i></a>
-            </div>
-            <div class="d-flex align-items-center">
-                <a href="#"><i class="fas fa-envelope me-1"></i> Liên hệ</a>
-                <span class="divider">|</span>
-                <span><i class="fas fa-clock me-1"></i> 08:00 – 17:00</span>
-                <span class="divider">|</span>
-                <a href="tel:+84901234567"><i class="fas fa-phone me-1"></i> +84 90 123 4567</a>
+    @if (patientUi.ShowTopInfoBar)
+    {
+        <div class="top-infobar d-none d-md-block">
+            <div class="container container-xl d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-1">
+                    <a href="#"><i class="fab fa-facebook-f me-1"></i></a>
+                    <a href="#" class="ms-2"><i class="fab fa-instagram me-1"></i></a>
+                    <a href="#" class="ms-2"><i class="fab fa-youtube me-1"></i></a>
+                    <a href="mailto:@patientUi.ContactEmail" class="ms-2"><i class="fas fa-envelope me-1"></i></a>
+                </div>
+                <div class="d-flex align-items-center">
+                    <a href="mailto:@patientUi.ContactEmail"><i class="fas fa-envelope me-1"></i> Liên hệ</a>
+                    <span class="divider">|</span>
+                    <span><i class="fas fa-clock me-1"></i> 08:00 – 17:00</span>
+                    <span class="divider">|</span>
+                    <a href="@patientUiHotlineHref"><i class="fas fa-phone me-1"></i> @patientUi.HotlinePhone</a>
+                </div>
             </div>
         </div>
-    </div>
+    }
 
     <!-- ── HEADER LOGO BAR ── -->
     <header class="header-main">
         <div class="container container-xl d-flex align-items-center justify-content-between">
             <a asp-controller="Home" asp-action="Index" class="brand-wrap">
-                <div class="brand-logo-icon"><i class="fas fa-heartbeat"></i></div>
+                <div class="brand-logo-icon"><i class="@patientUi.LogoIcon"></i></div>
                 <div class="brand-text-wrap">
-                    <span class="brand-name">SmartHealth</span>
-                    <span class="brand-sub">Tim Mạch</span>
+                    <span class="brand-name">@patientUi.BrandName</span>
+                    <span class="brand-sub">@patientUi.BrandSubtitle</span>
                 </div>
             </a>
 
             <div class="header-search d-none d-lg-flex">
-                <input type="text" placeholder="Tìm kiếm dịch vụ, thông tin..." />
+                <input type="text" placeholder="@patientUi.SearchPlaceholder" />
                 <button type="button"><i class="fas fa-search"></i></button>
             </div>
 
@@ -721,8 +744,8 @@
                 <div class="hotline-wrap">
                     <div class="hotline-icon"><i class="fas fa-phone-alt"></i></div>
                     <div>
-                        <div class="hotline-number">0999 999 999</div>
-                        <div class="hotline-label">Hotline 24/7</div>
+                        <div class="hotline-number">@patientUi.HotlinePhone</div>
+                        <div class="hotline-label">@patientUi.HotlineLabel</div>
                     </div>
                 </div>
                 @if (User.Identity != null && User.Identity.IsAuthenticated)
@@ -903,99 +926,89 @@
     <footer class="footer-cl">
         <div class="container container-xl">
             <div class="row gy-4 pb-4">
-
-                <!-- Cột 1: Logo + mô tả -->
                 <div class="col-lg-3 col-md-6">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <div class="brand-logo-icon" style="width:40px;height:40px;font-size:1.1rem;"><i class="fas fa-heartbeat"></i></div>
+                        <div class="brand-logo-icon" style="width:40px;height:40px;font-size:1.1rem;"><i class="@patientUi.LogoIcon"></i></div>
                         <div>
-                            <div class="footer-logo-name">SmartHealth</div>
-                            <div class="footer-logo-sub">Theo dõi Tim mạch AI</div>
+                            <div class="footer-logo-name">@patientUi.BrandName</div>
+                            <div class="footer-logo-sub">@patientUi.FooterSubtitle</div>
                         </div>
                     </div>
-                    <p class="footer-desc">
-                        Hệ thống theo dõi sức khỏe tim mạch thông minh. Phát hiện sớm nguy cơ và nhận cảnh báo kịp thời từ AI.
-                    </p>
-                    <p style="font-size:0.75rem;color:rgba(255,255,255,.5);margin-top:8px;">
-                        Giấy phép số 47/GP-TTĐT, ngày 20 tháng 01 năm 2017
-                    </p>
-                    <div class="footer-social mt-3">
-                        <a href="#"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
-                        <a href="#"><i class="fas fa-envelope"></i></a>
-                    </div>
-                </div>
-
-                <!-- Cột 2: Lịch làm việc -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="footer-col-title"><i class="fas fa-clock me-1"></i>Lịch làm việc</div>
-                    <div class="footer-schedule-row">
-                        <span class="day">Thứ 2 – Thứ 7</span>
-                        <span class="time">08:00 – 17:00</span>
-                    </div>
-                    <div class="footer-schedule-row">
-                        <span class="day">Chuyên khoa Tim mạch</span>
-                        <span class="time">08:00 – 12:00</span>
-                    </div>
-                    <div class="footer-schedule-row">
-                        <span class="day">Thứ 2 – Thứ 6</span>
-                        <span class="time">17:00 – 20:00</span>
-                    </div>
-                    <div class="footer-schedule-row">
-                        <span class="day">Chủ nhật</span>
-                        <span class="time" style="color:#fbbf24;">Nghỉ</span>
-                    </div>
-                    <div class="footer-schedule-row mt-2">
-                        <span class="day"><i class="fas fa-phone-alt me-1"></i>Hotline 24/7</span>
-                        <span class="time" style="color:#fbbf24;">0999 999 999</span>
-                    </div>
-                </div>
-
-                <!-- Cột 3: Liên hệ -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="footer-col-title"><i class="fas fa-map-marker-alt me-1"></i>Liên hệ</div>
-                    <div class="footer-contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Đại học FPT,<br>TP. Hồ Chí Minh</span>
-                    </div>
-                    <div class="footer-contact-item">
-                        <i class="fas fa-phone-alt"></i>
-                        <span>1900 1234 — Hotline 24/7</span>
-                    </div>
-                    <div class="footer-contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <span>contact@smarthealth.vn</span>
-                    </div>
-                    <div class="footer-contact-item">
-                        <i class="fas fa-globe"></i>
-                        <span>www.smarthealth.vn</span>
-                    </div>
-                    <div class="mt-3">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <div class="spinner-grow text-success spinner-grow-sm" role="status" style="width:8px;height:8px;"></div>
-                            <span style="font-size:0.76rem;color:rgba(255,255,255,.8);">Hệ thống đang hoạt động ổn định</span>
+                    <p class="footer-desc">@patientUi.FooterDescription</p>
+                    @if (!string.IsNullOrWhiteSpace(patientUi.FooterLicenseText))
+                    {
+                        <p style="font-size:0.75rem;color:rgba(255,255,255,.5);margin-top:8px;">
+                            @patientUi.FooterLicenseText
+                        </p>
+                    }
+                    @if (patientUi.FooterSocialLinks.Any())
+                    {
+                        <div class="footer-social mt-3">
+                            @foreach (var link in patientUi.FooterSocialLinks)
+                            {
+                                <a href="@link.Url" aria-label="@link.Label"><i class="@link.IconClass"></i></a>
+                            }
                         </div>
-                    </div>
+                    }
                 </div>
 
-                <!-- Cột 4: Bản đồ -->
-                <div class="col-lg-3 col-md-6">
-                    <div class="footer-col-title"><i class="fas fa-map me-1"></i>Bản đồ</div>
-                    <div style="border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.15);">
-                        <iframe
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4482!2d106.8!3d10.85!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDUxJzAwLjAiTiAxMDbCsDQ4JzAwLjAiRQ!5e0!3m2!1svi!2svn!4v1234567890"
-                            width="100%" height="150" style="border:0;" allowfullscreen="" loading="lazy">
-                        </iframe>
-                    </div>
-                </div>
+                @foreach (var footerSection in patientUi.FooterSections)
+                {
+                    <div class="col-lg-3 col-md-6 footer-dynamic-section" data-footer-section-type="@footerSection.DisplayType">
+                        <div class="footer-col-title"><i class="@footerSection.IconClass me-1"></i>@footerSection.Title</div>
 
+                        @if (footerSection.DisplayType == PatientFooterSectionDisplayTypes.Map)
+                        {
+                            @if (!string.IsNullOrWhiteSpace(footerSection.MapEmbedUrl))
+                            {
+                                <div class="footer-map-frame">
+                                    <iframe src="@footerSection.MapEmbedUrl" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                </div>
+                            }
+                        }
+                        else if (footerSection.DisplayType == PatientFooterSectionDisplayTypes.Schedule)
+                        {
+                            @foreach (var item in footerSection.Items)
+                            {
+                                <div class="footer-schedule-row">
+                                    <span class="day">
+                                        @if (!string.IsNullOrWhiteSpace(item.IconClass) && item.IconClass != "fas fa-circle")
+                                        {
+                                            <i class="@item.IconClass me-1"></i>
+                                        }
+                                        @item.Label
+                                    </span>
+                                    <span class="time" style="@(item.Highlight ? "color:#fbbf24;" : null)">@item.Value</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            @foreach (var item in footerSection.Items)
+                            {
+                                <div class="footer-contact-item">
+                                    <i class="@item.IconClass" style="@(item.Highlight ? "color:#22c55e;" : null)"></i>
+                                    @if (!string.IsNullOrWhiteSpace(item.Url) && item.Url != "#")
+                                    {
+                                        <a href="@item.Url">@(string.IsNullOrWhiteSpace(item.Value) ? item.Label : item.Value)</a>
+                                    }
+                                    else
+                                    {
+                                        <span style="@(item.Highlight ? "color:rgba(255,255,255,.9);" : null)">@(string.IsNullOrWhiteSpace(item.Value) ? item.Label : item.Value)</span>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                }
             </div>
         </div>
         <div class="footer-bottom">
-            © 2026 SmartHealth Tim Mạch. Bảo lưu mọi quyền.
-            &nbsp;|&nbsp; <a href="#" style="color:rgba(255,255,255,.5);">Điều khoản</a>
-            &nbsp;|&nbsp; <a href="#" style="color:rgba(255,255,255,.5);">Bảo mật</a>
+            @patientUiFooterBottomText
+            @foreach (var link in patientUi.FooterBottomLinks)
+            {
+                <span>&nbsp;|&nbsp;</span><a href="@link.Url" class="footer-link-bottom">@link.Label</a>
+            }
         </div>
     </footer>
 
@@ -1157,6 +1170,8 @@
     @if (User.Identity != null && User.Identity.IsAuthenticated)
     {
         bool layoutIsDoctor = User.IsInRole("1");
+        bool layoutIsPatient = User.IsInRole("0");
+        bool showPatientSupportHub = layoutIsPatient && patientUi.ShowSupportHub;
 
         @if (layoutIsDoctor)
         {
@@ -1172,7 +1187,7 @@
                 </div>
             </div>
         }
-        else
+        else if (showPatientSupportHub)
         {
             <!-- Patient: Unified Support Hub (FAB) -->
             <div class="sh-hub-container">
@@ -1183,20 +1198,23 @@
                     </div>
                     <div class="sh-hub-items">
                         <!-- Option 1: AI Chatbot -->
-                        <button class="sh-hub-item border-0" onclick="handleHubAction('ai')">
-                            <div class="sh-hub-item-icon ai"><i class="fas fa-robot"></i></div>
-                            <div class="sh-hub-item-info">
-                                <div class="sh-hub-item-title">Trợ lý sức khỏe AI</div>
-                                <div class="sh-hub-item-desc">Tư vấn sức khỏe nhanh 24/7</div>
-                            </div>
-                        </button>
+                        @if (patientUi.ShowAiChatbot)
+                        {
+                            <button class="sh-hub-item border-0" onclick="handleHubAction('ai')">
+                                <div class="sh-hub-item-icon ai"><i class="fas fa-robot"></i></div>
+                                <div class="sh-hub-item-info">
+                                    <div class="sh-hub-item-title">Trợ lý sức khỏe AI</div>
+                                    <div class="sh-hub-item-desc">Tư vấn sức khỏe nhanh 24/7</div>
+                                </div>
+                            </button>
+                        }
 
                         <!-- Option 3: Hotline -->
-                        <a href="tel:0337915228" class="sh-hub-item text-decoration-none">
+                        <a href="@patientUiHotlineHref" class="sh-hub-item text-decoration-none">
                             <div class="sh-hub-item-icon hotline"><i class="fas fa-phone-alt"></i></div>
                             <div class="sh-hub-item-info">
                                 <div class="sh-hub-item-title">Hotline khẩn cấp</div>
-                                <div class="sh-hub-item-desc">Gọi: 0337 915 228</div>
+                                <div class="sh-hub-item-desc">Gọi: @patientUi.HotlinePhone</div>
                             </div>
                         </a>
                     </div>
@@ -1360,44 +1378,47 @@
         </script>
     }
 
-    <div id="chatbotPopup" class="chatbot-popup">
-        <div class="chatbot-header d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center" style="width:30px;height:30px;color:var(--cl-blue);">
-                    <i class="fas fa-robot"></i>
+    @if (patientUi.ShowAiChatbot)
+    {
+        <div id="chatbotPopup" class="chatbot-popup">
+            <div class="chatbot-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-white rounded-circle d-flex align-items-center justify-content-center" style="width:30px;height:30px;color:var(--cl-blue);">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <span>Trợ lý Tim mạch AI</span>
                 </div>
-                <span>Trợ lý Tim mạch AI</span>
+                <button id="closeChatbot" class="btn text-white fs-4 p-0 shadow-none border-0" style="line-height:1;">&times;</button>
             </div>
-            <button id="closeChatbot" class="btn text-white fs-4 p-0 shadow-none border-0" style="line-height:1;">&times;</button>
-        </div>
 
-        <div id="chatMessages" class="chat-messages d-flex flex-column">
-            <div id="popupWelcome" class="popup-welcome">
-                <p class="popup-welcome-title">Xin chào! 👋</p>
-                <p class="popup-welcome-sub">Bạn muốn hỏi gì về tim mạch?</p>
-                <div class="popup-suggestions">
-                    <button class="popup-suggestion-btn" onclick="sendPopupSuggestion(this)">
-                        <i class="fas fa-chart-line"></i>
-                        Xu hướng sức khỏe trong 30 ngày qua
-                    </button>
-                    <button class="popup-suggestion-btn" onclick="sendPopupSuggestion(this)">
-                        <i class="fas fa-heartbeat"></i>
-                        Chỉ số của tôi hôm nay có đáng lo ngại không?
-                    </button>
+            <div id="chatMessages" class="chat-messages d-flex flex-column">
+                <div id="popupWelcome" class="popup-welcome">
+                    <p class="popup-welcome-title">Xin chào! 👋</p>
+                    <p class="popup-welcome-sub">Bạn muốn hỏi gì về tim mạch?</p>
+                    <div class="popup-suggestions">
+                        <button class="popup-suggestion-btn" onclick="sendPopupSuggestion(this)">
+                            <i class="fas fa-chart-line"></i>
+                            Xu hướng sức khỏe trong 30 ngày qua
+                        </button>
+                        <button class="popup-suggestion-btn" onclick="sendPopupSuggestion(this)">
+                            <i class="fas fa-heartbeat"></i>
+                            Chỉ số của tôi hôm nay có đáng lo ngại không?
+                        </button>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-start mb-2">
+                    <div class="chat-bubble ai-bubble">Xin chào 👋 Tôi là trợ lý AI chuyên về <strong>tim mạch</strong>. Tôi có thể giúp gì cho bạn hôm nay?</div>
                 </div>
             </div>
-            <div class="d-flex justify-content-start mb-2">
-                <div class="chat-bubble ai-bubble">Xin chào 👋 Tôi là trợ lý AI chuyên về <strong>tim mạch</strong>. Tôi có thể giúp gì cho bạn hôm nay?</div>
-            </div>
-        </div>
 
-        <div class="chat-input-area">
-            <div class="chat-input-wrapper">
-                <input type="text" id="chatInput" placeholder="Hỏi về tim mạch..." autocomplete="off" />
-                <button id="sendMessage" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
+            <div class="chat-input-area">
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chatInput" placeholder="Hỏi về tim mạch..." autocomplete="off" />
+                    <button id="sendMessage" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
             </div>
         </div>
-    </div>
+    }
 
 </body>
 </html>
