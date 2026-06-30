@@ -30,7 +30,7 @@ public class AppointmentController : Controller
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var role   = User.FindFirstValue(ClaimTypes.Role);
 
-        Patient? patient = role == "2" ? await _context.Patients
+        Patient? patient = role == "0" ? await _context.Patients
             .Include(p => p.User)
             .FirstOrDefaultAsync(p => p.UserId == userId && !p.IsDeleted) : null;
 
@@ -45,7 +45,7 @@ public class AppointmentController : Controller
     // ═══════════════════════════════════════════════════════════════
 
     // GET: /Appointment/FindDoctor?specialty=Tim mạch&date=2024-07-01
-    [Authorize(Roles = "2")]
+    [Authorize(Roles = "0")]
     public async Task<IActionResult> FindDoctor(string? specialty, DateOnly? date)
     {
         var selectedDate = date ?? DateOnly.FromDateTime(DateTime.UtcNow);
@@ -80,7 +80,7 @@ public class AppointmentController : Controller
     }
 
     // GET: /Appointment/Book?slotId=5
-    [Authorize(Roles = "2")]
+    [Authorize(Roles = "0")]
     public async Task<IActionResult> Book(int slotId)
     {
         var (patient, _) = await GetCurrentUserAsync();
@@ -122,7 +122,7 @@ public class AppointmentController : Controller
     // POST: /Appointment/ConfirmBook
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = "2")]
+    [Authorize(Roles = "0")]
     public async Task<IActionResult> ConfirmBook(int slotId, string? patientNote)
     {
         var (patient, _) = await GetCurrentUserAsync();
@@ -141,7 +141,7 @@ public class AppointmentController : Controller
     }
 
     // GET: /Appointment/MyAppointments
-    [Authorize(Roles = "2")]
+    [Authorize(Roles = "0")]
     public async Task<IActionResult> MyAppointments()
     {
         var (patient, _) = await GetCurrentUserAsync();
