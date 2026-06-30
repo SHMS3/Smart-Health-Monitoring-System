@@ -356,6 +356,7 @@
             @if (User.IsInRole("3") || User.IsInRole("2"))
             {
                 <a asp-controller="Receptionist" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-cash-register me-3"></i>Thanh toán & Thu ngân</a>
+                <a asp-controller="Receptionist" asp-action="Patients" class="nav-link text-decoration-none"><i class="fas fa-user-injured me-3"></i>Danh sách bệnh nhân</a>
             }
         </div>
 

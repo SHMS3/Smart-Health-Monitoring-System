@@ -4,9 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.Common;
+using SmartHealthMonitoring.ViewModels;
+using SmartHealthMonitoring.Interfaces;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace SmartHealthMonitoring.Controllers
 {
@@ -14,6 +17,7 @@ namespace SmartHealthMonitoring.Controllers
     public class ReceptionistController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
+        private readonly IEmailService _emailService;
 
         // ─── Cấu hình VietQR của phòng khám ───────────────────────────────────────
         // Thay bằng thông tin ngân hàng thực của phòng khám
@@ -22,9 +26,10 @@ namespace SmartHealthMonitoring.Controllers
         private const string ACCOUNT_NAME = "PHAM THE SON"; // Tên chủ TK
         // ────────────────────────────────────────────────────────────────────────────
 
-        public ReceptionistController(SmartHealthMonitoringContext context)
+        public ReceptionistController(SmartHealthMonitoringContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         // GET: /Receptionist/Index – Danh sách phiếu thanh toán
@@ -153,10 +158,16 @@ namespace SmartHealthMonitoring.Controllers
         // SePay gửi POST khi có giao dịch khớp nội dung
         [HttpPost]
         [AllowAnonymous] // Webhook từ SePay không mang cookie auth
+        [IgnoreAntiforgeryToken] // Bỏ qua check CSRF token cho webhook
         public async Task<IActionResult> SepayWebhook([FromBody] SepayWebhookPayload payload)
         {
             if (payload == null || string.IsNullOrEmpty(payload.Content))
-                return Ok(new { success = false });
+            {
+                Console.WriteLine("SepayWebhook: Payload is null or Content is empty.");
+                return Ok(new { success = false, message = "Empty payload" });
+            }
+
+            Console.WriteLine($"SepayWebhook RECEIVED: Amount={payload.TransferAmount}, Content={payload.Content}");
 
             // Tìm phiếu theo nội dung chuyển khoản "THANHTOAN HD00001"
             var content = payload.Content.ToUpper();
@@ -178,6 +189,172 @@ namespace SmartHealthMonitoring.Controllers
             }
 
             return Ok(new { success = false, message = "Không tìm thấy phiếu phù hợp" });
+        }
+
+        // GET: /Receptionist/Patients – Danh sách bệnh nhân
+        public async Task<IActionResult> Patients(string search, int page = 1, int pageSize = 10)
+        {
+            var query = _context.Patients
+                .Include(p => p.User)
+                .Where(p => !p.IsDeleted)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                var lowerSearch = search.ToLower();
+                query = query.Where(p => 
+                    (p.User.FullName != null && p.User.FullName.ToLower().Contains(lowerSearch)) ||
+                    (p.Phone != null && p.Phone.Contains(search)) ||
+                    (p.User.Email != null && p.User.Email.ToLower().Contains(lowerSearch)) ||
+                    (p.CitizenId != null && p.CitizenId.Contains(search))
+                );
+            }
+
+            int totalRecords = await query.CountAsync();
+
+            var patients = await query
+                .OrderByDescending(p => p.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new PagedResult<Patient>
+            {
+                Items = patients,
+                TotalCount = totalRecords,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            var viewModel = new ReceptionistPatientListViewModel
+            {
+                Patients = result,
+                SearchQuery = search
+            };
+
+            return View(viewModel);
+        }
+
+        // GET: /Receptionist/PatientDetails/5
+        public async Task<IActionResult> PatientDetails(int id)
+        {
+            var patient = await _context.Patients
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+
+            if (patient == null)
+            {
+                return NotFound();
+            }
+
+            return View(patient);
+        }
+
+        // GET: /Receptionist/RegisterPatient
+        public IActionResult RegisterPatient()
+        {
+            return View(new ReceptionistRegisterPatientViewModel());
+        }
+
+        // POST: /Receptionist/RegisterPatient
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegisterPatient(ReceptionistRegisterPatientViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            bool emailExists = await _context.Users
+                .AnyAsync(u => u.Email == model.Email && !u.IsDeleted);
+
+            if (emailExists)
+            {
+                ModelState.AddModelError("Email", "Email này đã được sử dụng trong hệ thống.");
+                return View(model);
+            }
+
+            // Generate random password
+            string randomPassword = GenerateRandomPassword(8);
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(randomPassword);
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var user = new User
+                {
+                    FullName = model.FullName,
+                    Email = model.Email,
+                    PasswordHash = passwordHash,
+                    Role = 0, // Patient Role
+                    IsDeleted = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                var patient = new Patient
+                {
+                    UserId = user.Id,
+                    DateOfBirth = model.DateOfBirth,
+                    Sex = model.Sex,
+                    Phone = model.Phone,
+                    Address = model.Address,
+                    CitizenId = model.CitizenId,
+                    IsDeleted = false
+                };
+
+                _context.Patients.Add(patient);
+                await _context.SaveChangesAsync();
+                
+                await transaction.CommitAsync();
+
+                // Send email to patient
+                var replacements = new Dictionary<string, string>
+                {
+                    { "{{FullName}}", model.FullName },
+                    { "{{Email}}", model.Email },
+                    { "{{Password}}", randomPassword }
+                };
+
+                var htmlContent = _emailService.GetHtmlContentFromFile("NewPatientAccount.html", replacements);
+                if (string.IsNullOrEmpty(htmlContent))
+                {
+                    // Fallback content if template is missing
+                    htmlContent = $@"
+                        <h2>Xin chào {model.FullName},</h2>
+                        <p>Hồ sơ bệnh nhân của bạn đã được đăng ký thành công tại SmartHealth.</p>
+                        <p>Thông tin tài khoản của bạn để đăng nhập vào hệ thống:</p>
+                        <ul>
+                            <li><strong>Email:</strong> {model.Email}</li>
+                            <li><strong>Mật khẩu:</strong> {randomPassword}</li>
+                        </ul>
+                        <p>Vui lòng đăng nhập và đổi mật khẩu sớm nhất có thể để đảm bảo bảo mật.</p>
+                        <p>Trân trọng,</p>
+                        <p>SmartHealth Clinic</p>";
+                }
+
+                await _emailService.SendEmailAsync(model.Email, "Tài khoản bệnh nhân - SmartHealth Clinic", htmlContent);
+
+                TempData["Success"] = "Đăng ký bệnh nhân thành công. Mật khẩu đã được gửi qua email.";
+                return RedirectToAction(nameof(Patients));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                ModelState.AddModelError(string.Empty, "Đã xảy ra lỗi khi đăng ký bệnh nhân: " + ex.Message);
+                return View(model);
+            }
+        }
+
+        private string GenerateRandomPassword(int length)
+        {
+            const string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$";
+            var random = new Random();
+            return new string(Enumerable.Repeat(validChars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 
