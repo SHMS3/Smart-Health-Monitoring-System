@@ -1,0 +1,515 @@
+@model SmartHealthMonitoring.ViewModels.EmergencyContactIndexViewModel
+
+@{
+    ViewData["Title"] = "Liên hệ khẩn cấp";
+    var isEditing = Model.Form.Id.HasValue;
+}
+
+<div class="sos-page">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show sos-alert" role="alert">
+            <strong>Thành công!</strong> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show sos-alert" role="alert">
+            <strong>Không hợp lệ!</strong> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+        </div>
+    }
+
+    <div class="sos-header">
+        <div>
+            <p class="sos-kicker">SOS</p>
+            <h2>Liên hệ khẩn cấp</h2>
+            <p>Khai báo người thân để hệ thống gửi email/SMS khi AI phát hiện nguy cơ cao và không có bác sĩ trực.</p>
+        </div>
+        <div class="sos-badge">
+            <i class="fas fa-user-shield"></i>
+            <span>@Model.Contacts.Count(c => c.IsActive) đang bật</span>
+        </div>
+    </div>
+
+    <div class="sos-grid">
+        <section class="sos-panel">
+            <div class="sos-panel-head">
+                <h3>@(isEditing ? "Sửa người liên hệ" : "Thêm người liên hệ")</h3>
+                @if (isEditing)
+                {
+                    <a asp-action="Index" class="sos-link">Hủy sửa</a>
+                }
+            </div>
+
+            <form asp-action="Save" method="post" class="sos-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Form.Id" />
+
+                <div asp-validation-summary="All" class="text-danger small"></div>
+
+                <label>
+                    <span>Họ tên</span>
+                    <input asp-for="Form.FullName" class="form-control" placeholder="Ví dụ: Nguyễn Văn An" autocomplete="name" />
+                    <span asp-validation-for="Form.FullName" class="text-danger small"></span>
+                </label>
+
+                <label>
+                    <span>Mối quan hệ</span>
+                    <input asp-for="Form.Relationship" class="form-control" placeholder="Bố, mẹ, vợ/chồng, con..." />
+                    <span asp-validation-for="Form.Relationship" class="text-danger small"></span>
+                </label>
+
+                <label>
+                    <span>Email nhận SOS</span>
+                    <input asp-for="Form.Email" type="email" class="form-control" placeholder="nguoinhan@gmail.com" autocomplete="email" />
+                    <span asp-validation-for="Form.Email" class="text-danger small"></span>
+                </label>
+
+                <label>
+                    <span>Số điện thoại nhận SMS</span>
+                    <input asp-for="Form.Phone" type="tel" inputmode="tel" class="form-control" placeholder="0901234567 hoặc +84901234567" autocomplete="tel" />
+                    <span asp-validation-for="Form.Phone" class="text-danger small"></span>
+                </label>
+
+                <div class="sos-check-row">
+                    <label class="sos-check">
+                        <input asp-for="Form.IsPrimary" />
+                        <span>Đặt làm liên hệ chính</span>
+                    </label>
+                    <label class="sos-check">
+                        <input asp-for="Form.IsActive" />
+                        <span>Bật nhận SOS</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="sos-primary-btn">
+                    <i class="fas fa-save"></i>
+                    @(isEditing ? "Lưu thay đổi" : "Thêm người liên hệ")
+                </button>
+            </form>
+        </section>
+
+        <section class="sos-panel">
+            <div class="sos-panel-head">
+                <h3>Danh sách người thân</h3>
+                <span>@Model.Contacts.Count người</span>
+            </div>
+
+            @if (!Model.Contacts.Any())
+            {
+                <div class="sos-empty">
+                    <i class="fas fa-user-shield"></i>
+                    <h4>Chưa có người liên hệ</h4>
+                    <p>Thêm ít nhất một người thân có email hoặc số điện thoại để hệ thống có thể gửi SOS.</p>
+                </div>
+            }
+            else
+            {
+                <div class="sos-contact-list">
+                    @foreach (var contact in Model.Contacts)
+                    {
+                        <article class="sos-contact @(contact.IsActive ? "" : "is-muted")">
+                            <div class="sos-contact-main">
+                                <div class="sos-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <div class="sos-name-line">
+                                        <strong>@contact.FullName</strong>
+                                        @if (contact.IsPrimary)
+                                        {
+                                            <span class="sos-tag primary">Chính</span>
+                                        }
+                                        <span class="sos-tag @(contact.IsActive ? "active" : "inactive")">
+                                            @(contact.IsActive ? "Đang bật" : "Đã tắt")
+                                        </span>
+                                    </div>
+                                    <p>@contact.Relationship</p>
+                                    <div class="sos-contact-meta">
+                                        @if (!string.IsNullOrWhiteSpace(contact.Email))
+                                        {
+                                            <span><i class="fas fa-envelope"></i>@contact.Email</span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(contact.Phone))
+                                        {
+                                            <span><i class="fas fa-phone"></i>@contact.Phone</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sos-actions">
+                                <a asp-action="Index" asp-route-editId="@contact.Id" class="sos-icon-btn" title="Sửa">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+
+                                @if (!contact.IsPrimary)
+                                {
+                                    <form asp-action="SetPrimary" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@contact.Id" />
+                                        <button type="submit" class="sos-icon-btn" title="Đặt làm liên hệ chính">
+                                            <i class="fas fa-star"></i>
+                                        </button>
+                                    </form>
+                                }
+
+                                <form asp-action="ToggleActive" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@contact.Id" />
+                                    <button type="submit" class="sos-icon-btn" title="Bật/tắt nhận SOS">
+                                        <i class="fas @(contact.IsActive ? "fa-bell-slash" : "fa-bell")"></i>
+                                    </button>
+                                </form>
+
+                                <form asp-action="Delete" method="post" onsubmit="return confirm('Xóa người liên hệ này?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@contact.Id" />
+                                    <button type="submit" class="sos-icon-btn danger" title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+</div>
+
+<style>
+    .sos-page {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 2rem 1rem 3rem;
+    }
+
+    .sos-alert {
+        border-radius: 12px;
+        border: 0;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
+    }
+
+    .sos-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-end;
+        margin-bottom: 1.5rem;
+    }
+
+    .sos-kicker {
+        margin: 0 0 .35rem;
+        color: #dc2626;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .sos-header h2 {
+        margin: 0;
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .sos-header p {
+        margin: .35rem 0 0;
+        color: #64748b;
+        max-width: 720px;
+    }
+
+    .sos-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .6rem;
+        background: #fff1f2;
+        color: #be123c;
+        border: 1px solid #fecdd3;
+        border-radius: 999px;
+        padding: .7rem 1rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .sos-grid {
+        display: grid;
+        grid-template-columns: minmax(280px, 390px) 1fr;
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .sos-panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, .06);
+        padding: 1.25rem;
+    }
+
+    .sos-panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .sos-panel-head h3 {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.1rem;
+        font-weight: 800;
+    }
+
+    .sos-panel-head span,
+    .sos-link {
+        color: #64748b;
+        font-size: .9rem;
+        text-decoration: none;
+    }
+
+    .sos-form {
+        display: grid;
+        gap: .9rem;
+    }
+
+    .sos-form label span {
+        display: block;
+        margin-bottom: .35rem;
+        color: #475569;
+        font-size: .85rem;
+        font-weight: 700;
+    }
+
+    .sos-form .form-control {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: .68rem .8rem;
+    }
+
+    .sos-form .form-control:focus {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, .1);
+    }
+
+    .sos-form .form-control.input-validation-error {
+        border-color: #dc2626;
+        background: #fff7f7;
+    }
+
+    .sos-form .field-validation-error,
+    .sos-form .validation-summary-errors {
+        color: #b91c1c !important;
+        font-weight: 700;
+    }
+
+    .sos-check-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .75rem;
+    }
+
+    .sos-check {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: .7rem;
+        cursor: pointer;
+    }
+
+    .sos-check input {
+        width: 16px;
+        height: 16px;
+        accent-color: #dc2626;
+    }
+
+    .sos-check span {
+        margin: 0 !important;
+        color: #334155 !important;
+    }
+
+    .sos-primary-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .55rem;
+        border: 0;
+        border-radius: 10px;
+        background: #dc2626;
+        color: #fff;
+        padding: .8rem 1rem;
+        font-weight: 800;
+    }
+
+    .sos-primary-btn:hover {
+        background: #b91c1c;
+    }
+
+    .sos-empty {
+        text-align: center;
+        color: #64748b;
+        padding: 3rem 1rem;
+    }
+
+    .sos-empty i {
+        font-size: 2.4rem;
+        color: #fecdd3;
+        margin-bottom: .75rem;
+    }
+
+    .sos-empty h4 {
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .sos-contact-list {
+        display: grid;
+        gap: .8rem;
+    }
+
+    .sos-contact {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1rem;
+    }
+
+    .sos-contact.is-muted {
+        opacity: .65;
+        background: #f8fafc;
+    }
+
+    .sos-contact-main {
+        display: flex;
+        gap: .85rem;
+        min-width: 0;
+    }
+
+    .sos-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff1f2;
+        color: #dc2626;
+        flex: 0 0 auto;
+    }
+
+    .sos-name-line {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .45rem;
+    }
+
+    .sos-name-line strong {
+        color: #0f172a;
+    }
+
+    .sos-contact p {
+        margin: .2rem 0 .35rem;
+        color: #64748b;
+        font-size: .9rem;
+    }
+
+    .sos-tag {
+        border-radius: 999px;
+        padding: .18rem .55rem;
+        font-size: .72rem;
+        font-weight: 800;
+    }
+
+    .sos-tag.primary {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .sos-tag.active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .sos-tag.inactive {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .sos-contact-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .65rem;
+        color: #475569;
+        font-size: .85rem;
+        word-break: break-word;
+    }
+
+    .sos-contact-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+    }
+
+    .sos-actions {
+        display: flex;
+        align-items: flex-start;
+        gap: .35rem;
+        flex: 0 0 auto;
+    }
+
+    .sos-actions form {
+        margin: 0;
+    }
+
+    .sos-icon-btn {
+        width: 34px;
+        height: 34px;
+        border: 0;
+        border-radius: 9px;
+        background: #f1f5f9;
+        color: #334155;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+
+    .sos-icon-btn:hover {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .sos-icon-btn.danger:hover {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    @@media (max-width: 900px) {
+        .sos-header,
+        .sos-contact {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .sos-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .sos-actions {
+            justify-content: flex-end;
+        }
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

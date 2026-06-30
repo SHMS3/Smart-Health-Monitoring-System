@@ -171,11 +171,12 @@
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
 
         .user-info {
             text-align: right;
+            max-width: 220px;
         }
 
         .user-name {
@@ -184,12 +185,40 @@
             color: #1e293b;
             font-size: 0.95rem;
             margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .user-role {
             color: #64748b;
             font-size: 0.75rem;
             margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .topbar-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            text-decoration: none;
+            transition: all .2s ease;
+        }
+
+        .topbar-icon-btn:hover,
+        .topbar-icon-btn.active {
+            color: #fff;
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            box-shadow: 0 8px 18px rgba(14, 165, 233, .22);
         }
 
         .avatar {
@@ -331,6 +360,10 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
+    @{
+        var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+        var action = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+    }
 
     <!-- Sidebar -->
     <div class="sidebar">
@@ -358,6 +391,29 @@
                 <a asp-controller="Receptionist" asp-action="Index" class="nav-link text-decoration-none"><i class="fas fa-cash-register me-3"></i>Thanh toán & Thu ngân</a>
                 <a asp-controller="Receptionist" asp-action="Patients" class="nav-link text-decoration-none"><i class="fas fa-user-injured me-3"></i>Danh sách bệnh nhân</a>
             }
+
+
+            <a asp-controller="AdminDashboard" asp-action="Index" class="nav-item-link @(controller == "AdminDashboard" && action == "Index" ? "active" : "")">
+                <i class="fas fa-th-large"></i> Tổng quan
+            </a>
+            <a asp-controller="AdminDashboard" asp-action="PatientStatistics" class="nav-item-link @(controller == "AdminDashboard" && action == "PatientStatistics" ? "active" : "")">
+                <i class="fas fa-chart-area"></i> Thống kê Lâm sàng
+            </a>
+            <a asp-controller="AdminDoctor" asp-action="Index" class="nav-item-link @(controller == "AdminDoctor" ? "active" : "")">
+                <i class="fas fa-user-md"></i> Quản lý Bác sĩ
+            </a>
+            <a asp-controller="AdminPatient" asp-action="Index" class="nav-item-link @(controller == "AdminPatient" ? "active" : "")">
+                <i class="fas fa-users"></i> Quản lý Bệnh nhân
+            </a>
+            <a asp-controller="StandardThreshold" asp-action="Index" class="nav-item-link @(controller == "StandardThreshold" ? "active" : "")">
+                <i class="fas fa-sliders-h"></i> Ngưỡng Chuẩn Y Tế
+            </a>
+            <a asp-controller="AdminAuditLog" asp-action="Index" class="nav-item-link @(controller == "AdminAuditLog" ? "active" : "")">
+                <i class="fas fa-clipboard-check"></i> Nhật ký hoạt động
+            </a>
+            <a asp-controller="AdminEmailTemplate" asp-action="Index" class="nav-item-link @(controller == "AdminEmailTemplate" ? "active" : "")">
+                <i class="fas fa-envelope-open-text"></i> Mẫu Email
+            </a>
         </div>
 
         <div class="sidebar-footer">
@@ -372,13 +428,28 @@
         <!-- Topbar -->
         <div class="topbar">
             <div class="user-profile">
+                @{
+                    var adminName = User.FindFirst("FullName")?.Value ?? "Quản trị viên";
+                    var adminEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name ?? "Admin";
+                }
                 <div class="user-info">
+                    <p class="user-name">@adminName</p>
+                    <p class="user-role">@adminEmail</p>
+                </div>
+                <div class="user-info d-none">
                     <p class="user-name">Quản trị viên</p>
                     <p class="user-role">Hệ thống cấp cao</p>
                 </div>
                 <div class="avatar">
                     <i class="fas fa-user-shield"></i>
                 </div>
+                <a asp-controller="AdminSettings"
+                   asp-action="Index"
+                   class="topbar-icon-btn @(controller == "AdminSettings" ? "active" : "")"
+                   title="Cài đặt admin"
+                   aria-label="Cài đặt admin">
+                    <i class="fas fa-gear"></i>
+                </a>
                 <div style="border-left: 1px solid #e2e8f0; height: 30px; margin: 0 8px;"></div>
                 <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
                     <button type="submit" class="btn-logout">
