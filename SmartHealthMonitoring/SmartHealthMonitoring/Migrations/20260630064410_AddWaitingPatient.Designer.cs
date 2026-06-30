@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartHealthMonitoring.Context;
 
@@ -11,9 +12,11 @@ using SmartHealthMonitoring.Context;
 namespace SmartHealthMonitoring.Migrations
 {
     [DbContext(typeof(SmartHealthMonitoringContext))]
-    partial class SmartHealthMonitoringContextModelSnapshot : ModelSnapshot
+    [Migration("20260630064410_AddWaitingPatient")]
+    partial class AddWaitingPatient
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -196,103 +199,6 @@ namespace SmartHealthMonitoring.Migrations
                             RiskLevel = (byte)2,
                             RiskScore = 0.82m
                         });
-                });
-
-            modelBuilder.Entity("SmartHealthMonitoring.Models.Appointment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("ClinicalRecordId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DoctorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("DoctorNote")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PatientNote")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("SlotId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClinicalRecordId");
-
-                    b.HasIndex("DoctorId");
-
-                    b.HasIndex("PatientId");
-
-                    b.HasIndex("SlotId")
-                        .IsUnique();
-
-                    b.ToTable("Appointments", (string)null);
-                });
-
-            modelBuilder.Entity("SmartHealthMonitoring.Models.AppointmentSlot", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DoctorId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PatientId")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<DateTime>("SlotEnd")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("SlotStart")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("SoftLockedUntil")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PatientId");
-
-                    b.HasIndex("DoctorId", "SlotStart")
-                        .IsUnique()
-                        .HasDatabaseName("UX_AppointmentSlot_Doctor_Start");
-
-                    b.ToTable("AppointmentSlots", (string)null);
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.AuditLog", b =>
@@ -1197,42 +1103,6 @@ namespace SmartHealthMonitoring.Migrations
                             Specialty = "Nội tim mạch",
                             UserId = 10
                         });
-                });
-
-            modelBuilder.Entity("SmartHealthMonitoring.Models.DoctorWorkSchedule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<byte>("DayOfWeek")
-                        .HasColumnType("tinyint");
-
-                    b.Property<int>("DoctorId")
-                        .HasColumnType("int");
-
-                    b.Property<TimeOnly>("EndTime")
-                        .HasColumnType("time");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("SlotDurationMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<TimeOnly>("StartTime")
-                        .HasColumnType("time");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DoctorId");
-
-                    b.ToTable("DoctorWorkSchedules", (string)null);
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.EmailNotification", b =>
@@ -2797,58 +2667,6 @@ namespace SmartHealthMonitoring.Migrations
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("SmartHealthMonitoring.Models.Appointment", b =>
-                {
-                    b.HasOne("SmartHealthMonitoring.Models.ClinicalRecord", "ClinicalRecord")
-                        .WithMany()
-                        .HasForeignKey("ClinicalRecordId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("SmartHealthMonitoring.Models.Doctor", "Doctor")
-                        .WithMany("Appointments")
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("SmartHealthMonitoring.Models.Patient", "Patient")
-                        .WithMany("Appointments")
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("SmartHealthMonitoring.Models.AppointmentSlot", "Slot")
-                        .WithOne("Appointment")
-                        .HasForeignKey("SmartHealthMonitoring.Models.Appointment", "SlotId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("ClinicalRecord");
-
-                    b.Navigation("Doctor");
-
-                    b.Navigation("Patient");
-
-                    b.Navigation("Slot");
-                });
-
-            modelBuilder.Entity("SmartHealthMonitoring.Models.AppointmentSlot", b =>
-                {
-                    b.HasOne("SmartHealthMonitoring.Models.Doctor", "Doctor")
-                        .WithMany("AppointmentSlots")
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SmartHealthMonitoring.Models.Patient", "Patient")
-                        .WithMany("AppointmentSlots")
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Doctor");
-
-                    b.Navigation("Patient");
-                });
-
             modelBuilder.Entity("SmartHealthMonitoring.Models.AuditLog", b =>
                 {
                     b.HasOne("SmartHealthMonitoring.Models.User", "ActorUser")
@@ -2929,17 +2747,6 @@ namespace SmartHealthMonitoring.Migrations
                         .HasConstraintName("FK__Doctors__UserId__4222D4EF");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SmartHealthMonitoring.Models.DoctorWorkSchedule", b =>
-                {
-                    b.HasOne("SmartHealthMonitoring.Models.Doctor", "Doctor")
-                        .WithMany("WorkSchedules")
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Doctor");
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.EmailNotification", b =>
@@ -3144,11 +2951,6 @@ namespace SmartHealthMonitoring.Migrations
                     b.Navigation("WarningAlert");
                 });
 
-            modelBuilder.Entity("SmartHealthMonitoring.Models.AppointmentSlot", b =>
-                {
-                    b.Navigation("Appointment");
-                });
-
             modelBuilder.Entity("SmartHealthMonitoring.Models.ChatbotSession", b =>
                 {
                     b.Navigation("ChatMessages");
@@ -3166,24 +2968,14 @@ namespace SmartHealthMonitoring.Migrations
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.Doctor", b =>
                 {
-                    b.Navigation("AppointmentSlots");
-
-                    b.Navigation("Appointments");
-
                     b.Navigation("ClinicalRecords");
 
                     b.Navigation("WarningAlerts");
-
-                    b.Navigation("WorkSchedules");
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.Patient", b =>
                 {
                     b.Navigation("AiriskPredictions");
-
-                    b.Navigation("AppointmentSlots");
-
-                    b.Navigation("Appointments");
 
                     b.Navigation("ChatbotSessions");
 

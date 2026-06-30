@@ -10,6 +10,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace SmartHealthMonitoring.Controllers
 {
@@ -347,6 +348,58 @@ namespace SmartHealthMonitoring.Controllers
                 ModelState.AddModelError(string.Empty, "Đã xảy ra lỗi khi đăng ký bệnh nhân: " + ex.Message);
                 return View(model);
             }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddToWaitingList(int patientId)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdString, out int receptionistId))
+            {
+                TempData["Error"] = "Không thể xác định thông tin tài khoản lễ tân.";
+                return RedirectToAction(nameof(Patients));
+            }
+
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.Id == patientId && !p.IsDeleted);
+            if (patient == null)
+            {
+                TempData["Error"] = "Bệnh nhân không tồn tại.";
+                return RedirectToAction(nameof(Patients));
+            }
+
+            // Check if patient is already in the queue waiting or being examined
+            var isActiveSession = await _context.WaitingPatients
+                .AnyAsync(w => w.PatientId == patientId && (w.Status == 0 || w.Status == 1));
+
+            if (isActiveSession)
+            {
+                TempData["Error"] = "Bệnh nhân đang trong danh sách chờ hoặc đang được bác sĩ khám.";
+                return RedirectToAction(nameof(Patients));
+            }
+
+            // Generate sequence number for today
+            var today = DateTime.UtcNow.Date;
+            var currentMaxSeq = await _context.WaitingPatients
+                .Where(w => w.CreatedAt >= today)
+                .MaxAsync(w => (int?)w.SequenceNumber) ?? 0;
+
+            var newSeq = currentMaxSeq + 1;
+
+            var waitingPatient = new WaitingPatient
+            {
+                PatientId = patientId,
+                ReceptionistId = receptionistId,
+                SequenceNumber = newSeq,
+                Status = 0, // Waiting
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.WaitingPatients.Add(waitingPatient);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Đã thêm bệnh nhân {patient.User?.FullName ?? ""} vào danh sách chờ khám. Số thứ tự: {newSeq}";
+            return RedirectToAction(nameof(Patients));
         }
 
         private string GenerateRandomPassword(int length)

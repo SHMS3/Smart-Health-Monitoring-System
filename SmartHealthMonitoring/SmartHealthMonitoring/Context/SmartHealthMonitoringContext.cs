@@ -52,6 +52,7 @@ public partial class SmartHealthMonitoringContext : DbContext
     public virtual DbSet<Service> Services { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<PaymentDetail> PaymentDetails { get; set; }
+    public virtual DbSet<WaitingPatient> WaitingPatients { get; set; }
 
     // ── Appointment Booking System ─────────────────────────────────────────────
     public virtual DbSet<DoctorWorkSchedule> DoctorWorkSchedules { get; set; }
@@ -832,6 +833,27 @@ public partial class SmartHealthMonitoringContext : DbContext
                   .WithMany()
                   .HasForeignKey(a => a.ClinicalRecordId)
                   .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<WaitingPatient>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("WaitingPatients");
+
+            entity.HasOne(d => d.Patient)
+                .WithMany()
+                .HasForeignKey(d => d.PatientId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(d => d.Receptionist)
+                .WithMany()
+                .HasForeignKey(d => d.ReceptionistId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(d => d.Doctor)
+                .WithMany()
+                .HasForeignKey(d => d.DoctorId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         OnModelCreatingPartial(modelBuilder);

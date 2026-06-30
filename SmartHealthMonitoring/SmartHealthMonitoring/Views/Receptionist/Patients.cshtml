@@ -35,9 +35,6 @@
                     <th>Họ và Tên</th>
                     <th>Email</th>
                     <th>Số điện thoại</th>
-                    <th>CCCD/CMND</th>
-                    <th>Ngày sinh</th>
-                    <th>Giới tính</th>
                     <th>Hành động</th>
                 </tr>
             </thead>
@@ -50,23 +47,19 @@
                             <td><strong>#@patient.Id.ToString("D4")</strong></td>
                             <td class="fw-bold">@patient.User.FullName</td>
                             <td>@patient.User.Email</td>
-                            <td>@(patient.Phone ?? "<span class='text-muted'>Chưa có</span>")</td>
-                            <td>@(patient.CitizenId ?? "<span class='text-muted'>Chưa có</span>")</td>
-                            <td>@patient.DateOfBirth.ToString("dd/MM/yyyy")</td>
+                            <td>@(patient.Phone ?? "Chưa cập nhật")</td>
                             <td>
-                                @if (patient.Sex == 1)
-                                {
-                                    <span class="text-primary"><i class="fas fa-mars me-1"></i> Nam</span>
-                                }
-                                else
-                                {
-                                    <span class="text-danger"><i class="fas fa-venus me-1"></i> Nữ</span>
-                                }
-                            </td>
-                            <td>
-                                <a asp-action="PatientDetails" asp-route-id="@patient.Id" class="btn btn-sm btn-outline-secondary" style="border-radius: 20px; padding: 5px 15px;">
-                                    Chi tiết
-                                </a>
+                                <div class="d-flex gap-2">
+                                    <form asp-action="AddToWaitingList" method="post" class="m-0">
+                                        <input type="hidden" name="patientId" value="@patient.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-primary" style="border-radius: 20px; padding: 5px 15px;">
+                                            <i class="fas fa-user-md me-1"></i> Đăng ký khám
+                                        </button>
+                                    </form>
+                                    <a asp-action="PatientDetails" asp-route-id="@patient.Id" class="btn btn-sm btn-outline-secondary" style="border-radius: 20px; padding: 5px 15px;">
+                                        Chi tiết
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     }
