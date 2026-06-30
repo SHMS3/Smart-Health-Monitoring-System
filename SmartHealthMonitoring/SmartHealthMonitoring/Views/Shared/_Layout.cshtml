@@ -739,8 +739,13 @@
                 @if (isDoc)
                 {
                     <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="DoctorDashboard" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="Index">
+                        <a class="nav-link-cl @(ctrl=="DoctorDashboard" && action!="WaitingList" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="Index">
                             <i class="fas fa-users"></i> Bệnh nhân
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="DoctorDashboard" && action=="WaitingList" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="WaitingList">
+                            <i class="fas fa-list-ol"></i> Danh sách chờ khám
                         </a>
                     </li>
                     <li class="nav-item">

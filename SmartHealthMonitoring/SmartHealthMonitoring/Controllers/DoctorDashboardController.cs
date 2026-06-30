@@ -168,6 +168,79 @@ namespace SmartHealthMonitoring.Controllers
 
             return View(model);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> WaitingList(int page = 1)
+        {
+            int pageSize = 10;
+            var today = DateTime.UtcNow.Date;
+            
+            var query = _context.WaitingPatients
+                .Include(w => w.Patient).ThenInclude(p => p.User)
+                .Where(w => w.CreatedAt >= today && w.Status == 0);
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var waitingPatients = await query
+                .OrderBy(w => w.SequenceNumber)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var model = new SmartHealthMonitoring.Common.PagedResult<WaitingPatient>
+            {
+                Items = waitingPatients,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AcceptPatient([FromBody] AcceptPatientRequest request)
+        {
+            try
+            {
+                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdString, out int userId))
+                    return Json(new { success = false, message = "Không xác định được tài khoản bác sĩ." });
+
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+                if (doctor == null)
+                    return Json(new { success = false, message = "Không tìm thấy hồ sơ bác sĩ." });
+
+                var waitingPatient = await _context.WaitingPatients.AsNoTracking().FirstOrDefaultAsync(w => w.Id == request.WaitingId);
+                if (waitingPatient == null)
+                    return Json(new { success = false, message = "Không tìm thấy bệnh nhân trong hàng đợi." });
+
+                if (waitingPatient.Status != 0)
+                    return Json(new { success = false, message = "Bệnh nhân này đã được tiếp nhận hoặc đã hủy." });
+
+                // Dùng ExecuteUpdateAsync để cập nhật trực tiếp xuống DB (Atomic Update - giải quyết race condition)
+                int rowsAffected = await _context.WaitingPatients
+                    .Where(w => w.Id == request.WaitingId && w.Status == 0)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(w => w.Status, 1)
+                        .SetProperty(w => w.DoctorId, doctor.Id)
+                        .SetProperty(w => w.AcceptedAt, DateTime.UtcNow));
+
+                if (rowsAffected == 0)
+                {
+                    return Json(new { success = false, message = "Cảnh báo: Bệnh nhân này vừa được một bác sĩ khác tiếp nhận!" });
+                }
+
+                return Json(new { success = true, patientId = waitingPatient.PatientId });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi khi tiếp nhận: " + ex.Message });
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetServices()
         {
@@ -222,6 +295,16 @@ namespace SmartHealthMonitoring.Controllers
                 }).ToList();
 
                 _context.PaymentDetails.AddRange(paymentDetails);
+                
+                // Update waiting patient status to 3 (Completed)
+                var activeWaiting = await _context.WaitingPatients
+                    .FirstOrDefaultAsync(w => w.PatientId == request.PatientId && w.Status == 1 && w.DoctorId == doctor.Id);
+                
+                if (activeWaiting != null)
+                {
+                    activeWaiting.Status = 3;
+                }
+
                 await _context.SaveChangesAsync();
 
                 return Json(new { success = true, message = "Đã gửi yêu cầu thanh toán thành công." });
@@ -237,5 +320,10 @@ namespace SmartHealthMonitoring.Controllers
     {
         public int PatientId { get; set; }
         public List<int> ServiceIds { get; set; } = new List<int>();
+    }
+
+    public class AcceptPatientRequest
+    {
+        public int WaitingId { get; set; }
     }
 }
