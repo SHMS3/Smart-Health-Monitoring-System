@@ -63,6 +63,10 @@ namespace SmartHealthMonitoring
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AI.AiPredictionWorker>();
             // Đăng ký Background Worker nhắc nhở ghi log chỉ số sinh hiệu (gửi email sau 1 giờ)
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.DailyVitalLogReminderWorker>();
+            // Đặt lịch: sinh slot tự động mỗi ngày lúc 00:05
+            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentSlotGeneratorWorker>();
+            // Đặt lịch: dọn dẹp SoftLock hết hạn và đánh dấu No-show mỗi 2 phút
+            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentCleanupWorker>();
             // ====================================================================
 
             // 6.5. Session (dùng để lưu OTP xác thực số điện thoại)
