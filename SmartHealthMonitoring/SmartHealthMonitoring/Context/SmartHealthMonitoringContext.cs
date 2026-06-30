@@ -19,6 +19,8 @@ public partial class SmartHealthMonitoringContext : DbContext
 
     public virtual DbSet<AiriskPrediction> AiriskPredictions { get; set; }
 
+    public virtual DbSet<AiAlertSetting> AiAlertSettings { get; set; }
+
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     public virtual DbSet<ChatMessage> ChatMessages { get; set; }
@@ -32,6 +34,8 @@ public partial class SmartHealthMonitoringContext : DbContext
     public virtual DbSet<Doctor> Doctors { get; set; }
 
     public virtual DbSet<EmailNotification> EmailNotifications { get; set; }
+
+    public virtual DbSet<EmergencyContact> EmergencyContacts { get; set; }
 
     public virtual DbSet<Patient> Patients { get; set; }
 
@@ -131,6 +135,40 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .HasForeignKey(d => d.PatientId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__AIRiskPre__Patie__628FA481");
+        });
+
+        modelBuilder.Entity<AiAlertSetting>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("AiAlertSettings");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.EmergencyAgeMax).HasDefaultValue((byte)120);
+            entity.Property(e => e.EmergencyAgeMin).HasDefaultValue((byte)0);
+            entity.Property(e => e.EmergencyRiskLevelThreshold).HasDefaultValue((byte)3);
+            entity.Property(e => e.EmergencyRiskScoreThreshold).HasColumnType("decimal(5, 4)").HasDefaultValue(0.70m);
+            entity.Property(e => e.EmergencySex).HasDefaultValue((byte)2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
+
+            entity.HasOne(d => d.UpdatedByAdmin)
+                .WithMany()
+                .HasForeignKey(d => d.UpdatedByAdminId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_AiAlertSettings_UpdatedByAdmin");
+
+            entity.HasData(new AiAlertSetting
+            {
+                Id = AiAlertSetting.DefaultId,
+                EmergencyAgeMin = 0,
+                EmergencyAgeMax = 120,
+                EmergencyRiskLevelThreshold = 3,
+                EmergencyRiskScoreThreshold = 0.70m,
+                EmergencySex = 2,
+                CreatedAt = new DateTime(2026, 6, 29, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 6, 29, 0, 0, 0, DateTimeKind.Utc)
+            });
         });
 
         modelBuilder.Entity<ChatMessage>(entity =>
@@ -255,6 +293,32 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .HasForeignKey(d => d.PatientId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__EmailNoti__Patie__76969D2E");
+        });
+
+        modelBuilder.Entity<EmergencyContact>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_EmergencyContacts");
+
+            entity.ToTable("EmergencyContacts");
+
+            entity.HasIndex(e => new { e.PatientId, e.IsDeleted, e.IsActive }, "IX_EmergencyContacts_Patient_Status");
+
+            entity.Property(e => e.FullName).HasMaxLength(100);
+            entity.Property(e => e.Relationship).HasMaxLength(50);
+            entity.Property(e => e.Email)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.Phone)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+
+            entity.HasOne(d => d.Patient).WithMany(p => p.EmergencyContacts)
+                .HasForeignKey(d => d.PatientId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_EmergencyContacts_Patients");
         });
 
         modelBuilder.Entity<Patient>(entity =>

@@ -56,6 +56,22 @@ public class EmailTemplateService : IEmailTemplateService
         },
         new()
         {
+            TemplateName = "SosEmergencyContactTemplate.html",
+            DisplayName = "SOS người thân",
+            Description = "Gửi tự động cho người thân khi bệnh nhân đạt ngưỡng SOS.",
+            DefaultSubject = "[SOS] Cảnh báo khẩn cấp cho {{PatientName}}",
+            IsUsedInSystem = true,
+            Tokens = new()
+            {
+                "{{ContactName}}",
+                "{{PatientName}}",
+                "{{DetectedAt}}",
+                "{{RiskScore}}",
+                "{{RiskLevel}}"
+            }
+        },
+        new()
+        {
             TemplateName = "VitalLogReminderTemplate.html",
             DisplayName = "Nhắc ghi chỉ số",
             Description = "Nhắc bệnh nhân cập nhật chỉ số sinh hiệu hằng ngày.",
@@ -348,6 +364,7 @@ public class EmailTemplateService : IEmailTemplateService
             ["{{PatientName}}"] = "Nguyễn Văn An",
             ["{{AppointmentMessage}}"] = "Bác sĩ khuyến nghị tái khám để đánh giá lại các chỉ số gần đây.",
             ["{{DoctorName}}"] = "Trần Minh Khoa",
+            ["{{ContactName}}"] = "Nguyễn Văn A",
             ["{{HospitalReplyContact}}"] = "smarthealth.support@gmail.com | 1900-9999",
             ["{{LastExamDate}}"] = DateTime.Now.AddDays(-7).ToString("dd/MM/yyyy"),
             ["{{AppointmentDate}}"] = DateTime.Now.AddDays(3).ToString("dd/MM/yyyy HH:mm"),

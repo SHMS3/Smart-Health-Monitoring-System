@@ -14,15 +14,18 @@ namespace SmartHealthMonitoring.Services
         private readonly SmartHealthMonitoringContext _context;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _emailTemplateService;
+        private readonly IAiAlertSettingsService _aiAlertSettingsService;
 
         public EmailTriggerService(
             SmartHealthMonitoringContext context,
             IEmailService emailService,
-            IEmailTemplateService emailTemplateService)
+            IEmailTemplateService emailTemplateService,
+            IAiAlertSettingsService aiAlertSettingsService)
         {
             _context = context;
             _emailService = emailService;
             _emailTemplateService = emailTemplateService;
+            _aiAlertSettingsService = aiAlertSettingsService;
         }
 
         public async Task SendAppointmentInvitationAsync(int alertId, int sentByDoctorId, DateTime? appointmentDate = null)
@@ -123,18 +126,9 @@ namespace SmartHealthMonitoring.Services
                 if (patient?.User?.Email != null && prediction != null)
                 {
                     // Lấy WarningAlert để gán AlertId (Foreign Key bắt buộc trong EmailNotification)
-                    var alert = await _context.WarningAlerts.FirstOrDefaultAsync(a => a.PredictionId == predictionId);
-                    if (alert == null || prediction.RiskScore <= 0.70m)
-                    {
-                        return;
-                    }
-
-                    var alreadySent = await _context.EmailNotifications.AnyAsync(n =>
-                        n.AlertId == alert.Id &&
-                        n.PatientId == patientId &&
-                        n.SentByDoctorId == null);
-
-                    if (alreadySent)
+                    var alert = await _context.WarningAlerts
+                        .FirstOrDefaultAsync(a => a.PredictionId == predictionId && !a.IsDeleted);
+                    if (alert == null || !_aiAlertSettingsService.IsHighPriority(prediction))
                     {
                         return;
                     }
@@ -156,6 +150,19 @@ namespace SmartHealthMonitoring.Services
                     const string templateName = "HealthWarningTemplate.html";
                     subject = _emailTemplateService.GetSubject(templateName, replacements);
                     string htmlBody = _emailTemplateService.RenderBody(templateName, replacements);
+
+                    var alreadySent = await _context.EmailNotifications.AnyAsync(n =>
+                        n.AlertId == alert.Id &&
+                        n.PatientId == patientId &&
+                        n.ToEmail == patientEmail &&
+                        n.Subject == subject &&
+                        n.SentByDoctorId == null &&
+                        n.IsSent);
+
+                    if (alreadySent)
+                    {
+                        return;
+                    }
 
                     var notification = new EmailNotification
                     {

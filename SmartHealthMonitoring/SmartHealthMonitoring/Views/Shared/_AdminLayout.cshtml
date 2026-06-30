@@ -171,11 +171,12 @@
         .user-profile {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
 
         .user-info {
             text-align: right;
+            max-width: 220px;
         }
 
         .user-name {
@@ -184,12 +185,40 @@
             color: #1e293b;
             font-size: 0.95rem;
             margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .user-role {
             color: #64748b;
             font-size: 0.75rem;
             margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .topbar-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            text-decoration: none;
+            transition: all .2s ease;
+        }
+
+        .topbar-icon-btn:hover,
+        .topbar-icon-btn.active {
+            color: #fff;
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            box-shadow: 0 8px 18px rgba(14, 165, 233, .22);
         }
 
         .avatar {
@@ -381,7 +410,6 @@
             <a asp-controller="AdminEmailTemplate" asp-action="Index" class="nav-item-link @(controller == "AdminEmailTemplate" ? "active" : "")">
                 <i class="fas fa-envelope-open-text"></i> Mẫu Email
             </a>
-
         </div>
 
         <div class="sidebar-footer">
@@ -396,13 +424,28 @@
         <!-- Topbar -->
         <div class="topbar">
             <div class="user-profile">
+                @{
+                    var adminName = User.FindFirst("FullName")?.Value ?? "Quản trị viên";
+                    var adminEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name ?? "Admin";
+                }
                 <div class="user-info">
+                    <p class="user-name">@adminName</p>
+                    <p class="user-role">@adminEmail</p>
+                </div>
+                <div class="user-info d-none">
                     <p class="user-name">Quản trị viên</p>
                     <p class="user-role">Hệ thống cấp cao</p>
                 </div>
                 <div class="avatar">
                     <i class="fas fa-user-shield"></i>
                 </div>
+                <a asp-controller="AdminSettings"
+                   asp-action="Index"
+                   class="topbar-icon-btn @(controller == "AdminSettings" ? "active" : "")"
+                   title="Cài đặt admin"
+                   aria-label="Cài đặt admin">
+                    <i class="fas fa-gear"></i>
+                </a>
                 <div style="border-left: 1px solid #e2e8f0; height: 30px; margin: 0 8px;"></div>
                 <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
                     <button type="submit" class="btn-logout">
