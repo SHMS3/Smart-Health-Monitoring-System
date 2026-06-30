@@ -65,12 +65,24 @@
                                 else
                                 {
                                     <div class="d-flex justify-content-end gap-2">
-                                        <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold shadow-sm" onclick="openServiceModal(@wp.PatientId, '@wp.Patient.User.FullName')">
+                                        <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold shadow-sm" onclick="openServiceModal(@wp.Id, @wp.PatientId, '@wp.Patient.User.FullName')">
                                             <i class="fas fa-plus-circle me-1"></i> Thêm dịch vụ
                                         </button>
-                                        <a asp-controller="ClinicalRecord" asp-action="Index" asp-route-id="@wp.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
-                                            <i class="fas fa-history me-1"></i> Xem bệnh án
-                                        </a>
+                                        @{
+                                            var patientsWithPayments = ViewBag.PatientsWithPayments as List<int> ?? new List<int>();
+                                        }
+                                        @if (patientsWithPayments.Contains(wp.PatientId))
+                                        {
+                                            <a asp-controller="ClinicalRecord" asp-action="Index" asp-route-id="@wp.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
+                                                <i class="fas fa-history me-1"></i> Vào khám
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold shadow-sm btn-cancel-exam" data-id="@wp.Id">
+                                                <i class="fas fa-times me-1"></i> Hủy khám
+                                            </button>
+                                        }
                                     </div>
                                 }
                             </td>
@@ -175,12 +187,12 @@
                             
                             var newButtons = `
                                 <div class="d-flex justify-content-end gap-2">
-                                    <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold shadow-sm" onclick="openServiceModal(${patientId}, '${patientName}')">
+                                    <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold shadow-sm" onclick="openServiceModal(${waitingId}, ${patientId}, '${patientName}')">
                                         <i class="fas fa-plus-circle me-1"></i> Thêm dịch vụ
                                     </button>
-                                    <a href="/ClinicalRecord/Index/${patientId}" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
-                                        <i class="fas fa-history me-1"></i> Xem bệnh án
-                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold shadow-sm btn-cancel-exam" data-id="${waitingId}">
+                                        <i class="fas fa-times me-1"></i> Hủy khám
+                                    </button>
                                 </div>
                             `;
                             actionCell.html(newButtons);
@@ -197,11 +209,55 @@
                     }
                 });
             });
+
+            // Handle Cancel Exam
+            $(document).on('click', '.btn-cancel-exam', function () {
+                var btn = $(this);
+                var waitingId = btn.data('id');
+                
+                Swal.fire({
+                    title: 'Xác nhận hủy khám?',
+                    text: 'Bệnh nhân này sẽ được chuyển sang trạng thái đã hủy.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Đồng ý hủy',
+                    cancelButtonText: 'Không'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>...');
+                        $.ajax({
+                            url: '@Url.Action("CancelExam", "DoctorDashboard")',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify({ waitingId: waitingId }),
+                            headers: {
+                                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                            },
+                            success: function (res) {
+                                if (res.success) {
+                                    $('#waiting-row-' + waitingId).fadeOut(400, function() { $(this).remove(); });
+                                    toastr.success(res.message);
+                                } else {
+                                    toastr.error(res.message);
+                                    btn.prop('disabled', false).html('<i class="fas fa-times me-1"></i> Hủy khám');
+                                }
+                            },
+                            error: function () {
+                                toastr.error("Có lỗi xảy ra khi gọi server.");
+                                btn.prop('disabled', false).html('<i class="fas fa-times me-1"></i> Hủy khám');
+                            }
+                        });
+                    }
+                });
+            });
         });
         
         let currentServices = [];
 
-        function openServiceModal(patientId, patientName) {
+        function openServiceModal(waitingId, patientId, patientName) {
+            document.getElementById('serviceModal').setAttribute('data-waiting-id', waitingId);
             document.getElementById('modalPatientId').value = patientId;
             document.getElementById('modalPatientName').textContent = patientName;
             document.getElementById('totalAmountText').textContent = '0 đ';
@@ -319,8 +375,24 @@
                 if (result.success) {
                     Swal.fire('Thành công', result.message, 'success').then(() => {
                         const modalEl = document.getElementById('serviceModal');
+                        const waitingId = modalEl.getAttribute('data-waiting-id');
                         const modal = bootstrap.Modal.getInstance(modalEl);
                         modal.hide();
+                        
+                        const actionCell = $('#action-cell-' + waitingId);
+                        if (actionCell.length) {
+                            const newButtons = `
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold shadow-sm" onclick="openServiceModal(${waitingId}, ${patientId}, '${document.getElementById('modalPatientName').textContent}')">
+                                        <i class="fas fa-plus-circle me-1"></i> Thêm dịch vụ
+                                    </button>
+                                    <a href="/ClinicalRecord/Index/${patientId}" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
+                                        <i class="fas fa-history me-1"></i> Vào khám
+                                    </a>
+                                </div>
+                            `;
+                            actionCell.html(newButtons);
+                        }
                     });
                 } else {
                     Swal.fire('Lỗi', result.message, 'error');

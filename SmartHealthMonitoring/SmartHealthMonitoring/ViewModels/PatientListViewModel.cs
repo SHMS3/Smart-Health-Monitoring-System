@@ -42,6 +42,8 @@ namespace SmartHealthMonitoring.ViewModels
         public DateTime? SearchDate { get; set; }
         public string ActiveTab { get; set; } = "clinical-content";
         public bool HasPaidPaymentToday { get; set; }
+        public bool HasClinicalRecordToday { get; set; }
+        public bool HasConfiguredThresholds { get; set; }
     }
 
     public class ClinicalRecordSummaryViewModel

@@ -56,6 +56,7 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
             .ToListAsync(ct);
 
         int created = 0;
+        var generatedSlots = new HashSet<(int DoctorId, DateTime SlotStart)>();
 
         foreach (var schedule in schedules)
         {
@@ -72,11 +73,13 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
                     var slotEnd   = slotStart.AddMinutes(schedule.SlotDurationMinutes);
 
                     // Kiểm tra slot đã tồn tại chưa (Unique Index sẽ bắt, nhưng check trước để tránh exception)
-                    bool exists = await context.AppointmentSlots
+                    bool existsInDb = await context.AppointmentSlots
                         .AnyAsync(s => s.DoctorId == schedule.DoctorId && s.SlotStart == slotStart, ct);
 
-                    if (!exists)
+                    var slotKey = (schedule.DoctorId, slotStart);
+                    if (!existsInDb && !generatedSlots.Contains(slotKey))
                     {
+                        generatedSlots.Add(slotKey);
                         context.AppointmentSlots.Add(new AppointmentSlot
                         {
                             DoctorId  = schedule.DoctorId,

@@ -172,12 +172,17 @@ namespace SmartHealthMonitoring.Controllers
         [HttpGet]
         public async Task<IActionResult> WaitingList(int page = 1)
         {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int.TryParse(userIdString, out int userId);
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+
             int pageSize = 10;
             var today = DateTime.UtcNow.Date;
             
             var query = _context.WaitingPatients
                 .Include(w => w.Patient).ThenInclude(p => p.User)
-                .Where(w => w.CreatedAt >= today && w.Status == 0);
+                .Where(w => w.CreatedAt >= today && 
+                            (w.Status == 0 || (w.Status == 1 && doctor != null && w.DoctorId == doctor.Id)));
 
             var totalCount = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -196,7 +201,59 @@ namespace SmartHealthMonitoring.Controllers
                 PageSize = pageSize
             };
 
+            var patientIds = waitingPatients.Select(w => w.PatientId).ToList();
+            ViewBag.PatientsWithPayments = await _context.Payments
+                .Where(p => patientIds.Contains(p.PatientId) && p.CreatedAt.Date == today)
+                .Select(p => p.PatientId)
+                .Distinct()
+                .ToListAsync();
+
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelExam([FromBody] CancelExamRequest request)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdString, out int userId))
+                return Json(new { success = false, message = "Không xác định được tài khoản bác sĩ." });
+
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+            if (doctor == null) return Json(new { success = false, message = "Không tìm thấy hồ sơ bác sĩ." });
+
+            var waiting = await _context.WaitingPatients.FirstOrDefaultAsync(w => w.Id == request.WaitingId && w.Status == 1 && w.DoctorId == doctor.Id);
+            if (waiting != null)
+            {
+                waiting.Status = 2; // Đã hủy (Cancelled)
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Đã hủy khám thành công." });
+            }
+            return Json(new { success = false, message = "Không thể hủy ca khám này." });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompleteExam(int patientId)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdString, out int userId))
+                return RedirectToAction(nameof(WaitingList));
+
+            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
+            if (doctor == null) return RedirectToAction(nameof(WaitingList));
+
+            var activeWaiting = await _context.WaitingPatients
+                .FirstOrDefaultAsync(w => w.PatientId == patientId && (w.Status == 0 || w.Status == 1) && w.DoctorId == doctor.Id);
+            
+            if (activeWaiting != null)
+            {
+                activeWaiting.Status = 3;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Đã hoàn tất khám cho bệnh nhân.";
+            }
+
+            return RedirectToAction(nameof(WaitingList));
         }
 
         [HttpPost]
@@ -296,14 +353,7 @@ namespace SmartHealthMonitoring.Controllers
 
                 _context.PaymentDetails.AddRange(paymentDetails);
                 
-                // Update waiting patient status to 3 (Completed)
-                var activeWaiting = await _context.WaitingPatients
-                    .FirstOrDefaultAsync(w => w.PatientId == request.PatientId && w.Status == 1 && w.DoctorId == doctor.Id);
-                
-                if (activeWaiting != null)
-                {
-                    activeWaiting.Status = 3;
-                }
+                // (Removed activeWaiting.Status = 3 here so patient stays in waiting list to be examined)
 
                 await _context.SaveChangesAsync();
 
@@ -320,6 +370,11 @@ namespace SmartHealthMonitoring.Controllers
     {
         public int PatientId { get; set; }
         public List<int> ServiceIds { get; set; } = new List<int>();
+    }
+
+    public class CancelExamRequest
+    {
+        public int WaitingId { get; set; }
     }
 
     public class AcceptPatientRequest

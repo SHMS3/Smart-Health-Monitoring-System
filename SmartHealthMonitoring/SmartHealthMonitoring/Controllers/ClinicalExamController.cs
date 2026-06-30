@@ -236,6 +236,14 @@ namespace SmartHealthMonitoring.Controllers
                 _context.ClinicalRecords.Add(record);
                 await _context.SaveChangesAsync();
 
+                var activeWaiting = await _context.WaitingPatients
+                    .FirstOrDefaultAsync(w => w.PatientId == model.PatientId && (w.Status == 0 || w.Status == 1));
+                if (activeWaiting != null)
+                {
+                    activeWaiting.Status = 3;
+                    await _context.SaveChangesAsync();
+                }
+
                 _cache.Remove($"LabResult_{model.PatientId}");
 
                 // patient đã được fetch ở trên để tính fallback, dùng lại ở đây

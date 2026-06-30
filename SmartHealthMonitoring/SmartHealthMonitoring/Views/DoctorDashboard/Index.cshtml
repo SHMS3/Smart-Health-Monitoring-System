@@ -198,6 +198,9 @@
                                     <a asp-controller="DoctorDashboard" asp-action="PatientProfile" asp-route-patientId="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
                                         <i class="fas fa-folder-open me-1"></i> Xem hồ sơ
                                     </a>
+                                    <a asp-controller="ClinicalRecord" asp-action="Index_ListPatient" asp-route-id="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
+                                        <i class="fas fa-history me-1"></i> Xem bệnh án
+                                    </a>
                                 </td>
                             </tr>
                         }
@@ -458,4 +461,4 @@
         });
     });
 </script>
-}
+}
