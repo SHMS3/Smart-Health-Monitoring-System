@@ -105,12 +105,12 @@ namespace SmartHealthMonitoring.Controllers
                         RestingBP = r.RestingBp,
                         Cholesterol = r.Cholesterol,
                         MaxHeartRate = r.MaxHeartRate,
-
-                        // ĐÃ FIX: Dùng toán tử 3 ngôi để EF Core có thể dịch sang SQL (CASE WHEN)
-                        ChestPainTypeDisplay = r.ChestPainType == 0 ? "Typical Angina (TA)" :
+                        ChestPainType = r.ChestPainType,
+                        // Chỉ tạo display khi ChestPainType có giá trị
+                        ChestPainTypeDisplay = r.ChestPainType == null ? null :
+                                               r.ChestPainType == 0 ? "Typical Angina (TA)" :
                                                r.ChestPainType == 1 ? "Atypical Angina (ATA)" :
                                                r.ChestPainType == 2 ? "Non-Anginal Pain (NAP)" : "Asymptomatic (ASY)",
-
                         FastingBS = r.FastingBs,
                         RestECG = r.RestEcg,
                         ExerciseAngina = r.ExerciseAngina,
@@ -158,6 +158,18 @@ namespace SmartHealthMonitoring.Controllers
                     .ToListAsync();
 
                 // ========================================================
+                // Kiểm tra trạng thái thanh toán hôm nay (1 lần thanh toán = 1 hồ sơ)
+                // ========================================================
+                var todayDate = DateTime.UtcNow.Date;
+                int todayPaidPaymentsCount = await _context.Payments
+                    .CountAsync(p => p.PatientId == patient.Id && p.Status == "Paid" && p.CreatedAt.Date == todayDate);
+
+                int todayClinicalRecordsCount = await _context.ClinicalRecords
+                    .CountAsync(r => r.PatientId == patient.Id && r.VisitDate.Date == todayDate && !r.IsDeleted);
+
+                bool hasPaidPaymentToday = todayPaidPaymentsCount > todayClinicalRecordsCount;
+
+                // ========================================================
                 // Gói toàn bộ dữ liệu vào ViewModel chung
                 // ========================================================
                 var viewModel = new PatientRecordIndexViewModel
@@ -182,7 +194,8 @@ namespace SmartHealthMonitoring.Controllers
                         Page = diaryPage,
                         PageSize = diaryPageSize
                     },
-                    
+
+                    HasPaidPaymentToday = hasPaidPaymentToday,
                     SearchDate = searchDate,
                     ActiveTab = activeTab
                 };

@@ -1,0 +1,119 @@
+@model List<SmartHealthMonitoring.Controllers.DoctorSlotViewModel>
+@{
+    ViewData["Title"] = "Đặt lịch khám";
+    var selectedDate = (DateOnly)ViewBag.SelectedDate;
+    var specialties  = ViewBag.Specialties as List<string> ?? new();
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
+    .page-header {
+        background: linear-gradient(135deg, #1a6b3a 0%, #27ae60 100%);
+        color: white; border-radius: 20px; padding: 32px 40px; margin-bottom: 28px;
+    }
+    .filter-bar {
+        background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+        padding: 20px 28px; margin-bottom: 24px; display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;
+    }
+    .filter-bar .form-control, .filter-bar .form-select {
+        border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: .9rem;
+    }
+    .filter-bar .form-control:focus, .filter-bar .form-select:focus { border-color: #27ae60; box-shadow: none; }
+    .doctor-card {
+        background: white; border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.07);
+        overflow: hidden; margin-bottom: 20px; transition: box-shadow .2s;
+    }
+    .doctor-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.13); }
+    .doctor-header { padding: 24px 28px; border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; gap: 18px; }
+    .doctor-avatar {
+        width: 60px; height: 60px; border-radius: 50%;
+        background: linear-gradient(135deg, #1a6b3a, #27ae60);
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-weight: 700; font-size: 1.4rem; flex-shrink: 0;
+    }
+    .slot-grid { padding: 20px 28px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .slot-btn {
+        padding: 8px 18px; border-radius: 10px; font-size: .88rem; font-weight: 500;
+        border: 1.5px solid; cursor: pointer; transition: all .2s; text-decoration: none;
+    }
+    .slot-btn.available {
+        border-color: #22c55e; color: #16a34a; background: #f0fdf4;
+    }
+    .slot-btn.available:hover { background: #22c55e; color: white; transform: translateY(-1px); }
+    .slot-btn.taken { border-color: #e2e8f0; color: #94a3b8; background: #f8fafc; cursor: not-allowed; }
+    .no-slots { color: #94a3b8; font-size: .9rem; padding: 8px 0; }
+    .badge-specialty {
+        background: #e0f2fe; color: #0369a1; border-radius: 20px;
+        padding: 4px 12px; font-size: .78rem; font-weight: 600;
+    }
+</style>
+
+<div class="container pt-5 mt-3 pb-5">
+    <div class="page-header">
+        <h1 class="h3 mb-1 fw-bold">🏥 Đặt lịch khám bệnh</h1>
+        <p class="mb-0 opacity-75">Chọn bác sĩ và khung giờ phù hợp với bạn.</p>
+    </div>
+
+    <!-- Filter -->
+    <form method="get" class="filter-bar">
+        <div>
+            <label class="form-label small text-muted mb-1">Chuyên khoa</label>
+            <select name="specialty" class="form-select" style="min-width:180px">
+                <option value="">Tất cả chuyên khoa</option>
+                @foreach (var sp in specialties)
+                {
+                    <option value="@sp" selected="@(ViewBag.Specialty == sp ? "selected" : null)">@sp</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label class="form-label small text-muted mb-1">Ngày khám</label>
+            <input type="date" name="date" class="form-control" value="@selectedDate.ToString("yyyy-MM-dd")" min="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")">
+        </div>
+        <button type="submit" class="btn fw-semibold rounded-3" style="background:#27ae60;color:white;padding:10px 24px">
+            <i class="fas fa-search me-2"></i>Tìm kiếm
+        </button>
+    </form>
+
+    <!-- Doctor list + slots -->
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-user-md fa-3x mb-3 d-block opacity-25"></i>
+            <p>Không tìm thấy bác sĩ phù hợp.</p>
+        </div>
+    }
+
+    @foreach (var item in Model)
+    {
+        <div class="doctor-card">
+            <div class="doctor-header">
+                <div class="doctor-avatar">@item.Doctor.User.FullName.Substring(0, 1).ToUpper()</div>
+                <div>
+                    <div class="fw-bold fs-6">BS. @item.Doctor.User.FullName</div>
+                    <span class="badge-specialty">@item.Doctor.Specialty</span>
+                </div>
+                <div class="ms-auto text-muted small">
+                    <i class="fas fa-clock me-1"></i>@item.AvailableSlots.Count slot trống
+                </div>
+            </div>
+            <div class="slot-grid">
+                @if (item.AvailableSlots.Any())
+                {
+                    @foreach (var slot in item.AvailableSlots)
+                    {
+                        <a asp-action="Book" asp-route-slotId="@slot.Id" class="slot-btn available">
+                            @slot.SlotStart.ToString("HH:mm") – @slot.SlotEnd.ToString("HH:mm")
+                        </a>
+                    }
+                }
+                else
+                {
+                    <p class="no-slots"><i class="fas fa-calendar-times me-2"></i>Không còn slot trống cho ngày này.</p>
+                }
+            </div>
+        </div>
+    }
+</div>

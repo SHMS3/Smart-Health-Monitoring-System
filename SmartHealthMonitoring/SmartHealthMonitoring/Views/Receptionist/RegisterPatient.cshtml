@@ -1,0 +1,85 @@
+@using SmartHealthMonitoring.ViewModels
+@model ReceptionistRegisterPatientViewModel
+
+@{
+    ViewData["Title"] = "Đăng ký Bệnh nhân Mới";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-title">Đăng ký Bệnh nhân Mới</h1>
+    <a asp-action="Patients" class="btn btn-outline-secondary" style="border-radius: 8px; font-weight: 600;">
+        <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="admin-card">
+            <h4 class="mb-4 text-primary" style="font-family: 'Outfit', sans-serif;"><i class="fas fa-user-plus me-2"></i>Thông tin đăng ký</h4>
+            
+            <form asp-action="RegisterPatient" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="FullName" class="form-label fw-bold"></label>
+                        <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên đầy đủ" style="border-radius: 8px; padding: 10px 15px;" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label fw-bold"></label>
+                        <input asp-for="Email" class="form-control" type="email" placeholder="example@gmail.com" style="border-radius: 8px; padding: 10px 15px;" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                        <div class="form-text text-muted small"><i class="fas fa-info-circle me-1"></i>Email này sẽ được dùng để đăng nhập và nhận mật khẩu.</div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="DateOfBirth" class="form-label fw-bold"></label>
+                        <input asp-for="DateOfBirth" class="form-control" type="date" style="border-radius: 8px; padding: 10px 15px;" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Sex" class="form-label fw-bold"></label>
+                        <select asp-for="Sex" class="form-select" style="border-radius: 8px; padding: 10px 15px;">
+                            <option value="1">Nam</option>
+                            <option value="0">Nữ</option>
+                        </select>
+                        <span asp-validation-for="Sex" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Phone" class="form-label fw-bold"></label>
+                        <input asp-for="Phone" class="form-control" placeholder="Số điện thoại liên hệ" style="border-radius: 8px; padding: 10px 15px;" />
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CitizenId" class="form-label fw-bold"></label>
+                        <input asp-for="CitizenId" class="form-control" placeholder="Số CCCD hoặc CMND" style="border-radius: 8px; padding: 10px 15px;" />
+                        <span asp-validation-for="CitizenId" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Address" class="form-label fw-bold"></label>
+                    <textarea asp-for="Address" class="form-control" rows="3" placeholder="Địa chỉ thường trú" style="border-radius: 8px; padding: 10px 15px;"></textarea>
+                    <span asp-validation-for="Address" class="text-danger small"></span>
+                </div>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg shadow-sm" style="background: var(--color-primary); border: none; border-radius: 8px; font-weight: 700; padding: 12px;">
+                        <i class="fas fa-check-circle me-2"></i>Đăng ký ngay
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

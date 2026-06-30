@@ -51,6 +51,49 @@
                 border-top-right-radius: 12px;
                 border-bottom-right-radius: 12px;
             }
+
+        .form-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            height: 100%;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .bg-red-soft {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .bg-blue-soft {
+            background: #e0f2fe;
+            color: #0ea5e9;
+        }
+
+        .bg-purple-soft {
+            background: #f3e8ff;
+            color: #8b5cf6;
+        }
 </style>
 
 <div class="container pt-5 mt-4 pb-5 doc-container">
@@ -152,8 +195,8 @@
                                 </td>
                                 <td class="text-muted"><i class="fas fa-phone-alt me-2 small"></i>@patient.Phone</td>
                                 <td class="text-end pe-4">
-                                    <a asp-controller="ClinicalRecord" asp-action="Index" asp-route-id="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
-                                        <i class="fas fa-history me-1"></i> Xem bệnh án
+                                    <a asp-controller="DoctorDashboard" asp-action="PatientProfile" asp-route-patientId="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
+                                        <i class="fas fa-folder-open me-1"></i> Xem hồ sơ
                                     </a>
                                 </td>
                             </tr>
@@ -193,8 +236,177 @@
     </div>
 </div>
 
+<!-- Modal Thêm Dịch Vụ Khám -->
+<div class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="serviceModalLabel">Thêm dịch vụ khám cho <span id="modalPatientName" class="text-primary"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalPatientId" />
+                <div class="row g-3" id="servicesListBody">
+                    <!-- Dịch vụ sẽ được load qua AJAX -->
+                    <div class="col-12 text-center text-muted">
+                        <span class="spinner-border spinner-border-sm me-2"></span> Đang tải danh sách dịch vụ...
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="fw-bold fs-5 text-dark">Tổng tiền:</span>
+                    <span class="fw-bold fs-4 text-danger" id="totalAmountText">0 đ</span>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btnSubmitServices" onclick="submitServices()">
+                    <i class="fas fa-paper-plane me-1"></i> Gửi yêu cầu thanh toán
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    let currentServices = [];
+
+    function openServiceModal(patientId, patientName) {
+        document.getElementById('modalPatientId').value = patientId;
+        document.getElementById('modalPatientName').textContent = patientName;
+        document.getElementById('totalAmountText').textContent = '0 đ';
+        
+        const tbody = document.getElementById('servicesListBody');
+        tbody.innerHTML = '<div class="col-12 text-center text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Đang tải danh sách dịch vụ...</div>';
+
+        // Gọi API lấy danh sách dịch vụ
+        fetch('@Url.Action("GetServices", "DoctorDashboard")')
+            .then(response => response.json())
+            .then(result => {
+                if(result.success) {
+                    currentServices = result.data;
+                    tbody.innerHTML = '';
+                    if(currentServices.length === 0) {
+                        tbody.innerHTML = '<div class="col-12 text-center text-muted">Không có dịch vụ nào khả dụng</div>';
+                        return;
+                    }
+
+                    currentServices.forEach(s => {
+                        let iconClass = 'fa-stethoscope';
+                        let bgClass = 'bg-blue-soft';
+                        if (s.name.includes('Huyết áp') || s.name.includes('Triệu chứng')) {
+                            iconClass = 'fa-heartbeat';
+                            bgClass = 'bg-red-soft';
+                        } else if (s.name.includes('Huyết học')) {
+                            iconClass = 'fa-tint';
+                            bgClass = 'bg-blue-soft';
+                        } else if (s.name.includes('Điện tâm đồ') || s.name.includes('Mạch vành')) {
+                            iconClass = 'fa-wave-square';
+                            bgClass = 'bg-purple-soft';
+                        }
+
+                        let descHtml = '';
+                        if (s.description) {
+                            let items = s.description.split('|');
+                            descHtml = '<ul class="list-unstyled mt-3 mb-0 small text-muted border-top pt-2">';
+                            items.forEach(item => {
+                                descHtml += `<li class="mb-1 d-flex align-items-start"><i class="fas fa-check text-success mt-1 me-2" style="font-size:0.75rem"></i><span>${item}</span></li>`;
+                            });
+                            descHtml += '</ul>';
+                        }
+
+                        const col = document.createElement('div');
+                        col.className = 'col-lg-4 col-md-6 mb-3';
+                        col.innerHTML = `
+                            <div class="form-section position-relative h-100 d-flex flex-column" style="cursor:pointer;" onclick="toggleCheckbox(${s.id})">
+                                <div class="position-absolute top-0 end-0 p-3">
+                                    <input class="form-check-input service-checkbox fs-5" type="checkbox" id="chk_service_${s.id}" value="${s.id}" data-price="${s.price}" onchange="calculateTotal()" onclick="event.stopPropagation()">
+                                </div>
+                                <div class="section-title">
+                                    <div class="section-icon ${bgClass}"><i class="fas ${iconClass}"></i></div>
+                                </div>
+                                <h6 class="fw-bold text-dark mb-2">${s.name}</h6>
+                                <p class="text-danger fw-bold mb-0 fs-5">${s.price.toLocaleString('vi-VN')} đ</p>
+                                <div class="mt-auto">
+                                    ${descHtml}
+                                </div>
+                            </div>
+                        `;
+                        tbody.appendChild(col);
+                    });
+                } else {
+                    tbody.innerHTML = `<div class="col-12 text-center text-danger">Lỗi: ${result.message}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                tbody.innerHTML = '<div class="col-12 text-center text-danger">Đã có lỗi xảy ra khi tải dịch vụ.</div>';
+            });
+
+        const modal = new bootstrap.Modal(document.getElementById('serviceModal'));
+        modal.show();
+    }
+
+    function toggleCheckbox(id) {
+        const chk = document.getElementById('chk_service_' + id);
+        if(chk) {
+            chk.checked = !chk.checked;
+            calculateTotal();
+        }
+    }
+
+    function calculateTotal() {
+        let total = 0;
+        document.querySelectorAll('.service-checkbox:checked').forEach(cb => {
+            total += parseFloat(cb.getAttribute('data-price'));
+        });
+        document.getElementById('totalAmountText').textContent = total.toLocaleString('vi-VN') + ' đ';
+    }
+
+    function submitServices() {
+        const patientId = document.getElementById('modalPatientId').value;
+        const selectedIds = Array.from(document.querySelectorAll('.service-checkbox:checked')).map(cb => parseInt(cb.value));
+
+        if (selectedIds.length === 0) {
+            Swal.fire('Lỗi', 'Vui lòng chọn ít nhất một dịch vụ.', 'warning');
+            return;
+        }
+
+        const btn = document.getElementById('btnSubmitServices');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+
+        fetch('@Url.Action("CreatePayment", "DoctorDashboard")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            },
+            body: JSON.stringify({ patientId: parseInt(patientId), serviceIds: selectedIds })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                Swal.fire('Thành công', result.message, 'success').then(() => {
+                    const modalEl = document.getElementById('serviceModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+                });
+            } else {
+                Swal.fire('Lỗi', result.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Lỗi', 'Đã xảy ra lỗi kết nối.', 'error');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Gửi yêu cầu thanh toán';
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         const toggle      = document.getElementById('shiftToggle');
         const badge       = document.getElementById('shiftBadge');

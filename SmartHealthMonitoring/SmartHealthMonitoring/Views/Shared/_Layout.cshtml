@@ -739,8 +739,13 @@
                 @if (isDoc)
                 {
                     <li class="nav-item">
-                        <a class="nav-link-cl @(ctrl=="DoctorDashboard" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="Index">
+                        <a class="nav-link-cl @(ctrl=="DoctorDashboard" && action!="WaitingList" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="Index">
                             <i class="fas fa-users"></i> Bệnh nhân
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="DoctorDashboard" && action=="WaitingList" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="WaitingList">
+                            <i class="fas fa-list-ol"></i> Danh sách chờ khám
                         </a>
                     </li>
                     <li class="nav-item">
@@ -751,6 +756,16 @@
                     <li class="nav-item">
                         <a class="nav-link-cl @(ctrl=="EmailNotification" ? "active" : "")" asp-controller="EmailNotification" asp-action="Index">
                             <i class="fas fa-envelope"></i> Lịch sử Email
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="DoctorSchedule" ? "active" : "")" asp-controller="DoctorSchedule" asp-action="Index">
+                            <i class="fas fa-calendar-plus"></i> Cấu hình lịch
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="Appointment" && action=="DoctorQueue" ? "active" : "")" asp-controller="Appointment" asp-action="DoctorQueue">
+                            <i class="fas fa-clipboard-list"></i> Hàng đợi khám
                         </a>
                     </li>
                 }
@@ -781,6 +796,16 @@
                             <i class="fas fa-comments"></i> Lịch sử Chat
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="Appointment" && action=="FindDoctor" ? "active" : "")" asp-controller="Appointment" asp-action="FindDoctor">
+                            <i class="fas fa-calendar-check"></i> Đặt lịch khám
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link-cl @(ctrl=="Appointment" && action=="MyAppointments" ? "active" : "")" asp-controller="Appointment" asp-action="MyAppointments">
+                            <i class="fas fa-list-alt"></i> Lịch hẹn của tôi
+                        </a>
+                    </li>
                 }
                 <li class="nav-item">
                     <a class="nav-link-cl @(ctrl=="Home" && action=="News" ? "active" : "")" asp-controller="Home" asp-action="News">
@@ -794,16 +819,7 @@
                     </a>
                 </li>
 
-                @if (User.Identity != null && User.Identity.IsAuthenticated)
-                {
-                    <li class="nav-item ms-auto">
-                        <div class="nav-user-wrap">
-                            <div class="nav-user-avatar"><i class="fas fa-user"></i></div>
-                            @{ var fn = User.FindFirst("FullName")?.Value ?? "Người dùng"; }
-                            <span class="nav-user-name d-none d-lg-block">@fn</span>
-                        </div>
-                    </li>
-                }
+            
             </ul>
         </div>
     </nav>

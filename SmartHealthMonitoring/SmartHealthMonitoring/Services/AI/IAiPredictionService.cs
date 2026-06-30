@@ -17,5 +17,5 @@ public interface IAiPredictionService
     /// và các chỉ số xét nghiệm từ ClinicalRecord gần nhất (Cholesterol, FastingBS, OldPeak, STSlope...).
     /// ClinicalRecord có thể null nếu bệnh nhân chưa có lần khám nào.
     /// </summary>
-    AiriskPrediction PredictCombined(DailyVitalLog log, ClinicalRecord? clinicalRecord, Patient patient, string modelType = "SVM");
+    AiriskPrediction PredictCombined(DailyVitalLog log, ClinicalRecord? clinicalRecord, Patient patient, string modelType = "SVM", IReadOnlyList<string>? purchasedServiceNames = null);
 }

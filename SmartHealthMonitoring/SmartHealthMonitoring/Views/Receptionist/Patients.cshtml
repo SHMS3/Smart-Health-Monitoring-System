@@ -1,0 +1,111 @@
+@using SmartHealthMonitoring.ViewModels
+@model ReceptionistPatientListViewModel
+
+@{
+    ViewData["Title"] = "Danh sách bệnh nhân";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-title">Danh sách Bệnh nhân</h1>
+    <a asp-action="RegisterPatient" class="btn btn-primary shadow-sm" style="background: var(--color-primary); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600;">
+        <i class="fas fa-plus me-2"></i>Đăng ký Bệnh nhân Mới
+    </a>
+</div>
+
+<div class="admin-card">
+    <form method="get" class="mb-4">
+        <div class="input-group" style="max-width: 500px;">
+            <input type="text" name="search" class="form-control" placeholder="Tìm theo Tên, Email, SĐT, CCCD..." value="@Model.SearchQuery" style="border-radius: 8px 0 0 8px; padding: 10px 15px;">
+            <button type="submit" class="btn btn-primary px-4" style="border-radius: 0 8px 8px 0; background: var(--color-primary-dark); border: none;">
+                <i class="fas fa-search"></i> Tìm kiếm
+            </button>
+            @if (!string.IsNullOrEmpty(Model.SearchQuery))
+            {
+                <a asp-action="Patients" class="btn btn-light ms-2 border" style="border-radius: 8px;"><i class="fas fa-times"></i> Xóa</a>
+            }
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Họ và Tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Patients.Items != null && Model.Patients.Items.Any())
+                {
+                    foreach (var patient in Model.Patients.Items)
+                    {
+                        <tr>
+                            <td><strong>#@patient.Id.ToString("D4")</strong></td>
+                            <td class="fw-bold">@patient.User.FullName</td>
+                            <td>@patient.User.Email</td>
+                            <td>@(patient.Phone ?? "Chưa cập nhật")</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <form asp-action="AddToWaitingList" method="post" class="m-0">
+                                        <input type="hidden" name="patientId" value="@patient.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-primary" style="border-radius: 20px; padding: 5px 15px;">
+                                            <i class="fas fa-user-md me-1"></i> Đăng ký khám
+                                        </button>
+                                    </form>
+                                    <a asp-action="PatientDetails" asp-route-id="@patient.Id" class="btn btn-sm btn-outline-secondary" style="border-radius: 20px; padding: 5px 15px;">
+                                        Chi tiết
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3 text-light"></i>
+                            <p class="mb-0">Không tìm thấy bệnh nhân nào.</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Patients.TotalPages > 1)
+    {
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <span class="text-muted" style="font-size: 0.9rem;">
+                Hiển thị trang @Model.Patients.Page / @Model.Patients.TotalPages (Tổng số: @Model.Patients.TotalCount bệnh nhân)
+            </span>
+            <div class="btn-group">
+                @if (Model.Patients.Page > 1)
+                {
+                    <a asp-action="Patients" asp-route-page="@(Model.Patients.Page - 1)" asp-route-search="@Model.SearchQuery" class="btn btn-outline-primary btn-sm">Trước</a>
+                }
+                
+                @for (int i = 1; i <= Model.Patients.TotalPages; i++)
+                {
+                    if (i == Model.Patients.Page)
+                    {
+                        <span class="btn btn-primary btn-sm active">@i</span>
+                    }
+                    else
+                    {
+                        <a asp-action="Patients" asp-route-page="@i" asp-route-search="@Model.SearchQuery" class="btn btn-outline-primary btn-sm">@i</a>
+                    }
+                }
+
+                @if (Model.Patients.Page < Model.Patients.TotalPages)
+                {
+                    <a asp-action="Patients" asp-route-page="@(Model.Patients.Page + 1)" asp-route-search="@Model.SearchQuery" class="btn btn-outline-primary btn-sm">Sau</a>
+                }
+            </div>
+        </div>
+    }
+</div>
