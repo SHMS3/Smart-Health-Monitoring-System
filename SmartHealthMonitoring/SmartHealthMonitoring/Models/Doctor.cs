@@ -34,4 +34,10 @@ public partial class Doctor
     public virtual User User { get; set; } = null!;
 
     public virtual ICollection<WarningAlert> WarningAlerts { get; set; } = new List<WarningAlert>();
+
+    public virtual ICollection<DoctorWorkSchedule> WorkSchedules { get; set; } = new List<DoctorWorkSchedule>();
+
+    public virtual ICollection<AppointmentSlot> AppointmentSlots { get; set; } = new List<AppointmentSlot>();
+
+    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

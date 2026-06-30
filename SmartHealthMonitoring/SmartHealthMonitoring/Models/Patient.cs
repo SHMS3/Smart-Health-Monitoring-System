@@ -38,4 +38,8 @@ public partial class Patient
     public virtual ICollection<WarningAlert> WarningAlerts { get; set; } = new List<WarningAlert>();
     public virtual PatientThreshold? PatientThreshold { get; set; }
     public virtual PatientHabit? PatientHabit { get; set; }
+
+    public virtual ICollection<AppointmentSlot> AppointmentSlots { get; set; } = new List<AppointmentSlot>();
+
+    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }
