@@ -1,0 +1,745 @@
+@model SmartHealthMonitoring.ViewModels.Admin.PatientUiSettingsViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Trang chủ & Footer";
+}
+
+@section Styles {
+    <style>
+        .ui-editor-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(520px, .95fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .ui-hero,
+        .ui-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+        }
+
+        .ui-hero {
+            padding: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .ui-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .ui-subtitle {
+            color: #64748b;
+            margin: 6px 0 0;
+            max-width: 740px;
+        }
+
+        .ui-card {
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .ui-card-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ui-card-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: #eff6ff;
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ui-card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .ui-card-body {
+            padding: 22px;
+        }
+
+        .ui-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .ui-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .ui-field label {
+            display: block;
+            font-size: .78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #64748b;
+            margin-bottom: 7px;
+        }
+
+        .ui-input {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 11px 13px;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .ui-input:focus {
+            border-color: #0ea5e9;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, .12);
+        }
+
+        .ui-color-field {
+            display: grid;
+            grid-template-columns: 52px 1fr;
+            gap: 10px;
+        }
+
+        .ui-color-field input[type="color"] {
+            width: 52px;
+            min-height: 46px;
+            padding: 4px;
+        }
+
+        .ui-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .ui-primary-btn,
+        .ui-secondary-btn,
+        .ui-danger-btn {
+            border: 0;
+            border-radius: 12px;
+            font-weight: 800;
+            padding: 10px 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .ui-primary-btn {
+            background: #0ea5e9;
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(14, 165, 233, .24);
+        }
+
+        .ui-secondary-btn {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .ui-danger-btn {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .image-preview {
+            margin-top: 10px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background: #f8fafc;
+        }
+
+        .ui-preview {
+            position: sticky;
+            top: 88px;
+        }
+
+        .full-preview-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .preview-mode-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .preview-mode-btn {
+            border: 0;
+            border-radius: 9px;
+            background: transparent;
+            color: #64748b;
+            width: 38px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-mode-btn.active {
+            background: #0ea5e9;
+            color: #fff;
+        }
+
+        .full-preview-shell {
+            border: 1px solid #dbe4ef;
+            border-radius: 16px;
+            background: #e2e8f0;
+            padding: 12px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
+        }
+
+        .full-preview-browser {
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            transition: width .22s ease, height .22s ease;
+        }
+
+        .full-preview-browser.desktop {
+            width: 100%;
+            height: 760px;
+        }
+
+        .full-preview-browser.mobile {
+            width: min(390px, 100%);
+            height: 760px;
+        }
+
+        .full-preview-topbar {
+            height: 34px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 0 12px;
+        }
+
+        .full-preview-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #cbd5e1;
+        }
+
+        .full-preview-url {
+            margin-left: 8px;
+            flex: 1;
+            min-width: 0;
+            height: 22px;
+            border-radius: 999px;
+            background: #eef2f7;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: .72rem;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .full-preview-iframe {
+            width: 100%;
+            height: calc(100% - 34px);
+            border: 0;
+            display: block;
+            background: #fff;
+        }
+
+        .field-validation-error,
+        .validation-summary-errors {
+            color: #dc2626;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+
+        @@media (max-width: 1100px) {
+            .ui-editor-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .ui-preview {
+                position: static;
+            }
+        }
+
+        @@media (max-width: 720px) {
+            .ui-hero,
+            .ui-actions,
+            .full-preview-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .ui-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+<div class="ui-hero">
+    <div>
+        <h1 class="ui-title">Trang chủ & Footer</h1>
+        <p class="ui-subtitle">Admin chỉ cần chỉnh nội dung trang chủ, ảnh hiển thị và footer. Những thay đổi sẽ được xem trước trực tiếp ở khung bên phải.</p>
+    </div>
+    <a asp-controller="Home" asp-action="Index" class="ui-secondary-btn" target="_blank">
+        <i class="fas fa-eye"></i>
+        Xem trang chủ
+    </a>
+</div>
+
+<form asp-controller="AdminPatientInterface" asp-action="Save" method="post" enctype="multipart/form-data" id="patientUiForm">
+    @Html.AntiForgeryToken()
+
+    <input asp-for="BrandSubtitle" type="hidden" />
+    <input asp-for="SearchPlaceholder" type="hidden" />
+    <input asp-for="PrimaryDarkColor" type="hidden" />
+    <input asp-for="LogoIcon" type="hidden" />
+    <input asp-for="HotlineLabel" type="hidden" />
+    <input asp-for="ShowTopInfoBar" type="hidden" />
+    <input asp-for="ShowAiChatbot" type="hidden" />
+    <input asp-for="ShowSupportHub" type="hidden" />
+    <input asp-for="HomeHeroImageUrl" type="hidden" />
+    <input asp-for="HomeAboutImageUrl" type="hidden" />
+
+    <div asp-validation-summary="ModelOnly" class="mb-3"></div>
+
+    <div class="ui-editor-shell">
+        <div>
+            <div class="ui-card">
+                <div class="ui-card-header">
+                    <div class="ui-card-icon"><i class="fas fa-house-medical"></i></div>
+                    <h2 class="ui-card-title">Nội dung trang chủ</h2>
+                </div>
+                <div class="ui-card-body">
+                    <div class="ui-form-grid">
+                        <div class="ui-field">
+                            <label asp-for="BrandName">Tên thương hiệu</label>
+                            <input asp-for="BrandName" class="form-control ui-input" />
+                            <span asp-validation-for="BrandName"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="MetaDescription">Mô tả SEO</label>
+                            <input asp-for="MetaDescription" class="form-control ui-input" />
+                            <span asp-validation-for="MetaDescription"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeHeroEyebrow">Nhãn hero</label>
+                            <input asp-for="HomeHeroEyebrow" class="form-control ui-input" />
+                            <span asp-validation-for="HomeHeroEyebrow"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeHeroTitle">Tiêu đề chính</label>
+                            <input asp-for="HomeHeroTitle" class="form-control ui-input" />
+                            <span asp-validation-for="HomeHeroTitle"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeHeroHighlight">Dòng nhấn</label>
+                            <input asp-for="HomeHeroHighlight" class="form-control ui-input" />
+                            <span asp-validation-for="HomeHeroHighlight"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeHeroPriceTag">Nhãn ưu đãi</label>
+                            <input asp-for="HomeHeroPriceTag" class="form-control ui-input" />
+                            <span asp-validation-for="HomeHeroPriceTag"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeHeroPrice">Giá/ưu đãi</label>
+                            <input asp-for="HomeHeroPrice" class="form-control ui-input" />
+                            <span asp-validation-for="HomeHeroPrice"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeHeroPriceSuffix">Ghi chú giá</label>
+                            <input asp-for="HomeHeroPriceSuffix" class="form-control ui-input" />
+                            <span asp-validation-for="HomeHeroPriceSuffix"></span>
+                        </div>
+                        <div class="ui-field full">
+                            <label asp-for="HomeHeroNote">Ghi chú dưới nút</label>
+                            <input asp-for="HomeHeroNote" class="form-control ui-input" />
+                            <span asp-validation-for="HomeHeroNote"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeCtaTitle">Tiêu đề CTA cuối trang</label>
+                            <input asp-for="HomeCtaTitle" class="form-control ui-input" />
+                            <span asp-validation-for="HomeCtaTitle"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeCtaDescription">Mô tả CTA cuối trang</label>
+                            <input asp-for="HomeCtaDescription" class="form-control ui-input" />
+                            <span asp-validation-for="HomeCtaDescription"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ui-card">
+                <div class="ui-card-header">
+                    <div class="ui-card-icon" style="background:#fff7ed;color:#c2410c;"><i class="fas fa-image"></i></div>
+                    <h2 class="ui-card-title">Ảnh trang chủ</h2>
+                </div>
+                <div class="ui-card-body">
+                    <div class="ui-form-grid">
+                        <div class="ui-field">
+                            <label asp-for="HomeHeroImageFile">Ảnh banner đầu trang</label>
+                            <input asp-for="HomeHeroImageFile" type="file" accept="image/*" class="form-control ui-input" />
+                            <span asp-validation-for="HomeHeroImageFile"></span>
+                            <img src="@Model.HomeHeroImageUrl" class="image-preview" id="heroImagePreview" alt="Ảnh banner" />
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeAboutImageFile">Ảnh phần giới thiệu</label>
+                            <input asp-for="HomeAboutImageFile" type="file" accept="image/*" class="form-control ui-input" />
+                            <span asp-validation-for="HomeAboutImageFile"></span>
+                            <img src="@Model.HomeAboutImageUrl" class="image-preview" id="aboutImagePreview" alt="Ảnh giới thiệu" />
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeAboutTag">Nhãn giới thiệu</label>
+                            <input asp-for="HomeAboutTag" class="form-control ui-input" />
+                            <span asp-validation-for="HomeAboutTag"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HomeAboutTitle">Tiêu đề giới thiệu</label>
+                            <input asp-for="HomeAboutTitle" class="form-control ui-input" />
+                            <span asp-validation-for="HomeAboutTitle"></span>
+                        </div>
+                        <div class="ui-field full">
+                            <label asp-for="HomeAboutDescription">Mô tả giới thiệu</label>
+                            <textarea asp-for="HomeAboutDescription" class="form-control ui-input" rows="4"></textarea>
+                            <span asp-validation-for="HomeAboutDescription"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ui-card">
+                <div class="ui-card-header">
+                    <div class="ui-card-icon" style="background:#ecfdf5;color:#047857;"><i class="fas fa-palette"></i></div>
+                    <h2 class="ui-card-title">Màu trang chủ & Footer</h2>
+                </div>
+                <div class="ui-card-body">
+                    <div class="ui-form-grid">
+                        <div class="ui-field">
+                            <label asp-for="PrimaryColor">Màu chủ đạo</label>
+                            <div class="ui-color-field">
+                                <input asp-for="PrimaryColor" type="color" class="form-control ui-input" />
+                                <input asp-for="PrimaryColor" class="form-control ui-input" />
+                            </div>
+                            <span asp-validation-for="PrimaryColor"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="NavigationColor">Màu footer/menu</label>
+                            <div class="ui-color-field">
+                                <input asp-for="NavigationColor" type="color" class="form-control ui-input" />
+                                <input asp-for="NavigationColor" class="form-control ui-input" />
+                            </div>
+                            <span asp-validation-for="NavigationColor"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="AccentColor">Màu nút/nhấn</label>
+                            <div class="ui-color-field">
+                                <input asp-for="AccentColor" type="color" class="form-control ui-input" />
+                                <input asp-for="AccentColor" class="form-control ui-input" />
+                            </div>
+                            <span asp-validation-for="AccentColor"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="BackgroundColor">Màu nền</label>
+                            <div class="ui-color-field">
+                                <input asp-for="BackgroundColor" type="color" class="form-control ui-input" />
+                                <input asp-for="BackgroundColor" class="form-control ui-input" />
+                            </div>
+                            <span asp-validation-for="BackgroundColor"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ui-card">
+                <div class="ui-card-header">
+                    <div class="ui-card-icon" style="background:#fef2f2;color:#dc2626;"><i class="fas fa-shoe-prints"></i></div>
+                    <h2 class="ui-card-title">Footer</h2>
+                </div>
+                <div class="ui-card-body">
+                    <div class="ui-form-grid">
+                        <div class="ui-field">
+                            <label asp-for="FooterSubtitle">Phụ đề thương hiệu</label>
+                            <input asp-for="FooterSubtitle" class="form-control ui-input" />
+                            <span asp-validation-for="FooterSubtitle"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="HotlinePhone">Hotline</label>
+                            <input asp-for="HotlinePhone" class="form-control ui-input" />
+                            <span asp-validation-for="HotlinePhone"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="ContactEmail">Email liên hệ</label>
+                            <input asp-for="ContactEmail" class="form-control ui-input" />
+                            <span asp-validation-for="ContactEmail"></span>
+                        </div>
+                        <div class="ui-field">
+                            <label asp-for="Address">Địa chỉ</label>
+                            <input asp-for="Address" class="form-control ui-input" />
+                            <span asp-validation-for="Address"></span>
+                        </div>
+                        <div class="ui-field full">
+                            <label asp-for="FooterDescription">Mô tả footer</label>
+                            <textarea asp-for="FooterDescription" class="form-control ui-input" rows="3"></textarea>
+                            <span asp-validation-for="FooterDescription"></span>
+                        </div>
+                        <div class="ui-field full">
+                            <label asp-for="FooterLicenseText">Dòng pháp lý</label>
+                            <input asp-for="FooterLicenseText" class="form-control ui-input" />
+                            <span asp-validation-for="FooterLicenseText"></span>
+                        </div>
+                    </div>
+
+                    <div class="ui-actions">
+                        <button type="submit" class="ui-primary-btn">
+                            <i class="fas fa-save"></i>
+                            Lưu trang chủ & footer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside class="ui-preview">
+            <div class="ui-card">
+                <div class="ui-card-header">
+                    <div class="ui-card-icon"><i class="fas fa-display"></i></div>
+                    <h2 class="ui-card-title">Xem trước trang chủ</h2>
+                </div>
+                <div class="ui-card-body">
+                    <div class="full-preview-toolbar">
+                        <div class="preview-mode-group" aria-label="Chọn kích thước xem trước">
+                            <button type="button" class="preview-mode-btn active" data-preview-mode="desktop" title="Desktop">
+                                <i class="fas fa-desktop"></i>
+                            </button>
+                            <button type="button" class="preview-mode-btn" data-preview-mode="mobile" title="Mobile">
+                                <i class="fas fa-mobile-screen-button"></i>
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="ui-secondary-btn" id="refreshFullPreview">
+                                <i class="fas fa-rotate-right"></i>
+                                Tải lại
+                            </button>
+                            <a asp-controller="Home" asp-action="Index" class="ui-secondary-btn" target="_blank">
+                                <i class="fas fa-up-right-from-square"></i>
+                                Mở rộng
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="full-preview-shell">
+                        <div class="full-preview-browser desktop" id="fullPreviewBrowser">
+                            <div class="full-preview-topbar">
+                                <span class="full-preview-dot"></span>
+                                <span class="full-preview-dot"></span>
+                                <span class="full-preview-dot"></span>
+                                <div class="full-preview-url">/Home/Index</div>
+                            </div>
+                            <iframe
+                                id="fullPreviewIframe"
+                                class="full-preview-iframe"
+                                src="@Url.Action("Index", "Home")"
+                                title="Xem trước trang chủ bệnh nhân"></iframe>
+                        </div>
+                    </div>
+
+                    @if (Model.UpdatedAt.HasValue)
+                    {
+                        <div class="text-muted small mt-3">
+                            Cập nhật lần cuối: @Model.UpdatedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            @if (!string.IsNullOrWhiteSpace(Model.UpdatedByAdminName))
+                            {
+                                <span>bởi @Model.UpdatedByAdminName</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </aside>
+    </div>
+</form>
+
+<form asp-controller="AdminPatientInterface" asp-action="Reset" method="post" class="mt-3" onsubmit="return confirm('Khôi phục trang chủ và footer về mặc định?');">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="ui-danger-btn">
+        <i class="fas fa-rotate-left"></i>
+        Khôi phục mặc định
+    </button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const byName = name => document.querySelector(`[name="${name}"]`);
+            const iframe = document.getElementById('fullPreviewIframe');
+            const imageUrls = {
+                hero: byName('HomeHeroImageUrl')?.value || '/images/banner.jpg',
+                about: byName('HomeAboutImageUrl')?.value || '/images/about-banner.png'
+            };
+
+            function syncColorGroup(name) {
+                const inputs = document.querySelectorAll(`[name="${name}"]`);
+                inputs.forEach(input => {
+                    input.addEventListener('input', () => {
+                        inputs.forEach(other => {
+                            if (other !== input) other.value = input.value;
+                        });
+                        updatePreview();
+                    });
+                });
+            }
+
+            function setText(doc, selector, value) {
+                doc.querySelectorAll(selector).forEach(element => {
+                    element.textContent = value || '';
+                });
+            }
+
+            function ensurePreviewStyle(doc) {
+                let style = doc.getElementById('admin-live-home-preview-style');
+                if (!style) {
+                    style = doc.createElement('style');
+                    style.id = 'admin-live-home-preview-style';
+                    doc.head.appendChild(style);
+                }
+                return style;
+            }
+
+            function updatePreview() {
+                const doc = iframe?.contentDocument || iframe?.contentWindow?.document;
+                if (!doc || !doc.documentElement) return;
+
+                const primary = byName('PrimaryColor')?.value || '#1a73c8';
+                const primaryDark = byName('PrimaryDarkColor')?.value || '#135fa5';
+                const nav = byName('NavigationColor')?.value || '#1565c0';
+                const accent = byName('AccentColor')?.value || '#e53935';
+                const bg = byName('BackgroundColor')?.value || '#f4f7fb';
+
+                doc.documentElement.style.setProperty('--cl-blue', primary);
+                doc.documentElement.style.setProperty('--cl-blue-dark', primaryDark);
+                doc.documentElement.style.setProperty('--cl-blue-nav', nav);
+                doc.documentElement.style.setProperty('--cl-red', accent);
+                doc.documentElement.style.setProperty('--cl-bg', bg);
+
+                ensurePreviewStyle(doc).textContent = `
+                    .hero-banner::before { background-image: url('${imageUrls.hero}') !important; }
+                    .hero-title .highlight, .hero-price, .hero-sub-note, .section-heading span, .about-link { color: ${primary} !important; }
+                    .hero-eyebrow { color: ${accent} !important; }
+                    .btn-hero-cta { background: ${accent} !important; }
+                    .stats-banner, .cta-cl, .footer-cl { background: linear-gradient(135deg, ${nav}, ${primary}) !important; }
+                    main.flex-grow-1 { background: ${bg} !important; }
+                `;
+
+                setText(doc, '.brand-name, .footer-logo-name', byName('BrandName')?.value);
+                setText(doc, '.hero-eyebrow', byName('HomeHeroEyebrow')?.value);
+                const heroTitle = doc.querySelector('.hero-title');
+                if (heroTitle) {
+                    heroTitle.innerHTML = `${byName('HomeHeroTitle')?.value || ''}<br><span class="highlight">${byName('HomeHeroHighlight')?.value || ''}</span>`;
+                }
+                setText(doc, '.hero-price-tag', byName('HomeHeroPriceTag')?.value);
+                const heroPrice = doc.querySelector('.hero-price');
+                if (heroPrice) {
+                    heroPrice.innerHTML = `${byName('HomeHeroPrice')?.value || ''}<small class="fs-5 fw-normal text-muted">${byName('HomeHeroPriceSuffix')?.value || ''}</small>`;
+                }
+                setText(doc, '.hero-sub-note', byName('HomeHeroNote')?.value);
+                setText(doc, '.about-tag', byName('HomeAboutTag')?.value);
+                setText(doc, '.about-title', byName('HomeAboutTitle')?.value);
+                setText(doc, '.about-desc', byName('HomeAboutDescription')?.value);
+                const aboutImage = doc.querySelector('.about-img-main');
+                if (aboutImage) aboutImage.src = imageUrls.about;
+                setText(doc, '.cta-cl h2', byName('HomeCtaTitle')?.value);
+                setText(doc, '.cta-cl p', byName('HomeCtaDescription')?.value);
+
+                setText(doc, '.footer-logo-sub', byName('FooterSubtitle')?.value);
+                setText(doc, '.footer-desc', byName('FooterDescription')?.value);
+                setText(doc, '.footer-contact-item:nth-of-type(1) span', byName('Address')?.value);
+                setText(doc, '.footer-contact-item:nth-of-type(2) span', `${byName('HotlinePhone')?.value || ''} — Hotline 24/7`);
+                setText(doc, '.footer-contact-item:nth-of-type(3) span', byName('ContactEmail')?.value);
+                setText(doc, '.footer-schedule-row.mt-2 .time', byName('HotlinePhone')?.value);
+                setText(doc, '.footer-bottom', `© 2026 ${byName('BrandName')?.value || ''}. Bảo lưu mọi quyền.`);
+            }
+
+            function bindImageInput(inputName, previewId, targetKey) {
+                const input = byName(inputName);
+                input?.addEventListener('change', () => {
+                    const file = input.files && input.files[0];
+                    if (!file) return;
+                    const url = URL.createObjectURL(file);
+                    imageUrls[targetKey] = url;
+                    const preview = document.getElementById(previewId);
+                    if (preview) preview.src = url;
+                    updatePreview();
+                });
+            }
+
+            ['PrimaryColor', 'NavigationColor', 'AccentColor', 'BackgroundColor'].forEach(syncColorGroup);
+            document.querySelectorAll('#patientUiForm input, #patientUiForm textarea').forEach(input => {
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
+            });
+
+            bindImageInput('HomeHeroImageFile', 'heroImagePreview', 'hero');
+            bindImageInput('HomeAboutImageFile', 'aboutImagePreview', 'about');
+
+            iframe?.addEventListener('load', updatePreview);
+            document.getElementById('refreshFullPreview')?.addEventListener('click', () => {
+                if (iframe) iframe.src = iframe.src;
+            });
+
+            document.querySelectorAll('[data-preview-mode]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const mode = button.dataset.previewMode;
+                    document.querySelectorAll('[data-preview-mode]').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const browser = document.getElementById('fullPreviewBrowser');
+                    browser?.classList.toggle('mobile', mode === 'mobile');
+                    browser?.classList.toggle('desktop', mode !== 'mobile');
+                });
+            });
+
+            updatePreview();
+        })();
+    </script>
+}
