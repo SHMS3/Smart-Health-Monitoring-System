@@ -163,6 +163,7 @@
 </div>
 
 @section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 function addSlot(dow) {
     const container = document.getElementById(`slots-${dow}`);
@@ -198,8 +199,8 @@ async function saveSchedule() {
         });
     });
 
-    const token = document.querySelector('input[name=__RequestVerificationToken]')?.value
-               ?? '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)?.[1] ?? '';
+    const tokenElement = document.querySelector('input[name=__RequestVerificationToken]');
+    const token = tokenElement ? tokenElement.value : '';
 
     const res = await fetch('/DoctorSchedule/Save', {
         method: 'POST',
