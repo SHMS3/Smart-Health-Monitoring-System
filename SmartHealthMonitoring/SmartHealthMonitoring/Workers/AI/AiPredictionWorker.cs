@@ -28,25 +28,18 @@ public class AiPredictionWorker : BackgroundService
     {
         _logger.LogInformation("AiPredictionWorker bat dau chay.");
 
-        try
+        while (!stoppingToken.IsCancellationRequested)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                try
-                {
-                    await DoWorkAsync(stoppingToken);
-                }
-                catch (Exception ex) when (ex is not TaskCanceledException)
-                {
-                    _logger.LogError(ex, "Loi xay ra trong qua trinh chay AiPredictionWorker.");
-                }
-
-                await Task.Delay(_period, stoppingToken);
+                await DoWorkAsync(stoppingToken);
             }
-        }
-        catch (TaskCanceledException)
-        {
-            _logger.LogInformation("AiPredictionWorker dang dung lai do he thong tat.");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Loi xay ra trong qua trinh chay AiPredictionWorker.");
+            }
+
+            await Task.Delay(_period, stoppingToken);
         }
     }
 
@@ -55,14 +48,12 @@ public class AiPredictionWorker : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var dbContext  = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
         var aiService  = scope.ServiceProvider.GetRequiredService<IAiPredictionService>();
+        var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
         var emailTriggerService = scope.ServiceProvider.GetRequiredService<IEmailTriggerService>();
-        var sosNotificationService = scope.ServiceProvider.GetRequiredService<ISosNotificationService>();
-        var aiAlertSettingsService = scope.ServiceProvider.GetRequiredService<IAiAlertSettingsService>();
 
         int successCount = 0;
         int alertCount   = 0;
         var highRiskEmailCandidates = new List<(int PatientId, AiriskPrediction Prediction)>();
-        var sosAlertCandidates = new List<WarningAlert>();
 
         // ═══════════════════════════════════════════════════════════════════════
         // LUONG 1: Quet DailyVitalLogs chua co du bao
@@ -235,8 +226,7 @@ public class AiPredictionWorker : BackgroundService
                         riskLevelName1,
                         prediction.ModelVersion);
 
-                    var isHighPriority = aiAlertSettingsService.IsHighPriority(prediction);
-                    if (isHighPriority)
+                    if (prediction.RiskLevel >= 2)
                     {
                         var alert = new WarningAlert
                         {
@@ -249,13 +239,19 @@ public class AiPredictionWorker : BackgroundService
                         dbContext.WarningAlerts.Add(alert);
                         alertCount++;
 
-                        highRiskEmailCandidates.Add((log.PatientId, prediction));
-                        sosAlertCandidates.Add(alert);
+                        if (prediction.RiskScore > 0.70m)
+                        {
+                            highRiskEmailCandidates.Add((log.PatientId, prediction));
+                        }
 
                         _logger.LogWarning(
                             "[LUONG 1] => TAO CANH BAO MOI (RiskLevel={Level}, RiskScore={Score:F4}) cho BenhNhan={PatientId}",
                             prediction.RiskLevel, (double)prediction.RiskScore, log.PatientId);
 
+                        // KIEM TRA CA TRUC: neu khong co bac si nao online -> Thong bao khan cap cho benh nhan
+                        await NotifyPatientIfNoDoctorOnShiftAsync(
+                            dbContext, emailService, log.PatientId,
+                            prediction.RiskScore, prediction.RiskLevel, stoppingToken);
                     }
                     else
                     {
@@ -373,8 +369,7 @@ public class AiPredictionWorker : BackgroundService
                         riskLevelName2,
                         prediction.ModelVersion);
 
-                    var isHighPriority = aiAlertSettingsService.IsHighPriority(prediction);
-                    if (isHighPriority)
+                    if (prediction.RiskLevel >= 2)
                     {
                         var alert = new WarningAlert
                         {
@@ -387,13 +382,19 @@ public class AiPredictionWorker : BackgroundService
                         dbContext.WarningAlerts.Add(alert);
                         alertCount++;
 
-                        highRiskEmailCandidates.Add((record.PatientId, prediction));
-                        sosAlertCandidates.Add(alert);
+                        if (prediction.RiskScore > 0.70m)
+                        {
+                            highRiskEmailCandidates.Add((record.PatientId, prediction));
+                        }
 
                         _logger.LogWarning(
                             "[LUONG 2] => TAO CANH BAO MOI (RiskLevel={Level}, RiskScore={Score:F4}) cho BenhNhan={PatientId}",
                             prediction.RiskLevel, (double)prediction.RiskScore, record.PatientId);
 
+                        // KIEM TRA CA TRUC: neu khong co bac si nao online -> Thong bao khan cap cho benh nhan
+                        await NotifyPatientIfNoDoctorOnShiftAsync(
+                            dbContext, emailService, record.PatientId,
+                            prediction.RiskScore, prediction.RiskLevel, stoppingToken);
                     }
                     else
                     {
@@ -447,142 +448,21 @@ public class AiPredictionWorker : BackgroundService
                         candidate.Prediction.Id);
                 }
             }
-
-            foreach (var alert in sosAlertCandidates)
-            {
-                if (stoppingToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                try
-                {
-                    await sosNotificationService.NotifyEmergencyContactsAsync(alert.Id, stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(
-                        ex,
-                        "[SOS] Loi khi gui SOS nguoi than cho Alert={AlertId}, Patient={PatientId}.",
-                        alert.Id,
-                        alert.PatientId);
-                }
-            }
         }
 
         int total = pendingDailyLogs.Count + pendingClinicalRecords.Count;
 
         _logger.LogWarning(
             "\n" +
-            "╔═════════════════════════════════════════════════════════════════════════════╗\n" +
-            "║                 KẾT QUẢ QUÉT AI PREDICTION WORKER                           ║\n" +
-            "╠═════════════════════════════════════════════════════════════════════════════╣\n" +
-            "║                                                                             ║\n" +
-            "║   [{Time}]                                                ║\n" +
-            "║                                                                             ║\n" +
-            "║   • Tổng số mẫu đã quét     : {Total,-42} ║\n" +
-            "║   • Từ DailyVitalLogs       : {Daily,-42} ║\n" +
-            "║   • Từ ClinicalRecords      : {Clinic,-42} ║\n" +
-            "║                                                                             ║\n" +
-            "║   • Số mẫu thành công       : {Success,-42} ║\n" +
-            "║   • Số cảnh báo (Risk >= 2) : {Alert,-42} ║\n" +
-            "║                                                                             ║\n" +
-            "╚═════════════════════════════════════════════════════════════════════════════╝\n",
-            DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), total, pendingDailyLogs.Count, pendingClinicalRecords.Count, successCount, alertCount);
-
-        await SendMissingHighRiskNotificationsAsync(
-            dbContext,
-            emailTriggerService,
-            sosNotificationService,
-            aiAlertSettingsService,
-            stoppingToken);
-    }
-
-    private async Task SendMissingHighRiskNotificationsAsync(
-        SmartHealthMonitoringContext dbContext,
-        IEmailTriggerService emailTriggerService,
-        ISosNotificationService sosNotificationService,
-        IAiAlertSettingsService aiAlertSettingsService,
-        CancellationToken stoppingToken)
-    {
-        var predictionCandidates = await dbContext.AiriskPredictions
-            .Where(p => !p.IsDeleted &&
-                        p.RiskLevel >= 2 &&
-                        p.WarningAlert == null)
-            .OrderByDescending(p => p.PredictedAt)
-            .Take(100)
-            .ToListAsync(stoppingToken);
-
-        var predictionsWithoutAlert = predictionCandidates
-            .Where(aiAlertSettingsService.IsHighPriority)
-            .ToList();
-
-        foreach (var prediction in predictionsWithoutAlert)
-        {
-            dbContext.WarningAlerts.Add(new WarningAlert
-            {
-                PatientId = prediction.PatientId,
-                PredictionId = prediction.Id,
-                Status = 0,
-                FlaggedAt = DateTime.Now,
-                IsDeleted = false
-            });
-        }
-
-        if (predictionsWithoutAlert.Count > 0)
-        {
-            await dbContext.SaveChangesAsync(stoppingToken);
-            _logger.LogWarning(
-                "[EMAIL/SOS] Da tao bo sung {Count} WarningAlert cho prediction co muc uu tien Cao tren Dashboard.",
-                predictionsWithoutAlert.Count);
-        }
-
-        var alertCandidates = await dbContext.WarningAlerts
-            .AsNoTracking()
-            .Include(a => a.Prediction)
-            .Where(a => !a.IsDeleted &&
-                        !a.Prediction.IsDeleted &&
-                        a.Prediction.RiskLevel >= 2)
-            .OrderByDescending(a => a.FlaggedAt)
-            .Take(100)
-            .ToListAsync(stoppingToken);
-
-        var highRiskAlerts = alertCandidates
-            .Where(a => aiAlertSettingsService.IsHighPriority(a.Prediction))
-            .Select(a => new
-            {
-                AlertId = a.Id,
-                a.PatientId,
-                a.PredictionId,
-                a.Prediction.RiskScore
-            })
-            .ToList();
-
-        foreach (var alert in highRiskAlerts)
-        {
-            if (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-
-            try
-            {
-                await emailTriggerService.SendHealthWarningAsync(alert.PatientId, alert.PredictionId);
-            }
-            catch (Exception)
-            {
-                // Silently ignore email errors to prevent console spam
-            }
-
-            try
-            {
-                await sosNotificationService.NotifyEmergencyContactsAsync(alert.AlertId, stoppingToken);
-            }
-            catch (Exception)
-            {
-                // Silently ignore SOS errors to prevent console spam
-            }
-        }
+            "╔══════════════════════════════════════════════════════╗\n" +
+            "║          AI PREDICTION WORKER - TONG KET             ║\n" +
+            "╠══════════════════════════════════════════════════════╣\n" +
+            "║  Thanh cong : {SuccessCount}/{Total,-6}                               ║\n" +
+            "║  DailyLog   : {DailyCount,-6}                                 ║\n" +
+            "║  Clinical   : {ClinicalCount,-6}                                 ║\n" +
+            "║  Alert moi  : {AlertCount,-6}                                 ║\n" +
+            "╚══════════════════════════════════════════════════════╝",
+            successCount, total, pendingDailyLogs.Count, pendingClinicalRecords.Count, alertCount);
     }
 
     /// <summary>
