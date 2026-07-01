@@ -52,20 +52,7 @@
                     <h2>Xác nhận đặt lịch</h2>
                     <p class="mb-0 opacity-75 small">Vui lòng kiểm tra thông tin trước khi xác nhận</p>
                 </div>
-            </div>
-        </div>
-
-        <div class="confirm-body">
-
-            <!-- Countdown timer -->
-            <div class="countdown-bar">
-                <i class="fas fa-clock text-warning fa-lg"></i>
-                <div>
-                    <div class="small text-muted">Giờ giữ chỗ còn lại</div>
-                    <span class="time" id="countdown">05:00</span>
-                </div>
-                <div class="ms-auto small text-muted">Vui lòng hoàn tất trong thời gian này</div>
-            </div>
+                    <div class="confirm-body">
 
             <!-- Thông tin lịch hẹn -->
             <div class="info-row">
@@ -110,7 +97,7 @@
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Mô tả triệu chứng (tuỳ chọn)</label>
                     <textarea name="patientNote" class="form-control" rows="3"
-                              placeholder="Ví dụ: Đau ngực, khó thở, huyết áp cao..."></textarea>
+                               placeholder="Ví dụ: Đau ngực, khó thở, huyết áp cao..."></textarea>
                 </div>
 
                 <button type="submit" class="btn-confirm" id="submitBtn">
@@ -119,39 +106,10 @@
             </form>
 
             <div class="text-center mt-3">
-                <a href="javascript:history.back()" class="btn-back">
+                <a asp-action="FindDoctor" class="btn-back">
                     ← Quay lại chọn giờ khác
                 </a>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-// Countdown 5 phút
-const expireAt = new Date('@Model.SoftLockedUntil.ToString("yyyy-MM-ddTHH:mm:ss")Z');
-
-function updateCountdown() {
-    const now  = new Date();
-    const diff = Math.max(0, Math.floor((expireAt - now) / 1000));
-    const m    = Math.floor(diff / 60).toString().padStart(2, '0');
-    const s    = (diff % 60).toString().padStart(2, '0');
-    document.getElementById('countdown').textContent = `${m}:${s}`;
-
-    if (diff === 0) {
-        document.getElementById('submitBtn').disabled = true;
-        Swal.fire({
-            icon: 'warning',
-            title: 'Hết thời gian giữ chỗ!',
-            text: 'Vui lòng chọn lại khung giờ khác.',
-            confirmButtonText: 'Chọn lại'
-        }).then(() => window.location.href = '/Appointment/FindDoctor');
-    }
-}
-
-updateCountdown();
-setInterval(updateCountdown, 1000);
-</script>
-}
