@@ -458,11 +458,6 @@ public class AiPredictionWorker : BackgroundService
                 try
                 {
                     await sosNotificationService.NotifyEmergencyContactsAsync(alert.Id, stoppingToken);
-
-                    _logger.LogWarning(
-                        "[SOS] Da kiem tra/gui SOS nguoi than cho Alert={AlertId}, Patient={PatientId}.",
-                        alert.Id,
-                        alert.PatientId);
                 }
                 catch (Exception ex)
                 {
@@ -474,13 +469,6 @@ public class AiPredictionWorker : BackgroundService
                 }
             }
         }
-
-        await SendMissingHighRiskNotificationsAsync(
-            dbContext,
-            emailTriggerService,
-            sosNotificationService,
-            aiAlertSettingsService,
-            stoppingToken);
 
         int total = pendingDailyLogs.Count + pendingClinicalRecords.Count;
 
@@ -501,6 +489,13 @@ public class AiPredictionWorker : BackgroundService
             "║                                                                             ║\n" +
             "╚═════════════════════════════════════════════════════════════════════════════╝\n",
             DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), total, pendingDailyLogs.Count, pendingClinicalRecords.Count, successCount, alertCount);
+
+        await SendMissingHighRiskNotificationsAsync(
+            dbContext,
+            emailTriggerService,
+            sosNotificationService,
+            aiAlertSettingsService,
+            stoppingToken);
     }
 
     private async Task SendMissingHighRiskNotificationsAsync(
@@ -574,28 +569,18 @@ public class AiPredictionWorker : BackgroundService
             {
                 await emailTriggerService.SendHealthWarningAsync(alert.PatientId, alert.PredictionId);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(
-                    ex,
-                    "[EMAIL] Loi khi gui/kiem tra mail benh nhan cho Alert={AlertId}, Patient={PatientId}, RiskScore={RiskScore:F4}.",
-                    alert.AlertId,
-                    alert.PatientId,
-                    (double)alert.RiskScore);
+                // Silently ignore email errors to prevent console spam
             }
 
             try
             {
                 await sosNotificationService.NotifyEmergencyContactsAsync(alert.AlertId, stoppingToken);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(
-                    ex,
-                    "[SOS] Loi khi gui/kiem tra SOS nguoi than cho Alert={AlertId}, Patient={PatientId}, RiskScore={RiskScore:F4}.",
-                    alert.AlertId,
-                    alert.PatientId,
-                    (double)alert.RiskScore);
+                // Silently ignore SOS errors to prevent console spam
             }
         }
     }
