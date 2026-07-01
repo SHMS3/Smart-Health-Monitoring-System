@@ -96,22 +96,35 @@
                     <span class="badge-specialty">@item.Doctor.Specialty</span>
                 </div>
                 <div class="ms-auto text-muted small">
-                    <i class="fas fa-clock me-1"></i>@item.AvailableSlots.Count slot trống
+                    <i class="fas fa-calendar-week me-1"></i>@item.TotalAvailableSlots slot trống trong 7 ngày
                 </div>
             </div>
-            <div class="slot-grid">
-                @if (item.AvailableSlots.Any())
+            <div class="slot-grid flex-column">
+                @if (item.TotalAvailableSlots > 0)
                 {
-                    @foreach (var slot in item.AvailableSlots)
+                    foreach (var dateGroup in item.WeeklySlots.OrderBy(k => k.Key))
                     {
-                        <a asp-action="Book" asp-route-slotId="@slot.Id" class="slot-btn available">
-                            @slot.SlotStart.ToString("HH:mm") – @slot.SlotEnd.ToString("HH:mm")
-                        </a>
+                        if (dateGroup.Value.Any())
+                        {
+                            <div class="w-100 mt-2 mb-2">
+                                <div class="fw-bold text-success mb-2" style="font-size: 0.9rem;">
+                                    <i class="fas fa-calendar-day me-1"></i>@dateGroup.Key.ToString("dd/MM/yyyy")
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach(var slot in dateGroup.Value)
+                                    {
+                                        <a href="/Appointment/Book?slotId=@slot.Id" class="slot-btn available">
+                                            @slot.SlotStart.ToString("HH:mm") - @slot.SlotEnd.ToString("HH:mm")
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
                     }
                 }
                 else
                 {
-                    <p class="no-slots"><i class="fas fa-calendar-times me-2"></i>Không còn slot trống cho ngày này.</p>
+                    <div class="no-slots">Không có ca khám trống nào trong 7 ngày tới.</div>
                 }
             </div>
         </div>

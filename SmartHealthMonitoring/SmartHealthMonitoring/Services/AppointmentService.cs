@@ -41,6 +41,22 @@ public class AppointmentService : IAppointmentService
             .ToListAsync();
     }
 
+    public async Task<List<AppointmentSlot>> GetAvailableSlotsRangeAsync(int doctorId, DateOnly startDate, DateOnly endDate)
+    {
+        var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var end   = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+
+        return await _context.AppointmentSlots
+            .Where(s =>
+                s.DoctorId == doctorId &&
+                s.SlotStart >= start &&
+                s.SlotStart <= end &&
+                (s.Status == AppointmentSlotStatus.Available ||
+                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow)))
+            .OrderBy(s => s.SlotStart)
+            .ToListAsync();
+    }
+
     public async Task<List<Appointment>> GetPatientAppointmentsAsync(int patientId)
     {
         return await _context.Appointments

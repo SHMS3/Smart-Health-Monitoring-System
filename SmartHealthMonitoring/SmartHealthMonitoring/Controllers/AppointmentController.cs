@@ -59,18 +59,32 @@ public class AppointmentController : Controller
 
         var doctors = await query.ToListAsync();
 
-        // Với mỗi bác sĩ, lấy số slot còn trống
+        // Với mỗi bác sĩ, lấy số slot còn trống trong 7 ngày tới (từ selectedDate)
         var doctorSlotsData = new List<DoctorSlotViewModel>();
+        var endDate = selectedDate.AddDays(6);
+
         foreach (var doc in doctors)
         {
-            var slots = await _appointmentService.GetAvailableSlotsAsync(doc.Id, selectedDate);
+            var slots = await _appointmentService.GetAvailableSlotsRangeAsync(doc.Id, selectedDate, endDate);
+            
+            // Nhóm slot theo từng ngày
+            var weeklySlots = slots.GroupBy(s => DateOnly.FromDateTime(s.SlotStart.Date))
+                                   .ToDictionary(g => g.Key, g => g.ToList());
+
             doctorSlotsData.Add(new DoctorSlotViewModel
             {
-                Doctor         = doc,
-                AvailableSlots = slots,
-                SelectedDate   = selectedDate
+                Doctor       = doc,
+                WeeklySlots  = weeklySlots,
+                SelectedDate = selectedDate
             });
         }
+
+        // Sắp xếp: Ai có slot trống đưa lên trên cùng, sau đó xếp theo tên
+        doctorSlotsData = doctorSlotsData
+            .OrderByDescending(d => d.TotalAvailableSlots > 0)
+            .ThenByDescending(d => d.TotalAvailableSlots)
+            .ThenBy(d => d.Doctor.User.FullName)
+            .ToList();
 
         ViewBag.Specialty    = specialty;
         ViewBag.SelectedDate = selectedDate;
@@ -218,8 +232,9 @@ public class AppointmentController : Controller
 public class DoctorSlotViewModel
 {
     public Doctor Doctor { get; set; } = null!;
-    public List<AppointmentSlot> AvailableSlots { get; set; } = new();
+    public Dictionary<DateOnly, List<AppointmentSlot>> WeeklySlots { get; set; } = new();
     public DateOnly SelectedDate { get; set; }
+    public int TotalAvailableSlots => WeeklySlots.Values.Sum(v => v.Count);
 }
 
 public class BookAppointmentViewModel
