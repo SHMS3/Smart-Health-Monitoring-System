@@ -97,9 +97,11 @@ public class AppointmentController : Controller
             .FirstOrDefaultAsync(s => s.Id == slotId);
         if (slot == null) return NotFound();
 
-        if (slot.Status == AppointmentSlotStatus.Booked)
+        // Cố gắng giữ chỗ (SoftLock) khung giờ cho bệnh nhân hiện tại
+        var (lockSuccess, lockMessage) = await _appointmentService.SoftLockSlotAsync(slotId, patient.Id);
+        if (!lockSuccess)
         {
-            TempData["Error"] = "Khung giờ này đã có người đặt. Vui lòng chọn giờ khác!";
+            TempData["Error"] = lockMessage;
             return RedirectToAction(nameof(FindDoctor));
         }
 
