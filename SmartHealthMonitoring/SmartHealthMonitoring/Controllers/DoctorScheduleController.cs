@@ -50,7 +50,33 @@ public class DoctorScheduleController : Controller
         var doctor = await GetCurrentDoctorAsync();
         if (doctor == null) return Forbid();
 
-        // Xóa tất cả schedule cũ và tạo lại
+        // 1. Validate overlaps and logical errors
+        var groupedSlots = slots.GroupBy(s => s.DayOfWeek);
+        foreach (var group in groupedSlots)
+        {
+            var dailySlots = group.OrderBy(s => TimeOnly.Parse(s.StartTime)).ToList();
+            for (int i = 0; i < dailySlots.Count; i++)
+            {
+                var currentStart = TimeOnly.Parse(dailySlots[i].StartTime);
+                var currentEnd = TimeOnly.Parse(dailySlots[i].EndTime);
+
+                if (currentStart >= currentEnd)
+                {
+                    return BadRequest(new { success = false, message = "Giờ bắt đầu phải nhỏ hơn giờ kết thúc." });
+                }
+
+                if (i > 0)
+                {
+                    var prevEnd = TimeOnly.Parse(dailySlots[i - 1].EndTime);
+                    if (currentStart < prevEnd)
+                    {
+                        return BadRequest(new { success = false, message = $"Phát hiện trùng lặp thời gian làm việc vào Thứ {dailySlots[i].DayOfWeek}." });
+                    }
+                }
+            }
+        }
+
+        // 2. Xóa tất cả schedule cũ và tạo lại
         var existing = _context.DoctorWorkSchedules.Where(s => s.DoctorId == doctor.Id);
         _context.DoctorWorkSchedules.RemoveRange(existing);
 

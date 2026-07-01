@@ -232,7 +232,12 @@ async function saveSchedule() {
     if (res.ok) {
         Swal.fire({ icon: 'success', title: 'Đã lưu!', text: 'Slot sẽ được sinh tự động ngay.', timer: 2000, showConfirmButton: false });
     } else {
-        Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Không thể lưu lịch. Vui lòng thử lại.' });
+        let errorMsg = 'Không thể lưu lịch. Vui lòng thử lại.';
+        try {
+            const data = await res.json();
+            if (data && data.message) errorMsg = data.message;
+        } catch(e) {}
+        Swal.fire({ icon: 'error', title: 'Lỗi', text: errorMsg });
     }
 }
 </script>
