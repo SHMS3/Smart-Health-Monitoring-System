@@ -185,19 +185,40 @@ function addSlot(dow) {
 async function saveSchedule() {
     const payload = [];
 
-    document.querySelectorAll('.day-card').forEach(card => {
+    const cards = Array.from(document.querySelectorAll('.day-card'));
+    for (const card of cards) {
         const dow      = parseInt(card.dataset.dow);
         const isActive = card.querySelector('.day-toggle').checked;
-        if (!isActive) return;
+        if (!isActive) continue;
 
-        card.querySelectorAll('.slot-row').forEach(row => {
+        const timeRanges = [];
+        const rows = Array.from(card.querySelectorAll('.slot-row'));
+        
+        for (const row of rows) {
             const start = row.querySelector('[name=startTime]').value;
             const end   = row.querySelector('[name=endTime]').value;
             if (start && end) {
+                if (start >= end) {
+                    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Giờ bắt đầu phải nhỏ hơn giờ kết thúc.' });
+                    return;
+                }
+                
+                const isOverlap = timeRanges.some(range => 
+                    (start >= range.start && start < range.end) || 
+                    (end > range.start && end <= range.end) ||
+                    (start <= range.start && end >= range.end)
+                );
+                
+                if (isOverlap) {
+                    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Các ca làm việc trong cùng một ngày không được trùng lặp thời gian.' });
+                    return;
+                }
+                
+                timeRanges.push({ start, end });
                 payload.push({ dayOfWeek: dow, startTime: start, endTime: end, slotDurationMinutes: 30 });
             }
-        });
-    });
+        }
+    }
 
     const tokenElement = document.querySelector('input[name=__RequestVerificationToken]');
     const token = tokenElement ? tokenElement.value : '';
