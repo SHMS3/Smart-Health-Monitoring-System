@@ -536,7 +536,7 @@ public partial class SmartHealthMonitoringContext : DbContext
 
         // 1. Users (10 Bác sĩ ID 1-10, 10 Bệnh nhân ID 11-20)
         modelBuilder.Entity<User>().HasData(
-            new User { Id = 1, Email = "    ", PasswordHash = "hash123", FullName = "Nguyễn Văn An", Role = 1, CreatedAt = baseDate },
+            new User { Id = 1, Email = "dr.an@smarthealth.vn", PasswordHash = "hash123", FullName = "Nguyễn Văn An", Role = 1, CreatedAt = baseDate },
             new User { Id = 2, Email = "dr.binh@smarthealth.vn", PasswordHash = "hash123", FullName = "Trần Thị Bình", Role = 1, CreatedAt = baseDate },
             new User { Id = 3, Email = "dr.cuong@smarthealth.vn", PasswordHash = "hash123", FullName = "Phạm Minh Cường", Role = 1, CreatedAt = baseDate },
             new User { Id = 4, Email = "dr.dung@smarthealth.vn", PasswordHash = "hash123", FullName = "Lê Tuấn Dũng", Role = 1, CreatedAt = baseDate },

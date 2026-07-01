@@ -2,8 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Hubs;
 
 namespace SmartHealthMonitoring.Workers;
 
@@ -31,7 +33,14 @@ public class AppointmentCleanupWorker : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await RunCleanupAsync(stoppingToken);
+            try
+            {
+                await RunCleanupAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi xảy ra trong quá trình dọn dẹp lịch hẹn.");
+            }
             await Task.Delay(_runInterval, stoppingToken);
         }
     }
@@ -83,6 +92,24 @@ public class AppointmentCleanupWorker : BackgroundService
             _logger.LogInformation("[Cleanup] Marked {Count} appointments as NoShow.", noShowAppointments.Count);
 
         if (expiredSoftLocks.Any() || noShowAppointments.Any())
+        {
             await context.SaveChangesAsync(ct);
+            try
+            {
+                var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<AppointmentHub>>();
+                foreach (var slot in expiredSoftLocks)
+                {
+                    await hubContext.Clients.All.SendAsync("SlotStatusChanged", slot.Id, "Available");
+                }
+                foreach (var appt in noShowAppointments)
+                {
+                    await hubContext.Clients.All.SendAsync("SlotStatusChanged", appt.SlotId, "Available");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error broadcasting slot cleanup updates.");
+            }
+        }
     }
 }

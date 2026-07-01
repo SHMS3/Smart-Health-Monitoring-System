@@ -1,0 +1,115 @@
+@model SmartHealthMonitoring.Models.Appointment
+@{
+    ViewData["Title"] = "Lịch hẹn cần xác nhận - SmartHealth";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+    .confirm-card { max-width: 780px; margin: 40px auto; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 40px; }
+    .success-icon-wrap { text-align: center; margin-bottom: 20px; }
+    .success-icon { font-size: 4rem; color: #27ae60; }
+    .confirm-title { font-size: 1.8rem; font-weight: 700; text-align: center; color: #0f172a; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .confirm-desc { text-align: center; color: #475569; font-size: 0.92rem; margin-bottom: 24px; line-height: 1.6; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .email-alert { text-align: center; color: #d97706; font-weight: 500; font-size: 0.9rem; margin-bottom: 32px; }
+    
+    .section-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 20px; background-color: #f8fafc; }
+    .section-title { font-size: 1rem; font-weight: 700; color: #0284c7; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 8px; }
+    
+    .info-row { display: flex; padding: 8px 0; font-size: 0.9rem; border-bottom: 1px dashed #e2e8f0; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { width: 220px; color: #64748b; font-weight: 500; }
+    .info-value { flex: 1; color: #0f172a; font-weight: 500; }
+    
+    .footer-text { text-align: center; margin-top: 36px; font-size: 0.9rem; color: #64748b; font-style: italic; }
+    .footer-text a { color: #0ea5e9; text-decoration: none; font-weight: 600; }
+    .footer-text a:hover { text-decoration: underline; color: #0284c7; }
+</style>
+
+<div class="container pb-5">
+    <div class="confirm-card">
+        <div class="success-icon-wrap">
+            <i class="fas fa-check-circle success-icon"></i>
+        </div>
+        <h1 class="confirm-title">Lịch hẹn cần xác nhận</h1>
+        <p class="confirm-desc">
+            Yêu cầu về lịch hẹn khám của quý khách cần được tổng đài viên SmartHealth gọi lại để xác nhận thông tin.
+            Quý khách vui lòng để ý điện thoại và chờ nhân viên liên hệ xác nhận chính xác lịch hẹn khám.
+            Cảm ơn quý khách đã lựa chọn dịch vụ của SmartHealth.
+        </p>
+        <p class="email-alert">
+            Email thông tin lịch hẹn đã được gửi cho quý khách (nếu quý khách để lại email chính xác)
+        </p>
+
+        <!-- Dịch vụ -->
+        <div class="section-box">
+            <h3 class="section-title"><i class="fas fa-folder-plus"></i> Dịch vụ</h3>
+            <div class="info-row">
+                <div class="info-label">Hình thức</div>
+                <div class="info-value">Khám chuyên khoa @Model.Doctor.Specialty</div>
+            </div>
+        </div>
+
+        <!-- Khách hàng -->
+        <div class="section-box">
+            <h3 class="section-title"><i class="fas fa-user"></i> Khách hàng</h3>
+            <div class="info-row">
+                <div class="info-label">Họ và tên</div>
+                <div class="info-value">@Model.Patient.User.FullName</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Ngày tháng năm sinh</div>
+                <div class="info-value">@Model.Patient.DateOfBirth.ToString("yyyy-MM-dd")</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Giới tính</div>
+                <div class="info-value">@(Model.Patient.Sex == 1 ? "Nam" : "Nữ")</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Số điện thoại</div>
+                <div class="info-value">@Model.Patient.Phone</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Email</div>
+                <div class="info-value">@Model.Patient.User.Email</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Lý do khám</div>
+                <div class="info-value">@Model.PatientNote</div>
+            </div>
+        </div>
+
+        <!-- Bác sĩ -->
+        <div class="section-box">
+            <h3 class="section-title"><i class="fas fa-user-md"></i> Bác sĩ</h3>
+            <div class="info-row">
+                <div class="info-label">Thời gian khám</div>
+                <div class="info-value">@Model.Slot.SlotStart.ToString("HH:mm") - @Model.Slot.SlotEnd.ToString("HH:mm") (Ngày @Model.Slot.SlotStart.ToString("dd/MM/yyyy"))</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Bệnh viện/Phòng khám</div>
+                <div class="info-value">Hệ thống Y tế SmartHealth</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Chuyên khoa</div>
+                <div class="info-value">@Model.Doctor.Specialty</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Bác sĩ</div>
+                <div class="info-value">BS. @Model.Doctor.User.FullName - Bác sĩ chuyên khoa II</div>
+            </div>
+        </div>
+
+        <p class="footer-text">
+            *Nếu quý khách cần thay đổi/huỷ lịch hẹn, vui lòng để lại yêu cầu <a asp-action="SupportPortal" asp-route-appointmentId="@Model.Id">TẠI ĐÂY</a>
+        </p>
+
+        <div class="text-center mt-4">
+            <a asp-action="FindDoctor" class="btn btn-outline-secondary" style="border-radius: 8px; font-weight: 500; padding: 8px 20px;">
+                Quay lại đặt lịch khám
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Hubs;
 
 namespace SmartHealthMonitoring.Services;
 
@@ -13,11 +15,16 @@ public class AppointmentService : IAppointmentService
 {
     private readonly SmartHealthMonitoringContext _context;
     private readonly ILogger<AppointmentService> _logger;
+    private readonly IHubContext<AppointmentHub> _hubContext;
 
-    public AppointmentService(SmartHealthMonitoringContext context, ILogger<AppointmentService> logger)
+    public AppointmentService(
+        SmartHealthMonitoringContext context,
+        ILogger<AppointmentService> logger,
+        IHubContext<AppointmentHub> hubContext)
     {
         _context = context;
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -227,5 +234,164 @@ public class AppointmentService : IAppointmentService
             slot.Status = AppointmentSlotStatus.Blocked;
 
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<bool> ReleaseSoftLockSlotAsync(int slotId, int patientId)
+    {
+        var slot = await _context.AppointmentSlots.FindAsync(slotId);
+        if (slot != null && slot.Status == AppointmentSlotStatus.SoftLocked && slot.PatientId == patientId)
+        {
+            slot.Status          = AppointmentSlotStatus.Available;
+            slot.PatientId       = null;
+            slot.SoftLockedUntil = null;
+            await _context.SaveChangesAsync();
+            
+            await _hubContext.Clients.All.SendAsync("SlotStatusChanged", slotId, "Available");
+            return true;
+        }
+        return false;
+    }
+
+    public async Task<(bool success, string message, Appointment? appointment)> CreatePendingAppointmentAsync(
+        int slotId, int patientId, string? note)
+    {
+        var slot = await _context.AppointmentSlots.FirstOrDefaultAsync(s => s.Id == slotId);
+        if (slot == null)
+            return (false, "Slot không tồn tại.", null);
+
+        if (slot.Status == AppointmentSlotStatus.Booked)
+            return (false, "Khung giờ này đã có người đặt.", null);
+
+        if (slot.Status == AppointmentSlotStatus.Blocked)
+            return (false, "Bác sĩ đã chặn khung giờ này.", null);
+
+        if (slot.Status == AppointmentSlotStatus.SoftLocked && slot.PatientId != patientId && slot.SoftLockedUntil > DateTime.UtcNow)
+            return (false, "Khung giờ này đang được người khác giữ chỗ. Vui lòng thử lại sau ít phút.", null);
+
+        slot.Status = AppointmentSlotStatus.SoftLocked;
+        slot.PatientId = patientId;
+        slot.SoftLockedUntil = DateTime.MaxValue; // SoftLock vĩnh viễn chờ duyệt
+
+        var appointment = new Appointment
+        {
+            SlotId = slotId,
+            PatientId = patientId,
+            DoctorId = slot.DoctorId,
+            Status = AppointmentStatus.Pending,
+            PatientNote = note,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Appointments.Add(appointment);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+            await _hubContext.Clients.All.SendAsync("SlotStatusChanged", slotId, "SoftLocked");
+            return (true, "Yêu cầu đặt lịch hẹn đã được gửi thành công, vui lòng chờ duyệt.", appointment);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return (false, "Khung giờ này vừa được người khác chọn. Vui lòng chọn giờ khác.", null);
+        }
+    }
+
+    public async Task<bool> RequestCancelAppointmentAsync(int appointmentId, string reason)
+    {
+        var appointment = await _context.Appointments.FindAsync(appointmentId);
+        if (appointment == null || appointment.Status != AppointmentStatus.Confirmed)
+            return false;
+
+        appointment.Status = AppointmentStatus.CancellationPending;
+        appointment.PatientNote = (appointment.PatientNote ?? "") + "\n[Yêu cầu huỷ]: " + reason;
+        appointment.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<List<Appointment>> GetPendingAppointmentsAsync()
+    {
+        return await _context.Appointments
+            .Include(a => a.Slot)
+            .Include(a => a.Patient).ThenInclude(p => p.User)
+            .Include(a => a.Doctor).ThenInclude(d => d.User)
+            .Where(a => a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.CancellationPending)
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<bool> ApproveAppointmentBookingAsync(int appointmentId)
+    {
+        var appointment = await _context.Appointments
+            .Include(a => a.Slot)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId);
+
+        if (appointment == null || appointment.Status != AppointmentStatus.Pending)
+            return false;
+
+        appointment.Status = AppointmentStatus.Confirmed;
+        appointment.UpdatedAt = DateTime.UtcNow;
+
+        appointment.Slot.Status = AppointmentSlotStatus.Booked;
+        appointment.Slot.SoftLockedUntil = null;
+
+        await _context.SaveChangesAsync();
+        await _hubContext.Clients.All.SendAsync("SlotBooked", appointment.SlotId);
+        return true;
+    }
+
+    public async Task<bool> RejectAppointmentBookingAsync(int appointmentId)
+    {
+        var appointment = await _context.Appointments
+            .Include(a => a.Slot)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId);
+
+        if (appointment == null || appointment.Status != AppointmentStatus.Pending)
+            return false;
+
+        appointment.Status = AppointmentStatus.CancelledByDoctor;
+        appointment.UpdatedAt = DateTime.UtcNow;
+
+        appointment.Slot.Status = AppointmentSlotStatus.Available;
+        appointment.Slot.PatientId = null;
+        appointment.Slot.SoftLockedUntil = null;
+
+        await _context.SaveChangesAsync();
+        await _hubContext.Clients.All.SendAsync("SlotStatusChanged", appointment.SlotId, "Available");
+        return true;
+    }
+
+    public async Task<bool> ApproveAppointmentCancellationAsync(int appointmentId)
+    {
+        var appointment = await _context.Appointments
+            .Include(a => a.Slot)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId);
+
+        if (appointment == null || appointment.Status != AppointmentStatus.CancellationPending)
+            return false;
+
+        appointment.Status = AppointmentStatus.CancelledByPatient;
+        appointment.UpdatedAt = DateTime.UtcNow;
+
+        appointment.Slot.Status = AppointmentSlotStatus.Available;
+        appointment.Slot.PatientId = null;
+        appointment.Slot.SoftLockedUntil = null;
+
+        await _context.SaveChangesAsync();
+        await _hubContext.Clients.All.SendAsync("SlotStatusChanged", appointment.SlotId, "Available");
+        return true;
+    }
+
+    public async Task<bool> RejectAppointmentCancellationAsync(int appointmentId)
+    {
+        var appointment = await _context.Appointments.FindAsync(appointmentId);
+        if (appointment == null || appointment.Status != AppointmentStatus.CancellationPending)
+            return false;
+
+        appointment.Status = AppointmentStatus.Confirmed;
+        appointment.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return true;
     }
 }

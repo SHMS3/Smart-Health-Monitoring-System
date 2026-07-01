@@ -104,7 +104,7 @@
                 {
                     @foreach (var slot in item.AvailableSlots)
                     {
-                        <a asp-action="Book" asp-route-slotId="@slot.Id" class="slot-btn available">
+                        <a asp-action="VerifyOtp" asp-route-slotId="@slot.Id" class="slot-btn available">
                             @slot.SlotStart.ToString("HH:mm") – @slot.SlotEnd.ToString("HH:mm")
                         </a>
                     }
