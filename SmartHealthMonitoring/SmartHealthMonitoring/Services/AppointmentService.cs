@@ -64,6 +64,60 @@ public class AppointmentService : IAppointmentService
             .ToListAsync();
     }
 
+    public async Task<int> RefreshDoctorSlotsAsync(int doctorId)
+    {
+        var now = DateTime.UtcNow;
+
+        // 1. Xóa các slot Available trong tương lai để dọn chỗ cho lịch mới
+        var futureAvailableSlots = await _context.AppointmentSlots
+            .Where(s => s.DoctorId == doctorId && s.SlotStart > now && s.Status == AppointmentSlotStatus.Available)
+            .ToListAsync();
+            
+        _context.AppointmentSlots.RemoveRange(futureAvailableSlots);
+
+        // 2. Sinh lại slot cho 14 ngày tới theo lịch mới
+        var today = DateOnly.FromDateTime(now);
+        var genUntil = today.AddDays(14);
+        var schedules = await _context.DoctorWorkSchedules
+            .Where(s => s.DoctorId == doctorId && s.IsActive)
+            .ToListAsync();
+
+        int created = 0;
+        foreach (var schedule in schedules)
+        {
+            for (var d = today; d <= genUntil; d = d.AddDays(1))
+            {
+                if ((int)d.DayOfWeek != schedule.DayOfWeek) continue;
+
+                var current = schedule.StartTime;
+                while (current.Add(TimeSpan.FromMinutes(schedule.SlotDurationMinutes)) <= schedule.EndTime)
+                {
+                    var slotStart = d.ToDateTime(current, DateTimeKind.Utc);
+                    var slotEnd   = slotStart.AddMinutes(schedule.SlotDurationMinutes);
+
+                    // Bỏ qua nếu slot giờ này đã có người đặt (Booked/SoftLocked/Blocked)
+                    bool exists = await _context.AppointmentSlots
+                        .AnyAsync(s => s.DoctorId == doctorId && s.SlotStart == slotStart);
+
+                    if (!exists)
+                    {
+                        _context.AppointmentSlots.Add(new AppointmentSlot
+                        {
+                            DoctorId  = doctorId,
+                            SlotStart = slotStart,
+                            SlotEnd   = slotEnd,
+                            Status    = AppointmentSlotStatus.Available
+                        });
+                        created++;
+                    }
+                    current = current.Add(TimeSpan.FromMinutes(schedule.SlotDurationMinutes));
+                }
+            }
+        }
+        await _context.SaveChangesAsync();
+        return created;
+    }
+
     public async Task<List<Appointment>> GetPatientAppointmentsAsync(int patientId)
     {
         return await _context.Appointments

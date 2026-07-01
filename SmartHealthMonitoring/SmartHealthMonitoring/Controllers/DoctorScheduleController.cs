@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
 using System.Security.Claims;
 
@@ -15,10 +16,12 @@ namespace SmartHealthMonitoring.Controllers;
 public class DoctorScheduleController : Controller
 {
     private readonly SmartHealthMonitoringContext _context;
+    private readonly IAppointmentService _appointmentService;
 
-    public DoctorScheduleController(SmartHealthMonitoringContext context)
+    public DoctorScheduleController(SmartHealthMonitoringContext context, IAppointmentService appointmentService)
     {
         _context = context;
+        _appointmentService = appointmentService;
     }
 
     private async Task<Doctor?> GetCurrentDoctorAsync()
@@ -94,6 +97,10 @@ public class DoctorScheduleController : Controller
         }
 
         await _context.SaveChangesAsync();
+        
+        // 3. Tự động cập nhật lại các Slot cho 14 ngày tiếp theo ngay lập tức
+        await _appointmentService.RefreshDoctorSlotsAsync(doctor.Id);
+
         TempData["Success"] = "Lịch làm việc đã được cập nhật!";
         return Ok(new { success = true });
     }
