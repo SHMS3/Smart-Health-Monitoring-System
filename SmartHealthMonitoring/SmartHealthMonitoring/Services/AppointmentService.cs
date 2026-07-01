@@ -97,15 +97,16 @@ public class AppointmentService : IAppointmentService
         if (slot.Status == AppointmentSlotStatus.Blocked)
             return (false, "Bác sĩ đã chặn khung giờ này.");
 
-        // Giữ chỗ 5 phút
+        // Giữ chỗ 10 phút
         slot.Status = AppointmentSlotStatus.SoftLocked;
         slot.PatientId = patientId;
-        slot.SoftLockedUntil = DateTime.UtcNow.AddMinutes(5);
+        slot.SoftLockedUntil = DateTime.UtcNow.AddMinutes(10);
 
         try
         {
             await _context.SaveChangesAsync();
-            return (true, "Đã giữ chỗ trong 5 phút. Vui lòng hoàn tất đặt lịch.");
+            await _hubContext.Clients.All.SendAsync("SlotStatusChanged", slotId, "SoftLocked");
+            return (true, "Đã giữ chỗ trong 10 phút. Vui lòng hoàn tất đặt lịch.");
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -337,6 +338,7 @@ public class AppointmentService : IAppointmentService
 
         await _context.SaveChangesAsync();
         await _hubContext.Clients.All.SendAsync("SlotBooked", appointment.SlotId);
+        await _hubContext.Clients.All.SendAsync("SlotStatusChanged", appointment.SlotId, "Booked");
         return true;
     }
 

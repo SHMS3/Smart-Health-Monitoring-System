@@ -104,7 +104,7 @@
                 {
                     @foreach (var slot in item.AvailableSlots)
                     {
-                        <a asp-action="VerifyOtp" asp-route-slotId="@slot.Id" class="slot-btn available">
+                        <a id="slot-btn-@slot.Id" data-slot-id="@slot.Id" asp-action="VerifyOtp" asp-route-slotId="@slot.Id" class="slot-btn available">
                             @slot.SlotStart.ToString("HH:mm") – @slot.SlotEnd.ToString("HH:mm")
                         </a>
                     }
@@ -117,3 +117,45 @@
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Khởi tạo kết nối SignalR tới appointmentHub
+            const appointmentConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/appointmentHub")
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.Warning)
+                .build();
+
+            appointmentConnection.on("SlotStatusChanged", function (slotId, status) {
+                console.log(`[SignalR] Nhận thay đổi trạng thái slot ${slotId}: ${status}`);
+                const slotBtn = document.getElementById(`slot-btn-${slotId}`);
+                if (slotBtn) {
+                    if (status === "Available") {
+                        // Trả lại trạng thái khả dụng và hiện lại slot
+                        slotBtn.style.display = "inline-block";
+                        slotBtn.classList.remove("taken");
+                        slotBtn.classList.add("available");
+                    } else {
+                        // Ẩn slot đi khỏi giao diện khi đã bị giữ hoặc đã đặt
+                        slotBtn.style.display = "none";
+                    }
+                }
+            });
+
+            // Lắng nghe thêm sự kiện SlotBooked
+            appointmentConnection.on("SlotBooked", function (slotId) {
+                console.log(`[SignalR] Slot ${slotId} đã được đặt.`);
+                const slotBtn = document.getElementById(`slot-btn-${slotId}`);
+                if (slotBtn) {
+                    slotBtn.style.display = "none";
+                }
+            });
+
+            appointmentConnection.start()
+                .then(() => console.log("[SignalR] Kết nối thành công tới AppointmentHub."))
+                .catch(err => console.error("[SignalR] Lỗi kết nối:", err));
+        });
+    </script>
+}
