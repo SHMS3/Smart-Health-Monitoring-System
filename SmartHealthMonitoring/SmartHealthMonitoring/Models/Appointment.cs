@@ -62,5 +62,11 @@ public enum AppointmentStatus
     CancelledByDoctor = 3,
 
     /// <summary>Bệnh nhân không đến (hệ thống tự đánh dấu)</summary>
-    NoShow = 4
+    NoShow = 4,
+
+    /// <summary>Chờ duyệt đặt lịch</summary>
+    Pending = 5,
+
+    /// <summary>Chờ duyệt huỷ lịch</summary>
+    CancellationPending = 6
 }
