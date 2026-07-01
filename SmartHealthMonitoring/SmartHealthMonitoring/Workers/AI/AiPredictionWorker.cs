@@ -486,15 +486,21 @@ public class AiPredictionWorker : BackgroundService
 
         _logger.LogWarning(
             "\n" +
-            "╔══════════════════════════════════════════════════════╗\n" +
-            "║          AI PREDICTION WORKER - TONG KET             ║\n" +
-            "╠══════════════════════════════════════════════════════╣\n" +
-            "║  Thanh cong : {SuccessCount}/{Total,-6}                               ║\n" +
-            "║  DailyLog   : {DailyCount,-6}                                 ║\n" +
-            "║  Clinical   : {ClinicalCount,-6}                                 ║\n" +
-            "║  Alert moi  : {AlertCount,-6}                                 ║\n" +
-            "╚══════════════════════════════════════════════════════╝",
-            successCount, total, pendingDailyLogs.Count, pendingClinicalRecords.Count, alertCount);
+            "╔═════════════════════════════════════════════════════════════════════════════╗\n" +
+            "║                 KẾT QUẢ QUÉT AI PREDICTION WORKER                           ║\n" +
+            "╠═════════════════════════════════════════════════════════════════════════════╣\n" +
+            "║                                                                             ║\n" +
+            "║   [{Time}]                                                ║\n" +
+            "║                                                                             ║\n" +
+            "║   • Tổng số mẫu đã quét     : {Total,-42} ║\n" +
+            "║   • Từ DailyVitalLogs       : {Daily,-42} ║\n" +
+            "║   • Từ ClinicalRecords      : {Clinic,-42} ║\n" +
+            "║                                                                             ║\n" +
+            "║   • Số mẫu thành công       : {Success,-42} ║\n" +
+            "║   • Số cảnh báo (Risk >= 2) : {Alert,-42} ║\n" +
+            "║                                                                             ║\n" +
+            "╚═════════════════════════════════════════════════════════════════════════════╝\n",
+            DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"), total, pendingDailyLogs.Count, pendingClinicalRecords.Count, successCount, alertCount);
     }
 
     private async Task SendMissingHighRiskNotificationsAsync(
