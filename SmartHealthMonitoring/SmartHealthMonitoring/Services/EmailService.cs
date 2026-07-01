@@ -46,7 +46,7 @@ namespace SmartHealthMonitoring.Services
                 await smtp.SendAsync(email);
                 await smtp.DisconnectAsync(true);
 
-                _logger.LogInformation($"Email đã gửi thành công tới {toEmail}");
+                _logger.LogDebug($"Email đã gửi thành công tới {toEmail}");
             }
             catch (Exception ex)
             {
