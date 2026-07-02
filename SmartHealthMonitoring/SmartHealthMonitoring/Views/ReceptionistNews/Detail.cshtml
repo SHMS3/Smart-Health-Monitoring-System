@@ -1,0 +1,191 @@
+@model SmartHealthMonitoring.Models.HealthNewsPost
+
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .news-detail-hero {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        padding: 56px 0 80px;
+        position: relative;
+        overflow: hidden;
+    }
+    .news-detail-hero::before {
+        content: '';
+        position: absolute;
+        width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(26,115,200,0.2) 0%, transparent 70%);
+        top: -150px; right: -100px;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .news-hero-tag {
+        display: inline-block;
+        background: rgba(26,115,200,0.3);
+        border: 1px solid rgba(26,115,200,0.5);
+        color: #90caf9;
+        font-size: 0.75rem; font-weight: 600;
+        padding: 4px 14px; border-radius: 20px;
+        text-transform: uppercase; letter-spacing: 0.5px;
+        margin-bottom: 16px;
+    }
+    .news-hero-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: clamp(1.5rem, 3vw, 2.2rem);
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.3;
+        margin-bottom: 16px;
+        max-width: 800px;
+    }
+    .news-hero-meta {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.85rem;
+    }
+    .news-hero-meta span { display: flex; align-items: center; gap: 6px; }
+    .news-hero-meta i { color: #1a73c8; }
+
+    .news-detail-body {
+        max-width: 800px;
+        margin: -40px auto 0;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.12);
+        overflow: hidden;
+        position: relative;
+        z-index: 2;
+    }
+    .news-thumbnail {
+        width: 100%;
+        height: 340px;
+        object-fit: cover;
+    }
+    .news-content-area {
+        padding: 40px 48px 48px;
+    }
+    .news-content-area h2, .news-content-area h3 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: #1a2340;
+        font-weight: 700;
+        margin-top: 28px;
+        margin-bottom: 12px;
+    }
+    .news-content-area h3 { font-size: 1.15rem; }
+    .news-content-area p {
+        font-size: 0.95rem;
+        color: #374151;
+        line-height: 1.85;
+        margin-bottom: 14px;
+    }
+    .news-content-area ul, .news-content-area ol {
+        padding-left: 22px;
+        margin-bottom: 14px;
+    }
+    .news-content-area li {
+        font-size: 0.95rem;
+        color: #374151;
+        line-height: 1.7;
+        margin-bottom: 6px;
+    }
+    .news-content-area strong { color: #1a2340; }
+    .news-summary-box {
+        background: linear-gradient(135deg, #e8f4fd, #f0f7ff);
+        border-left: 4px solid #1a73c8;
+        border-radius: 0 10px 10px 0;
+        padding: 16px 20px;
+        margin-bottom: 28px;
+        font-size: 0.95rem;
+        color: #1a2340;
+        font-style: italic;
+        line-height: 1.65;
+    }
+    .news-source-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        margin-bottom: 24px;
+    }
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #1a73c8;
+        font-weight: 600;
+        font-size: 0.88rem;
+        text-decoration: none;
+        padding: 8px 20px;
+        border: 2px solid #1a73c8;
+        border-radius: 8px;
+        margin-top: 32px;
+        transition: all .2s;
+    }
+    .back-btn:hover { background: #1a73c8; color: white; }
+
+    @@media (max-width: 768px) {
+        .news-content-area { padding: 24px 20px 32px; }
+        .news-thumbnail { height: 220px; }
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="news-detail-hero">
+    <div class="container" style="position:relative;z-index:1;">
+        <div class="news-hero-tag">
+            @(Model.Source switch {
+                "PatientStatistics" => "📊 Thống kê Lâm sàng",
+                "HabitStatistics"   => "🏃 Thống kê Thói quen",
+                _ => "✏️ Sức khỏe"
+            })
+        </div>
+        <h1 class="news-hero-title">@Model.Title</h1>
+        <div class="news-hero-meta">
+            <span><i class="fas fa-calendar-alt"></i>
+                @(Model.PublishedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm"))
+            </span>
+            <span><i class="fas fa-user-edit"></i>@Model.AuthorName</span>
+            <span><i class="fas fa-robot"></i>Được tạo bởi AI</span>
+        </div>
+    </div>
+</div>
+
+<!-- Article Body -->
+<div class="container pb-5" style="position:relative;">
+    <div class="news-detail-body">
+        <img src="@(string.IsNullOrEmpty(Model.ThumbnailUrl) ? "/images/banner.jpg" : Model.ThumbnailUrl)"
+             class="news-thumbnail" alt="@Model.Title" />
+
+        <div class="news-content-area">
+            @if (!string.IsNullOrEmpty(Model.Summary))
+            {
+                <div class="news-summary-box">
+                    <i class="fas fa-quote-left me-2 text-primary"></i>@Model.Summary
+                </div>
+            }
+
+            <div id="articleContent">
+                @Html.Raw(Model.Content)
+            </div>
+
+            <hr class="my-4" style="border-color:#e0eaf4;" />
+
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="text-muted" style="font-size:0.8rem;">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Nội dung được tạo bởi AI dựa trên dữ liệu thống kê sức khỏe thực tế và đã được kiểm duyệt bởi quản trị viên.
+                </div>
+                <a asp-controller="Home" asp-action="Index" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>Quay lại trang chủ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

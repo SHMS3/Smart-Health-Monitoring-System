@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartHealthMonitoring.Context;
 
@@ -11,9 +12,11 @@ using SmartHealthMonitoring.Context;
 namespace SmartHealthMonitoring.Migrations
 {
     [DbContext(typeof(SmartHealthMonitoringContext))]
-    partial class SmartHealthMonitoringContextModelSnapshot : ModelSnapshot
+    [Migration("20260701072557_AddRejectionReasonToHealthNews")]
+    partial class AddRejectionReasonToHealthNews
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1146,10 +1149,6 @@ namespace SmartHealthMonitoring.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("RoomNumber")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<byte?>("Sex")
                         .HasColumnType("tinyint");
 
@@ -1180,7 +1179,6 @@ namespace SmartHealthMonitoring.Migrations
                             IsDeleted = false,
                             IsOnShift = true,
                             IsPhoneVerified = false,
-                            RoomNumber = "P.101",
                             Specialty = "Tim mạch can thiệp",
                             UserId = 1
                         },
@@ -1190,7 +1188,6 @@ namespace SmartHealthMonitoring.Migrations
                             IsDeleted = false,
                             IsOnShift = false,
                             IsPhoneVerified = false,
-                            RoomNumber = "P.102",
                             Specialty = "Nhịp học tim mạch",
                             UserId = 2
                         },
@@ -1200,7 +1197,6 @@ namespace SmartHealthMonitoring.Migrations
                             IsDeleted = false,
                             IsOnShift = true,
                             IsPhoneVerified = false,
-                            RoomNumber = "P.103",
                             Specialty = "Nội tim mạch",
                             UserId = 3
                         },
@@ -1210,7 +1206,6 @@ namespace SmartHealthMonitoring.Migrations
                             IsDeleted = false,
                             IsOnShift = false,
                             IsPhoneVerified = false,
-                            RoomNumber = "P.201",
                             Specialty = "Phẫu thuật tim",
                             UserId = 4
                         },
@@ -1220,7 +1215,6 @@ namespace SmartHealthMonitoring.Migrations
                             IsDeleted = false,
                             IsOnShift = true,
                             IsPhoneVerified = false,
-                            RoomNumber = "P.202",
                             Specialty = "Nội tim mạch",
                             UserId = 5
                         },
@@ -1230,7 +1224,6 @@ namespace SmartHealthMonitoring.Migrations
                             IsDeleted = false,
                             IsOnShift = false,
                             IsPhoneVerified = false,
-                            RoomNumber = "P.203",
                             Specialty = "Tim mạch nhi",
                             UserId = 6
                         },
@@ -1240,7 +1233,6 @@ namespace SmartHealthMonitoring.Migrations
                             IsDeleted = false,
                             IsOnShift = true,
                             IsPhoneVerified = false,
-                            RoomNumber = "P.301",
                             Specialty = "Chẩn đoán hình ảnh",
                             UserId = 7
                         },
@@ -1250,7 +1242,6 @@ namespace SmartHealthMonitoring.Migrations
                             IsDeleted = false,
                             IsOnShift = false,
                             IsPhoneVerified = false,
-                            RoomNumber = "P.302",
                             Specialty = "Nội tim mạch",
                             UserId = 8
                         },
@@ -1260,7 +1251,6 @@ namespace SmartHealthMonitoring.Migrations
                             IsDeleted = false,
                             IsOnShift = true,
                             IsPhoneVerified = false,
-                            RoomNumber = "P.303",
                             Specialty = "Tim mạch can thiệp",
                             UserId = 9
                         },
@@ -1270,7 +1260,6 @@ namespace SmartHealthMonitoring.Migrations
                             IsDeleted = false,
                             IsOnShift = false,
                             IsPhoneVerified = false,
-                            RoomNumber = "P.304",
                             Specialty = "Nội tim mạch",
                             UserId = 10
                         });
@@ -2518,7 +2507,7 @@ namespace SmartHealthMonitoring.Migrations
                         {
                             Id = 1,
                             CreatedAt = new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "dr.an@smarthealth.vn",
+                            Email = "    ",
                             FullName = "Nguyễn Văn An",
                             IsDeleted = false,
                             PasswordHash = "hash123",
