@@ -304,6 +304,31 @@ public class AppointmentService : IAppointmentService
         {
             await _context.SaveChangesAsync();
             await _hubContext.Clients.All.SendAsync("SlotStatusChanged", slotId, "SoftLocked");
+
+            // Load đầy đủ thông tin để broadcast cho staff
+            var fullAppt = await _context.Appointments
+                .Include(a => a.Slot)
+                .Include(a => a.Patient).ThenInclude(p => p.User)
+                .Include(a => a.Doctor).ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(a => a.Id == appointment.Id);
+
+            if (fullAppt != null)
+            {
+                await _hubContext.Clients.Group("Staff").SendAsync("NewBookingRequest", new
+                {
+                    appointmentId  = fullAppt.Id,
+                    patientName    = fullAppt.Patient.User.FullName,
+                    patientPhone   = fullAppt.Patient.Phone ?? "",
+                    patientEmail   = fullAppt.Patient.User.Email,
+                    doctorName     = fullAppt.Doctor.User.FullName,
+                    specialty      = fullAppt.Doctor.Specialty,
+                    slotStart      = fullAppt.Slot.SlotStart.ToString("HH:mm"),
+                    slotEnd        = fullAppt.Slot.SlotEnd.ToString("HH:mm"),
+                    slotDate       = fullAppt.Slot.SlotStart.ToString("dd/MM/yyyy"),
+                    patientNote    = fullAppt.PatientNote ?? ""
+                });
+            }
+
             return (true, "Yêu cầu đặt lịch hẹn đã được gửi thành công, vui lòng chờ duyệt.", appointment);
         }
         catch (DbUpdateConcurrencyException)
@@ -314,7 +339,12 @@ public class AppointmentService : IAppointmentService
 
     public async Task<bool> RequestCancelAppointmentAsync(int appointmentId, string reason)
     {
-        var appointment = await _context.Appointments.FindAsync(appointmentId);
+        var appointment = await _context.Appointments
+            .Include(a => a.Slot)
+            .Include(a => a.Patient).ThenInclude(p => p.User)
+            .Include(a => a.Doctor).ThenInclude(d => d.User)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId);
+
         if (appointment == null || appointment.Status != AppointmentStatus.Confirmed)
             return false;
 
@@ -323,6 +353,22 @@ public class AppointmentService : IAppointmentService
         appointment.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        // Broadcast realtime cho staff
+        await _hubContext.Clients.Group("Staff").SendAsync("NewCancellationRequest", new
+        {
+            appointmentId  = appointment.Id,
+            patientName    = appointment.Patient.User.FullName,
+            patientPhone   = appointment.Patient.Phone ?? "",
+            patientEmail   = appointment.Patient.User.Email,
+            doctorName     = appointment.Doctor.User.FullName,
+            specialty      = appointment.Doctor.Specialty,
+            slotStart      = appointment.Slot.SlotStart.ToString("HH:mm"),
+            slotEnd        = appointment.Slot.SlotEnd.ToString("HH:mm"),
+            slotDate       = appointment.Slot.SlotStart.ToString("dd/MM/yyyy"),
+            patientNote    = appointment.PatientNote ?? ""
+        });
+
         return true;
     }
 

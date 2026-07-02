@@ -94,6 +94,12 @@
                 <div>
                     <div class="fw-bold fs-6">BS. @item.Doctor.User.FullName</div>
                     <span class="badge-specialty">@item.Doctor.Specialty</span>
+                    @if (!string.IsNullOrEmpty(item.Doctor.RoomNumber))
+                    {
+                        <span class="badge-specialty" style="background:#fef3c7;color:#92400e;margin-left:4px">
+                            <i class="fas fa-door-open me-1"></i>@item.Doctor.RoomNumber
+                        </span>
+                    }
                 </div>
                 <div class="ms-auto text-muted small">
                     <i class="fas fa-calendar-week me-1"></i>@item.TotalAvailableSlots slot trống trong 7 ngày
