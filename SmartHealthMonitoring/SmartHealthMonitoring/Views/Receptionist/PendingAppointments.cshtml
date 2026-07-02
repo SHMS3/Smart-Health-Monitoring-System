@@ -4,12 +4,41 @@
     ViewData["Title"] = "Duyệt lịch hẹn khám - SmartHealth";
 }
 
+<style>
+    /* ── Realtime toast container ── */
+    #rt-toast-container {
+        position: fixed; bottom: 24px; right: 24px;
+        z-index: 9999; display: flex; flex-direction: column; gap: 12px;
+    }
+    .rt-toast {
+        min-width: 320px; max-width: 400px; background: white;
+        border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.18);
+        padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start;
+        animation: slideIn .35s cubic-bezier(.22,1,.36,1);
+        border-left: 5px solid #3b82f6;
+    }
+    .rt-toast.cancel { border-left-color: #ef4444; }
+    .rt-toast .rt-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
+    .rt-toast .rt-body .rt-title { font-weight: 700; font-size: .95rem; margin-bottom: 2px; }
+    .rt-toast .rt-body .rt-sub   { font-size: .82rem; color: #64748b; }
+    @@keyframes slideIn {
+        from { transform: translateX(120%); opacity: 0; }
+        to   { transform: translateX(0);    opacity: 1; }
+    }
+    @@keyframes fadeOut {
+        to { opacity: 0; transform: translateY(10px); }
+    }
+</style>
+
+<!-- Toast container -->
+<div id="rt-toast-container"></div>
+
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-slate-800" style="font-weight: 700; color: #1e293b;">
             <i class="fas fa-calendar-check text-primary me-2"></i>Phê duyệt lịch hẹn khám
         </h1>
-        <span class="badge bg-primary px-3 py-2 fs-6">Có @Model.Count yêu cầu cần xử lý</span>
+        <span id="pending-badge" class="badge bg-primary px-3 py-2 fs-6">Có @Model.Count yêu cầu cần xử lý</span>
     </div>
 
     @if (TempData["Success"] != null)
@@ -32,7 +61,7 @@
             <h5 class="card-title mb-0 fw-bold text-slate-700">Danh sách yêu cầu chờ duyệt</h5>
         </div>
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" id="pending-table">
                 <thead class="table-light text-slate-500 font-semibold" style="font-size: 0.85rem;">
                     <tr>
                         <th class="ps-4">MÃ LỊCH HẸN</th>
@@ -44,10 +73,10 @@
                         <th class="text-end pe-4" style="width: 260px;">THAO TÁC</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="pending-tbody">
                     @if (!Model.Any())
                     {
-                        <tr>
+                        <tr id="empty-row">
                             <td colspan="7" class="text-center py-5 text-muted">
                                 <i class="fas fa-calendar-times fa-3x mb-3 d-block opacity-25"></i>
                                 <span class="fw-semibold">Tuyệt vời! Không có yêu cầu đặt hoặc hủy lịch nào đang chờ duyệt.</span>
@@ -58,7 +87,7 @@
                     {
                         @foreach (var appt in Model)
                         {
-                            <tr>
+                            <tr id="appt-row-@appt.Id">
                                 <td class="ps-4 fw-bold text-slate-700">#APT-@appt.Id</td>
                                 <td>
                                     <div class="fw-semibold text-slate-800">@appt.Patient.User.FullName</div>
@@ -142,3 +171,150 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+<script>
+(function () {
+    // ─── Helpers ────────────────────────────────────────────────────────────
+    let pendingCount = @Model.Count;
+
+    function updateBadge(delta) {
+        pendingCount += delta;
+        document.getElementById('pending-badge').textContent =
+            'Có ' + pendingCount + ' yêu cầu cần xử lý';
+    }
+
+    function showToast(type, title, sub) {
+        const container = document.getElementById('rt-toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'rt-toast' + (type === 'cancel' ? ' cancel' : '');
+        toast.innerHTML = `
+            <div class="rt-icon">${type === 'cancel' ? '🔴' : '🟡'}</div>
+            <div class="rt-body">
+                <div class="rt-title">${title}</div>
+                <div class="rt-sub">${sub}</div>
+            </div>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut .4s ease forwards';
+            setTimeout(() => toast.remove(), 400);
+        }, 6000);
+    }
+
+    function removeEmptyRow() {
+        const empty = document.getElementById('empty-row');
+        if (empty) empty.remove();
+    }
+
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+    }
+
+    function buildActions(apptId, type) {
+        const token = getAntiForgeryToken();
+        if (type === 'booking') {
+            return `
+            <div class="d-flex justify-content-end gap-2">
+                <form action="/Receptionist/ApproveBooking" method="post">
+                    <input type="hidden" name="__RequestVerificationToken" value="${token}">
+                    <input type="hidden" name="appointmentId" value="${apptId}">
+                    <button type="submit" class="btn btn-success btn-sm px-3 py-2 d-flex align-items-center gap-1" style="border-radius:8px;font-weight:600">
+                        <i class="fas fa-check"></i> Duyệt đặt
+                    </button>
+                </form>
+                <form action="/Receptionist/RejectBooking" method="post">
+                    <input type="hidden" name="__RequestVerificationToken" value="${token}">
+                    <input type="hidden" name="appointmentId" value="${apptId}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm px-3 py-2 d-flex align-items-center gap-1" style="border-radius:8px;font-weight:600"
+                        onclick="return confirm('Từ chối yêu cầu này?')">
+                        <i class="fas fa-times"></i> Từ chối
+                    </button>
+                </form>
+            </div>`;
+        } else {
+            return `
+            <div class="d-flex justify-content-end gap-2">
+                <form action="/Receptionist/ApproveCancellation" method="post">
+                    <input type="hidden" name="__RequestVerificationToken" value="${token}">
+                    <input type="hidden" name="appointmentId" value="${apptId}">
+                    <button type="submit" class="btn btn-danger btn-sm px-3 py-2 d-flex align-items-center gap-1" style="border-radius:8px;font-weight:600">
+                        <i class="fas fa-trash-alt"></i> Duyệt hủy
+                    </button>
+                </form>
+                <form action="/Receptionist/RejectCancellation" method="post">
+                    <input type="hidden" name="__RequestVerificationToken" value="${token}">
+                    <input type="hidden" name="appointmentId" value="${apptId}">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm px-3 py-2 d-flex align-items-center gap-1" style="border-radius:8px;font-weight:600">
+                        <i class="fas fa-times"></i> Không hủy
+                    </button>
+                </form>
+            </div>`;
+        }
+    }
+
+    function injectRow(d, type) {
+        removeEmptyRow();
+        const tbody = document.getElementById('pending-tbody');
+        const isCancel = type === 'cancel';
+        const badgeHtml = isCancel
+            ? `<span class="badge px-3 py-2" style="border-radius:20px;font-weight:600;background:#fee2e2;color:#ef4444">
+                   <i class="fas fa-minus-circle me-1"></i>Yêu cầu hủy lịch</span>`
+            : `<span class="badge bg-warning text-dark px-3 py-2" style="border-radius:20px;font-weight:600">
+                   <i class="fas fa-plus-circle me-1"></i>Chờ duyệt đặt lịch</span>`;
+
+        const tr = document.createElement('tr');
+        tr.id = 'appt-row-' + d.appointmentId;
+        tr.style.cssText = 'background:#fffbeb;transition:background 1.5s';
+        tr.innerHTML = `
+            <td class="ps-4 fw-bold text-slate-700">#APT-${d.appointmentId}</td>
+            <td>
+                <div class="fw-semibold">${d.patientName}</div>
+                <div class="text-muted small"><i class="fas fa-phone-alt me-1"></i>${d.patientPhone}</div>
+                <div class="text-muted small"><i class="fas fa-envelope me-1"></i>${d.patientEmail}</div>
+            </td>
+            <td>
+                <div class="fw-semibold">BS. ${d.doctorName}</div>
+                <div class="text-muted small">Chuyên khoa: ${d.specialty}</div>
+            </td>
+            <td>
+                <div class="fw-semibold text-primary">${d.slotStart} - ${d.slotEnd}</div>
+                <div class="text-muted small">Ngày ${d.slotDate}</div>
+            </td>
+            <td>${badgeHtml}</td>
+            <td class="text-muted small" style="max-width:250px;white-space:normal;word-break:break-all">${d.patientNote}</td>
+            <td class="text-end pe-4">${buildActions(d.appointmentId, type === 'cancel' ? 'cancel' : 'booking')}</td>`;
+        tbody.prepend(tr);
+        // Flash effect rồi fade to white
+        setTimeout(() => tr.style.background = 'white', 2000);
+        updateBadge(1);
+    }
+
+    // ─── SignalR connection ──────────────────────────────────────────────────
+    const conn = new signalR.HubConnectionBuilder()
+        .withUrl('/appointmentHub')
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
+
+    conn.on('NewBookingRequest', function (d) {
+        injectRow(d, 'booking');
+        showToast('booking',
+            '📋 Yêu cầu đặt lịch mới',
+            `${d.patientName} — BS. ${d.doctorName} lúc ${d.slotStart} ngày ${d.slotDate}`);
+    });
+
+    conn.on('NewCancellationRequest', function (d) {
+        injectRow(d, 'cancel');
+        showToast('cancel',
+            '❌ Yêu cầu hủy lịch',
+            `${d.patientName} — BS. ${d.doctorName} lúc ${d.slotStart} ngày ${d.slotDate}`);
+    });
+
+    conn.start()
+        .then(() => console.log('[SignalR] Staff connected to AppointmentHub'))
+        .catch(err => console.error('[SignalR] Lỗi:', err));
+})();
+</script>
+}
+
