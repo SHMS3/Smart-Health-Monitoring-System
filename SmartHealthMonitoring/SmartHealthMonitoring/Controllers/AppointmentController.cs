@@ -299,7 +299,7 @@ public class AppointmentController : Controller
                             </tr>
                             <tr>
                                 <td style='padding: 6px 0; color: #64748b;'>Phòng khám:</td>
-                                <td>Hệ thống Y tế SmartHealth</td>
+                                <td style='font-weight: bold; color: #92400e;'>{(slot.Doctor.RoomNumber ?? "Chưa phân phòng")} — Hệ thống Y tế SmartHealth</td>
                             </tr>
                             <tr>
                                 <td style='padding: 6px 0; color: #64748b;'>Lý do khám:</td>

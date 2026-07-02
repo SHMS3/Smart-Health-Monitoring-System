@@ -92,6 +92,15 @@
                 <div class="info-label">Bệnh viện/Phòng khám</div>
                 <div class="info-value">Hệ thống Y tế SmartHealth</div>
             </div>
+            @if (!string.IsNullOrEmpty(Model.Doctor.RoomNumber))
+            {
+                <div class="info-row">
+                    <div class="info-label">Phòng khám</div>
+                    <div class="info-value" style="color:#92400e;font-weight:600">
+                        <i class="fas fa-door-open me-1"></i>@Model.Doctor.RoomNumber
+                    </div>
+                </div>
+            }
             <div class="info-row">
                 <div class="info-label">Chuyên khoa</div>
                 <div class="info-value">@Model.Doctor.Specialty</div>

@@ -264,6 +264,9 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.Property(e => e.Sex)
                 .HasColumnType("tinyint");
 
+            entity.Property(e => e.RoomNumber)
+                .HasMaxLength(20);
+
             entity.HasOne(d => d.User).WithMany(p => p.Doctors)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -555,22 +558,24 @@ public partial class SmartHealthMonitoringContext : DbContext
             new User { Id = 16, Email = "patient.thuy@gmail.com", PasswordHash = "hash123", FullName = "Lê Thanh Thủy", Role = 0, CreatedAt = baseDate },
             new User { Id = 17, Email = "patient.hai@gmail.com", PasswordHash = "hash123", FullName = "Đặng Quang Hải", Role = 0, CreatedAt = baseDate },
             new User { Id = 18, Email = "patient.yen@gmail.com", PasswordHash = "hash123", FullName = "Võ Hoàng Yến", Role = 0, CreatedAt = baseDate },
-            new User { Id = 19, Email = "patient.phong@gmail.com", PasswordHash = "hash123", FullName = "Ngô Đình Phong", Role = 0, CreatedAt = baseDate },
-            new User { Id = 20, Email = "patient.mai@gmail.com", PasswordHash = "hash123", FullName = "Đoàn Ngọc Mai", Role = 0, CreatedAt = baseDate }
+
+            new User { Id = 19, Email = "patient.phong@gmail.com", PasswordHash = "hash123", FullName = "Ngô Đình Phong", Role = 2, CreatedAt = baseDate },
+            
+            new User { Id = 20, Email = "patient.mai@gmail.com", PasswordHash = "hash123", FullName = "Đoàn Ngọc Mai", Role = 3, CreatedAt = baseDate }
         );
 
         // 2. Doctors 
         modelBuilder.Entity<Doctor>().HasData(
-            new Doctor { Id = 1, UserId = 1, Specialty = "Tim mạch can thiệp", IsOnShift = true },
-            new Doctor { Id = 2, UserId = 2, Specialty = "Nhịp học tim mạch", IsOnShift = false },
-            new Doctor { Id = 3, UserId = 3, Specialty = "Nội tim mạch", IsOnShift = true },
-            new Doctor { Id = 4, UserId = 4, Specialty = "Phẫu thuật tim", IsOnShift = false },
-            new Doctor { Id = 5, UserId = 5, Specialty = "Nội tim mạch", IsOnShift = true },
-            new Doctor { Id = 6, UserId = 6, Specialty = "Tim mạch nhi", IsOnShift = false },
-            new Doctor { Id = 7, UserId = 7, Specialty = "Chẩn đoán hình ảnh", IsOnShift = true },
-            new Doctor { Id = 8, UserId = 8, Specialty = "Nội tim mạch", IsOnShift = false },
-            new Doctor { Id = 9, UserId = 9, Specialty = "Tim mạch can thiệp", IsOnShift = true },
-            new Doctor { Id = 10, UserId = 10, Specialty = "Nội tim mạch", IsOnShift = false }
+            new Doctor { Id = 1, UserId = 1, Specialty = "Tim mạch can thiệp", IsOnShift = true, RoomNumber = "P.101" },
+            new Doctor { Id = 2, UserId = 2, Specialty = "Nhịp học tim mạch", IsOnShift = false, RoomNumber = "P.102" },
+            new Doctor { Id = 3, UserId = 3, Specialty = "Nội tim mạch", IsOnShift = true, RoomNumber = "P.103" },
+            new Doctor { Id = 4, UserId = 4, Specialty = "Phẫu thuật tim", IsOnShift = false, RoomNumber = "P.201" },
+            new Doctor { Id = 5, UserId = 5, Specialty = "Nội tim mạch", IsOnShift = true, RoomNumber = "P.202" },
+            new Doctor { Id = 6, UserId = 6, Specialty = "Tim mạch nhi", IsOnShift = false, RoomNumber = "P.203" },
+            new Doctor { Id = 7, UserId = 7, Specialty = "Chẩn đoán hình ảnh", IsOnShift = true, RoomNumber = "P.301" },
+            new Doctor { Id = 8, UserId = 8, Specialty = "Nội tim mạch", IsOnShift = false, RoomNumber = "P.302" },
+            new Doctor { Id = 9, UserId = 9, Specialty = "Tim mạch can thiệp", IsOnShift = true, RoomNumber = "P.303" },
+            new Doctor { Id = 10, UserId = 10, Specialty = "Nội tim mạch", IsOnShift = false, RoomNumber = "P.304" }
         );
 
         // 3. Patients (Đã thêm DateOfBirth và Sex)
