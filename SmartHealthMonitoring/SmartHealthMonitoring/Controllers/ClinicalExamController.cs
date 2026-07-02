@@ -207,6 +207,46 @@ namespace SmartHealthMonitoring.Controllers
                     .Include(p => p.User)
                     .FirstOrDefaultAsync(p => p.Id == model.PatientId && !p.IsDeleted);
 
+                // ── Tự động cấu hình ngưỡng nếu chưa có ──────────────────────
+                bool isAutoThresholdCreated = false;
+                PatientThreshold autoThreshold = null;
+                if (patient != null)
+                {
+                    var existingThreshold = await _context.PatientThresholds.FirstOrDefaultAsync(t => t.PatientId == model.PatientId);
+                    if (existingThreshold == null)
+                    {
+                        var todayDate = DateOnly.FromDateTime(DateTime.UtcNow);
+                        int age = todayDate.Year - patient.DateOfBirth.Year - (todayDate.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
+
+                        var templates = await _context.StandardThresholds
+                            .Where(t => t.IsActive && age >= t.AgeMin && age <= t.AgeMax)
+                            .ToListAsync();
+
+                        var matched = templates.FirstOrDefault(t => t.Sex == patient.Sex)
+                                   ?? templates.FirstOrDefault(t => t.Sex == 2);
+
+                        if (matched != null)
+                        {
+                            autoThreshold = new PatientThreshold
+                            {
+                                PatientId = model.PatientId,
+                                SystolicBpWarning = matched.SystolicBpWarning,
+                                SystolicBpDanger = matched.SystolicBpDanger,
+                                DiastolicBpWarning = matched.DiastolicBpWarning,
+                                DiastolicBpDanger = matched.DiastolicBpDanger,
+                                HeartRateWarningMin = matched.HeartRateWarningMin,
+                                HeartRateDangerMin = matched.HeartRateDangerMin,
+                                HeartRateWarningMax = matched.HeartRateWarningMax,
+                                HeartRateDangerMax = matched.HeartRateDangerMax,
+                                UpdatedAt = DateTime.Now,
+                                UpdatedByDoctorId = doctor.Id
+                            };
+                            _context.PatientThresholds.Add(autoThreshold);
+                            isAutoThresholdCreated = true;
+                        }
+                    }
+                }
+                // ─────────────────────────────────────────────────────────────
 
                 // ── Lưu ClinicalRecord với NULL cho các gói chưa thanh toán ─────────────────
                 // Các chỉ số không được mua giữ nguyên là null (không gán fallback).
@@ -255,6 +295,17 @@ namespace SmartHealthMonitoring.Controllers
                     $"Tạo hồ sơ lâm sàng #{record.Id} cho bệnh nhân {patient?.User?.FullName ?? $"#{model.PatientId}"}; huyết áp {record.RestingBp}, cholesterol {record.Cholesterol}, nhịp tim tối đa {record.MaxHeartRate}.",
                     patient?.UserId,
                     patient?.User?.FullName);
+
+                if (isAutoThresholdCreated && autoThreshold != null)
+                {
+                    await _auditLogService.LogAsync(
+                        "Create",
+                        "PatientThreshold",
+                        autoThreshold.Id.ToString(),
+                        $"Tự động cấu hình ngưỡng cho bệnh nhân {patient?.User?.FullName ?? $"#{model.PatientId}"}; huyết áp tâm thu {autoThreshold.SystolicBpWarning}/{autoThreshold.SystolicBpDanger}, nhịp tim {autoThreshold.HeartRateWarningMin}-{autoThreshold.HeartRateWarningMax}.",
+                        patient?.UserId,
+                        patient?.User?.FullName);
+                }
 
                 // ĐÃ TẮT CƠ CHẾ GỬI EMAIL TỰ ĐỘNG THEO YÊU CẦU NGHIỆP VỤ Y KHOA
                 // Tránh tình trạng bệnh nhân nhận kết quả chẩn đoán bệnh hiểm nghèo qua email mà không có Bác sĩ tư vấn tâm lý.

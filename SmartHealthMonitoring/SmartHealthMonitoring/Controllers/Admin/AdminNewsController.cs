@@ -185,9 +185,35 @@ namespace SmartHealthMonitoring.Controllers.Admin
             return RedirectToAction(nameof(Index));
         }
 
-        // ══════════════════════════════════════════════
-        // PUBLISH / HIDE / DELETE (POST actions)
-        // ══════════════════════════════════════════════
+        // =======================================================================================
+        // PUBLISH / HIDE / DELETE / APPROVE / REJECT (POST actions)
+        // =======================================================================================
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Approve(int id)
+        {
+            var post = await _context.HealthNewsPosts.FindAsync(id);
+            if (post == null) return NotFound();
+            post.Status = "Published";
+            post.PublishedAt = DateTime.UtcNow;
+            post.RejectionReason = null;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "✅ Bài viết đã được duyệt và đăng tải!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reject(int id, string rejectionReason)
+        {
+            var post = await _context.HealthNewsPosts.FindAsync(id);
+            if (post == null) return NotFound();
+            
+            post.Status = "Draft";
+            post.RejectionReason = rejectionReason;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "⚠️ Đã từ chối bài viết. Tác giả sẽ phải chỉnh sửa lại.";
+            return RedirectToAction(nameof(Index));
+        }
+
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Publish(int id)
         {
@@ -258,12 +284,18 @@ namespace SmartHealthMonitoring.Controllers.Admin
             }
         }
 
-        // ══════════════════════════════════════════════
-        // AI GENERATE AJAX — từ trang Create (trả JSON)
-        // ══════════════════════════════════════════════
+        // =======================================================================================
+        // AI GENERATE AJAX (Từ trang Create)
+        // =======================================================================================
+        [AllowAnonymous]
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateNewsAjax([FromForm] string source, [FromForm] string userPrompt = "")
         {
+            if (!User.Identity.IsAuthenticated || (!User.IsInRole("2") && !User.IsInRole("3")))
+            {
+                return Json(new { success = false, error = "Bạn không có quyền sử dụng tính năng này." });
+            }
+
             Console.WriteLine($"[DEBUG] GenerateNewsAjax: source={source}, prompt={userPrompt}");
             try
             {
