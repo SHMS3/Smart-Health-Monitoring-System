@@ -417,6 +417,9 @@
                 <a asp-controller="Receptionist" asp-action="Index" class="nav-item-link @(controller == "Receptionist" && action == "Index" ? "active" : "")">
                     <i class="fas fa-cash-register"></i> Thanh toán & Thu ngân
                 </a>
+                <a asp-controller="Receptionist" asp-action="PaymentHistory" class="nav-item-link @(controller == "Receptionist" && action == "PaymentHistory" ? "active" : "")">
+                    <i class="fas fa-history"></i> Lịch sử thanh toán
+                </a>
                 <a asp-controller="Receptionist" asp-action="Patients" class="nav-item-link @(controller == "Receptionist" && action == "Patients" ? "active" : "")">
                     <i class="fas fa-user-injured"></i> Danh sách bệnh nhân
                 </a>

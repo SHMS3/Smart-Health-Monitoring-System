@@ -36,18 +36,13 @@ namespace SmartHealthMonitoring.Controllers
             _appointmentService = appointmentService;
         }
 
-        // GET: /Receptionist/Index – Danh sách phiếu thanh toán
-        public async Task<IActionResult> Index(string status = "All", int page = 1, int pageSize = 10)
+        // GET: /Receptionist/Index – Danh sách phiếu thanh toán (Chỉ Pending)
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
             var query = _context.Payments
                 .Include(p => p.Patient).ThenInclude(pt => pt.User)
                 .Include(p => p.Doctor).ThenInclude(d => d.User)
-                .AsQueryable();
-
-            if (status != "All")
-            {
-                query = query.Where(p => p.Status == status);
-            }
+                .Where(p => p.Status == "Pending");
 
             int totalRecords = await query.CountAsync();
 
@@ -57,7 +52,45 @@ namespace SmartHealthMonitoring.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            ViewBag.CurrentStatus = status;
+            var result = new PagedResult<Payment>
+            {
+                Items = payments,
+                TotalCount = totalRecords,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            return View(result);
+        }
+
+        // GET: /Receptionist/PaymentHistory – Lịch sử thanh toán (Paid) với Filter ngày
+        public async Task<IActionResult> PaymentHistory(DateTime? fromDate, DateTime? toDate, int page = 1, int pageSize = 10)
+        {
+            // Mặc định lấy ngày hôm nay nếu không có tham số
+            if (!fromDate.HasValue) fromDate = DateTime.Today;
+            if (!toDate.HasValue) toDate = DateTime.Today;
+
+            var query = _context.Payments
+                .Include(p => p.Patient).ThenInclude(pt => pt.User)
+                .Include(p => p.Doctor).ThenInclude(d => d.User)
+                .Where(p => p.Status == "Paid");
+
+            // Lọc theo ngày (CreatedAt bao gồm cả giờ, nên toDate cần tính hết ngày)
+            var start = fromDate.Value.Date;
+            var end = toDate.Value.Date.AddDays(1).AddTicks(-1);
+
+            query = query.Where(p => p.CreatedAt >= start && p.CreatedAt <= end);
+
+            int totalRecords = await query.CountAsync();
+
+            var payments = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.FromDate = start.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = toDate.Value.ToString("yyyy-MM-dd");
 
             var result = new PagedResult<Payment>
             {

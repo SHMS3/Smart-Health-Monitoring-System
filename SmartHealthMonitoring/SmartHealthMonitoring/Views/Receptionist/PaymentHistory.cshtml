@@ -1,11 +1,18 @@
 @model SmartHealthMonitoring.Common.PagedResult<SmartHealthMonitoring.Models.Payment>
 @{
-    ViewData["Title"] = "Quản lý Thanh toán";
+    ViewData["Title"] = "Lịch sử thanh toán";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold mb-0">Danh sách yêu cầu thanh toán</h3>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <h3 class="fw-bold mb-0">Lịch sử thanh toán</h3>
+    <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+        <label class="text-muted small fw-bold mb-0 text-nowrap">Từ ngày:</label>
+        <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control rounded-pill px-3" style="width: 150px;" onchange="this.form.submit()" />
+        
+        <label class="text-muted small fw-bold mb-0 text-nowrap">Đến ngày:</label>
+        <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control rounded-pill px-3" style="width: 150px;" onchange="this.form.submit()" />
+    </form>
 </div>
 
 <div class="card border-0 shadow-sm rounded-4">
@@ -27,7 +34,7 @@
                     @if (!Model.Items.Any())
                     {
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">Không có yêu cầu thanh toán nào.</td>
+                            <td colspan="7" class="text-center py-4 text-muted">Không có lịch sử thanh toán nào trong khoảng thời gian này.</td>
                         </tr>
                     }
                     @foreach (var item in Model.Items)
@@ -36,16 +43,13 @@
                             <td class="ps-4 fw-bold">#@item.Id.ToString("D5")</td>
                             <td>@item.Patient.User.FullName</td>
                             <td>Bs. @item.Doctor.User.FullName</td>
-                            <td class="text-danger fw-bold">@item.TotalAmount.ToString("N0") đ</td>
+                            <td class="text-success fw-bold">@item.TotalAmount.ToString("N0") đ</td>
                             <td>
-                                <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                                <span class="badge bg-success">Đã thanh toán</span>
                             </td>
                             <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                             <td class="text-end pe-4">
                                 <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary rounded-pill px-3 me-1">Chi tiết</a>
-                                <a asp-action="Checkout" asp-route-id="@item.Id" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold">
-                                    <i class="fas fa-cash-register me-1"></i>Thu tiền
-                                </a>
                             </td>
                         </tr>
                     }
@@ -63,16 +67,16 @@
             <nav>
                 <ul class="pagination pagination-sm mb-0">
                     <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
-                        <a class="page-link rounded-start-pill px-3" asp-action="Index" asp-route-page="@(Model.Page - 1)">Trước</a>
+                        <a class="page-link rounded-start-pill px-3" asp-action="PaymentHistory" asp-route-fromDate="@ViewBag.FromDate" asp-route-toDate="@ViewBag.ToDate" asp-route-page="@(Model.Page - 1)">Trước</a>
                     </li>
                     @for (int i = 1; i <= Model.TotalPages; i++)
                     {
                         <li class="page-item @(i == Model.Page ? "active" : "")">
-                            <a class="page-link px-3" asp-action="Index" asp-route-page="@i">@i</a>
+                            <a class="page-link px-3" asp-action="PaymentHistory" asp-route-fromDate="@ViewBag.FromDate" asp-route-toDate="@ViewBag.ToDate" asp-route-page="@i">@i</a>
                         </li>
                     }
                     <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
-                        <a class="page-link rounded-end-pill px-3" asp-action="Index" asp-route-page="@(Model.Page + 1)">Sau</a>
+                        <a class="page-link rounded-end-pill px-3" asp-action="PaymentHistory" asp-route-fromDate="@ViewBag.FromDate" asp-route-toDate="@ViewBag.ToDate" asp-route-page="@(Model.Page + 1)">Sau</a>
                     </li>
                 </ul>
             </nav>
