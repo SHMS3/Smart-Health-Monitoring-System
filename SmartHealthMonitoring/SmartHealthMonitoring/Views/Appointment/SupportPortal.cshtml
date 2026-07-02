@@ -1,0 +1,107 @@
+@model SmartHealthMonitoring.Models.Appointment
+@{
+    ViewData["Title"] = "Cổng chăm sóc khách hàng - SmartHealth";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+    .portal-card { max-width: 680px; margin: 40px auto; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); padding: 40px; }
+    .portal-title { font-size: 1.6rem; font-weight: 700; text-align: center; color: #0284c7; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #0284c7; padding-bottom: 10px; display: inline-block; width: 100%; }
+    .form-label { font-weight: 600; font-size: 0.88rem; color: #0f172a; }
+    .form-label .required { color: #ef4444; }
+    .form-control, .form-select { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; }
+    .form-control:focus, .form-select:focus { border-color: #27ae60; box-shadow: none; }
+    .btn-submit { background-color: #2ec4b6; color: white; border: none; font-weight: 600; padding: 14px; border-radius: 30px; width: 100%; max-width: 280px; margin: 20px auto 0 auto; display: block; font-size: 1rem; transition: background-color 0.2s; }
+    .btn-submit:hover { background-color: #20a396; }
+    .form-check-label { font-size: 0.82rem; color: #475569; line-height: 1.5; }
+    .form-check-input:checked { background-color: #2ec4b6; border-color: #2ec4b6; }
+</style>
+
+<div class="container pb-5">
+    <div class="portal-card">
+        <h1 class="portal-title">Cổng chăm sóc khách hàng</h1>
+
+        <form asp-action="SupportPortal" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="appointmentId" value="@Model.Id" />
+
+            <!-- Họ và tên -->
+            <div class="mb-3">
+                <label class="form-label">Họ và tên<span class="required">*</span></label>
+                <input type="text" class="form-control" value="@Model.Patient.User.FullName" readonly required />
+            </div>
+
+            <!-- Ngày tháng năm sinh -->
+            <div class="mb-3">
+                <label class="form-label">Ngày tháng năm sinh<span class="required">*</span></label>
+                <input type="date" class="form-control" value="@Model.Patient.DateOfBirth.ToString("yyyy-MM-dd")" readonly required />
+            </div>
+
+            <!-- Số điện thoại -->
+            <div class="mb-3">
+                <label class="form-label">Số điện thoại<span class="required">*</span></label>
+                <input type="text" class="form-control" value="@Model.Patient.Phone" readonly required />
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+                <label class="form-label">Email<span class="required">*</span></label>
+                <input type="email" class="form-control" value="@Model.Patient.User.Email" readonly required />
+            </div>
+
+            <!-- PID -->
+            <div class="mb-3">
+                <label class="form-label">PID (Mã số bệnh nhân nếu có)</label>
+                <input type="text" class="form-control" placeholder="PID nếu có" value="PID-@Model.Patient.Id" readonly />
+            </div>
+
+            <!-- Bệnh viện/phòng khám -->
+            <div class="mb-3">
+                <label class="form-label">Bệnh viện/phòng khám SmartHealth<span class="required">*</span></label>
+                <select class="form-select" required>
+                    <option value="smarthealth" selected>Hệ thống Y tế SmartHealth</option>
+                </select>
+            </div>
+
+            <!-- Vấn đề cần hỗ trợ -->
+            <div class="mb-3">
+                <label class="form-label">Vấn đề cần hỗ trợ<span class="required">*</span></label>
+                <select class="form-select" required>
+                    <option value="cancel" selected>Yêu cầu huỷ lịch hẹn</option>
+                    <option value="reschedule">Yêu cầu thay đổi thời gian khám</option>
+                    <option value="other">Ý kiến đóng góp/Hỗ trợ khác</option>
+                </select>
+            </div>
+
+            <!-- Chọn dịch vụ cần hỗ trợ -->
+            <div class="mb-3">
+                <label class="form-label">Chọn dịch vụ cần hỗ trợ<span class="required">*</span></label>
+                <select class="form-select" required>
+                    <option value="cardio" selected>Khám chuyên khoa @Model.Doctor.Specialty</option>
+                    <option value="other">Dịch vụ khác</option>
+                </select>
+            </div>
+
+            <!-- Chi tiết yêu cầu của bạn -->
+            <div class="mb-4">
+                <label class="form-label">Chi tiết yêu cầu của bạn<span class="required">*</span></label>
+                <textarea name="reason" class="form-control" rows="4" required placeholder="Ví dụ: Tôi muốn hủy lịch khám ngày @Model.Slot.SlotStart.ToString("dd/MM/yyyy") vì bận việc đột xuất..."></textarea>
+            </div>
+
+            <!-- Điều khoản bảo mật -->
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="agreeCheck" required checked />
+                <label class="form-check-label" for="agreeCheck">
+                    Tôi đã đọc và đồng ý với <a href="#" style="color:#2ec4b6; font-weight:600; text-decoration:none;">Chính sách bảo vệ dữ liệu cá nhân của SmartHealth</a> và chấp thuận để SmartHealth xử lý dữ liệu cá nhân của tôi theo quy định của pháp luật về bảo vệ dữ liệu cá nhân.<span class="required">*</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                Gửi thông tin
+            </button>
+        </form>
+    </div>
+</div>

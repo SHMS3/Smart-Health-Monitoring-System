@@ -63,7 +63,7 @@ public class SosNotificationService : ISosNotificationService
 
         if (!contacts.Any())
         {
-            _logger.LogWarning("[SOS] Patient #{PatientId} has no active emergency contact email.", alert.PatientId);
+            _logger.LogDebug("[SOS] Patient #{PatientId} has no active emergency contact email.", alert.PatientId);
             return;
         }
 

@@ -23,7 +23,8 @@ namespace SmartHealthMonitoring
 
             // 1. Đăng ký DB Context
             builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
-                options.UseSqlServer(connectionString ?? builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(connectionString ?? builder.Configuration.GetConnectionString("DefaultConnection"),
+                    sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()));
 
             // 2. Cấu hình kết nối MinIO
             builder.Services.AddMinio(configureClient => configureClient
@@ -133,6 +134,7 @@ namespace SmartHealthMonitoring
             // SignalR Hub endpoint cho Telemedicine Chat
             app.MapHub<ChatHub>("/chatHub");
             app.MapHub<AuditLogHub>("/auditLogHub");
+            app.MapHub<AppointmentHub>("/appointmentHub");
 
             app.Run();
         }

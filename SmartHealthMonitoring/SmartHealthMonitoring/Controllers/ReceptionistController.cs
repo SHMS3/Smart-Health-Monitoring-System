@@ -17,20 +17,23 @@ namespace SmartHealthMonitoring.Controllers
     [Authorize(Roles = "2,3")] // Admin and Receptionist
     public class ReceptionistController : Controller
     {
-        private readonly SmartHealthMonitoringContext _context;
-        private readonly IEmailService _emailService;
-
         // ─── Cấu hình VietQR của phòng khám ───────────────────────────────────────
         // Thay bằng thông tin ngân hàng thực của phòng khám
         private const string BANK_ID = "MB";          // Mã ngân hàng (MBBank)
         private const string ACCOUNT_NO = "1508200456788";  // Số tài khoản
         private const string ACCOUNT_NAME = "PHAM THE SON"; // Tên chủ TK
-        // ────────────────────────────────────────────────────────────────────────────
+        private readonly SmartHealthMonitoringContext _context;
+        private readonly IEmailService _emailService;
+        private readonly IAppointmentService _appointmentService;
 
-        public ReceptionistController(SmartHealthMonitoringContext context, IEmailService emailService)
+        public ReceptionistController(
+            SmartHealthMonitoringContext context,
+            IEmailService emailService,
+            IAppointmentService appointmentService)
         {
             _context = context;
             _emailService = emailService;
+            _appointmentService = appointmentService;
         }
 
         // GET: /Receptionist/Index – Danh sách phiếu thanh toán
@@ -408,6 +411,82 @@ namespace SmartHealthMonitoring.Controllers
             var random = new Random();
             return new string(Enumerable.Repeat(validChars, length)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        // GET: /Receptionist/PendingAppointments
+        [HttpGet]
+        public async Task<IActionResult> PendingAppointments()
+        {
+            var pendingList = await _appointmentService.GetPendingAppointmentsAsync();
+            return View(pendingList);
+        }
+
+        // POST: /Receptionist/ApproveBooking
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveBooking(int appointmentId)
+        {
+            var success = await _appointmentService.ApproveAppointmentBookingAsync(appointmentId);
+            if (success)
+            {
+                TempData["Success"] = "Đã phê duyệt yêu cầu đặt lịch hẹn thành công.";
+            }
+            else
+            {
+                TempData["Error"] = "Phê duyệt thất bại. Lịch hẹn không hợp lệ hoặc đã được xử lý.";
+            }
+            return RedirectToAction(nameof(PendingAppointments));
+        }
+
+        // POST: /Receptionist/RejectBooking
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectBooking(int appointmentId)
+        {
+            var success = await _appointmentService.RejectAppointmentBookingAsync(appointmentId);
+            if (success)
+            {
+                TempData["Success"] = "Đã từ chối yêu cầu đặt lịch hẹn.";
+            }
+            else
+            {
+                TempData["Error"] = "Từ chối thất bại.";
+            }
+            return RedirectToAction(nameof(PendingAppointments));
+        }
+
+        // POST: /Receptionist/ApproveCancellation
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveCancellation(int appointmentId)
+        {
+            var success = await _appointmentService.ApproveAppointmentCancellationAsync(appointmentId);
+            if (success)
+            {
+                TempData["Success"] = "Đã đồng ý hủy lịch hẹn thành công.";
+            }
+            else
+            {
+                TempData["Error"] = "Phê duyệt hủy lịch thất bại.";
+            }
+            return RedirectToAction(nameof(PendingAppointments));
+        }
+
+        // POST: /Receptionist/RejectCancellation
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectCancellation(int appointmentId)
+        {
+            var success = await _appointmentService.RejectAppointmentCancellationAsync(appointmentId);
+            if (success)
+            {
+                TempData["Success"] = "Đã bác bỏ yêu cầu hủy lịch hẹn.";
+            }
+            else
+            {
+                TempData["Error"] = "Từ chối yêu cầu hủy thất bại.";
+            }
+            return RedirectToAction(nameof(PendingAppointments));
         }
     }
     // DTO cho SePay webhook
