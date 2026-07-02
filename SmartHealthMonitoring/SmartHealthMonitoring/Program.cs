@@ -27,9 +27,13 @@ namespace SmartHealthMonitoring
                     sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()));
 
             // 2. Cấu hình kết nối MinIO
+            var minioEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9000";
+            var minioAccessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY") ?? "admin";
+            var minioSecretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY") ?? "admin123";
+
             builder.Services.AddMinio(configureClient => configureClient
-                .WithEndpoint("localhost:9000")
-                .WithCredentials("admin", "admin123")
+                .WithEndpoint(minioEndpoint)
+                .WithCredentials(minioAccessKey, minioSecretKey)
                 .WithSSL(false)
                 .Build());
 
@@ -104,7 +108,15 @@ namespace SmartHealthMonitoring
             {
                 var services = scope.ServiceProvider;
                 var context = services.GetRequiredService<SmartHealthMonitoringContext>();
-                 //SeedData.Initialize(context);
+                try
+                {
+                    context.Database.Migrate();
+                    Console.WriteLine("[Database] Auto-migration successfully executed.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Database] Auto-migration failed: {ex.Message}");
+                }
             }
 
             if (!app.Environment.IsDevelopment())
