@@ -30,17 +30,61 @@
 
 <div class="container pb-5">
     <div class="confirm-card">
-        <div class="success-icon-wrap">
-            <i class="fas fa-check-circle success-icon"></i>
+        <div class="success-icon-wrap" id="status-icon-wrap">
+            @if (Model.Status == SmartHealthMonitoring.Models.AppointmentStatus.Pending)
+            {
+                <i class="fas fa-clock success-icon text-warning" id="status-icon" style="color: #f59e0b;"></i>
+            }
+            else if (Model.Status == SmartHealthMonitoring.Models.AppointmentStatus.Confirmed)
+            {
+                <i class="fas fa-check-circle success-icon text-success" id="status-icon" style="color: #22c55e;"></i>
+            }
+            else
+            {
+                <i class="fas fa-times-circle success-icon text-danger" id="status-icon" style="color: #ef4444;"></i>
+            }
         </div>
-        <h1 class="confirm-title">Lịch hẹn cần xác nhận</h1>
-        <p class="confirm-desc">
-            Yêu cầu về lịch hẹn khám của quý khách cần được tổng đài viên SmartHealth gọi lại để xác nhận thông tin.
-            Quý khách vui lòng để ý điện thoại và chờ nhân viên liên hệ xác nhận chính xác lịch hẹn khám.
-            Cảm ơn quý khách đã lựa chọn dịch vụ của SmartHealth.
+        <h1 class="confirm-title" id="confirm-title">
+            @if (Model.Status == SmartHealthMonitoring.Models.AppointmentStatus.Pending)
+            {
+                @:Lịch hẹn cần xác nhận
+            }
+            else if (Model.Status == SmartHealthMonitoring.Models.AppointmentStatus.Confirmed)
+            {
+                @:Lịch hẹn đã được xác nhận
+            }
+            else
+            {
+                @:Lịch hẹn đã bị hủy/từ chối
+            }
+        </h1>
+        <p class="confirm-desc" id="confirm-desc">
+            @if (Model.Status == SmartHealthMonitoring.Models.AppointmentStatus.Pending)
+            {
+                @:Yêu cầu về lịch hẹn khám của quý khách cần được tổng đài viên SmartHealth gọi lại để xác nhận thông tin. Quý khách vui lòng để ý điện thoại và chờ nhân viên liên hệ xác nhận chính xác lịch hẹn khám. Cảm ơn quý khách đã lựa chọn dịch vụ của SmartHealth.
+            }
+            else if (Model.Status == SmartHealthMonitoring.Models.AppointmentStatus.Confirmed)
+            {
+                @:Yêu cầu đặt lịch hẹn của quý khách đã được ban lễ tân phê duyệt thành công! Vui lòng đến đúng giờ hẹn. Cảm ơn quý khách đã lựa chọn dịch vụ của SmartHealth.
+            }
+            else
+            {
+                @:Yêu cầu đặt lịch hẹn của quý khách đã bị hủy hoặc từ chối. Vui lòng liên hệ hotline hoặc chọn khung giờ khác để đăng ký khám bệnh.
+            }
         </p>
-        <p class="email-alert">
-            Email thông tin lịch hẹn đã được gửi cho quý khách (nếu quý khách để lại email chính xác)
+        <p class="email-alert" id="email-alert" style="color: @(Model.Status == SmartHealthMonitoring.Models.AppointmentStatus.Confirmed ? "#22c55e" : (Model.Status == SmartHealthMonitoring.Models.AppointmentStatus.Pending ? "#d97706" : "#ef4444"))">
+            @if (Model.Status == SmartHealthMonitoring.Models.AppointmentStatus.Pending)
+            {
+                @:Email thông tin lịch hẹn đã được gửi cho quý khách (nếu quý khách để lại email chính xác)
+            }
+            else if (Model.Status == SmartHealthMonitoring.Models.AppointmentStatus.Confirmed)
+            {
+                @:Chúc quý khách có một buổi khám bệnh thuận lợi.
+            }
+            else
+            {
+                @:Lịch hẹn này không còn hiệu lực.
+            }
         </p>
 
         <!-- Dịch vụ -->
@@ -92,6 +136,15 @@
                 <div class="info-label">Bệnh viện/Phòng khám</div>
                 <div class="info-value">Hệ thống Y tế SmartHealth</div>
             </div>
+            @if (!string.IsNullOrEmpty(Model.Doctor.RoomNumber))
+            {
+                <div class="info-row">
+                    <div class="info-label">Phòng khám</div>
+                    <div class="info-value" style="color:#92400e;font-weight:600">
+                        <i class="fas fa-door-open me-1"></i>@Model.Doctor.RoomNumber
+                    </div>
+                </div>
+            }
             <div class="info-row">
                 <div class="info-label">Chuyên khoa</div>
                 <div class="info-value">@Model.Doctor.Specialty</div>
@@ -113,3 +166,55 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script src="https://unpkg.com/@@microsoft/signalr@@8.0.0/dist/browser/signalr.min.js"></script>
+<script>
+(function () {
+    const conn = new signalR.HubConnectionBuilder()
+        .withUrl('/appointmentHub')
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
+
+    conn.on('AppointmentStatusChanged', function (appointmentId, status) {
+        if (appointmentId == @Model.Id) {
+            console.log(`[SignalR] Received status update for appointment #${appointmentId}: ${status}`);
+            
+            const icon = document.getElementById('status-icon');
+            const title = document.getElementById('confirm-title');
+            const desc = document.getElementById('confirm-desc');
+            const alert = document.getElementById('email-alert');
+
+            if (status === 'Confirmed') {
+                if (icon) {
+                    icon.className = 'fas fa-check-circle success-icon text-success';
+                    icon.style.color = '#22c55e';
+                }
+                if (title) title.textContent = 'Lịch hẹn đã được xác nhận';
+                if (desc) desc.textContent = 'Yêu cầu đặt lịch hẹn của quý khách đã được ban lễ tân phê duyệt thành công! Vui lòng đến đúng giờ hẹn. Cảm ơn quý khách đã lựa chọn dịch vụ của SmartHealth.';
+                if (alert) {
+                    alert.textContent = 'Chúc quý khách có một buổi khám bệnh thuận lợi.';
+                    alert.style.color = '#22c55e';
+                }
+            } else if (status === 'CancelledByDoctor' || status === 'CancelledByPatient') {
+                if (icon) {
+                    icon.className = 'fas fa-times-circle success-icon text-danger';
+                    icon.style.color = '#ef4444';
+                }
+                if (title) title.textContent = 'Lịch hẹn đã bị hủy/từ chối';
+                if (desc) desc.textContent = 'Yêu cầu đặt lịch hẹn của quý khách đã bị hủy hoặc từ chối. Vui lòng liên hệ hotline hoặc chọn khung giờ khác để đăng ký khám bệnh.';
+                if (alert) {
+                    alert.textContent = 'Lịch hẹn này không còn hiệu lực.';
+                    alert.style.color = '#ef4444';
+                }
+            }
+        }
+    });
+
+    conn.start()
+        .then(() => console.log('[SignalR] Connected to AppointmentHub (BookingConfirmation)'))
+        .catch(err => console.error('[SignalR] Connection error:', err));
+})();
+</script>
+}

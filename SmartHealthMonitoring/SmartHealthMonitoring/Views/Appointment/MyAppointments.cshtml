@@ -98,11 +98,9 @@
             </div>
             <div class="d-flex flex-column align-items-end gap-2">
                 <span class="status-badge status-confirmed">✓ Đã xác nhận</span>
-                <form asp-action="Cancel" method="post" onsubmit="return confirm('Bạn có chắc muốn huỷ lịch hẹn này?')">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="appointmentId" value="@a.Id">
-                    <button type="submit" class="btn-cancel-appt">Huỷ lịch</button>
-                </form>
+                <a asp-action="SupportPortal" asp-route-appointmentId="@a.Id" class="btn-cancel-appt" style="text-decoration:none">
+                    Huỷ lịch
+                </a>
             </div>
         </div>
     }
@@ -144,3 +142,32 @@
         }
     }
 </div>
+
+@section Scripts {
+<script src="https://unpkg.com/@@microsoft/signalr@@8.0.0/dist/browser/signalr.min.js"></script>
+<script>
+(function () {
+    const myApptIds = [@string.Join(",", Model.Select(a => a.Id))];
+    if (myApptIds.length === 0) return;
+
+    const conn = new signalR.HubConnectionBuilder()
+        .withUrl('/appointmentHub')
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
+
+    conn.on('AppointmentStatusChanged', function (appointmentId, status) {
+        if (myApptIds.includes(appointmentId)) {
+            console.log(`[SignalR] Your appointment #${appointmentId} status changed to: ${status}. Reloading page...`);
+            setTimeout(() => {
+                location.reload();
+            }, 500); // 500ms delay for DB write propagation and visual feel
+        }
+    });
+
+    conn.start()
+        .then(() => console.log('[SignalR] Connected to AppointmentHub (MyAppointments)'))
+        .catch(err => console.error('[SignalR] Connection error:', err));
+})();
+</script>
+}

@@ -78,6 +78,7 @@ namespace SmartHealthMonitoring.Controllers
             }
 
             // 4. Tạo Claims cho cookie
+            Console.WriteLine($"[DEBUG LOGIN] Email={user.Email}, UserId={user.Id}, Role={user.Role}");
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -114,11 +115,14 @@ namespace SmartHealthMonitoring.Controllers
             }
 
             // 7. Redirect
+            Console.WriteLine($"[DEBUG LOGIN] returnUrl='{returnUrl}'");
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl != "/")
             {
+                Console.WriteLine($"[DEBUG LOGIN] Redirecting to returnUrl: {returnUrl}");
                 return Redirect(returnUrl);
             }
 
+            Console.WriteLine($"[DEBUG LOGIN] Calling RedirectByRole({user.Role})");
             return RedirectByRole(user.Role);
         }
 
@@ -325,19 +329,23 @@ namespace SmartHealthMonitoring.Controllers
             if (role == null)
             {
                 var roleClaim = User.FindFirstValue(ClaimTypes.Role);
+                Console.WriteLine($"[DEBUG RedirectByRole] roleClaim from cookie = '{roleClaim}'");
                 if (byte.TryParse(roleClaim, out byte parsedRole))
                 {
                     role = parsedRole;
                 }
             }
 
-            return role switch
+            Console.WriteLine($"[DEBUG RedirectByRole] Final role = {role}");
+            var result = role switch
             {
                 3 => RedirectToAction("Index", "Receptionist"),
                 2 => RedirectToAction("Index", "AdminDashboard"),
                 1 => RedirectToAction("Index", "DoctorDashboard"), 
                 _ => RedirectToAction("Index", "Home") 
             };
+            Console.WriteLine($"[DEBUG RedirectByRole] Redirecting to: {(result as RedirectToActionResult)?.ControllerName}/{(result as RedirectToActionResult)?.ActionName}");
+            return result;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Quản lý Tin tức";
-    Layout = "_AdminLayout";
+    Layout = "_ReceptionistLayout";
     string currentStatus = ViewBag.CurrentStatus ?? "all";
 }
 
@@ -213,12 +213,16 @@
                                 var statusLabel = post.Status switch {
                                     "Published" => "✅ Đã đăng",
                                     "Draft"     => "📝 Nháp",
-                                    "Hidden"    => "🙈 Đã ẩn",
+                                    "Hidden"    => "👁️ Đã ẩn",
                                     "Pending"   => "⏳ Chờ duyệt",
                                     _ => post.Status
                                 };
                             }
                             <span class="badge rounded-pill @badgeClass px-3 py-2">@statusLabel</span>
+                            @if(post.Status == "Draft" && !string.IsNullOrEmpty(post.RejectionReason))
+                            {
+                                <i class="fas fa-exclamation-circle text-danger ms-2" title="Bị từ chối: @post.RejectionReason"></i>
+                            }
                         </td>
                         <td style="white-space:nowrap;">
                             <i class="fas fa-calendar-alt text-muted me-1"></i>
@@ -229,62 +233,23 @@
                         </td>
                         <td>
                             <div class="action-btn-group justify-content-center">
-                                <a asp-action="Edit" asp-route-id="@post.Id"
-                                   class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                                   title="Chỉnh sửa">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-
-                                @if (post.Status == "Pending")
+                                @if ((post.Status == "Draft" || post.Status == "Pending") && post.AuthorName == ViewBag.CurrentAuthor)
                                 {
-                                    <form asp-action="Approve" asp-route-id="@post.Id" method="post" style="display:inline;">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3"
-                                                title="Duyệt bài"
-                                                onclick="return confirm('Duyệt bài viết này?')">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                    </form>
+                                    <a asp-action="Edit" asp-route-id="@post.Id"
+                                       class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                       title="Chỉnh sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
 
-                                    <button type="button" class="btn btn-sm btn-danger rounded-pill px-3"
-                                            title="Từ chối"
-                                            onclick="openRejectModal(@post.Id)">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                }
-
-                                @if (post.Status == "Draft" || post.Status == "Hidden")
-                                {
-                                    <form asp-action="Publish" asp-route-id="@post.Id" method="post" style="display:inline;">
+                                    <form asp-action="Delete" asp-route-id="@post.Id" method="post" style="display:inline;">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3"
-                                                title="Đăng bài"
-                                                onclick="return confirm('Đăng bài viết này lên trang chủ?')">
-                                            <i class="fas fa-paper-plane"></i>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                                title="Xóa"
+                                                onclick="return confirm('Bạn có chắc muốn xóa bài viết này?')">
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
                                 }
-
-                                @if (post.Status == "Published")
-                                {
-                                    <form asp-action="Hide" asp-route-id="@post.Id" method="post" style="display:inline;">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-warning rounded-pill px-3"
-                                                title="Ẩn bài"
-                                                onclick="return confirm('Ẩn bài viết này khỏi trang chủ?')">
-                                            <i class="fas fa-eye-slash"></i>
-                                        </button>
-                                    </form>
-                                }
-
-                                <form asp-action="Delete" asp-route-id="@post.Id" method="post" style="display:inline;">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                            title="Xóa"
-                                            onclick="return confirm('Bạn có chắc muốn xóa bài viết này?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
                             </div>
                         </td>
                     </tr>
@@ -293,39 +258,3 @@
         </table>
     </div>
 </div>
-
-<!-- Reject Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form asp-action="Reject" method="post">
-          @Html.AntiForgeryToken()
-          <input type="hidden" name="id" id="rejectPostId" value="" />
-          <div class="modal-header">
-            <h5 class="modal-title">Từ chối bài viết</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-                <label for="rejectionReason" class="form-label">Lý do từ chối</label>
-                <textarea class="form-control" id="rejectionReason" name="reason" rows="3" required></textarea>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button type="submit" class="btn btn-danger">Từ chối bài viết</button>
-          </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-@section Scripts {
-<script>
-function openRejectModal(id) {
-    document.getElementById("rejectPostId").value = id;
-    var rejectModal = new bootstrap.Modal(document.getElementById("rejectModal"));
-    rejectModal.show();
-}
-</script>
-}

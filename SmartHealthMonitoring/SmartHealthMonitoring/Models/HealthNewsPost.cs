@@ -20,7 +20,7 @@ namespace SmartHealthMonitoring.Models
         [MaxLength(50)]
         public string Source { get; set; } = "Manual";
 
-        /// <summary>"Draft" | "Published" | "Hidden"</summary>
+        /// <summary>"Draft" | "Published" | "Hidden" | "Pending"</summary>
         [MaxLength(20)]
         public string Status { get; set; } = "Draft";
 
@@ -29,6 +29,9 @@ namespace SmartHealthMonitoring.Models
 
         [MaxLength(100)]
         public string AuthorName { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string? RejectionReason { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? PublishedAt { get; set; }

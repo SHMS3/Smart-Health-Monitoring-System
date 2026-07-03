@@ -641,6 +641,20 @@ namespace SmartHealthMonitoring.Controllers
 
             return Json(new { success = true, message = "Xác thực số điện thoại thành công!" });
         }
+
+        [Route("Home/Error")]
+        [AllowAnonymous]
+        public IActionResult Error()
+        {
+            var exceptionHandlerPathFeature = HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+            var exception = exceptionHandlerPathFeature?.Error;
+            
+            ViewBag.ErrorMessage = exception?.Message;
+            ViewBag.StackTrace = exception?.StackTrace;
+            ViewBag.InnerException = exception?.InnerException?.Message;
+            
+            return View();
+        }
     }
 }
 
