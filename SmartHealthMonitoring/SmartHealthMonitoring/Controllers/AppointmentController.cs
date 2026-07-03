@@ -144,7 +144,7 @@ public class AppointmentController : Controller
         {
             await _emailService.SendEmailAsync(patient.User.Email, subject, emailBody);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             TempData["Error"] = "Không thể gửi email OTP. Vui lòng kiểm tra lại cấu hình mail.";
         }

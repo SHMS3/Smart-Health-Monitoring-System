@@ -10,6 +10,9 @@ public interface IAppointmentService
     /// <summary>Lấy danh sách slot còn trống của bác sĩ theo khoảng ngày</summary>
     Task<List<AppointmentSlot>> GetAvailableSlotsRangeAsync(int doctorId, DateOnly startDate, DateOnly endDate);
 
+    /// <summary>Làm mới toàn bộ slot trong 14 ngày tới sau khi bác sĩ đổi lịch</summary>
+    Task<int> RefreshDoctorSlotsAsync(int doctorId);
+
     /// <summary>Giữ chỗ tạm 5 phút trước khi bệnh nhân confirm</summary>
     Task<(bool success, string message)> SoftLockSlotAsync(int slotId, int patientId);
 
