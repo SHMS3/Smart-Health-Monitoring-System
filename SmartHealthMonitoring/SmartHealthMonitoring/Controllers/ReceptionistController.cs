@@ -36,18 +36,13 @@ namespace SmartHealthMonitoring.Controllers
             _appointmentService = appointmentService;
         }
 
-        // GET: /Receptionist/Index – Danh sách phiếu thanh toán
-        public async Task<IActionResult> Index(string status = "All", int page = 1, int pageSize = 10)
+        // GET: /Receptionist/Index – Danh sách phiếu thanh toán (Chỉ Pending)
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
             var query = _context.Payments
                 .Include(p => p.Patient).ThenInclude(pt => pt.User)
                 .Include(p => p.Doctor).ThenInclude(d => d.User)
-                .AsQueryable();
-
-            if (status != "All")
-            {
-                query = query.Where(p => p.Status == status);
-            }
+                .Where(p => p.Status == "Pending");
 
             int totalRecords = await query.CountAsync();
 
@@ -57,7 +52,45 @@ namespace SmartHealthMonitoring.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            ViewBag.CurrentStatus = status;
+            var result = new PagedResult<Payment>
+            {
+                Items = payments,
+                TotalCount = totalRecords,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            return View(result);
+        }
+
+        // GET: /Receptionist/PaymentHistory – Lịch sử thanh toán (Paid) với Filter ngày
+        public async Task<IActionResult> PaymentHistory(DateTime? fromDate, DateTime? toDate, int page = 1, int pageSize = 10)
+        {
+            // Mặc định lấy ngày hôm nay nếu không có tham số
+            if (!fromDate.HasValue) fromDate = DateTime.Today;
+            if (!toDate.HasValue) toDate = DateTime.Today;
+
+            var query = _context.Payments
+                .Include(p => p.Patient).ThenInclude(pt => pt.User)
+                .Include(p => p.Doctor).ThenInclude(d => d.User)
+                .Where(p => p.Status == "Paid");
+
+            // Lọc theo ngày (CreatedAt bao gồm cả giờ, nên toDate cần tính hết ngày)
+            var start = fromDate.Value.Date;
+            var end = toDate.Value.Date.AddDays(1).AddTicks(-1);
+
+            query = query.Where(p => p.CreatedAt >= start && p.CreatedAt <= end);
+
+            int totalRecords = await query.CountAsync();
+
+            var payments = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.FromDate = start.ToString("yyyy-MM-dd");
+            ViewBag.ToDate = toDate.Value.ToString("yyyy-MM-dd");
 
             var result = new PagedResult<Payment>
             {
@@ -355,7 +388,7 @@ namespace SmartHealthMonitoring.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddToWaitingList(int patientId)
+        public async Task<IActionResult> AddToWaitingList(int patientId, int doctorId, int slotId)
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdString, out int receptionistId))
@@ -364,14 +397,16 @@ namespace SmartHealthMonitoring.Controllers
                 return RedirectToAction(nameof(Patients));
             }
 
-            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.Id == patientId && !p.IsDeleted);
+            var patient = await _context.Patients
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.Id == patientId && !p.IsDeleted);
             if (patient == null)
             {
                 TempData["Error"] = "Bệnh nhân không tồn tại.";
                 return RedirectToAction(nameof(Patients));
             }
 
-            // Check if patient is already in the queue waiting or being examined
+            // Kiểm tra bệnh nhân đã trong danh sách chờ chưa
             var isActiveSession = await _context.WaitingPatients
                 .AnyAsync(w => w.PatientId == patientId && (w.Status == 0 || w.Status == 1));
 
@@ -381,28 +416,208 @@ namespace SmartHealthMonitoring.Controllers
                 return RedirectToAction(nameof(Patients));
             }
 
-            // Generate sequence number for today
-            var today = DateTime.UtcNow.Date;
-            var currentMaxSeq = await _context.WaitingPatients
-                .Where(w => w.CreatedAt >= today)
-                .MaxAsync(w => (int?)w.SequenceNumber) ?? 0;
+            // Lấy slot và kiểm tra còn Available không
+            var slot = await _context.AppointmentSlots
+                .FirstOrDefaultAsync(s => s.Id == slotId && s.DoctorId == doctorId && s.Status == AppointmentSlotStatus.Available);
 
-            var newSeq = currentMaxSeq + 1;
-
-            var waitingPatient = new WaitingPatient
+            if (slot == null)
             {
-                PatientId = patientId,
-                ReceptionistId = receptionistId,
-                SequenceNumber = newSeq,
-                Status = 0, // Waiting
-                CreatedAt = DateTime.UtcNow
-            };
+                TempData["Error"] = "Slot khám đã được đặt hoặc không còn hợp lệ. Vui lòng chọn lại.";
+                return RedirectToAction(nameof(Patients));
+            }
 
-            _context.WaitingPatients.Add(waitingPatient);
-            await _context.SaveChangesAsync();
+            // Dùng ExecutionStrategy để tương thích với SqlServerRetryingExecutionStrategy
+            var strategy = _context.Database.CreateExecutionStrategy();
+            string? successMsg = null;
+            string? errorMsg = null;
 
-            TempData["Success"] = $"Đã thêm bệnh nhân {patient.User?.FullName ?? ""} vào danh sách chờ khám. Số thứ tự: {newSeq}";
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    // Re-check slot vẫn Available (tránh race condition)
+                    var freshSlot = await _context.AppointmentSlots
+                        .FirstOrDefaultAsync(s => s.Id == slotId && s.DoctorId == doctorId && s.Status == AppointmentSlotStatus.Available);
+
+                    if (freshSlot == null)
+                    {
+                        errorMsg = "Slot khám đã được đặt hoặc không còn hợp lệ. Vui lòng chọn lại.";
+                        await transaction.RollbackAsync();
+                        return;
+                    }
+
+                    // Book slot
+                    freshSlot.Status = AppointmentSlotStatus.Booked;
+                    freshSlot.PatientId = patientId;
+
+                    // Tạo Appointment
+                    var appointment = new Appointment
+                    {
+                        SlotId = slotId,
+                        PatientId = patientId,
+                        DoctorId = doctorId,
+                        Status = AppointmentStatus.Confirmed,
+                        PatientNote = "Đăng ký trực tiếp tại quầy lễ tân",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Appointments.Add(appointment);
+                    await _context.SaveChangesAsync();
+
+                    // Tạo số thứ tự cho bác sĩ cụ thể hôm nay (chỉ tính các bản ghi chưa hủy)
+                    var today = DateTime.UtcNow.Date;
+                    var currentMaxSeq = await _context.WaitingPatients
+                        .Where(w => w.CreatedAt >= today && w.DoctorId == doctorId && w.Status != 2)
+                        .MaxAsync(w => (int?)w.SequenceNumber) ?? 0;
+
+                    var newSeq = currentMaxSeq + 1;
+
+                    // Tạo WaitingPatient với DoctorId đã xác định
+                    var waitingPatient = new WaitingPatient
+                    {
+                        PatientId = patientId,
+                        ReceptionistId = receptionistId,
+                        DoctorId = doctorId,
+                        SequenceNumber = newSeq,
+                        Status = 0, // Đang chờ
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.WaitingPatients.Add(waitingPatient);
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+                    successMsg = $"Đã đăng ký khám cho bệnh nhân {patient.User?.FullName ?? ""}. Số thứ tự: {newSeq}";
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    errorMsg = "Đã xảy ra lỗi khi đăng ký khám: " + ex.Message;
+                }
+            });
+
+            if (errorMsg != null) TempData["Error"] = errorMsg;
+            if (successMsg != null) TempData["Success"] = successMsg;
+
             return RedirectToAction(nameof(Patients));
+        }
+
+        // GET: /Receptionist/GetAvailableDoctors – Lấy danh sách bác sĩ có slot Available hôm nay
+        [HttpGet]
+        public async Task<IActionResult> GetAvailableDoctors()
+        {
+            // Dùng múi giờ Việt Nam (UTC+7) để xác định ngày hôm nay
+            var vnZone   = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var nowVn    = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnZone);
+            var todayVn  = nowVn.Date;
+            // Slot được lưu theo UTC trong DB
+            var todayUtc    = TimeZoneInfo.ConvertTimeToUtc(todayVn, vnZone);
+            var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(todayVn.AddDays(1), vnZone);
+
+            // Nếu chưa có slot nào cho hôm nay → generate on-the-fly từ DoctorWorkSchedules
+            bool hasSlots = await _context.AppointmentSlots
+                .AnyAsync(s => s.SlotStart >= todayUtc && s.SlotStart < tomorrowUtc);
+
+            if (!hasSlots)
+            {
+                await GenerateSlotsForDateAsync(todayVn, vnZone);
+            }
+
+            var doctors = await _context.AppointmentSlots
+                .Where(s => s.Status == AppointmentSlotStatus.Available
+                         && s.SlotStart >= todayUtc
+                         && s.SlotStart < tomorrowUtc)
+                .Include(s => s.Doctor).ThenInclude(d => d.User)
+                .GroupBy(s => s.DoctorId)
+                .Select(g => new
+                {
+                    doctorId = g.Key,
+                    doctorName = g.First().Doctor.User.FullName,
+                    specialty = g.First().Doctor.Specialty,
+                    roomNumber = g.First().Doctor.RoomNumber,
+                    availableSlots = g.Count()
+                })
+                .OrderBy(d => d.doctorName)
+                .ToListAsync();
+
+            return Json(new { success = true, data = doctors });
+        }
+
+        // GET: /Receptionist/GetDoctorSlots?doctorId=X – Lấy slot Available hôm nay của bác sĩ
+        [HttpGet]
+        public async Task<IActionResult> GetDoctorSlots(int doctorId)
+        {
+            var vnZone   = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var nowVn    = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnZone);
+            var todayVn  = nowVn.Date;
+            var todayUtc    = TimeZoneInfo.ConvertTimeToUtc(todayVn, vnZone);
+            var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(todayVn.AddDays(1), vnZone);
+            // Chỉ lấy slot từ thời điểm hiện tại trở đi (không hiện slot đã qua)
+            var nowUtc = DateTime.UtcNow;
+
+            var slots = await _context.AppointmentSlots
+                .Where(s => s.DoctorId == doctorId
+                         && s.Status == AppointmentSlotStatus.Available
+                         && s.SlotStart >= nowUtc
+                         && s.SlotStart < tomorrowUtc)
+                .OrderBy(s => s.SlotStart)
+                .Select(s => new
+                {
+                    slotId = s.Id,
+                    slotStart = s.SlotStart,
+                    slotEnd = s.SlotEnd
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, data = slots });
+        }
+
+        /// <summary>
+        /// Generate slots cho ngày cụ thể từ DoctorWorkSchedules (gọi khi Worker chưa sinh slot).
+        /// </summary>
+        private async Task GenerateSlotsForDateAsync(DateTime localDate, TimeZoneInfo vnZone)
+        {
+            // DayOfWeek trong DB: 0=CN,1=T2,...,6=T7 – khớp với System.DayOfWeek (Sunday=0)
+            int dayOfWeek = (int)localDate.DayOfWeek;
+
+            var schedules = await _context.DoctorWorkSchedules
+                .Where(s => s.IsActive && s.DayOfWeek == dayOfWeek)
+                .ToListAsync();
+
+            if (!schedules.Any()) return;
+
+            int created = 0;
+            foreach (var schedule in schedules)
+            {
+                var current = schedule.StartTime;
+                while (current.Add(TimeSpan.FromMinutes(schedule.SlotDurationMinutes)) <= schedule.EndTime)
+                {
+                    // Slot lưu theo UTC
+                    var slotStartLocal = localDate.Add(current.ToTimeSpan());
+                    var slotStartUtc   = TimeZoneInfo.ConvertTimeToUtc(slotStartLocal, vnZone);
+                    var slotEndUtc     = slotStartUtc.AddMinutes(schedule.SlotDurationMinutes);
+
+                    bool exists = await _context.AppointmentSlots
+                        .AnyAsync(s => s.DoctorId == schedule.DoctorId && s.SlotStart == slotStartUtc);
+
+                    if (!exists)
+                    {
+                        _context.AppointmentSlots.Add(new AppointmentSlot
+                        {
+                            DoctorId  = schedule.DoctorId,
+                            SlotStart = slotStartUtc,
+                            SlotEnd   = slotEndUtc,
+                            Status    = AppointmentSlotStatus.Available
+                        });
+                        created++;
+                    }
+
+                    current = current.Add(TimeSpan.FromMinutes(schedule.SlotDurationMinutes));
+                }
+            }
+
+            if (created > 0)
+                await _context.SaveChangesAsync();
         }
 
         private string GenerateRandomPassword(int length)

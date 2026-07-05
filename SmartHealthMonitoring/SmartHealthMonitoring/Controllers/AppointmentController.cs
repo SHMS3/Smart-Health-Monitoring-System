@@ -426,10 +426,50 @@ public class AppointmentController : Controller
         var selectedDate = date ?? DateOnly.FromDateTime(DateTime.UtcNow);
         var queue = await _appointmentService.GetDoctorQueueAsync(doctor.Id, selectedDate);
 
+        // Lọc bỏ những appointment là walk-in (do lễ tân tạo) để tránh lặp lại ở section Online
+        queue = queue.Where(a => a.PatientNote != "Đăng ký trực tiếp tại quầy lễ tân").ToList();
+
+        // Load thêm WaitingPatients hôm nay (bệnh nhân walk-in)
+        var todayUtc = DateTime.UtcNow.Date;
+        var waitingQueue = await _context.WaitingPatients
+            .Include(w => w.Patient).ThenInclude(p => p.User)
+            .Where(w => w.CreatedAt >= todayUtc
+                     && w.DoctorId == doctor.Id
+                     && (w.Status == 0 || w.Status == 1))
+            .OrderBy(w => w.SequenceNumber)
+            .ToListAsync();
+
+        var patientIds = waitingQueue.Select(w => w.PatientId).ToList();
+        
+        var paidPayments = await _context.Payments
+            .Where(p => patientIds.Contains(p.PatientId) && p.CreatedAt.Date == todayUtc && p.Status == "Paid")
+            .Select(p => p.PatientId)
+            .Distinct()
+            .ToListAsync();
+
+        var pendingPayments = await _context.Payments
+            .Where(p => patientIds.Contains(p.PatientId) && p.CreatedAt.Date == todayUtc && p.Status == "Pending")
+            .Select(p => p.PatientId)
+            .Distinct()
+            .ToListAsync();
+
+        var onlyPendingPayments = pendingPayments.Except(paidPayments).ToList();
+
+        // Sắp xếp lại: Đẩy những bệnh nhân đang nợ (Pending) xuống cuối danh sách
+        waitingQueue = waitingQueue
+            .OrderBy(w => onlyPendingPayments.Contains(w.PatientId) ? 1 : 0)
+            .ThenBy(w => w.SequenceNumber)
+            .ToList();
+
+        ViewBag.WaitingQueue = waitingQueue;
+        ViewBag.PaidPayments = paidPayments;
+        ViewBag.PendingPayments = onlyPendingPayments;
+
         ViewBag.SelectedDate = selectedDate;
         ViewBag.DoctorId     = doctor.Id;
         return View(queue);
     }
+
 
     // POST: /Appointment/Complete — Liên kết hồ sơ bệnh án
     [HttpPost]

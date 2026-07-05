@@ -73,7 +73,7 @@ namespace SmartHealthMonitoring.Controllers
                 if (patient == null)
                 {
                     TempData["Error"] = "Không tìm thấy bệnh nhân.";
-                    return User.IsInRole("1") ? RedirectToAction("Index", "DoctorDashboard") : RedirectToAction("Index", "Home");
+                    return User.IsInRole("1") ? RedirectToAction("DoctorQueue", "Appointment") : RedirectToAction("Index", "Home");
                 }
 
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -213,7 +213,7 @@ namespace SmartHealthMonitoring.Controllers
 
                 if (User.IsInRole("1"))
                 {
-                    return RedirectToAction("Index", "DoctorDashboard");
+                    return RedirectToAction("DoctorQueue", "Appointment");
                 }
 
                 return RedirectToAction("Index", "Home");
@@ -235,7 +235,7 @@ namespace SmartHealthMonitoring.Controllers
                 if (record == null)
                 {
                     TempData["Error"] = "Không tìm thấy hồ sơ hệ thống.";
-                    return RedirectToAction("Index", "DoctorDashboard");
+                    return RedirectToAction("DoctorQueue", "Appointment");
                 }
 
                 if (record.IsDeleted)
@@ -262,7 +262,7 @@ namespace SmartHealthMonitoring.Controllers
             catch (Exception)
             {
                 TempData["Error"] = "Lỗi hệ thống khi hủy hồ sơ.";
-                return RedirectToAction("Index", "DoctorDashboard");
+                return RedirectToAction("DoctorQueue", "Appointment");
             }
         }
 
@@ -281,7 +281,7 @@ namespace SmartHealthMonitoring.Controllers
                 if (record == null)
                 {
                     TempData["Error"] = "Không tìm thấy hồ sơ.";
-                    return RedirectToAction("Index", "DoctorDashboard");
+                    return RedirectToAction("DoctorQueue", "Appointment");
                 }
 
                 // Đảo trạng thái IsViewForPatient
@@ -307,7 +307,7 @@ namespace SmartHealthMonitoring.Controllers
             catch (Exception)
             {
                 TempData["Error"] = "Lỗi hệ thống khi cập nhật quyền xem.";
-                return RedirectToAction("Index", "DoctorDashboard");
+                return RedirectToAction("DoctorQueue", "Appointment");
             }
         }
 
@@ -339,7 +339,7 @@ namespace SmartHealthMonitoring.Controllers
                 if (patient == null)
                 {
                     TempData["Error"] = "Không tìm thấy bệnh nhân.";
-                    return User.IsInRole("1") ? RedirectToAction("Index", "DoctorDashboard") : RedirectToAction("Index", "Home");
+                    return User.IsInRole("1") ? RedirectToAction("DoctorQueue", "Appointment") : RedirectToAction("Index", "Home");
                 }
 
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -479,7 +479,7 @@ namespace SmartHealthMonitoring.Controllers
 
                 if (User.IsInRole("1"))
                 {
-                    return RedirectToAction("Index", "DoctorDashboard");
+                    return RedirectToAction("DoctorQueue", "Appointment");
                 }
 
                 return RedirectToAction("Index", "Home");

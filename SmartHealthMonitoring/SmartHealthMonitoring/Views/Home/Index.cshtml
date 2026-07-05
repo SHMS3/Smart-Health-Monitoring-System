@@ -71,6 +71,15 @@
         transition: all .25s; box-shadow: 0 4px 14px rgba(229,57,53,.3);
     }
     .btn-hero-cta:hover { background: @homeUi.PrimaryDarkColor; color: white; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(229,57,53,.4); }
+    .btn-hero-success {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: #198754; color: white;
+        border: none; border-radius: 6px;
+        padding: 12px 28px; font-weight: 700; font-size: 0.9rem;
+        text-decoration: none; cursor: pointer;
+        transition: all .25s; box-shadow: 0 4px 14px rgba(25, 135, 84, .3);
+    }
+    .btn-hero-success:hover { background: #157347; color: white; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(25, 135, 84, .4); }
     .hero-sub-note {
         font-size: 0.82rem; color: @homeUi.PrimaryColor;
         margin-top: 10px; font-style: italic;
@@ -251,6 +260,9 @@
             {
                 <a asp-controller="Patient" asp-action="Create" class="btn-hero-cta">
                     <i class="fas fa-plus-circle"></i> Nhập chỉ số ngay
+                </a>
+                <a asp-controller="Appointment" asp-action="FindDoctor" class="btn-hero-success">
+                    <i class="fas fa-plus-circle"></i> Đặt lịch hẹn
                 </a>
             }
             else
