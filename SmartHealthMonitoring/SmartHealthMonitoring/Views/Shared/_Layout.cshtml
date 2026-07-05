@@ -798,13 +798,8 @@
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navDropdownDocPatient">
                             <li>
-                                <a class="dropdown-item @(ctrl=="DoctorDashboard" && action!="WaitingList" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="Index">
+                                <a class="dropdown-item @(ctrl=="DoctorDashboard" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="Index">
                                     <i class="fas fa-user"></i> Bệnh nhân
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item @(ctrl=="DoctorDashboard" && action=="WaitingList" ? "active" : "")" asp-controller="DoctorDashboard" asp-action="WaitingList">
-                                    <i class="fas fa-list-ol"></i> Danh sách chờ khám
                                 </a>
                             </li>
                             <li>

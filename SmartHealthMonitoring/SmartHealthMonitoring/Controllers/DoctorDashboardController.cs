@@ -30,31 +30,28 @@ namespace SmartHealthMonitoring.Controllers
         {
             try
             {
-                // Lấy thông tin bác sĩ đang đăng nhập để hiển thị trạng thái ca trực
                 var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                Doctor? currentDoctor = null;
+
                 if (int.TryParse(userIdString, out int userId))
                 {
-                    var currentDoctor = await _context.Doctors
+                    currentDoctor = await _context.Doctors
                         .FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
 
                     ViewBag.IsOnShift = currentDoctor?.IsOnShift ?? false;
 
-                    // Số cảnh báo chưa xử lý (Status = 0) để hiện banner đỏ khi vừa đăng nhập
                     ViewBag.UnresolvedAlertCount = await _context.WarningAlerts
                         .CountAsync(w => w.Status == 0 && !w.IsDeleted);
                 }
 
+                // ─── Danh sách bệnh nhân (phân trang) ────────────────────────
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
-                // 1. Dựng Query cơ sở
                 var query = _context.Patients
                     .Include(p => p.User)
                     .Where(p => !p.IsDeleted && !p.User.IsDeleted && p.User.Role == 0);
 
-                // 2. Đếm tổng số bệnh nhân thỏa mãn điều kiện
                 int totalRecords = await query.CountAsync();
 
-                // 3. Thực hiện phân trang và map dữ liệu sang ViewModel
                 var items = await query
                     .OrderByDescending(p => p.User.CreatedAt)
                     .Skip((page - 1) * pageSize)
@@ -69,7 +66,6 @@ namespace SmartHealthMonitoring.Controllers
                     })
                     .ToListAsync();
 
-                // 4. Đóng gói kết quả
                 var result = new PagedResult<PatientListViewModel>
                 {
                     Items = items,
@@ -82,10 +78,11 @@ namespace SmartHealthMonitoring.Controllers
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Lỗi khi tải danh sách bệnh nhân: " + ex.Message;
+                TempData["Error"] = "Lỗi khi tải dữ liệu: " + ex.Message;
                 return View(new PagedResult<PatientListViewModel>());
             }
         }
+
 
         /// <summary>
         /// AJAX: Bác sĩ tự gạt công tắc ca trực (bật/tắt thủ công)
@@ -176,13 +173,21 @@ namespace SmartHealthMonitoring.Controllers
             int.TryParse(userIdString, out int userId);
             var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
 
+            if (doctor == null)
+            {
+                TempData["Error"] = "Không tìm thấy hồ sơ bác sĩ.";
+                return View(new SmartHealthMonitoring.Common.PagedResult<WaitingPatient>());
+            }
+
             int pageSize = 10;
             var today = DateTime.UtcNow.Date;
-            
+
+            // Chỉ lấy bệnh nhân được gán cho bác sĩ này (DoctorId == doctor.Id)
             var query = _context.WaitingPatients
                 .Include(w => w.Patient).ThenInclude(p => p.User)
-                .Where(w => w.CreatedAt >= today && 
-                            (w.Status == 0 || (w.Status == 1 && doctor != null && w.DoctorId == doctor.Id)));
+                .Where(w => w.CreatedAt >= today
+                         && w.DoctorId == doctor.Id
+                         && (w.Status == 0 || w.Status == 1));
 
             var totalCount = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -211,6 +216,7 @@ namespace SmartHealthMonitoring.Controllers
             return View(model);
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CancelExam([FromBody] CancelExamRequest request)
@@ -238,10 +244,10 @@ namespace SmartHealthMonitoring.Controllers
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdString, out int userId))
-                return RedirectToAction(nameof(WaitingList));
+                return RedirectToAction("DoctorQueue", "Appointment");
 
             var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
-            if (doctor == null) return RedirectToAction(nameof(WaitingList));
+            if (doctor == null) return RedirectToAction("DoctorQueue", "Appointment");
 
             var activeWaiting = await _context.WaitingPatients
                 .FirstOrDefaultAsync(w => w.PatientId == patientId && (w.Status == 0 || w.Status == 1) && w.DoctorId == doctor.Id);
@@ -253,7 +259,7 @@ namespace SmartHealthMonitoring.Controllers
                 TempData["Success"] = "Đã hoàn tất khám cho bệnh nhân.";
             }
 
-            return RedirectToAction(nameof(WaitingList));
+            return RedirectToAction("DoctorQueue", "Appointment");
         }
 
         [HttpPost]
