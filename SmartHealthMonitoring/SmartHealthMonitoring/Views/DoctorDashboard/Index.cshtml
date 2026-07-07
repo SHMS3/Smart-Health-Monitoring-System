@@ -97,7 +97,9 @@
 </style>
 
 <div class="container pt-5 mt-4 pb-5 doc-container">
-    @* ─── Banner cảnh báo chưa xử lý (hiện khi vừa đăng nhập) ─── *@
+
+
+    @* ─── Banner cảnh báo chưa xử lý ─── *@
     @if (ViewBag.UnresolvedAlertCount != null && (int)ViewBag.UnresolvedAlertCount > 0)
     {
         <div class="alert border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center gap-3"
@@ -115,9 +117,11 @@
         </div>
     }
 
+
+    @* ─── SECTION: Danh sách Bệnh nhân ─── *@
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
-            <h3 class="fw-bold text-dark mb-1">Danh sách Bệnh nhân</h3>
+            <h4 class="fw-bold text-dark mb-1">Danh sách Bệnh nhân</h4>
             <p class="text-muted small mb-0">Quản lý và theo dõi chỉ số sức khỏe của bệnh nhân được phân công</p>
         </div>
 
@@ -143,7 +147,6 @@
             </div>
         </div>
     </div>
-
 
     @if (TempData["Error"] != null)
     {
@@ -215,20 +218,17 @@
                 <span class="text-muted small">
                     Hiển thị trang <strong>@Model.Page</strong> / @Model.TotalPages (Tổng số: <strong>@Model.TotalCount</strong> bệnh nhân)
                 </span>
-
                 <nav aria-label="Page navigation">
                     <ul class="pagination pagination-sm mb-0">
                         <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
                             <a class="page-link rounded-start-pill px-3" asp-action="Index" asp-route-page="@(Model.Page - 1)">Trước</a>
                         </li>
-
                         @for (int i = 1; i <= Model.TotalPages; i++)
                         {
                             <li class="page-item @(i == Model.Page ? "active" : "")">
                                 <a class="page-link px-3" asp-action="Index" asp-route-page="@i">@i</a>
                             </li>
                         }
-
                         <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
                             <a class="page-link rounded-end-pill px-3" asp-action="Index" asp-route-page="@(Model.Page + 1)">Sau</a>
                         </li>
@@ -239,177 +239,9 @@
     </div>
 </div>
 
-<!-- Modal Thêm Dịch Vụ Khám -->
-<div class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="modal-title fw-bold" id="serviceModalLabel">Thêm dịch vụ khám cho <span id="modalPatientName" class="text-primary"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="modalPatientId" />
-                <div class="row g-3" id="servicesListBody">
-                    <!-- Dịch vụ sẽ được load qua AJAX -->
-                    <div class="col-12 text-center text-muted">
-                        <span class="spinner-border spinner-border-sm me-2"></span> Đang tải danh sách dịch vụ...
-                    </div>
-                </div>
-                <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-                    <span class="fw-bold fs-5 text-dark">Tổng tiền:</span>
-                    <span class="fw-bold fs-4 text-danger" id="totalAmountText">0 đ</span>
-                </div>
-            </div>
-            <div class="modal-footer border-top-0 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btnSubmitServices" onclick="submitServices()">
-                    <i class="fas fa-paper-plane me-1"></i> Gửi yêu cầu thanh toán
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section Scripts {
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    let currentServices = [];
-
-    function openServiceModal(patientId, patientName) {
-        document.getElementById('modalPatientId').value = patientId;
-        document.getElementById('modalPatientName').textContent = patientName;
-        document.getElementById('totalAmountText').textContent = '0 đ';
-        
-        const tbody = document.getElementById('servicesListBody');
-        tbody.innerHTML = '<div class="col-12 text-center text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Đang tải danh sách dịch vụ...</div>';
-
-        // Gọi API lấy danh sách dịch vụ
-        fetch('@Url.Action("GetServices", "DoctorDashboard")')
-            .then(response => response.json())
-            .then(result => {
-                if(result.success) {
-                    currentServices = result.data;
-                    tbody.innerHTML = '';
-                    if(currentServices.length === 0) {
-                        tbody.innerHTML = '<div class="col-12 text-center text-muted">Không có dịch vụ nào khả dụng</div>';
-                        return;
-                    }
-
-                    currentServices.forEach(s => {
-                        let iconClass = 'fa-stethoscope';
-                        let bgClass = 'bg-blue-soft';
-                        if (s.name.includes('Huyết áp') || s.name.includes('Triệu chứng')) {
-                            iconClass = 'fa-heartbeat';
-                            bgClass = 'bg-red-soft';
-                        } else if (s.name.includes('Huyết học')) {
-                            iconClass = 'fa-tint';
-                            bgClass = 'bg-blue-soft';
-                        } else if (s.name.includes('Điện tâm đồ') || s.name.includes('Mạch vành')) {
-                            iconClass = 'fa-wave-square';
-                            bgClass = 'bg-purple-soft';
-                        }
-
-                        let descHtml = '';
-                        if (s.description) {
-                            let items = s.description.split('|');
-                            descHtml = '<ul class="list-unstyled mt-3 mb-0 small text-muted border-top pt-2">';
-                            items.forEach(item => {
-                                descHtml += `<li class="mb-1 d-flex align-items-start"><i class="fas fa-check text-success mt-1 me-2" style="font-size:0.75rem"></i><span>${item}</span></li>`;
-                            });
-                            descHtml += '</ul>';
-                        }
-
-                        const col = document.createElement('div');
-                        col.className = 'col-lg-4 col-md-6 mb-3';
-                        col.innerHTML = `
-                            <div class="form-section position-relative h-100 d-flex flex-column" style="cursor:pointer;" onclick="toggleCheckbox(${s.id})">
-                                <div class="position-absolute top-0 end-0 p-3">
-                                    <input class="form-check-input service-checkbox fs-5" type="checkbox" id="chk_service_${s.id}" value="${s.id}" data-price="${s.price}" onchange="calculateTotal()" onclick="event.stopPropagation()">
-                                </div>
-                                <div class="section-title">
-                                    <div class="section-icon ${bgClass}"><i class="fas ${iconClass}"></i></div>
-                                </div>
-                                <h6 class="fw-bold text-dark mb-2">${s.name}</h6>
-                                <p class="text-danger fw-bold mb-0 fs-5">${s.price.toLocaleString('vi-VN')} đ</p>
-                                <div class="mt-auto">
-                                    ${descHtml}
-                                </div>
-                            </div>
-                        `;
-                        tbody.appendChild(col);
-                    });
-                } else {
-                    tbody.innerHTML = `<div class="col-12 text-center text-danger">Lỗi: ${result.message}</div>`;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                tbody.innerHTML = '<div class="col-12 text-center text-danger">Đã có lỗi xảy ra khi tải dịch vụ.</div>';
-            });
-
-        const modal = new bootstrap.Modal(document.getElementById('serviceModal'));
-        modal.show();
-    }
-
-    function toggleCheckbox(id) {
-        const chk = document.getElementById('chk_service_' + id);
-        if(chk) {
-            chk.checked = !chk.checked;
-            calculateTotal();
-        }
-    }
-
-    function calculateTotal() {
-        let total = 0;
-        document.querySelectorAll('.service-checkbox:checked').forEach(cb => {
-            total += parseFloat(cb.getAttribute('data-price'));
-        });
-        document.getElementById('totalAmountText').textContent = total.toLocaleString('vi-VN') + ' đ';
-    }
-
-    function submitServices() {
-        const patientId = document.getElementById('modalPatientId').value;
-        const selectedIds = Array.from(document.querySelectorAll('.service-checkbox:checked')).map(cb => parseInt(cb.value));
-
-        if (selectedIds.length === 0) {
-            Swal.fire('Lỗi', 'Vui lòng chọn ít nhất một dịch vụ.', 'warning');
-            return;
-        }
-
-        const btn = document.getElementById('btnSubmitServices');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
-
-        fetch('@Url.Action("CreatePayment", "DoctorDashboard")', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-            },
-            body: JSON.stringify({ patientId: parseInt(patientId), serviceIds: selectedIds })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                Swal.fire('Thành công', result.message, 'success').then(() => {
-                    const modalEl = document.getElementById('serviceModal');
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    modal.hide();
-                });
-            } else {
-                Swal.fire('Lỗi', result.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            Swal.fire('Lỗi', 'Đã xảy ra lỗi kết nối.', 'error');
-        })
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Gửi yêu cầu thanh toán';
-        });
-    }
-
     document.addEventListener('DOMContentLoaded', function () {
         const toggle      = document.getElementById('shiftToggle');
         const badge       = document.getElementById('shiftBadge');

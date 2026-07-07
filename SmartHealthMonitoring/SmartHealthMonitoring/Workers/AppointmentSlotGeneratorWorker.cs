@@ -28,7 +28,14 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Chạy ngay khi khởi động
-        await GenerateSlotsAsync(stoppingToken);
+        try
+        {
+            await GenerateSlotsAsync(stoppingToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[SlotGenerator] Lỗi xảy ra khi sinh slots lúc khởi động. Tiếp tục chạy worker...");
+        }
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -39,7 +46,14 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
 
             _logger.LogInformation("[SlotGenerator] Next run in {Hours}h {Minutes}m.", (int)delay.TotalHours, delay.Minutes);
             await Task.Delay(delay, stoppingToken);
-            await GenerateSlotsAsync(stoppingToken);
+            try
+            {
+                await GenerateSlotsAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[SlotGenerator] Lỗi xảy ra khi sinh slots định kỳ.");
+            }
         }
     }
 

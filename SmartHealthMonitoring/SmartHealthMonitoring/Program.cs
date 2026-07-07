@@ -104,20 +104,24 @@ namespace SmartHealthMonitoring
             var app = builder.Build();
 
 
-            using (var scope = app.Services.CreateScope())
+            // Chạy migration trong background để tránh block luồng Kestrel khởi chạy port binding (gây 502 Bad Gateway)
+            _ = Task.Run(() =>
             {
-                var services = scope.ServiceProvider;
-                var context = services.GetRequiredService<SmartHealthMonitoringContext>();
-                try
+                using (var scope = app.Services.CreateScope())
                 {
-                    context.Database.Migrate();
-                    Console.WriteLine("[Database] Auto-migration successfully executed.");
+                    var services = scope.ServiceProvider;
+                    try
+                    {
+                        var context = services.GetRequiredService<SmartHealthMonitoringContext>();
+                        context.Database.Migrate();
+                        Console.WriteLine("[Database] Auto-migration successfully executed.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Database] Auto-migration failed: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[Database] Auto-migration failed: {ex.Message}");
-                }
-            }
+            });
 
             if (!app.Environment.IsDevelopment())
             {
