@@ -15,7 +15,7 @@
     .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
     .day-card {
         background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
-        overflow: hidden; transition: box-shadow .2s;
+        transition: box-shadow .2s;
     }
     .day-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,.12); }
     .day-header {
@@ -28,10 +28,10 @@
     .day-dot.active { background: #22c55e; }
     .day-dot.inactive { background: #cbd5e1; }
     .day-body { padding: 16px 20px; }
-    .slot-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .slot-row { display: flex; align-items: center; gap: 5px; margin-bottom: 10px; flex-wrap: nowrap; }
     .slot-row input[type=time] {
-        border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 6px 10px;
-        font-size: .88rem; color: #334155; flex: 1; outline: none;
+        border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 6px 8px;
+        font-size: .85rem; color: #334155; flex: 1; min-width: 0; outline: none;
         transition: border-color .2s;
     }
     .slot-row input[type=time]:focus { border-color: #2d6a9f; }
@@ -42,7 +42,21 @@
         width: 100%; justify-content: center; margin-top: 6px; transition: all .2s;
     }
     .btn-add-slot:hover { border-color: #2d6a9f; color: #2d6a9f; background: #f0f9ff; }
-    .btn-remove { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.1rem; padding: 2px 6px; border-radius: 6px; }
+    .btn-remove { 
+        flex-shrink: 0; 
+        width: 32px; 
+        height: 32px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        background: #fee2e2; 
+        border: 1px solid #fca5a5; 
+        color: #dc2626; 
+        cursor: pointer; 
+        font-size: .9rem; 
+        border-radius: 8px; 
+        transition: .2s; 
+    }
     .btn-remove:hover { background: #fef2f2; }
     .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -88,26 +102,6 @@
         </div>
     }
 
-    <!-- Block Time Form -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body p-4">
-            <h6 class="fw-bold mb-3 text-warning"><i class="fas fa-ban me-2"></i>Block thời gian nghỉ</h6>
-            <form asp-action="BlockTime" method="post" class="d-flex gap-3 align-items-end flex-wrap">
-                @Html.AntiForgeryToken()
-                <div>
-                    <label class="form-label small text-muted">Từ</label>
-                    <input type="datetime-local" name="blockStart" class="form-control rounded-3" required>
-                </div>
-                <div>
-                    <label class="form-label small text-muted">Đến</label>
-                    <input type="datetime-local" name="blockEnd" class="form-control rounded-3" required>
-                </div>
-                <button type="submit" class="btn btn-warning fw-semibold rounded-3">
-                    <i class="fas fa-lock me-2"></i>Block giờ này
-                </button>
-            </form>
-        </div>
-    </div>
 
     <!-- Lịch 7 ngày -->
     <div class="schedule-grid" id="scheduleGrid">
@@ -141,7 +135,7 @@
                                 <input type="time" name="startTime" value="@block.StartTime" placeholder="Từ">
                                 <span class="text-muted">→</span>
                                 <input type="time" name="endTime" value="@block.EndTime" placeholder="Đến">
-                                <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()">×</button>
+                                <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         }
                     }
@@ -201,7 +195,7 @@ function addSlot(index) {
         <input type="time" name="startTime" value="08:00" placeholder="Từ">
         <span class="text-muted">→</span>
         <input type="time" name="endTime" value="12:00" placeholder="Đến">
-        <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()">×</button>
+        <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
     `;
     container.appendChild(row);
     

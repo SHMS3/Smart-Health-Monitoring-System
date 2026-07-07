@@ -135,8 +135,7 @@ public class DoctorScheduleController : Controller
             .Where(s => s.DoctorId == doctor.Id && s.SlotStart >= today && s.SlotStart < endDay)
             .ToListAsync();
 
-        // 3. Find Booked/SoftLocked/Blocked slots
-        var nonAvailableSlots = existingSlots.Where(s => s.Status != AppointmentSlotStatus.Available).ToList();
+        var nonAvailableSlots = existingSlots.Where(s => s.Status == AppointmentSlotStatus.Booked || s.Status == AppointmentSlotStatus.SoftLocked).ToList();
 
         // 4. Validate that all Booked/SoftLocked slots are STILL COVERED by the new configuration
         foreach (var bookedSlot in nonAvailableSlots)
@@ -168,9 +167,9 @@ public class DoctorScheduleController : Controller
             }
         }
 
-        // 5. Delete ALL existing Available slots in these 7 days
-        var availableSlots = existingSlots.Where(s => s.Status == AppointmentSlotStatus.Available).ToList();
-        _context.AppointmentSlots.RemoveRange(availableSlots);
+        // 5. Delete ALL existing Available and Blocked slots in these 7 days
+        var deletableSlots = existingSlots.Where(s => s.Status == AppointmentSlotStatus.Available || s.Status == AppointmentSlotStatus.Blocked).ToList();
+        _context.AppointmentSlots.RemoveRange(deletableSlots);
 
         // 6. Generate new Available slots
         foreach (var block in slots)
@@ -204,30 +203,6 @@ public class DoctorScheduleController : Controller
         await _context.SaveChangesAsync();
         TempData["Success"] = "Lịch làm việc 7 ngày tới đã được cập nhật!";
         return Ok(new { success = true });
-    }
-
-    // POST: /DoctorSchedule/BlockTime
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> BlockTime(DateTime blockStart, DateTime blockEnd)
-    {
-        var doctor = await GetCurrentDoctorAsync();
-        if (doctor == null) return Forbid();
-
-        var slotsToBlock = await _context.AppointmentSlots
-            .Where(s =>
-                s.DoctorId == doctor.Id &&
-                s.SlotStart >= blockStart &&
-                s.SlotStart < blockEnd &&
-                s.Status == AppointmentSlotStatus.Available)
-            .ToListAsync();
-
-        foreach (var slot in slotsToBlock)
-            slot.Status = AppointmentSlotStatus.Blocked;
-
-        await _context.SaveChangesAsync();
-        TempData["Success"] = $"Đã block {slotsToBlock.Count} khung giờ.";
-        return RedirectToAction(nameof(Index));
     }
 }
 
