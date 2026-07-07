@@ -69,7 +69,7 @@ namespace SmartHealthMonitoring
             // Tắt Background Worker nhắc nhở ghi log chỉ số sinh hiệu để không tự động gửi email cho bệnh nhân.
             // builder.Services.AddHostedService<SmartHealthMonitoring.Workers.DailyVitalLogReminderWorker>();
             // Đặt lịch: sinh slot tự động mỗi ngày lúc 00:05
-            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentSlotGeneratorWorker>();
+            // builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentSlotGeneratorWorker>();
             // Đặt lịch: dọn dẹp SoftLock hết hạn và đánh dấu No-show mỗi 2 phút
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentCleanupWorker>();
 

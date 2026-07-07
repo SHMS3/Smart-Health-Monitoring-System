@@ -1,9 +1,7 @@
-@model List<SmartHealthMonitoring.Models.DoctorWorkSchedule>
+@model List<SmartHealthMonitoring.Controllers.DoctorSchedule7DaysViewModel>
 @{
     ViewData["Title"] = "Cấu hình Lịch làm việc";
-    var days = new[] { "Chủ Nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7" };
-    // Group schedules by DayOfWeek
-    var scheduleMap = Model.GroupBy(s => s.DayOfWeek).ToDictionary(g => g.Key, g => g.ToList());
+    var culture = new System.Globalization.CultureInfo("vi-VN");
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -75,7 +73,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h1 class="h3 mb-1 fw-bold">📅 Cấu hình Lịch làm việc</h1>
-                <p class="mb-0 opacity-75">Thiết lập khung giờ khám hàng tuần. Hệ thống sẽ tự động sinh slot 14 ngày tới.</p>
+                <p class="mb-0 opacity-75">Thiết lập khung giờ khám cho 7 ngày tới.</p>
             </div>
             <a asp-action="Index" asp-controller="DoctorDashboard" class="btn btn-light btn-sm">
                 ← Về Dashboard
@@ -113,28 +111,36 @@
 
     <!-- Lịch 7 ngày -->
     <div class="schedule-grid" id="scheduleGrid">
-        @for (byte dow = 0; dow <= 6; dow++)
+        @for (int i = 0; i < Model.Count; i++)
         {
-            var daySchedules = scheduleMap.ContainsKey(dow) ? scheduleMap[dow] : new List<SmartHealthMonitoring.Models.DoctorWorkSchedule>();
-            var isActive = daySchedules.Any();
-            <div class="day-card" data-dow="@dow">
+            var dayData = Model[i];
+            var dateStr = dayData.Date.ToString("yyyy-MM-dd");
+            var displayDate = dayData.Date.ToString("dd/MM");
+            var displayDayName = dayData.Date == DateTime.Today ? "Hôm nay" : 
+                                 dayData.Date == DateTime.Today.AddDays(1) ? "Ngày mai" : 
+                                 culture.DateTimeFormat.GetDayName(dayData.Date.DayOfWeek);
+            displayDayName = char.ToUpper(displayDayName[0]) + displayDayName.Substring(1);
+
+            var isActive = dayData.Blocks.Any();
+
+            <div class="day-card" data-date="@dateStr">
                 <div class="day-header @(isActive ? "active" : "inactive")">
                     <div class="day-dot @(isActive ? "active" : "inactive")"></div>
-                    <span>@days[dow]</span>
+                    <span>@displayDayName (@displayDate)</span>
                     <label class="toggle-switch ms-auto">
-                        <input type="checkbox" class="day-toggle" data-dow="@dow" @(isActive ? "checked" : "")>
+                        <input type="checkbox" class="day-toggle" data-date="@dateStr" @(isActive ? "checked" : "") onchange="toggleDay(this)">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
-                <div class="day-body slot-container" id="slots-@dow">
-                    @if (daySchedules.Any())
+                <div class="day-body slot-container" id="slots-@i">
+                    @if (isActive)
                     {
-                        foreach (var s in daySchedules)
+                        foreach (var block in dayData.Blocks)
                         {
                             <div class="slot-row">
-                                <input type="time" name="startTime" value="@s.StartTime.ToString("HH:mm")" placeholder="Từ">
+                                <input type="time" name="startTime" value="@block.StartTime" placeholder="Từ">
                                 <span class="text-muted">→</span>
-                                <input type="time" name="endTime" value="@s.EndTime.ToString("HH:mm")" placeholder="Đến">
+                                <input type="time" name="endTime" value="@block.EndTime" placeholder="Đến">
                                 <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()">×</button>
                             </div>
                         }
@@ -145,7 +151,7 @@
                     }
                 </div>
                 <div class="px-4 pb-3">
-                    <button type="button" class="btn-add-slot" onclick="addSlot(@dow)">
+                    <button type="button" class="btn-add-slot" onclick="addSlot(@i)">
                         <i class="fas fa-plus"></i> Thêm ca
                     </button>
                 </div>
@@ -155,7 +161,7 @@
 
     <!-- Save Bar -->
     <div class="save-bar">
-        <span class="text-muted small align-self-center me-auto">💡 Mỗi ca là một khung giờ làm việc. Hệ thống sẽ sinh slot 30 phút/lần.</span>
+        <span class="text-muted small align-self-center me-auto">💡 Mỗi ca là một khung giờ làm việc. Hệ thống sẽ sinh slot 30 phút/lần. Lịch đã được bệnh nhân đặt sẽ không bị ảnh hưởng.</span>
         <button type="button" class="btn-save" onclick="saveSchedule()">
             <i class="fas fa-save me-2"></i>Lưu lịch làm việc
         </button>
@@ -165,8 +171,26 @@
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-function addSlot(dow) {
-    const container = document.getElementById(`slots-${dow}`);
+function toggleDay(checkbox) {
+    const card = checkbox.closest('.day-card');
+    const header = card.querySelector('.day-header');
+    const dot = card.querySelector('.day-dot');
+    
+    if (checkbox.checked) {
+        header.classList.remove('inactive');
+        header.classList.add('active');
+        dot.classList.remove('inactive');
+        dot.classList.add('active');
+    } else {
+        header.classList.remove('active');
+        header.classList.add('inactive');
+        dot.classList.remove('active');
+        dot.classList.add('inactive');
+    }
+}
+
+function addSlot(index) {
+    const container = document.getElementById(`slots-${index}`);
     // Remove "Ngày nghỉ" placeholder if present
     const placeholder = container.querySelector('p');
     if (placeholder) placeholder.remove();
@@ -180,6 +204,14 @@ function addSlot(dow) {
         <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()">×</button>
     `;
     container.appendChild(row);
+    
+    // Auto check the toggle
+    const card = container.closest('.day-card');
+    const toggle = card.querySelector('.day-toggle');
+    if (!toggle.checked) {
+        toggle.checked = true;
+        toggleDay(toggle);
+    }
 }
 
 async function saveSchedule() {
@@ -187,7 +219,7 @@ async function saveSchedule() {
 
     const cards = Array.from(document.querySelectorAll('.day-card'));
     for (const card of cards) {
-        const dow      = parseInt(card.dataset.dow);
+        const dateStr  = card.dataset.date;
         const isActive = card.querySelector('.day-toggle').checked;
         if (!isActive) continue;
 
@@ -215,7 +247,7 @@ async function saveSchedule() {
                 }
                 
                 timeRanges.push({ start, end });
-                payload.push({ dayOfWeek: dow, startTime: start, endTime: end, slotDurationMinutes: 30 });
+                payload.push({ date: dateStr, startTime: start, endTime: end, slotDurationMinutes: 30 });
             }
         }
     }
@@ -230,14 +262,15 @@ async function saveSchedule() {
     });
 
     if (res.ok) {
-        Swal.fire({ icon: 'success', title: 'Đã lưu!', text: 'Slot sẽ được sinh tự động ngay.', timer: 2000, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã lưu lịch làm việc cho 7 ngày tới!', timer: 2000, showConfirmButton: false })
+            .then(() => window.location.reload());
     } else {
         let errorMsg = 'Không thể lưu lịch. Vui lòng thử lại.';
         try {
             const data = await res.json();
             if (data && data.message) errorMsg = data.message;
         } catch(e) {}
-        Swal.fire({ icon: 'error', title: 'Lỗi', text: errorMsg });
+        Swal.fire({ icon: 'error', title: 'Không thể lưu!', text: errorMsg });
     }
 }
 </script>
