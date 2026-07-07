@@ -1,70 +1,86 @@
 @using SmartHealthMonitoring.Models
 @model List<SmartHealthMonitoring.Models.Appointment>
 @{
-    ViewData["Title"] = "Hàng đợi khám";
-    var selectedDate         = (DateOnly)ViewBag.SelectedDate;
-    var today                = DateOnly.FromDateTime(DateTime.UtcNow);
-    var waitingQueue         = ViewBag.WaitingQueue as List<WaitingPatient> ?? new List<WaitingPatient>();
-    var paidPayments = ViewBag.PaidPayments as List<int> ?? new List<int>();
-    var pendingPayments = ViewBag.PendingPayments as List<int> ?? new List<int>();
+    ViewData["Title"] = "Lịch hẹn khám";
+    var selectedDate  = (DateOnly)ViewBag.SelectedDate;
+    var todayDate     = (DateOnly)ViewBag.TodayDate;
+    var waitingQueue  = ViewBag.WaitingQueue as List<WaitingPatient> ?? new();
+    var paidPayments     = ViewBag.PaidPayments as List<int> ?? new();
+    var pendingPayments  = ViewBag.PendingPayments as List<int> ?? new();
+    var allByDate = ViewBag.AllByDate as Dictionary<DateOnly, List<Appointment>> ?? new();
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
     body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
-    .page-header { background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border-radius: 20px; padding: 32px 40px; margin-bottom: 28px; }
-    .date-nav { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; }
-    .date-btn { padding: 8px 18px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: white; color: #475569; font-size: .88rem; text-decoration: none; transition: all .2s; }
-    .date-btn:hover, .date-btn.active { background: #2d6a9f; color: white; border-color: #2d6a9f; }
-    .queue-table { background: white; border-radius: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.07); overflow: hidden; }
-    .queue-table table { width: 100%; border-collapse: collapse; }
-    .queue-table th { background: #f8fafc; padding: 14px 20px; font-size: .82rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid #f0f4f8; }
-    .queue-table td { padding: 16px 20px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+    .page-header { background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border-radius: 20px; padding: 28px 36px; margin-bottom: 24px; }
+    .stat-chip { background: rgba(255,255,255,.15); border-radius: 10px; padding: 10px 18px; font-size: .85rem; color: white; }
+    .stat-chip span { font-weight: 700; font-size: 1.3rem; display: block; }
+
+    /* Calendar */
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 24px; }
+    .cal-cell {
+        background: white; border-radius: 12px; padding: 10px 8px; text-align: center;
+        cursor: pointer; border: 2px solid transparent; transition: all .2s;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06); position: relative;
+    }
+    .cal-cell:hover { border-color: #2d6a9f; box-shadow: 0 4px 14px rgba(45,106,159,.2); }
+    .cal-cell.today { border-color: #2d6a9f; background: #eff6ff; }
+    .cal-cell.has-appt { background: linear-gradient(135deg, #dcfce7, #f0fdf4); border-color: #86efac; }
+    .cal-cell.has-appt:hover { border-color: #22c55e; }
+    .cal-cell.selected { border-color: #1e3a5f !important; background: #1e3a5f !important; color: white !important; box-shadow: 0 4px 18px rgba(30,58,95,.4); }
+    .cal-cell.selected .cal-date { color: white; }
+    .cal-cell.selected .cal-count { background: rgba(255,255,255,.3); color: white; }
+    .cal-cell.past { opacity: .5; cursor: default; }
+    .cal-date { font-weight: 600; font-size: .92rem; color: #1e293b; }
+    .cal-day  { font-size: .7rem; color: #94a3b8; margin-bottom: 4px; }
+    .cal-count { display: inline-block; background: #22c55e; color: white; border-radius: 20px; font-size: .7rem; font-weight: 700; padding: 1px 7px; margin-top: 4px; }
+    .cal-empty { background: #f8fafc; border-color: #f0f4f8; }
+    .cal-empty .cal-date { color: #cbd5e1; }
+
+    /* Detail Panel */
+    .detail-panel { background: white; border-radius: 20px; box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden; margin-bottom: 28px; }
+    .detail-header { padding: 18px 24px; background: linear-gradient(90deg, #f0f9ff, #eff6ff); border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; }
+    .detail-header h2 { font-size: 1rem; font-weight: 700; color: #1e3a5f; margin: 0; }
+
+    /* Queue table */
+    .queue-table { width: 100%; border-collapse: collapse; }
+    .queue-table th { background: #f8fafc; padding: 12px 18px; font-size: .78rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid #f0f4f8; }
+    .queue-table td { padding: 14px 18px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
     .queue-table tr:last-child td { border-bottom: none; }
-    .queue-table tr:hover td { background: #f8fafc; }
-    .order-badge { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; font-weight: 700; font-size: .9rem; display: flex; align-items: center; justify-content: center; }
+    .queue-table tr:hover td { background: #fafbfc; }
+    .order-badge { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
     .patient-name { font-weight: 600; color: #1e293b; }
-    .time-chip { background: #e0f2fe; color: #0369a1; border-radius: 8px; padding: 4px 12px; font-size: .85rem; font-weight: 600; display: inline-block; }
-    .walk-chip { background: #fef3c7; color: #92400e; border-radius: 8px; padding: 4px 12px; font-size: .82rem; font-weight: 600; display: inline-block; }
-    .note-text { font-size: .85rem; color: #64748b; max-width: 220px; }
-    .stat-chip { background: #f0f4f8; border-radius: 10px; padding: 10px 18px; font-size: .85rem; }
-    .stat-chip span { font-weight: 700; font-size: 1.2rem; color: #1e3a5f; display: block; }
-    .section-divider { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; padding: 10px 20px; border-bottom: 1px solid #f0f4f8; }
-    .section-walkin { background: linear-gradient(90deg, #fef9c3, #fefce8); color: #854d0e; }
-    .section-online  { background: linear-gradient(90deg, #eff6ff, #f0f9ff); color: #1e40af; }
-    .empty-queue { text-align: center; padding: 40px; color: #94a3b8; }
+    .time-chip { background: #e0f2fe; color: #0369a1; border-radius: 8px; padding: 3px 10px; font-size: .82rem; font-weight: 600; display: inline-block; }
+    .walk-chip  { background: #fef3c7; color: #92400e; border-radius: 8px; padding: 3px 10px; font-size: .82rem; font-weight: 600; display: inline-block; }
+    .note-text  { font-size: .83rem; color: #64748b; max-width: 200px; }
+    .section-divider { font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 9px 18px; border-bottom: 1px solid #f0f4f8; }
+    .section-walkin  { background: linear-gradient(90deg,#fef9c3,#fefce8); color: #854d0e; }
+    .section-online  { background: linear-gradient(90deg,#eff6ff,#f0f9ff); color: #1e40af; }
+    .empty-queue { text-align: center; padding: 44px; color: #94a3b8; }
+
+    .month-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .month-nav button { border: 1.5px solid #e2e8f0; background: white; border-radius: 8px; padding: 5px 14px; cursor: pointer; transition: all .2s; }
+    .month-nav button:hover { background: #2d6a9f; color: white; border-color: #2d6a9f; }
+    .day-label { font-size: .72rem; font-weight: 700; color: #94a3b8; text-align: center; text-transform: uppercase; letter-spacing: .4px; padding: 4px 0; }
 </style>
 
 <div class="container pt-5 mt-3 pb-5">
     <div class="page-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h1 class="h3 mb-1 fw-bold">🏥 Hàng đợi khám</h1>
-                <p class="mb-0 opacity-75">Ngày @selectedDate.ToString("dd/MM/yyyy") — @(waitingQueue.Count + Model.Count) bệnh nhân</p>
+                <h1 class="h3 mb-1 fw-bold">📅 Lịch hẹn khám</h1>
+                <p class="mb-0 opacity-75">Xem và quản lý lịch hẹn của bệnh nhân trong 30 ngày tới</p>
             </div>
             <div class="d-flex gap-3">
                 <div class="stat-chip text-center">
-                    <span>@waitingQueue.Count</span>Walk-in
+                    <span>@allByDate.Values.Sum(v => v.Count)</span>Tổng lịch hẹn
                 </div>
-                <div class="stat-chip text-center" style="background:#dbeafe">
-                    <span style="color:#1d4ed8">@Model.Count</span>Đặt lịch
-                </div>
-                <div class="stat-chip text-center" style="background:#dcfce7">
-                    <span style="color:#16a34a">@Model.Count(a => a.Status == AppointmentStatus.Completed)</span>Đã khám
+                <div class="stat-chip text-center">
+                    <span>@allByDate.Keys.Count</span>Ngày có lịch
                 </div>
             </div>
         </div>
-    </div>
-
-    @* Date Navigation *@
-    <div class="date-nav">
-        <a asp-action="DoctorQueue" asp-route-date="@selectedDate.AddDays(-1).ToString("yyyy-MM-dd")" class="date-btn">← Hôm qua</a>
-        <a asp-action="DoctorQueue" asp-route-date="@today.ToString("yyyy-MM-dd")" class="date-btn @(selectedDate == today ? "active" : "")">Hôm nay</a>
-        <a asp-action="DoctorQueue" asp-route-date="@selectedDate.AddDays(1).ToString("yyyy-MM-dd")" class="date-btn">Ngày mai →</a>
-        <input type="date" class="form-control rounded-3 ms-auto"
-               value="@selectedDate.ToString("yyyy-MM-dd")"
-               style="max-width:180px;border:1.5px solid #e2e8f0"
-               onchange="window.location='/Appointment/DoctorQueue?date='+this.value">
     </div>
 
     @if (TempData["Success"] != null)
@@ -74,20 +90,92 @@
         </div>
     }
 
-    @* ─── Bảng hàng đợi gộp ─── *@
-    @if (!waitingQueue.Any() && !Model.Any())
-    {
-        <div class="queue-table">
-            <div class="empty-queue">
-                <i class="fas fa-calendar-times fa-3x d-block mb-3 opacity-25"></i>
-                <p>Không có bệnh nhân nào trong hàng đợi hôm nay.</p>
+    @* ── Calendar Grid ── *@
+    <div class="detail-panel mb-4">
+        <div class="detail-header">
+            <i class="fas fa-calendar-alt text-primary"></i>
+            <h2>Lịch 30 ngày tới — Nhấn vào ngày để xem chi tiết</h2>
+        </div>
+        <div class="p-4">
+            @{
+                var dayNames = new[] { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+            }
+            <div class="cal-grid" style="margin-bottom:6px;">
+                @foreach (var d in dayNames)
+                {
+                    <div class="day-label">@d</div>
+                }
+            </div>
+
+            @{
+                var startDate = todayDate;
+                // Pad the beginning so Monday aligns
+                int startDow = (int)startDate.DayOfWeek; // 0=Sun
+                var calDays = new List<DateOnly?>();
+                for (int p = 0; p < startDow; p++) calDays.Add(null);
+                for (int d = 0; d < 30; d++) calDays.Add(startDate.AddDays(d));
+                // pad tail to fill last row
+                while (calDays.Count % 7 != 0) calDays.Add(null);
+            }
+
+            <div class="cal-grid">
+                @foreach (var cd in calDays)
+                {
+                    if (cd == null)
+                    {
+                        <div class="cal-cell cal-empty" style="pointer-events:none;">
+                            <div class="cal-date" style="visibility:hidden">-</div>
+                        </div>
+                    }
+                    else
+                    {
+                        var d = cd.Value;
+                        bool hasAppt = allByDate.ContainsKey(d);
+                        int count = hasAppt ? allByDate[d].Count : 0;
+                        string css = hasAppt ? "has-appt" : "";
+                        if (d == todayDate) css += " today";
+                        if (d == selectedDate) css += " selected";
+                        <div class="cal-cell @css" onclick="window.location='/Appointment/DoctorQueue?date=@d.ToString("yyyy-MM-dd")'">
+                            <div class="cal-day">@d.DayOfWeek.ToString().Substring(0,3)</div>
+                            <div class="cal-date">@d.Day/@d.Month</div>
+                            @if (hasAppt)
+                            {
+                                <span class="cal-count">@count</span>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="d-flex gap-3 mt-3 flex-wrap" style="font-size:.8rem;">
+                <span><span style="display:inline-block;width:12px;height:12px;background:#86efac;border-radius:3px;"></span> Có lịch hẹn</span>
+                <span><span style="display:inline-block;width:12px;height:12px;background:#bfdbfe;border-radius:3px;border:2px solid #2d6a9f"></span> Hôm nay</span>
+                <span><span style="display:inline-block;width:12px;height:12px;background:#1e3a5f;border-radius:3px;"></span> Đang xem</span>
             </div>
         </div>
-    }
-    else
-    {
-        <div class="queue-table">
-            <table>
+    </div>
+
+    @* ── Detail Panel for selected date ── *@
+    <div class="detail-panel">
+        <div class="detail-header">
+            <i class="fas fa-list-ul text-success"></i>
+            <h2>Chi tiết ngày @selectedDate.ToString("dd/MM/yyyy")
+                @if (selectedDate == todayDate) { <span class="badge bg-primary ms-2" style="font-size:.7rem;">Hôm nay</span> }
+            </h2>
+            <span class="ms-auto text-muted small">@(waitingQueue.Count + Model.Count) bệnh nhân</span>
+        </div>
+
+        @if (!waitingQueue.Any() && !Model.Any())
+        {
+            <div class="empty-queue">
+                <i class="fas fa-calendar-times fa-3x d-block mb-3 opacity-25"></i>
+                <p class="fw-semibold">Không có lịch hẹn nào vào ngày này.</p>
+                <p class="text-muted small">Hãy chọn một ngày có biểu tượng màu xanh trên lịch ở trên.</p>
+            </div>
+        }
+        else
+        {
+            <table class="queue-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -99,15 +187,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @* ── Walk-in patients (đăng ký tại quầy) ── *@
+                    @* ── Walk-in ── *@
                     @{ int wpIdx = 0; }
                     @if (waitingQueue.Any())
                     {
-                        <tr>
-                            <td colspan="6" class="section-divider section-walkin">
-                                <i class="fas fa-walking me-1"></i> Đăng ký trực tiếp tại quầy
-                            </td>
-                        </tr>
+                        <tr><td colspan="6" class="section-divider section-walkin"><i class="fas fa-walking me-1"></i>Đăng ký trực tiếp tại quầy</td></tr>
                         @foreach (var wp in waitingQueue)
                         {
                             wpIdx++;
@@ -120,22 +204,14 @@
                                 </td>
                                 <td><span class="note-text text-muted">Đăng ký trực tiếp tại quầy lễ tân</span></td>
                                 <td>
-                                    @if (wp.Status == 0)
-                                    {
-                                        <span class="badge bg-warning text-dark px-3 py-1 rounded-pill"><i class="fas fa-hourglass-half me-1"></i>Đang chờ</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-success px-3 py-1 rounded-pill"><i class="fas fa-check me-1"></i>Đã tiếp nhận</span>
-                                    }
+                                    @if (wp.Status == 0) { <span class="badge bg-warning text-dark px-3 py-1 rounded-pill"><i class="fas fa-hourglass-half me-1"></i>Đang chờ</span> }
+                                    else { <span class="badge bg-success px-3 py-1 rounded-pill"><i class="fas fa-check me-1"></i>Đã tiếp nhận</span> }
                                 </td>
                                 <td id="action-cell-@wp.Id">
                                     @if (wp.Status == 0)
                                     {
                                         <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold btn-accept"
-                                                data-id="@wp.Id"
-                                                data-patient-id="@wp.PatientId"
-                                                data-patient-name="@wp.Patient.User.FullName">
+                                                data-id="@wp.Id" data-patient-id="@wp.PatientId" data-patient-name="@wp.Patient.User.FullName">
                                             <i class="fas fa-stethoscope me-1"></i> Tiếp nhận khám
                                         </button>
                                     }
@@ -146,7 +222,6 @@
                                                     onclick="openServiceModal(@wp.Id, @wp.PatientId, '@wp.Patient.User.FullName')">
                                                 <i class="fas fa-plus-circle me-1"></i> Thêm dịch vụ
                                             </button>
-                                            
                                             @if (paidPayments.Contains(wp.PatientId))
                                             {
                                                 <a asp-controller="ClinicalRecord" asp-action="Index" asp-route-id="@wp.PatientId"
@@ -162,8 +237,7 @@
                                             }
                                             else
                                             {
-                                                <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold btn-cancel-exam"
-                                                        data-id="@wp.Id">
+                                                <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold btn-cancel-exam" data-id="@wp.Id">
                                                     <i class="fas fa-times me-1"></i> Hủy khám
                                                 </button>
                                             }
@@ -174,15 +248,11 @@
                         }
                     }
 
-                    @* ── Online appointments (đặt lịch trước) ── *@
+                    @* ── Online ── *@
                     @{ int i = 0; }
                     @if (Model.Any())
                     {
-                        <tr>
-                            <td colspan="6" class="section-divider section-online">
-                                <i class="fas fa-calendar-check me-1"></i> Đặt lịch trước (online)
-                            </td>
-                        </tr>
+                        <tr><td colspan="6" class="section-divider section-online"><i class="fas fa-calendar-check me-1"></i>Đặt lịch trước (online)</td></tr>
                         @foreach (var a in Model.OrderBy(x => x.Slot.SlotStart))
                         {
                             i++;
@@ -196,37 +266,47 @@
                                 <td><div class="note-text">@(string.IsNullOrEmpty(a.PatientNote) ? "—" : a.PatientNote)</div></td>
                                 <td>
                                     @if (a.Status == AppointmentStatus.Confirmed)
-                                    {
-                                        <span class="badge bg-success-subtle text-success rounded-pill px-3">Chờ khám</span>
-                                    }
+                                    { <span class="badge bg-success-subtle text-success rounded-pill px-3">Chờ khám</span> }
                                     else if (a.Status == AppointmentStatus.Completed)
-                                    {
-                                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3">Đã khám</span>
-                                    }
+                                    { <span class="badge bg-primary-subtle text-primary rounded-pill px-3">Đã khám</span> }
                                 </td>
                                 <td>
                                     @if (a.Status == AppointmentStatus.Confirmed)
                                     {
-                                        <a asp-controller="ClinicalExam" asp-action="Create" asp-route-patientId="@a.PatientId"
-                                           class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
-                                            <i class="fas fa-stethoscope me-1"></i>Bắt đầu khám
-                                        </a>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                                    onclick="openServiceModal(0, @a.PatientId, '@a.Patient.User.FullName')">
+                                                <i class="fas fa-plus-circle me-1"></i> Thêm dịch vụ
+                                            </button>
+                                            
+                                            @if (paidPayments.Contains(a.PatientId))
+                                            {
+                                                <a asp-controller="ClinicalExam" asp-action="Create" asp-route-patientId="@a.PatientId"
+                                                   class="btn btn-sm btn-primary rounded-pill px-3 fw-bold">
+                                                    <i class="fas fa-stethoscope me-1"></i> Bắt đầu khám
+                                                </a>
+                                            }
+                                            else if (pendingPayments.Contains(a.PatientId))
+                                            {
+                                                <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-3 py-2 fw-bold d-flex align-items-center">
+                                                    <i class="fas fa-hourglass-half me-1"></i> Chờ thanh toán
+                                                </span>
+                                            }
+                                        </div>
                                     }
-                                    else
-                                    {
-                                        <span class="text-muted small">Hoàn tất</span>
-                                    }
+                                    else { <span class="text-muted small">Hoàn tất</span> }
                                 </td>
                             </tr>
                         }
                     }
                 </tbody>
             </table>
-        </div>
-    }
+        }
+    </div>
 </div>
 
-@* Modal Thêm Dịch Vụ *@
+
+
 <div class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content rounded-4 border-0 shadow">
@@ -435,7 +515,7 @@
                     const modalEl  = document.getElementById('serviceModal');
                     const waitingId = modalEl.getAttribute('data-waiting-id');
                     bootstrap.Modal.getInstance(modalEl).hide();
-                    if (waitingId) {
+                    if (waitingId && waitingId !== '0') {
                         const actionCell = $('#action-cell-' + waitingId);
                         actionCell.html(`
                             <div class="d-flex gap-2 flex-wrap">
@@ -450,6 +530,8 @@
                         // Di chuyển hàng xuống dưới cùng (tạm ngưng)
                         const row = $('#waiting-row-' + waitingId);
                         row.parent().append(row);
+                    } else {
+                        window.location.reload();
                     }
                 });
             } else {

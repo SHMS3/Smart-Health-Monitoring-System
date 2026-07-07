@@ -64,6 +64,8 @@ public class AppointmentService : IAppointmentService
             .ToListAsync();
     }
 
+
+
     public async Task<List<Appointment>> GetPatientAppointmentsAsync(int patientId)
     {
         return await _context.Appointments

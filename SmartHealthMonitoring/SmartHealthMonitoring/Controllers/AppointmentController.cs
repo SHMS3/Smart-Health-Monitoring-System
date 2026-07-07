@@ -144,7 +144,7 @@ public class AppointmentController : Controller
         {
             await _emailService.SendEmailAsync(patient.User.Email, subject, emailBody);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             TempData["Error"] = "Không thể gửi email OTP. Vui lòng kiểm tra lại cấu hình mail.";
         }
@@ -424,49 +424,66 @@ public class AppointmentController : Controller
         if (doctor == null) return Forbid();
 
         var selectedDate = date ?? DateOnly.FromDateTime(DateTime.UtcNow);
-        var queue = await _appointmentService.GetDoctorQueueAsync(doctor.Id, selectedDate);
-
-        // Lọc bỏ những appointment là walk-in (do lễ tân tạo) để tránh lặp lại ở section Online
-        queue = queue.Where(a => a.PatientNote != "Đăng ký trực tiếp tại quầy lễ tân").ToList();
-
-        // Load thêm WaitingPatients hôm nay (bệnh nhân walk-in)
         var todayUtc = DateTime.UtcNow.Date;
-        var waitingQueue = await _context.WaitingPatients
-            .Include(w => w.Patient).ThenInclude(p => p.User)
-            .Where(w => w.CreatedAt >= todayUtc
-                     && w.DoctorId == doctor.Id
-                     && (w.Status == 0 || w.Status == 1))
-            .OrderBy(w => w.SequenceNumber)
+        var endDate = todayUtc.AddDays(30);
+
+        // Load ALL appointments in next 30 days for the calendar view
+        var allAppointments = await _context.Appointments
+            .Include(a => a.Slot)
+            .Include(a => a.Patient).ThenInclude(p => p.User)
+            .Where(a => a.Slot.DoctorId == doctor.Id
+                     && a.Slot.SlotStart >= todayUtc
+                     && a.Slot.SlotStart < endDate
+                     && (a.Status == AppointmentStatus.Confirmed || a.Status == AppointmentStatus.Completed))
+            .OrderBy(a => a.Slot.SlotStart)
             .ToListAsync();
 
+        // Group by date
+        var byDate = allAppointments
+            .GroupBy(a => DateOnly.FromDateTime(a.Slot.SlotStart.Date))
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        // Single-day queue for selected date (for detail panel)
+        var queue = allAppointments
+            .Where(a => DateOnly.FromDateTime(a.Slot.SlotStart.Date) == selectedDate)
+            .Where(a => a.PatientNote != "Đăng ký trực tiếp tại quầy lễ tân")
+            .ToList();
+
+        // Walk-in queue (only for today)
+        var waitingQueue = new List<WaitingPatient>();
+        if (selectedDate == DateOnly.FromDateTime(todayUtc))
+        {
+            waitingQueue = await _context.WaitingPatients
+                .Include(w => w.Patient).ThenInclude(p => p.User)
+                .Where(w => w.CreatedAt >= todayUtc
+                         && w.DoctorId == doctor.Id
+                         && (w.Status == 0 || w.Status == 1))
+                .OrderBy(w => w.SequenceNumber)
+                .ToListAsync();
+        }
+
         var patientIds = waitingQueue.Select(w => w.PatientId).ToList();
+        patientIds.AddRange(queue.Select(a => a.PatientId));
+        patientIds = patientIds.Distinct().ToList();
         
         var paidPayments = await _context.Payments
             .Where(p => patientIds.Contains(p.PatientId) && p.CreatedAt.Date == todayUtc && p.Status == "Paid")
-            .Select(p => p.PatientId)
-            .Distinct()
-            .ToListAsync();
-
+            .Select(p => p.PatientId).Distinct().ToListAsync();
         var pendingPayments = await _context.Payments
             .Where(p => patientIds.Contains(p.PatientId) && p.CreatedAt.Date == todayUtc && p.Status == "Pending")
-            .Select(p => p.PatientId)
-            .Distinct()
-            .ToListAsync();
-
+            .Select(p => p.PatientId).Distinct().ToListAsync();
         var onlyPendingPayments = pendingPayments.Except(paidPayments).ToList();
-
-        // Sắp xếp lại: Đẩy những bệnh nhân đang nợ (Pending) xuống cuối danh sách
         waitingQueue = waitingQueue
             .OrderBy(w => onlyPendingPayments.Contains(w.PatientId) ? 1 : 0)
-            .ThenBy(w => w.SequenceNumber)
-            .ToList();
+            .ThenBy(w => w.SequenceNumber).ToList();
 
-        ViewBag.WaitingQueue = waitingQueue;
-        ViewBag.PaidPayments = paidPayments;
-        ViewBag.PendingPayments = onlyPendingPayments;
-
-        ViewBag.SelectedDate = selectedDate;
-        ViewBag.DoctorId     = doctor.Id;
+        ViewBag.WaitingQueue     = waitingQueue;
+        ViewBag.PaidPayments     = paidPayments;
+        ViewBag.PendingPayments  = onlyPendingPayments;
+        ViewBag.SelectedDate     = selectedDate;
+        ViewBag.DoctorId         = doctor.Id;
+        ViewBag.AllByDate        = byDate;
+        ViewBag.TodayDate        = DateOnly.FromDateTime(todayUtc);
         return View(queue);
     }
 
