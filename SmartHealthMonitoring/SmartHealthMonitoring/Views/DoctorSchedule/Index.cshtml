@@ -1,0 +1,271 @@
+@model List<SmartHealthMonitoring.Controllers.DoctorSchedule7DaysViewModel>
+@{
+    ViewData["Title"] = "Cấu hình Lịch làm việc";
+    var culture = new System.Globalization.CultureInfo("vi-VN");
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
+    .page-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%);
+        color: white; border-radius: 20px; padding: 32px 40px; margin-bottom: 28px;
+    }
+    .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+    .day-card {
+        background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+        transition: box-shadow .2s;
+    }
+    .day-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,.12); }
+    .day-header {
+        padding: 16px 20px; font-weight: 600; font-size: .95rem;
+        border-bottom: 1px solid #f0f4f8; display: flex; align-items: center; gap: 10px;
+    }
+    .day-header.active { background: linear-gradient(90deg,#e8f4fd,#f0f9ff); color: #1e3a5f; }
+    .day-header.inactive { background: #f8fafc; color: #94a3b8; }
+    .day-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .day-dot.active { background: #22c55e; }
+    .day-dot.inactive { background: #cbd5e1; }
+    .day-body { padding: 16px 20px; }
+    .slot-row { display: flex; align-items: center; gap: 5px; margin-bottom: 10px; flex-wrap: nowrap; }
+    .slot-row input[type=time] {
+        border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 6px 8px;
+        font-size: .85rem; color: #334155; flex: 1; min-width: 0; outline: none;
+        transition: border-color .2s;
+    }
+    .slot-row input[type=time]:focus { border-color: #2d6a9f; }
+    .btn-add-slot {
+        display: flex; align-items: center; gap: 6px;
+        background: none; border: 1.5px dashed #94a3b8; border-radius: 8px;
+        padding: 8px 14px; font-size: .83rem; color: #64748b; cursor: pointer;
+        width: 100%; justify-content: center; margin-top: 6px; transition: all .2s;
+    }
+    .btn-add-slot:hover { border-color: #2d6a9f; color: #2d6a9f; background: #f0f9ff; }
+    .btn-remove { 
+        flex-shrink: 0; 
+        width: 32px; 
+        height: 32px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        background: #fee2e2; 
+        border: 1px solid #fca5a5; 
+        color: #dc2626; 
+        cursor: pointer; 
+        font-size: .9rem; 
+        border-radius: 8px; 
+        transition: .2s; 
+    }
+    .btn-remove:hover { background: #fef2f2; }
+    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+        position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+        background: #cbd5e1; transition: .3s; border-radius: 24px;
+    }
+    .toggle-slider:before {
+        position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+        background: white; transition: .3s; border-radius: 50%;
+    }
+    input:checked + .toggle-slider { background: #22c55e; }
+    input:checked + .toggle-slider:before { transform: translateX(20px); }
+    .save-bar {
+        position: sticky; bottom: 20px; background: white; border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,.15); padding: 16px 28px;
+        display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px;
+    }
+    .btn-save {
+        background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white;
+        border: none; border-radius: 10px; padding: 10px 28px; font-weight: 600; cursor: pointer; transition: opacity .2s;
+    }
+    .btn-save:hover { opacity: .9; }
+</style>
+
+<div class="container pt-5 mt-3 pb-5">
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1 fw-bold">📅 Cấu hình Lịch làm việc</h1>
+                <p class="mb-0 opacity-75">Thiết lập khung giờ khám cho 7 ngày tới.</p>
+            </div>
+            <a asp-action="Index" asp-controller="DoctorDashboard" class="btn btn-light btn-sm">
+                ← Về Dashboard
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success rounded-3 border-0 shadow-sm mb-4">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        </div>
+    }
+
+
+    <!-- Lịch 7 ngày -->
+    <div class="schedule-grid" id="scheduleGrid">
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            var dayData = Model[i];
+            var dateStr = dayData.Date.ToString("yyyy-MM-dd");
+            var displayDate = dayData.Date.ToString("dd/MM");
+            var displayDayName = dayData.Date == DateTime.Today ? "Hôm nay" : 
+                                 dayData.Date == DateTime.Today.AddDays(1) ? "Ngày mai" : 
+                                 culture.DateTimeFormat.GetDayName(dayData.Date.DayOfWeek);
+            displayDayName = char.ToUpper(displayDayName[0]) + displayDayName.Substring(1);
+
+            var isActive = dayData.Blocks.Any();
+
+            <div class="day-card" data-date="@dateStr">
+                <div class="day-header @(isActive ? "active" : "inactive")">
+                    <div class="day-dot @(isActive ? "active" : "inactive")"></div>
+                    <span>@displayDayName (@displayDate)</span>
+                    <label class="toggle-switch ms-auto">
+                        <input type="checkbox" class="day-toggle" data-date="@dateStr" @(isActive ? "checked" : "") onchange="toggleDay(this)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="day-body slot-container" id="slots-@i">
+                    @if (isActive)
+                    {
+                        foreach (var block in dayData.Blocks)
+                        {
+                            <div class="slot-row">
+                                <input type="time" name="startTime" value="@block.StartTime" placeholder="Từ">
+                                <span class="text-muted">→</span>
+                                <input type="time" name="endTime" value="@block.EndTime" placeholder="Đến">
+                                <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted small text-center py-2 mb-0">Ngày nghỉ</p>
+                    }
+                </div>
+                <div class="px-4 pb-3">
+                    <button type="button" class="btn-add-slot" onclick="addSlot(@i)">
+                        <i class="fas fa-plus"></i> Thêm ca
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Save Bar -->
+    <div class="save-bar">
+        <span class="text-muted small align-self-center me-auto">💡 Mỗi ca là một khung giờ làm việc. Hệ thống sẽ sinh slot 30 phút/lần. Lịch đã được bệnh nhân đặt sẽ không bị ảnh hưởng.</span>
+        <button type="button" class="btn-save" onclick="saveSchedule()">
+            <i class="fas fa-save me-2"></i>Lưu lịch làm việc
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function toggleDay(checkbox) {
+    const card = checkbox.closest('.day-card');
+    const header = card.querySelector('.day-header');
+    const dot = card.querySelector('.day-dot');
+    
+    if (checkbox.checked) {
+        header.classList.remove('inactive');
+        header.classList.add('active');
+        dot.classList.remove('inactive');
+        dot.classList.add('active');
+    } else {
+        header.classList.remove('active');
+        header.classList.add('inactive');
+        dot.classList.remove('active');
+        dot.classList.add('inactive');
+    }
+}
+
+function addSlot(index) {
+    const container = document.getElementById(`slots-${index}`);
+    // Remove "Ngày nghỉ" placeholder if present
+    const placeholder = container.querySelector('p');
+    if (placeholder) placeholder.remove();
+
+    const row = document.createElement('div');
+    row.className = 'slot-row';
+    row.innerHTML = `
+        <input type="time" name="startTime" value="08:00" placeholder="Từ">
+        <span class="text-muted">→</span>
+        <input type="time" name="endTime" value="12:00" placeholder="Đến">
+        <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
+    `;
+    container.appendChild(row);
+    
+    // Auto check the toggle
+    const card = container.closest('.day-card');
+    const toggle = card.querySelector('.day-toggle');
+    if (!toggle.checked) {
+        toggle.checked = true;
+        toggleDay(toggle);
+    }
+}
+
+async function saveSchedule() {
+    const payload = [];
+
+    const cards = Array.from(document.querySelectorAll('.day-card'));
+    for (const card of cards) {
+        const dateStr  = card.dataset.date;
+        const isActive = card.querySelector('.day-toggle').checked;
+        if (!isActive) continue;
+
+        const timeRanges = [];
+        const rows = Array.from(card.querySelectorAll('.slot-row'));
+        
+        for (const row of rows) {
+            const start = row.querySelector('[name=startTime]').value;
+            const end   = row.querySelector('[name=endTime]').value;
+            if (start && end) {
+                if (start >= end) {
+                    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Giờ bắt đầu phải nhỏ hơn giờ kết thúc.' });
+                    return;
+                }
+                
+                const isOverlap = timeRanges.some(range => 
+                    (start >= range.start && start < range.end) || 
+                    (end > range.start && end <= range.end) ||
+                    (start <= range.start && end >= range.end)
+                );
+                
+                if (isOverlap) {
+                    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Các ca làm việc trong cùng một ngày không được trùng lặp thời gian.' });
+                    return;
+                }
+                
+                timeRanges.push({ start, end });
+                payload.push({ date: dateStr, startTime: start, endTime: end, slotDurationMinutes: 30 });
+            }
+        }
+    }
+
+    const tokenElement = document.querySelector('input[name=__RequestVerificationToken]');
+    const token = tokenElement ? tokenElement.value : '';
+
+    const res = await fetch('/DoctorSchedule/Save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+        body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+        Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã lưu lịch làm việc cho 7 ngày tới!', timer: 2000, showConfirmButton: false })
+            .then(() => window.location.reload());
+    } else {
+        let errorMsg = 'Không thể lưu lịch. Vui lòng thử lại.';
+        try {
+            const data = await res.json();
+            if (data && data.message) errorMsg = data.message;
+        } catch(e) {}
+        Swal.fire({ icon: 'error', title: 'Không thể lưu!', text: errorMsg });
+    }
+}
+</script>
+}

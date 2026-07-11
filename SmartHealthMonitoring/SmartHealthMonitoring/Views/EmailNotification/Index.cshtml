@@ -143,41 +143,46 @@
                 AI Tự động (@Model.Stats.ByAI)
             </button> -->
             <div class="ml-auto self-center">
-                <span class="text-label-md text-on-surface-variant font-medium">Tổng số: <strong class="text-on-surface">@Model.Emails.Count</strong> hiển thị</span>
+                <span class="text-label-md text-on-surface-variant font-medium">Tổng số: <strong class="text-on-surface">@Model.TotalItems</strong> email</span>
             </div>
         </section>
 
         <!-- New Filters & Search Bar from Ref -->
         <section class="bg-white rounded-2xl vitals-shadow border border-outline-variant/30 overflow-hidden">
-            <form method="get" asp-action="Index">
+            <form id="emailFilterForm" method="get" asp-action="Index">
                 <div class="flex flex-col md:flex-row items-stretch border-b border-outline-variant/30">
                     <div class="flex-1 relative">
-                        <input name="keyword" class="w-full px-lg py-4 bg-transparent border-none focus:ring-0 text-body-md placeholder:text-outline-variant" placeholder="Tìm theo tên bệnh nhân, ID hoặc email..." type="text" value="@Context.Request.Query["keyword"]"/>
+                        <input id="keywordFilter" name="keyword" class="w-full px-lg py-4 bg-transparent border-none focus:ring-0 text-body-md placeholder:text-outline-variant" placeholder="Tìm theo tên bệnh nhân, ID hoặc email..." type="text" value="@Model.FilterKeyword" autocomplete="off"/>
                     </div>
-                    <button type="submit" class="bg-[#3b82f6] text-white px-xl font-bold text-label-md hover:bg-blue-600 transition-colors uppercase tracking-wide">Tìm kiếm</button>
                 </div>
                 
                 <div class="p-sm flex flex-wrap gap-sm bg-surface-container-lowest align-items-center">
                     <div class="flex items-center gap-xs px-md py-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
                         <span class="material-symbols-outlined text-[18px] text-outline">calendar_today</span>
-                        <input type="date" name="fromDate" id="fromDate" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 cursor-pointer font-medium text-on-surface-variant" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" max="@DateTime.Now.ToString("yyyy-MM-dd")" title="Từ ngày"/>
+                        <input type="date" name="fromDate" id="fromDate" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 cursor-pointer font-medium text-on-surface-variant" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" max="@DateTime.Now.ToString("yyyy-MM-dd")" title="Từ ngày" data-auto-submit="true"/>
                         <span class="mx-1 text-on-surface-variant">-</span>
-                        <input type="date" name="toDate" id="toDate" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 cursor-pointer font-medium text-on-surface-variant" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" max="@DateTime.Now.ToString("yyyy-MM-dd")" title="Đến ngày"/>
+                        <input type="date" name="toDate" id="toDate" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 cursor-pointer font-medium text-on-surface-variant" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" max="@DateTime.Now.ToString("yyyy-MM-dd")" title="Đến ngày" data-auto-submit="true"/>
                     </div>
                     
                     <div class="flex items-center gap-xs px-md py-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
                         <span class="material-symbols-outlined text-[18px] text-outline">filter_list</span>
-                        <select name="status" asp-for="FilterStatus" asp-items="Model.StatusOptions" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 pr-lg cursor-pointer font-medium text-on-surface-variant"></select>
+                        <select name="status" asp-for="FilterStatus" asp-items="Model.StatusOptions" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 pr-lg cursor-pointer font-medium text-on-surface-variant" data-auto-submit="true"></select>
                     </div>
 
                     <div class="flex items-center gap-xs px-md py-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
                         <span class="material-symbols-outlined text-[18px] text-outline">category</span>
-                        <select name="emailType" asp-for="FilterEmailType" asp-items="Model.EmailTypeOptions" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 pr-lg cursor-pointer font-medium text-on-surface-variant"></select>
+                        <select name="emailType" asp-for="FilterEmailType" asp-items="Model.EmailTypeOptions" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 pr-lg cursor-pointer font-medium text-on-surface-variant" data-auto-submit="true"></select>
                     </div>
 
-                    <a href="@Url.Action("Index")" class="ml-2 text-on-surface-variant font-medium text-label-md hover:underline">
-                        Xóa lọc
-                    </a>
+                    <div class="flex items-center gap-xs px-md py-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
+                        <span class="material-symbols-outlined text-[18px] text-outline">person</span>
+                        <select name="patientId" asp-for="FilterPatientId" asp-items="Model.PatientOptions" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 pr-lg cursor-pointer font-medium text-on-surface-variant max-w-[220px]" data-auto-submit="true"></select>
+                    </div>
+
+                    <div class="flex items-center gap-xs px-md py-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
+                        <span class="material-symbols-outlined text-[18px] text-outline">outgoing_mail</span>
+                        <select name="sender" asp-for="FilterSender" asp-items="Model.SenderOptions" class="bg-transparent border-none text-body-sm focus:ring-0 p-0 pr-lg cursor-pointer font-medium text-on-surface-variant max-w-[220px]" data-auto-submit="true"></select>
+                    </div>
                 </div>
             </form>
         </section>
@@ -327,28 +332,88 @@
                 </table>
             </div>
 
-            <!-- Refined Pagination (Static for now as requested by user template) -->
+            @{
+                string BuildPageUrl(int pageNumber)
+                {
+                    return Url.Action("Index", new
+                    {
+                        page = pageNumber,
+                        status = Model.FilterStatus,
+                        emailType = Model.FilterEmailType,
+                        fromDate = Model.FromDate?.ToString("yyyy-MM-dd"),
+                        toDate = Model.ToDate?.ToString("yyyy-MM-dd"),
+                        keyword = Model.FilterKeyword,
+                        patientId = Model.FilterPatientId,
+                        sender = Model.FilterSender
+                    }) ?? "#";
+                }
+
+                var startPage = Math.Max(1, Model.CurrentPage - 2);
+                var endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+            }
+
             <div class="px-lg py-lg bg-surface-container-lowest border-t border-outline-variant/30 flex justify-between items-center">
-                <span class="text-[13px] font-medium text-on-surface-variant">Hiển thị <span class="text-on-surface">@Model.Emails.Count</span> trên tổng số <span class="text-on-surface">@Model.Emails.Count</span> kết quả</span>
+                <span class="text-[13px] font-medium text-on-surface-variant">Hiển thị <span class="text-on-surface">@Model.StartItem - @Model.EndItem</span> trên tổng số <span class="text-on-surface">@Model.TotalItems</span> kết quả</span>
                 <div class="flex gap-2">
-                    <!-- <button class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors disabled:opacity-30" disabled>
-                        <span class="material-symbols-outlined text-[20px]">chevron_left</span>
-                    </button>
-                    <button class="w-9 h-9 flex items-center justify-center rounded-xl bg-[#3b82f6] text-white font-bold text-[13px] shadow-md shadow-blue-500/20">1</button>
-                    <button class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors disabled:opacity-30" disabled>
-                        <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-                    </button> -->
+                    @if (Model.TotalPages > 1)
+                    {
+                        <a href="@(Model.CurrentPage > 1 ? BuildPageUrl(Model.CurrentPage - 1) : "#")"
+                           class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors @(Model.CurrentPage <= 1 ? "pointer-events-none opacity-30" : "")"
+                           aria-label="Trang truoc">
+                            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                        </a>
+
+                        @if (startPage > 1)
+                        {
+                            <a href="@BuildPageUrl(1)" class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors font-bold text-[13px]">1</a>
+                            @if (startPage > 2)
+                            {
+                                <span class="w-9 h-9 flex items-center justify-center text-on-surface-variant">...</span>
+                            }
+                        }
+
+                        @for (var pageNumber = startPage; pageNumber <= endPage; pageNumber++)
+                        {
+                            if (pageNumber == Model.CurrentPage)
+                            {
+                                <span class="w-9 h-9 flex items-center justify-center rounded-xl bg-[#3b82f6] text-white font-bold text-[13px] shadow-md shadow-blue-500/20">@pageNumber</span>
+                            }
+                            else
+                            {
+                                <a href="@BuildPageUrl(pageNumber)" class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors font-bold text-[13px]">@pageNumber</a>
+                            }
+                        }
+
+                        @if (endPage < Model.TotalPages)
+                        {
+                            @if (endPage < Model.TotalPages - 1)
+                            {
+                                <span class="w-9 h-9 flex items-center justify-center text-on-surface-variant">...</span>
+                            }
+                            <a href="@BuildPageUrl(Model.TotalPages)" class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors font-bold text-[13px]">@Model.TotalPages</a>
+                        }
+
+                        <a href="@(Model.CurrentPage < Model.TotalPages ? BuildPageUrl(Model.CurrentPage + 1) : "#")"
+                           class="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant/50 hover:bg-surface-container-low transition-colors @(Model.CurrentPage >= Model.TotalPages ? "pointer-events-none opacity-30" : "")"
+                           aria-label="Trang sau">
+                            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                        </a>
+                    }
                 </div>
             </div>
+
         </section>
     </div>
 </main>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        const filterForm = document.getElementById("emailFilterForm");
+        const keywordFilter = document.getElementById("keywordFilter");
         const fromDate = document.getElementById("fromDate");
         const toDate = document.getElementById("toDate");
         const todayUrl = '@DateTime.Now.ToString("yyyy-MM-dd")';
+        let keywordTimer = null;
 
         function validateDates() {
             if (fromDate.value) {
@@ -370,8 +435,31 @@
             }
         }
 
-        fromDate.addEventListener("change", validateDates);
-        toDate.addEventListener("change", validateDates);
+        function submitFilters() {
+            validateDates();
+            if (filterForm.requestSubmit) {
+                filterForm.requestSubmit();
+            } else {
+                filterForm.submit();
+            }
+        }
+
+        filterForm.querySelectorAll("[data-auto-submit='true']").forEach(function (element) {
+            element.addEventListener("change", submitFilters);
+        });
+
+        keywordFilter.addEventListener("input", function () {
+            clearTimeout(keywordTimer);
+            keywordTimer = setTimeout(submitFilters, 600);
+        });
+
+        keywordFilter.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                clearTimeout(keywordTimer);
+                submitFilters();
+            }
+        });
         
         // Initial setup
         validateDates();

@@ -1,0 +1,40 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Application Error</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 40px; background-color: #fcf8f2; color: #1f1f1f; }
+        .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); padding: 40px; border-top: 6px solid #dc3545; }
+        h1 { margin-top: 0; color: #dc3545; font-size: 2rem; font-weight: 700; margin-bottom: 24px; }
+        .message-box { background-color: #fff5f5; border: 1px solid #fecaca; padding: 20px; border-radius: 8px; margin-bottom: 24px; }
+        .message-title { font-weight: bold; color: #991b1b; font-size: 1.1rem; margin-bottom: 8px; }
+        .message-text { color: #b91c1c; font-family: monospace; font-size: 0.95rem; word-break: break-all; margin: 0; }
+        .stack-trace-title { font-weight: 600; color: #4b5563; font-size: 1.1rem; margin-bottom: 12px; }
+        pre { background-color: #f3f4f6; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; font-family: Consolas, "Liberation Mono", Courier, monospace; font-size: 0.85rem; color: #374151; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Application Error (HTTP 500)</h1>
+        
+        <div class="message-box">
+            <div class="message-title">Error Message:</div>
+            <p class="message-text">@ViewBag.ErrorMessage</p>
+        </div>
+
+        @if (ViewBag.InnerException != null)
+        {
+            <div class="message-box" style="background-color: #fffbfa; border-color: #fed7aa;">
+                <div class="message-title" style="color: #c2410c;">Inner Exception:</div>
+                <p class="message-text" style="color: #ea580c;">@ViewBag.InnerException</p>
+            </div>
+        }
+
+        <div class="stack-trace-title">Stack Trace:</div>
+        <pre>@ViewBag.StackTrace</pre>
+    </div>
+</body>
+</html>

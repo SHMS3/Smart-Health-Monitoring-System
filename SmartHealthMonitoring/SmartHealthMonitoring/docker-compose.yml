@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web:
+    image: shms-web:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shms_app
+    restart: always
+    ports:
+      - "5001:8080" # Chạy cổng 5001 để tránh trùng cổng 5000 của dự án cũ
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - TZ=Asia/Ho_Chi_Minh
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Cho phép kết nối tới SQL Server chung trên VPS

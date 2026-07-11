@@ -122,70 +122,47 @@
                         </td>
 
                         <td>
-                            <a asp-action="Details"
-                               asp-route-id="@item.Id"
-                               class="btn btn-sm btn-outline-primary mb-2">
-
-                                <i class="fas fa-eye"></i>
-                                Chi tiết
-
-                            </a>
-
-                            <br />
-
-                            
                             @if (item.Status == 0)
-                            {
-                                <form class="claim-form">
-
-                                    @Html.AntiForgeryToken()
-
-                                    <input type="hidden"
-                                           name="id"
-                                           value="@item.Id" />
-
-                                    <button type="submit"
-                                            class="claim-btn">
-
-                                        Tiếp nhận
-
-                                    </button>
-
-                                </form>
-                            }
-                            else if (item.Status == 1 &&
-                            item.ClaimedByDoctorId == (int?)ViewData["DoctorId"])
                             {
                                 <a asp-action="Details"
                                    asp-route-id="@item.Id"
-                                   class="btn btn-sm btn-outline-primary">
-
-                                    <i class="fas fa-eye"></i>
-                                    Chi tiết
-
+                                   class="btn btn-sm btn-outline-primary mb-2 w-100 text-start">
+                                    <i class="fas fa-eye me-1"></i> Chi tiết
+                                </a>
+                                <form class="claim-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="claim-btn w-100">
+                                        Tiếp nhận
+                                    </button>
+                                </form>
+                            }
+                            else if (item.Status == 1 && item.ClaimedByDoctorId == (int?)ViewData["DoctorId"])
+                            {
+                                <a asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-sm btn-primary mb-2 w-100 text-start">
+                                    <i class="fas fa-comment-medical me-1"></i> Gửi lời nhắn
                                 </a>
                             }
                             else if (item.Status == 1)
                             {
-                                <span class="claimed-text">
-
-                                    Đang được bác sĩ khác xử lý
-
-                                </span>
+                                <a asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-sm btn-outline-primary mb-2 w-100 text-start">
+                                    <i class="fas fa-eye me-1"></i> Chi tiết
+                                </a>
+                                <span class="claimed-text d-block mt-1">Đang xử lý</span>
                             }
                             else
                             {
-                                <span class="status-badge status-resolved">
-
-                                    Hoàn tất
-
-                                </span>
+                                <a asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   class="btn btn-sm btn-outline-primary mb-2 w-100 text-start">
+                                    <i class="fas fa-eye me-1"></i> Chi tiết
+                                </a>
+                                <span class="status-badge status-resolved d-block w-100 text-center">Hoàn tất</span>
                             }
-                            
-
-                        </td>
-
-
                         </td>
 
                     </tr>

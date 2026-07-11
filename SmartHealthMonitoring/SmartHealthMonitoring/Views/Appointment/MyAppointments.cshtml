@@ -1,0 +1,173 @@
+@model List<SmartHealthMonitoring.Models.Appointment>
+@{
+    ViewData["Title"] = "Lịch hẹn của tôi";
+    var upcoming  = Model.Where(a => a.Slot.SlotStart >= DateTime.UtcNow && a.Status == SmartHealthMonitoring.Models.AppointmentStatus.Confirmed).ToList();
+    var past      = Model.Where(a => a.Slot.SlotStart < DateTime.UtcNow || a.Status != SmartHealthMonitoring.Models.AppointmentStatus.Confirmed).ToList();
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
+    .page-header { background: linear-gradient(135deg, #4338ca, #6366f1); color: white; border-radius: 20px; padding: 32px 40px; margin-bottom: 28px; }
+    .section-title { font-size: 1rem; font-weight: 700; color: #475569; margin-bottom: 16px; text-transform: uppercase; letter-spacing: .5px; }
+    .appt-card {
+        background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.07);
+        padding: 22px 28px; margin-bottom: 14px; display: flex; gap: 20px; align-items: center;
+        border-left: 4px solid transparent; transition: box-shadow .2s;
+    }
+    .appt-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,.12); }
+    .appt-card.confirmed { border-left-color: #22c55e; }
+    .appt-card.completed { border-left-color: #3b82f6; }
+    .appt-card.cancelled { border-left-color: #ef4444; opacity: .7; }
+    .appt-card.noshow   { border-left-color: #f59e0b; opacity: .7; }
+    .appt-date-box {
+        background: #f0f4f8; border-radius: 12px; padding: 12px 16px;
+        text-align: center; min-width: 70px; flex-shrink: 0;
+    }
+    .appt-date-box .day  { font-size: 1.8rem; font-weight: 700; color: #1e293b; line-height: 1; }
+    .appt-date-box .month { font-size: .75rem; color: #64748b; }
+    .appt-info { flex: 1; }
+    .appt-info .doctor { font-weight: 600; color: #1e293b; margin-bottom: 4px; }
+    .appt-info .meta   { font-size: .85rem; color: #64748b; }
+    .status-badge {
+        padding: 4px 14px; border-radius: 20px; font-size: .78rem; font-weight: 600;
+    }
+    .status-confirmed { background: #dcfce7; color: #16a34a; }
+    .status-completed { background: #dbeafe; color: #1d4ed8; }
+    .status-cancelled { background: #fee2e2; color: #dc2626; }
+    .status-noshow    { background: #fef3c7; color: #d97706; }
+    .btn-cancel-appt {
+        padding: 6px 16px; border-radius: 8px; border: 1.5px solid #ef4444;
+        color: #ef4444; background: none; font-size: .83rem; cursor: pointer; transition: all .2s;
+    }
+    .btn-cancel-appt:hover { background: #ef4444; color: white; }
+</style>
+
+<div class="container pt-5 mt-3 pb-5">
+    <div class="page-header">
+        <h1 class="h3 mb-1 fw-bold">📋 Lịch hẹn của tôi</h1>
+        <p class="mb-0 opacity-75">Quản lý toàn bộ lịch hẹn khám bệnh của bạn.</p>
+    </div>
+
+    <div class="d-flex justify-content-end mb-4">
+        <a asp-action="FindDoctor" class="btn fw-semibold rounded-3" style="background:#4338ca;color:white;padding:10px 22px">
+            <i class="fas fa-plus-circle me-2"></i>Đặt lịch mới
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success rounded-3 border-0 shadow-sm mb-4">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger rounded-3 border-0 shadow-sm mb-4">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+        </div>
+    }
+
+    <!-- Sắp tới -->
+    <div class="section-title"><i class="fas fa-clock me-2 text-success"></i>Sắp tới (@upcoming.Count)</div>
+    @if (!upcoming.Any())
+    {
+        <div class="text-center text-muted py-4 mb-4">
+            <i class="fas fa-calendar-times fa-2x d-block mb-2 opacity-25"></i>
+            Không có lịch hẹn sắp tới.
+        </div>
+    }
+    @foreach (var a in upcoming.OrderBy(x => x.Slot.SlotStart))
+    {
+        <div class="appt-card confirmed">
+            <div class="appt-date-box">
+                <div class="day">@a.Slot.SlotStart.Day</div>
+                <div class="month">@a.Slot.SlotStart.ToString("MMM")</div>
+            </div>
+            <div class="appt-info">
+                <div class="doctor"><i class="fas fa-user-md me-1 text-muted"></i>BS. @a.Doctor.User.FullName</div>
+                <div class="meta">
+                    <i class="fas fa-clock me-1"></i>@a.Slot.SlotStart.ToString("HH:mm") – @a.Slot.SlotEnd.ToString("HH:mm")
+                    <span class="mx-2">·</span>
+                    <i class="fas fa-stethoscope me-1"></i>@a.Doctor.Specialty
+                </div>
+                @if (!string.IsNullOrEmpty(a.PatientNote))
+                {
+                    <div class="meta mt-1 text-muted"><i class="fas fa-sticky-note me-1"></i>@a.PatientNote</div>
+                }
+            </div>
+            <div class="d-flex flex-column align-items-end gap-2">
+                <span class="status-badge status-confirmed">✓ Đã xác nhận</span>
+                <a asp-action="SupportPortal" asp-route-appointmentId="@a.Id" class="btn-cancel-appt" style="text-decoration:none">
+                    Huỷ lịch
+                </a>
+            </div>
+        </div>
+    }
+
+    <!-- Lịch sử -->
+    @if (past.Any())
+    {
+        <div class="section-title mt-4"><i class="fas fa-history me-2 text-muted"></i>Lịch sử (@past.Count)</div>
+        @foreach (var a in past.OrderByDescending(x => x.Slot.SlotStart))
+        {
+            var statusClass = a.Status switch {
+                SmartHealthMonitoring.Models.AppointmentStatus.Completed => "completed",
+                SmartHealthMonitoring.Models.AppointmentStatus.CancelledByPatient or
+                SmartHealthMonitoring.Models.AppointmentStatus.CancelledByDoctor => "cancelled",
+                SmartHealthMonitoring.Models.AppointmentStatus.NoShow => "noshow",
+                _ => "confirmed"
+            };
+            var statusLabel = a.Status switch {
+                SmartHealthMonitoring.Models.AppointmentStatus.Completed => "✓ Đã khám",
+                SmartHealthMonitoring.Models.AppointmentStatus.CancelledByPatient => "Bạn đã huỷ",
+                SmartHealthMonitoring.Models.AppointmentStatus.CancelledByDoctor => "Bác sĩ huỷ",
+                SmartHealthMonitoring.Models.AppointmentStatus.NoShow => "⚠ Không đến",
+                _ => "Đã xác nhận"
+            };
+            <div class="appt-card @statusClass">
+                <div class="appt-date-box">
+                    <div class="day">@a.Slot.SlotStart.Day</div>
+                    <div class="month">@a.Slot.SlotStart.ToString("MMM")</div>
+                </div>
+                <div class="appt-info">
+                    <div class="doctor"><i class="fas fa-user-md me-1 text-muted"></i>BS. @a.Doctor.User.FullName</div>
+                    <div class="meta">
+                        <i class="fas fa-clock me-1"></i>@a.Slot.SlotStart.ToString("HH:mm")
+                        <span class="mx-2">·</span>@a.Doctor.Specialty
+                    </div>
+                </div>
+                <span class="status-badge status-@statusClass">@statusLabel</span>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+<script src="https://unpkg.com/@@microsoft/signalr@@8.0.0/dist/browser/signalr.min.js"></script>
+<script>
+(function () {
+    const myApptIds = [@string.Join(",", Model.Select(a => a.Id))];
+    if (myApptIds.length === 0) return;
+
+    const conn = new signalR.HubConnectionBuilder()
+        .withUrl('/appointmentHub')
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
+
+    conn.on('AppointmentStatusChanged', function (appointmentId, status) {
+        if (myApptIds.includes(appointmentId)) {
+            console.log(`[SignalR] Your appointment #${appointmentId} status changed to: ${status}. Reloading page...`);
+            setTimeout(() => {
+                location.reload();
+            }, 500); // 500ms delay for DB write propagation and visual feel
+        }
+    });
+
+    conn.start()
+        .then(() => console.log('[SignalR] Connected to AppointmentHub (MyAppointments)'))
+        .catch(err => console.error('[SignalR] Connection error:', err));
+})();
+</script>
+}

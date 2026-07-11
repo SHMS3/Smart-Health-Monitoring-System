@@ -51,10 +51,55 @@
                 border-top-right-radius: 12px;
                 border-bottom-right-radius: 12px;
             }
+
+        .form-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            height: 100%;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .bg-red-soft {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .bg-blue-soft {
+            background: #e0f2fe;
+            color: #0ea5e9;
+        }
+
+        .bg-purple-soft {
+            background: #f3e8ff;
+            color: #8b5cf6;
+        }
 </style>
 
 <div class="container pt-5 mt-4 pb-5 doc-container">
-    @* ─── Banner cảnh báo chưa xử lý (hiện khi vừa đăng nhập) ─── *@
+
+
+    @* ─── Banner cảnh báo chưa xử lý ─── *@
     @if (ViewBag.UnresolvedAlertCount != null && (int)ViewBag.UnresolvedAlertCount > 0)
     {
         <div class="alert border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center gap-3"
@@ -72,9 +117,11 @@
         </div>
     }
 
+
+    @* ─── SECTION: Danh sách Bệnh nhân ─── *@
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
-            <h3 class="fw-bold text-dark mb-1">Danh sách Bệnh nhân</h3>
+            <h4 class="fw-bold text-dark mb-1">Danh sách Bệnh nhân</h4>
             <p class="text-muted small mb-0">Quản lý và theo dõi chỉ số sức khỏe của bệnh nhân được phân công</p>
         </div>
 
@@ -100,7 +147,6 @@
             </div>
         </div>
     </div>
-
 
     @if (TempData["Error"] != null)
     {
@@ -152,7 +198,10 @@
                                 </td>
                                 <td class="text-muted"><i class="fas fa-phone-alt me-2 small"></i>@patient.Phone</td>
                                 <td class="text-end pe-4">
-                                    <a asp-controller="ClinicalRecord" asp-action="Index" asp-route-id="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
+                                    <a asp-controller="DoctorDashboard" asp-action="PatientProfile" asp-route-patientId="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
+                                        <i class="fas fa-folder-open me-1"></i> Xem hồ sơ
+                                    </a>
+                                    <a asp-controller="ClinicalRecord" asp-action="Index_ListPatient" asp-route-id="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
                                         <i class="fas fa-history me-1"></i> Xem bệnh án
                                     </a>
                                 </td>
@@ -169,20 +218,17 @@
                 <span class="text-muted small">
                     Hiển thị trang <strong>@Model.Page</strong> / @Model.TotalPages (Tổng số: <strong>@Model.TotalCount</strong> bệnh nhân)
                 </span>
-
                 <nav aria-label="Page navigation">
                     <ul class="pagination pagination-sm mb-0">
                         <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
                             <a class="page-link rounded-start-pill px-3" asp-action="Index" asp-route-page="@(Model.Page - 1)">Trước</a>
                         </li>
-
                         @for (int i = 1; i <= Model.TotalPages; i++)
                         {
                             <li class="page-item @(i == Model.Page ? "active" : "")">
                                 <a class="page-link px-3" asp-action="Index" asp-route-page="@i">@i</a>
                             </li>
                         }
-
                         <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
                             <a class="page-link rounded-end-pill px-3" asp-action="Index" asp-route-page="@(Model.Page + 1)">Sau</a>
                         </li>
@@ -192,6 +238,7 @@
         }
     </div>
 </div>
+
 
 @section Scripts {
 <script>
@@ -246,4 +293,4 @@
         });
     });
 </script>
-}
+}

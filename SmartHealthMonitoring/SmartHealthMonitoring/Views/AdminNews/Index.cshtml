@@ -125,6 +125,9 @@
         <a href="@Url.Action("Index", new { status = "Published" })" class="status-tab published @(currentStatus == "Published" ? "active" : "")">
             <i class="fas fa-check-circle me-1"></i>Đã đăng
         </a>
+        <a href="@Url.Action("Index", new { status = "Pending" })" class="status-tab text-warning @(currentStatus == "Pending" ? "active" : "")">
+            <i class="fas fa-clock me-1"></i>Chờ duyệt
+        </a>
         <a href="@Url.Action("Index", new { status = "Draft" })" class="status-tab draft @(currentStatus == "Draft" ? "active" : "")">
             <i class="fas fa-pencil-alt me-1"></i>Nháp
         </a>
@@ -204,12 +207,14 @@
                                     "Published" => "badge-status-published",
                                     "Draft"     => "badge-status-draft",
                                     "Hidden"    => "badge-status-hidden",
+                                    "Pending"   => "bg-warning text-dark",
                                     _ => "badge-status-draft"
                                 };
                                 var statusLabel = post.Status switch {
                                     "Published" => "✅ Đã đăng",
                                     "Draft"     => "📝 Nháp",
                                     "Hidden"    => "🙈 Đã ẩn",
+                                    "Pending"   => "⏳ Chờ duyệt",
                                     _ => post.Status
                                 };
                             }
@@ -230,7 +235,25 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
 
-                                @if (post.Status != "Published")
+                                @if (post.Status == "Pending")
+                                {
+                                    <form asp-action="Approve" asp-route-id="@post.Id" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3"
+                                                title="Duyệt bài"
+                                                onclick="return confirm('Duyệt bài viết này?')">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+
+                                    <button type="button" class="btn btn-sm btn-danger rounded-pill px-3"
+                                            title="Từ chối"
+                                            onclick="openRejectModal(@post.Id)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                }
+
+                                @if (post.Status == "Draft" || post.Status == "Hidden")
                                 {
                                     <form asp-action="Publish" asp-route-id="@post.Id" method="post" style="display:inline;">
                                         @Html.AntiForgeryToken()
@@ -271,4 +294,38 @@
     </div>
 </div>
 
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form asp-action="Reject" method="post">
+          @Html.AntiForgeryToken()
+          <input type="hidden" name="id" id="rejectPostId" value="" />
+          <div class="modal-header">
+            <h5 class="modal-title">Từ chối bài viết</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+                <label for="rejectionReason" class="form-label">Lý do từ chối</label>
+                <textarea class="form-control" id="rejectionReason" name="reason" rows="3" required></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-danger">Từ chối bài viết</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
 
+@section Scripts {
+<script>
+function openRejectModal(id) {
+    document.getElementById("rejectPostId").value = id;
+    var rejectModal = new bootstrap.Modal(document.getElementById("rejectModal"));
+    rejectModal.show();
+}
+</script>
+}

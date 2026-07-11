@@ -1,0 +1,390 @@
+@using SmartHealthMonitoring.ViewModels
+@model ReceptionistPatientListViewModel
+
+@{
+    ViewData["Title"] = "Danh sách bệnh nhân";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-title">Danh sách Bệnh nhân</h1>
+    <a asp-action="RegisterPatient" class="btn btn-primary shadow-sm" style="background: var(--color-primary); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600;">
+        <i class="fas fa-plus me-2"></i>Đăng ký Bệnh nhân Mới
+    </a>
+</div>
+
+<div class="admin-card">
+    <form method="get" class="mb-4">
+        <div class="input-group" style="max-width: 500px;">
+            <input type="text" name="search" class="form-control" placeholder="Tìm theo Tên, Email, SĐT, CCCD..." value="@Model.SearchQuery" style="border-radius: 8px 0 0 8px; padding: 10px 15px;">
+            <button type="submit" class="btn btn-primary px-4" style="border-radius: 0 8px 8px 0; background: var(--color-primary-dark); border: none;">
+                <i class="fas fa-search"></i> Tìm kiếm
+            </button>
+            @if (!string.IsNullOrEmpty(Model.SearchQuery))
+            {
+                <a asp-action="Patients" class="btn btn-light ms-2 border" style="border-radius: 8px;"><i class="fas fa-times"></i> Xóa</a>
+            }
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Họ và Tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Patients.Items != null && Model.Patients.Items.Any())
+                {
+                    foreach (var patient in Model.Patients.Items)
+                    {
+                        <tr>
+                            <td><strong>#@patient.Id.ToString("D4")</strong></td>
+                            <td class="fw-bold">@patient.User.FullName</td>
+                            <td>@patient.User.Email</td>
+                            <td>@(patient.Phone ?? "Chưa cập nhật")</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary btn-register-exam"
+                                            style="border-radius: 20px; padding: 5px 15px;"
+                                            data-patient-id="@patient.Id"
+                                            data-patient-name="@patient.User.FullName">
+                                        <i class="fas fa-user-md me-1"></i> Đăng ký khám
+                                    </button>
+                                    <a asp-action="PatientDetails" asp-route-id="@patient.Id" class="btn btn-sm btn-outline-secondary" style="border-radius: 20px; padding: 5px 15px;">
+                                        Chi tiết
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3 text-light"></i>
+                            <p class="mb-0">Không tìm thấy bệnh nhân nào.</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Patients.TotalPages > 1)
+    {
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <span class="text-muted" style="font-size: 0.9rem;">
+                Hiển thị trang @Model.Patients.Page / @Model.Patients.TotalPages (Tổng số: @Model.Patients.TotalCount bệnh nhân)
+            </span>
+            <div class="btn-group">
+                @if (Model.Patients.Page > 1)
+                {
+                    <a asp-action="Patients" asp-route-page="@(Model.Patients.Page - 1)" asp-route-search="@Model.SearchQuery" class="btn btn-outline-primary btn-sm">Trước</a>
+                }
+                
+                @for (int i = 1; i <= Model.Patients.TotalPages; i++)
+                {
+                    if (i == Model.Patients.Page)
+                    {
+                        <span class="btn btn-primary btn-sm active">@i</span>
+                    }
+                    else
+                    {
+                        <a asp-action="Patients" asp-route-page="@i" asp-route-search="@Model.SearchQuery" class="btn btn-outline-primary btn-sm">@i</a>
+                    }
+                }
+
+                @if (Model.Patients.Page < Model.Patients.TotalPages)
+                {
+                    <a asp-action="Patients" asp-route-page="@(Model.Patients.Page + 1)" asp-route-search="@Model.SearchQuery" class="btn btn-outline-primary btn-sm">Sau</a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@* Anti-forgery token for AJAX form submission *@
+@Html.AntiForgeryToken()
+
+<div class="modal fade" id="slotPickerModal" tabindex="-1" aria-labelledby="slotPickerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 540px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
+
+
+            <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); padding: 24px 28px 20px;">
+                <div>
+                    <h5 class="modal-title text-white fw-bold mb-1" id="slotPickerModalLabel">
+                        <i class="fas fa-calendar-check me-2"></i>Đăng ký Khám
+                    </h5>
+                    <p class="text-white mb-0" style="opacity:.85; font-size:.9rem;">
+                        Bệnh nhân: <strong id="modal-patient-name"></strong>
+                    </p>
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+
+            <div class="modal-body px-4 py-4">
+
+
+                <div id="modal-loading" class="text-center py-4" style="display:none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p class="text-muted mt-2 mb-0">Đang tải dữ liệu...</p>
+                </div>
+
+
+                <div id="step-doctors">
+                    <p class="text-muted small mb-3">
+                        <i class="fas fa-info-circle me-1 text-primary"></i>
+                        Chọn bác sĩ có lịch trực hôm nay để đăng ký:
+                    </p>
+                    <div id="doctor-list"></div>
+                </div>
+
+
+                <div id="step-slots" style="display:none;">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <button type="button" id="btn-back-doctor" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;">
+                            <i class="fas fa-arrow-left me-1"></i>Quay lại
+                        </button>
+                        <span class="badge px-3 py-2" style="background:rgba(14,165,233,.12);color:#0369a1;border-radius:8px;font-size:.85rem;">
+                            <i class="fas fa-user-md me-1"></i><span id="selected-doctor-badge"></span>
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        <i class="fas fa-clock me-1 text-primary"></i>
+                        Chọn khung giờ khám phù hợp:
+                    </p>
+                    <div id="slot-list" style="max-height: 280px; overflow-y: auto;"></div>
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer border-0 px-4 pb-4 pt-0 gap-2">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px; min-width: 90px;">
+                    Huỷ
+                </button>
+                <button type="button" id="btn-confirm-register" class="btn btn-primary" disabled
+                        style="border-radius: 10px; min-width: 150px; background: linear-gradient(135deg, #0ea5e9, #0369a1); border: none;">
+                    <i class="fas fa-check me-2"></i>Xác nhận đăng ký
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    // ─── State ────────────────────────────────────────────────────────────────
+    let currentPatientId   = null;
+    let currentPatientName = '';
+    let selectedDoctorId   = null;
+    let selectedDoctorName = '';
+    let selectedSlotId     = null;
+
+    // ─── Elements ─────────────────────────────────────────────────────────────
+    const modal           = document.getElementById('slotPickerModal');
+    const bsModal         = new bootstrap.Modal(modal);
+    const stepDoctors     = document.getElementById('step-doctors');
+    const stepSlots       = document.getElementById('step-slots');
+    const doctorList      = document.getElementById('doctor-list');
+    const slotList        = document.getElementById('slot-list');
+    const selectedDocBadge = document.getElementById('selected-doctor-badge');
+    const btnConfirm      = document.getElementById('btn-confirm-register');
+    const btnBackDoctor   = document.getElementById('btn-back-doctor');
+    const modalPatientName = document.getElementById('modal-patient-name');
+    const loadingSpinner  = document.getElementById('modal-loading');
+
+    // ─── Open modal ───────────────────────────────────────────────────────────
+    document.querySelectorAll('.btn-register-exam').forEach(btn => {
+        btn.addEventListener('click', function () {
+            currentPatientId   = this.dataset.patientId;
+            currentPatientName = this.dataset.patientName;
+            selectedDoctorId   = null;
+            selectedSlotId     = null;
+
+            // Reset UI
+            modalPatientName.textContent = currentPatientName;
+            showStep('doctors');
+            loadDoctors();
+            bsModal.show();
+        });
+    });
+
+    // ─── Load doctors ─────────────────────────────────────────────────────────
+    function loadDoctors() {
+        showLoading(true);
+        doctorList.innerHTML = '';
+
+        fetch('/Receptionist/GetAvailableDoctors')
+            .then(r => r.json())
+            .then(res => {
+                showLoading(false);
+                if (!res.success || res.data.length === 0) {
+                    doctorList.innerHTML = `
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-calendar-times fa-2x mb-2 d-block"></i>
+                            Không có bác sĩ nào có slot khám hôm nay.
+                        </div>`;
+                    return;
+                }
+                res.data.forEach(doc => {
+                    const card = document.createElement('div');
+                    card.className = 'doctor-card d-flex align-items-center gap-3 p-3 mb-2 rounded-3 border cursor-pointer';
+                    card.style.cssText = 'cursor:pointer; transition: all .2s;';
+                    card.innerHTML = `
+                        <div class="doctor-avatar d-flex align-items-center justify-content-center rounded-circle"
+                             style="width:48px;height:48px;background:rgba(14,165,233,.12);flex-shrink:0;">
+                            <i class="fas fa-user-md text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">BS. ${doc.doctorName}</div>
+                            <div class="text-muted small">${doc.specialty || ''}${doc.roomNumber ? ' &nbsp;|&nbsp; Phòng ' + doc.roomNumber : ''}</div>
+                        </div>
+                        <span class="badge rounded-pill" style="background:rgba(16,185,129,.12);color:#10b981;font-size:.8rem;">
+                            <i class="fas fa-calendar-check me-1"></i>${doc.availableSlots} slot
+                        </span>`;
+
+                    card.addEventListener('click', () => selectDoctor(doc.doctorId, doc.doctorName));
+                    card.addEventListener('mouseenter', () => card.style.background = 'rgba(14,165,233,.06)');
+                    card.addEventListener('mouseleave', () => card.style.background = '');
+                    doctorList.appendChild(card);
+                });
+            })
+            .catch(() => {
+                showLoading(false);
+                doctorList.innerHTML = '<div class="text-danger text-center py-3">Lỗi tải danh sách bác sĩ.</div>';
+            });
+    }
+
+    // ─── Select doctor → load slots ───────────────────────────────────────────
+    function selectDoctor(doctorId, doctorName) {
+        selectedDoctorId   = doctorId;
+        selectedDoctorName = doctorName;
+        selectedSlotId     = null;
+
+        selectedDocBadge.textContent = 'BS. ' + doctorName;
+        showStep('slots');
+        showLoading(true);
+        slotList.innerHTML = '';
+        btnConfirm.disabled = true;
+
+        fetch('/Receptionist/GetDoctorSlots?doctorId=' + doctorId)
+            .then(r => r.json())
+            .then(res => {
+                showLoading(false);
+                if (!res.success || res.data.length === 0) {
+                    slotList.innerHTML = `
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-clock fa-2x mb-2 d-block"></i>
+                            Bác sĩ này không còn slot trống hôm nay.
+                        </div>`;
+                    return;
+                }
+                res.data.forEach(slot => {
+                    const startLocal = new Date(slot.slotStart + 'Z');
+                    const endLocal   = new Date(slot.slotEnd   + 'Z');
+                    const fmt = d => d.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
+
+                    const item = document.createElement('div');
+                    item.className = 'slot-item d-flex align-items-center gap-3 p-3 mb-2 rounded-3 border';
+                    item.style.cssText = 'cursor:pointer; transition: all .2s;';
+                    item.dataset.slotId = slot.slotId;
+                    item.innerHTML = `
+                        <div class="slot-radio d-flex align-items-center justify-content-center rounded-circle border"
+                             style="width:22px;height:22px;flex-shrink:0;border-color:#cbd5e1!important;">
+                            <div class="slot-dot rounded-circle" style="width:10px;height:10px;background:transparent;"></div>
+                        </div>
+                        <i class="fas fa-clock text-primary"></i>
+                        <span class="fw-bold">${fmt(startLocal)} – ${fmt(endLocal)}</span>`;
+
+                    item.addEventListener('click', () => selectSlot(item, slot.slotId));
+                    item.addEventListener('mouseenter', () => { if (!item.classList.contains('slot-selected')) item.style.background = 'rgba(14,165,233,.05)'; });
+                    item.addEventListener('mouseleave', () => { if (!item.classList.contains('slot-selected')) item.style.background = ''; });
+                    slotList.appendChild(item);
+                });
+            })
+            .catch(() => {
+                showLoading(false);
+                slotList.innerHTML = '<div class="text-danger text-center py-3">Lỗi tải danh sách slot.</div>';
+            });
+    }
+
+    // ─── Select slot ──────────────────────────────────────────────────────────
+    function selectSlot(el, slotId) {
+        selectedSlotId = slotId;
+        document.querySelectorAll('.slot-item').forEach(i => {
+            i.classList.remove('slot-selected');
+            i.style.background = '';
+            i.style.borderColor = '';
+            i.querySelector('.slot-dot').style.background = 'transparent';
+            i.querySelector('.slot-radio').style.borderColor = '#cbd5e1';
+        });
+        el.classList.add('slot-selected');
+        el.style.background     = 'rgba(14,165,233,.08)';
+        el.style.borderColor    = '#0ea5e9';
+        el.querySelector('.slot-dot').style.background = '#0ea5e9';
+        el.querySelector('.slot-radio').style.borderColor = '#0ea5e9';
+        btnConfirm.disabled = false;
+    }
+
+    // ─── Back to doctor list ──────────────────────────────────────────────────
+    btnBackDoctor.addEventListener('click', () => {
+        selectedDoctorId = null;
+        selectedSlotId   = null;
+        showStep('doctors');
+    });
+
+    // ─── Confirm registration ─────────────────────────────────────────────────
+    btnConfirm.addEventListener('click', function () {
+        if (!selectedDoctorId || !selectedSlotId) return;
+
+        btnConfirm.disabled = true;
+        btnConfirm.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/Receptionist/AddToWaitingList';
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]');
+        if (token) {
+            const t = document.createElement('input');
+            t.type = 'hidden'; t.name = '__RequestVerificationToken'; t.value = token.value;
+            form.appendChild(t);
+        }
+
+        [['patientId', currentPatientId], ['doctorId', selectedDoctorId], ['slotId', selectedSlotId]].forEach(([name, val]) => {
+            const inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = name; inp.value = val;
+            form.appendChild(inp);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+    });
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+    function showStep(step) {
+        stepDoctors.style.display = step === 'doctors' ? '' : 'none';
+        stepSlots.style.display   = step === 'slots'   ? '' : 'none';
+    }
+
+    function showLoading(show) {
+        loadingSpinner.style.display = show ? '' : 'none';
+    }
+})();
+</script>
+}

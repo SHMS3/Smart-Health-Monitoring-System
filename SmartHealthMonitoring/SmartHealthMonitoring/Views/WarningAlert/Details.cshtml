@@ -94,7 +94,7 @@
         <div>
             <h1 class="page-title">
                 <i class="fas fa-shield-alt me-2" style="color:#6366f1"></i>
-                Chi tiết Cảnh báo #@Model.Id
+                @(Model.Status == 1 && Model.ClaimedByDoctorId == (int?)ViewData["DoctorId"] ? $"Xử lý & Gửi lời nhắn cho Cảnh báo #{Model.Id}" : $"Chi tiết Cảnh báo #{Model.Id}")
             </h1>
             <p class="page-meta">
                 Gắn cờ lúc: <strong>@Model.FlaggedAt.ToString("HH:mm - dd/MM/yyyy")</strong>
@@ -270,7 +270,7 @@
                 <div class="card-header-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
                     <i class="fas fa-user-md"></i>
                 </div>
-                <div class="card-header-title" style="color: #d97706;">Xử lý Cảnh báo & Ghi chú</div>
+                <div class="card-header-title" style="color: #d97706;">Gửi lời nhắn cho Bệnh nhân & Đặt lịch hẹn khám</div>
             </div>
             <div class="card-body">
                 <form id="resolveForm" asp-action="Resolve" method="post">
@@ -280,7 +280,7 @@
                     <!-- Ghi chú xử lý -->
                     <div class="mb-4">
                         <label class="form-label fw-bold text-dark" style="font-size: 0.9rem; display: block; margin-bottom: 8px;">
-                            Ghi chú xử lý <span class="text-danger">*</span>
+                            Lời nhắn gửi bệnh nhân (hướng xử lý, chẩn đoán, lời khuyên) <span class="text-danger">*</span>
                         </label>
                         <textarea name="resolutionNote" class="form-control" rows="4" required 
                                   placeholder="Nhập chẩn đoán sơ bộ, hướng xử lý hoặc lời khuyên cho bệnh nhân..." 
@@ -304,7 +304,7 @@
                     <!-- Nút hành động -->
                     <div style="margin-top: 20px;">
                         <button type="submit" class="btn btn-success px-4 py-2.5 fw-bold" style="border-radius: 10px; background: #10b981; border: none; color: white; cursor: pointer; font-size: .88rem; transition: background .2s;">
-                            <i class="fas fa-check-circle me-2"></i>Hoàn tất xử lý
+                            <i class="fas fa-paper-plane me-2"></i>Gửi lời nhắn & Hoàn tất
                         </button>
                     </div>
                 </form>

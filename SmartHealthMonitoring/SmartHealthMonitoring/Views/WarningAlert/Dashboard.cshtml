@@ -567,14 +567,14 @@
 
         success: function (res)
         {
-            alert(res.message);
-
             if(res.success)
             {
-                loadAlerts(
-                    currentStatus,
-                    $('#keyword').val(),
-                    currentPage);
+                let alertId = form.find('input[name="id"]').val();
+                window.location.href = '/WarningAlert/Details/' + alertId;
+            }
+            else
+            {
+                alert(res.message);
             }
         },
 

@@ -41,23 +41,30 @@ namespace SmartHealthMonitoring.ViewModels
 
         public DateTime? SearchDate { get; set; }
         public string ActiveTab { get; set; } = "clinical-content";
+        public bool HasPaidPaymentToday { get; set; }
+        public bool HasClinicalRecordToday { get; set; }
+        public bool HasConfiguredThresholds { get; set; }
     }
 
     public class ClinicalRecordSummaryViewModel
     {
         public int Id { get; set; }
         public DateTime VisitDate { get; set; }
-        public int RestingBP { get; set; }
-        public int Cholesterol { get; set; }
-        public int MaxHeartRate { get; set; }
-        public string ChestPainTypeDisplay { get; set; } = null!;
-        public byte FastingBS { get; set; }
-        public byte RestECG { get; set; }
-        public byte ExerciseAngina { get; set; }
-        public decimal OldPeak { get; set; }
-        public byte STSlope { get; set; }
-        public byte MajorVessels { get; set; }
-        public byte ThalResult { get; set; }
+        // Nullable: chỉ hiện nếu đã đo (gói BP)
+        public int? RestingBP { get; set; }
+        public int? Cholesterol { get; set; }
+        public int? MaxHeartRate { get; set; }
+        public byte? ChestPainType { get; set; }
+        public string? ChestPainTypeDisplay { get; set; }
+        // Nullable: chỉ hiện nếu đã đo (gói Blood)
+        public byte? FastingBS { get; set; }
+        // Nullable: chỉ hiện nếu đã đo (gói ECG)
+        public byte? RestECG { get; set; }
+        public byte? ExerciseAngina { get; set; }
+        public decimal? OldPeak { get; set; }
+        public byte? STSlope { get; set; }
+        public byte? MajorVessels { get; set; }
+        public byte? ThalResult { get; set; }
         public string? EcgImageUrl { get; set; }
         public string? AttachmentUrl { get; set; }
         public bool IsViewForPatient { get; set; }

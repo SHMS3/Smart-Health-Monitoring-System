@@ -1,0 +1,545 @@
+@using SmartHealthMonitoring.Models
+@model List<SmartHealthMonitoring.Models.Appointment>
+@{
+    ViewData["Title"] = "Lịch hẹn khám";
+    var selectedDate  = (DateOnly)ViewBag.SelectedDate;
+    var todayDate     = (DateOnly)ViewBag.TodayDate;
+    var waitingQueue  = ViewBag.WaitingQueue as List<WaitingPatient> ?? new();
+    var paidPayments     = ViewBag.PaidPayments as List<int> ?? new();
+    var pendingPayments  = ViewBag.PendingPayments as List<int> ?? new();
+    var allByDate = ViewBag.AllByDate as Dictionary<DateOnly, List<Appointment>> ?? new();
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
+    .page-header { background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border-radius: 20px; padding: 28px 36px; margin-bottom: 24px; }
+    .stat-chip { background: rgba(255,255,255,.15); border-radius: 10px; padding: 10px 18px; font-size: .85rem; color: white; }
+    .stat-chip span { font-weight: 700; font-size: 1.3rem; display: block; }
+
+    /* Calendar */
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 24px; }
+    .cal-cell {
+        background: white; border-radius: 12px; padding: 10px 8px; text-align: center;
+        cursor: pointer; border: 2px solid transparent; transition: all .2s;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06); position: relative;
+    }
+    .cal-cell:hover { border-color: #2d6a9f; box-shadow: 0 4px 14px rgba(45,106,159,.2); }
+    .cal-cell.today { border-color: #2d6a9f; background: #eff6ff; }
+    .cal-cell.has-appt { background: linear-gradient(135deg, #dcfce7, #f0fdf4); border-color: #86efac; }
+    .cal-cell.has-appt:hover { border-color: #22c55e; }
+    .cal-cell.selected { border-color: #1e3a5f !important; background: #1e3a5f !important; color: white !important; box-shadow: 0 4px 18px rgba(30,58,95,.4); }
+    .cal-cell.selected .cal-date { color: white; }
+    .cal-cell.selected .cal-count { background: rgba(255,255,255,.3); color: white; }
+    .cal-cell.past { opacity: .5; cursor: default; }
+    .cal-date { font-weight: 600; font-size: .92rem; color: #1e293b; }
+    .cal-day  { font-size: .7rem; color: #94a3b8; margin-bottom: 4px; }
+    .cal-count { display: inline-block; background: #22c55e; color: white; border-radius: 20px; font-size: .7rem; font-weight: 700; padding: 1px 7px; margin-top: 4px; }
+    .cal-empty { background: #f8fafc; border-color: #f0f4f8; }
+    .cal-empty .cal-date { color: #cbd5e1; }
+
+    /* Detail Panel */
+    .detail-panel { background: white; border-radius: 20px; box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden; margin-bottom: 28px; }
+    .detail-header { padding: 18px 24px; background: linear-gradient(90deg, #f0f9ff, #eff6ff); border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; }
+    .detail-header h2 { font-size: 1rem; font-weight: 700; color: #1e3a5f; margin: 0; }
+
+    /* Queue table */
+    .queue-table { width: 100%; border-collapse: collapse; }
+    .queue-table th { background: #f8fafc; padding: 12px 18px; font-size: .78rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid #f0f4f8; }
+    .queue-table td { padding: 14px 18px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+    .queue-table tr:last-child td { border-bottom: none; }
+    .queue-table tr:hover td { background: #fafbfc; }
+    .order-badge { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; font-weight: 700; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+    .patient-name { font-weight: 600; color: #1e293b; }
+    .time-chip { background: #e0f2fe; color: #0369a1; border-radius: 8px; padding: 3px 10px; font-size: .82rem; font-weight: 600; display: inline-block; }
+    .walk-chip  { background: #fef3c7; color: #92400e; border-radius: 8px; padding: 3px 10px; font-size: .82rem; font-weight: 600; display: inline-block; }
+    .note-text  { font-size: .83rem; color: #64748b; max-width: 200px; }
+    .section-divider { font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 9px 18px; border-bottom: 1px solid #f0f4f8; }
+    .section-walkin  { background: linear-gradient(90deg,#fef9c3,#fefce8); color: #854d0e; }
+    .section-online  { background: linear-gradient(90deg,#eff6ff,#f0f9ff); color: #1e40af; }
+    .empty-queue { text-align: center; padding: 44px; color: #94a3b8; }
+
+    .month-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .month-nav button { border: 1.5px solid #e2e8f0; background: white; border-radius: 8px; padding: 5px 14px; cursor: pointer; transition: all .2s; }
+    .month-nav button:hover { background: #2d6a9f; color: white; border-color: #2d6a9f; }
+    .day-label { font-size: .72rem; font-weight: 700; color: #94a3b8; text-align: center; text-transform: uppercase; letter-spacing: .4px; padding: 4px 0; }
+</style>
+
+<div class="container pt-5 mt-3 pb-5">
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1 class="h3 mb-1 fw-bold">📅 Lịch hẹn khám</h1>
+                <p class="mb-0 opacity-75">Xem và quản lý lịch hẹn của bệnh nhân trong 30 ngày tới</p>
+            </div>
+            <div class="d-flex gap-3">
+                <div class="stat-chip text-center">
+                    <span>@allByDate.Values.Sum(v => v.Count)</span>Tổng lịch hẹn
+                </div>
+                <div class="stat-chip text-center">
+                    <span>@allByDate.Keys.Count</span>Ngày có lịch
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success rounded-3 border-0 shadow-sm mb-4">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        </div>
+    }
+
+    @* ── Calendar Grid ── *@
+    <div class="detail-panel mb-4">
+        <div class="detail-header">
+            <i class="fas fa-calendar-alt text-primary"></i>
+            <h2>Lịch 30 ngày tới — Nhấn vào ngày để xem chi tiết</h2>
+        </div>
+        <div class="p-4">
+            @{
+                var dayNames = new[] { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+            }
+            <div class="cal-grid" style="margin-bottom:6px;">
+                @foreach (var d in dayNames)
+                {
+                    <div class="day-label">@d</div>
+                }
+            </div>
+
+            @{
+                var startDate = todayDate;
+                // Pad the beginning so Monday aligns
+                int startDow = (int)startDate.DayOfWeek; // 0=Sun
+                var calDays = new List<DateOnly?>();
+                for (int p = 0; p < startDow; p++) calDays.Add(null);
+                for (int d = 0; d < 30; d++) calDays.Add(startDate.AddDays(d));
+                // pad tail to fill last row
+                while (calDays.Count % 7 != 0) calDays.Add(null);
+            }
+
+            <div class="cal-grid">
+                @foreach (var cd in calDays)
+                {
+                    if (cd == null)
+                    {
+                        <div class="cal-cell cal-empty" style="pointer-events:none;">
+                            <div class="cal-date" style="visibility:hidden">-</div>
+                        </div>
+                    }
+                    else
+                    {
+                        var d = cd.Value;
+                        bool hasAppt = allByDate.ContainsKey(d);
+                        int count = hasAppt ? allByDate[d].Count : 0;
+                        string css = hasAppt ? "has-appt" : "";
+                        if (d == todayDate) css += " today";
+                        if (d == selectedDate) css += " selected";
+                        <div class="cal-cell @css" onclick="window.location='/Appointment/DoctorQueue?date=@d.ToString("yyyy-MM-dd")'">
+                            <div class="cal-day">@d.DayOfWeek.ToString().Substring(0,3)</div>
+                            <div class="cal-date">@d.Day/@d.Month</div>
+                            @if (hasAppt)
+                            {
+                                <span class="cal-count">@count</span>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="d-flex gap-3 mt-3 flex-wrap" style="font-size:.8rem;">
+                <span><span style="display:inline-block;width:12px;height:12px;background:#86efac;border-radius:3px;"></span> Có lịch hẹn</span>
+                <span><span style="display:inline-block;width:12px;height:12px;background:#bfdbfe;border-radius:3px;border:2px solid #2d6a9f"></span> Hôm nay</span>
+                <span><span style="display:inline-block;width:12px;height:12px;background:#1e3a5f;border-radius:3px;"></span> Đang xem</span>
+            </div>
+        </div>
+    </div>
+
+    @* ── Detail Panel for selected date ── *@
+    <div class="detail-panel">
+        <div class="detail-header">
+            <i class="fas fa-list-ul text-success"></i>
+            <h2>Chi tiết ngày @selectedDate.ToString("dd/MM/yyyy")
+                @if (selectedDate == todayDate) { <span class="badge bg-primary ms-2" style="font-size:.7rem;">Hôm nay</span> }
+            </h2>
+            <span class="ms-auto text-muted small">@(waitingQueue.Count + Model.Count) bệnh nhân</span>
+        </div>
+
+        @if (!waitingQueue.Any() && !Model.Any())
+        {
+            <div class="empty-queue">
+                <i class="fas fa-calendar-times fa-3x d-block mb-3 opacity-25"></i>
+                <p class="fw-semibold">Không có lịch hẹn nào vào ngày này.</p>
+                <p class="text-muted small">Hãy chọn một ngày có biểu tượng màu xanh trên lịch ở trên.</p>
+            </div>
+        }
+        else
+        {
+            <table class="queue-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Giờ</th>
+                        <th>Bệnh nhân</th>
+                        <th>Ghi chú / Triệu chứng</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @* ── Walk-in ── *@
+                    @{ int wpIdx = 0; }
+                    @if (waitingQueue.Any())
+                    {
+                        <tr><td colspan="6" class="section-divider section-walkin"><i class="fas fa-walking me-1"></i>Đăng ký trực tiếp tại quầy</td></tr>
+                        @foreach (var wp in waitingQueue)
+                        {
+                            wpIdx++;
+                            <tr id="waiting-row-@wp.Id">
+                                <td><div class="order-badge" style="background:linear-gradient(135deg,#92400e,#d97706)">@wpIdx</div></td>
+                                <td><span class="walk-chip"><i class="fas fa-clock me-1"></i>@wp.CreatedAt.AddHours(7).ToString("HH:mm")</span></td>
+                                <td>
+                                    <div class="patient-name">@wp.Patient.User.FullName</div>
+                                    <div class="text-muted small">ID: #@wp.PatientId</div>
+                                </td>
+                                <td><span class="note-text text-muted">Đăng ký trực tiếp tại quầy lễ tân</span></td>
+                                <td>
+                                    @if (wp.Status == 0) { <span class="badge bg-warning text-dark px-3 py-1 rounded-pill"><i class="fas fa-hourglass-half me-1"></i>Đang chờ</span> }
+                                    else { <span class="badge bg-success px-3 py-1 rounded-pill"><i class="fas fa-check me-1"></i>Đã tiếp nhận</span> }
+                                </td>
+                                <td id="action-cell-@wp.Id">
+                                    @if (wp.Status == 0)
+                                    {
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold btn-accept"
+                                                data-id="@wp.Id" data-patient-id="@wp.PatientId" data-patient-name="@wp.Patient.User.FullName">
+                                            <i class="fas fa-stethoscope me-1"></i> Tiếp nhận khám
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                                    onclick="openServiceModal(@wp.Id, @wp.PatientId, '@wp.Patient.User.FullName')">
+                                                <i class="fas fa-plus-circle me-1"></i> Thêm dịch vụ
+                                            </button>
+                                            @if (paidPayments.Contains(wp.PatientId))
+                                            {
+                                                <a asp-controller="ClinicalRecord" asp-action="Index" asp-route-id="@wp.PatientId"
+                                                   class="btn btn-sm btn-primary rounded-pill px-3 fw-bold">
+                                                    <i class="fas fa-stethoscope me-1"></i> Vào khám
+                                                </a>
+                                            }
+                                            else if (pendingPayments.Contains(wp.PatientId))
+                                            {
+                                                <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-3 py-2 fw-bold d-flex align-items-center">
+                                                    <i class="fas fa-hourglass-half me-1"></i> Chờ thanh toán
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold btn-cancel-exam" data-id="@wp.Id">
+                                                    <i class="fas fa-times me-1"></i> Hủy khám
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+
+                    @* ── Online ── *@
+                    @{ int i = 0; }
+                    @if (Model.Any())
+                    {
+                        <tr><td colspan="6" class="section-divider section-online"><i class="fas fa-calendar-check me-1"></i>Đặt lịch trước (online)</td></tr>
+                        @foreach (var a in Model.OrderBy(x => x.Slot.SlotStart))
+                        {
+                            i++;
+                            <tr>
+                                <td><div class="order-badge">@i</div></td>
+                                <td><span class="time-chip">@a.Slot.SlotStart.AddHours(7).ToString("HH:mm")</span></td>
+                                <td>
+                                    <div class="patient-name">@a.Patient.User.FullName</div>
+                                    <div class="text-muted small">ID: #@a.PatientId</div>
+                                </td>
+                                <td><div class="note-text">@(string.IsNullOrEmpty(a.PatientNote) ? "—" : a.PatientNote)</div></td>
+                                <td>
+                                    @if (a.Status == AppointmentStatus.Confirmed)
+                                    { <span class="badge bg-success-subtle text-success rounded-pill px-3">Chờ khám</span> }
+                                    else if (a.Status == AppointmentStatus.Completed)
+                                    { <span class="badge bg-primary-subtle text-primary rounded-pill px-3">Đã khám</span> }
+                                </td>
+                                <td>
+                                    @if (a.Status == AppointmentStatus.Confirmed)
+                                    {
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                                    onclick="openServiceModal(0, @a.PatientId, '@a.Patient.User.FullName')">
+                                                <i class="fas fa-plus-circle me-1"></i> Thêm dịch vụ
+                                            </button>
+                                            
+                                            @if (paidPayments.Contains(a.PatientId))
+                                            {
+                                                <a asp-controller="ClinicalExam" asp-action="Create" asp-route-patientId="@a.PatientId"
+                                                   class="btn btn-sm btn-primary rounded-pill px-3 fw-bold">
+                                                    <i class="fas fa-stethoscope me-1"></i> Bắt đầu khám
+                                                </a>
+                                            }
+                                            else if (pendingPayments.Contains(a.PatientId))
+                                            {
+                                                <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-3 py-2 fw-bold d-flex align-items-center">
+                                                    <i class="fas fa-hourglass-half me-1"></i> Chờ thanh toán
+                                                </span>
+                                            }
+                                        </div>
+                                    }
+                                    else { <span class="text-muted small">Hoàn tất</span> }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="serviceModalLabel">Thêm dịch vụ khám cho <span id="modalPatientName" class="text-primary"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalPatientId" />
+                <div class="row g-3" id="servicesListBody">
+                    <div class="col-12 text-center text-muted">
+                        <span class="spinner-border spinner-border-sm me-2"></span> Đang tải danh sách dịch vụ...
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="fw-bold fs-5 text-dark">Tổng tiền:</span>
+                    <span class="fw-bold fs-4 text-danger" id="totalAmountText">0 đ</span>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="btnSubmitServices" onclick="submitServices()">
+                    <i class="fas fa-paper-plane me-1"></i> Gửi yêu cầu thanh toán
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // ── Tiếp nhận khám ────────────────────────────────────────────────────────
+    $(document).ready(function () {
+        $('.btn-accept').click(function () {
+            var btn         = $(this);
+            var waitingId   = btn.data('id');
+            var patientId   = btn.data('patient-id');
+            var patientName = btn.data('patient-name');
+
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
+
+            $.ajax({
+                url: '@Url.Action("AcceptPatient", "DoctorDashboard")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ waitingId: waitingId }),
+                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                success: function (res) {
+                    if (res.success) {
+                        $('#waiting-row-' + waitingId).find('td:nth-child(5)')
+                            .html('<span class="badge bg-success px-3 py-1 rounded-pill"><i class="fas fa-check me-1"></i>Đã tiếp nhận</span>');
+                        $('#action-cell-' + waitingId).html(`
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                        onclick="openServiceModal(${waitingId}, ${patientId}, '${patientName}')">
+                                    <i class="fas fa-plus-circle me-1"></i> Thêm dịch vụ
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold btn-cancel-exam"
+                                        data-id="${waitingId}">
+                                    <i class="fas fa-times me-1"></i> Hủy khám
+                                </button>
+                            </div>`);
+                        toastr.success("Tiếp nhận bệnh nhân thành công.");
+                    } else {
+                        toastr.error(res.message);
+                        btn.prop('disabled', false).html('<i class="fas fa-stethoscope me-1"></i> Tiếp nhận khám');
+                    }
+                },
+                error: function () {
+                    toastr.error("Có lỗi xảy ra.");
+                    btn.prop('disabled', false).html('<i class="fas fa-stethoscope me-1"></i> Tiếp nhận khám');
+                }
+            });
+        });
+
+        // ── Hủy khám ──────────────────────────────────────────────────────────
+        $(document).on('click', '.btn-cancel-exam', function () {
+            var btn       = $(this);
+            var waitingId = btn.data('id');
+            Swal.fire({
+                title: 'Xác nhận hủy khám?',
+                text: 'Bệnh nhân này sẽ được chuyển sang trạng thái đã hủy.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Đồng ý hủy',
+                cancelButtonText: 'Không'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>...');
+                    $.ajax({
+                        url: '@Url.Action("CancelExam", "DoctorDashboard")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ waitingId: waitingId }),
+                        headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                        success: function (res) {
+                            if (res.success) {
+                                $('#waiting-row-' + waitingId).fadeOut(400, function () { $(this).remove(); });
+                                toastr.success(res.message);
+                            } else {
+                                toastr.error(res.message);
+                                btn.prop('disabled', false).html('<i class="fas fa-times me-1"></i> Hủy khám');
+                            }
+                        },
+                        error: function () {
+                            toastr.error("Có lỗi xảy ra.");
+                            btn.prop('disabled', false).html('<i class="fas fa-times me-1"></i> Hủy khám');
+                        }
+                    });
+                }
+            });
+        });
+    });
+
+    // ── Modal Thêm Dịch Vụ ────────────────────────────────────────────────────
+    let currentServices = [];
+
+    function openServiceModal(waitingId, patientId, patientName) {
+        document.getElementById('serviceModal').setAttribute('data-waiting-id', waitingId);
+        document.getElementById('modalPatientId').value = patientId;
+        document.getElementById('modalPatientName').textContent = patientName;
+        document.getElementById('totalAmountText').textContent = '0 đ';
+
+        const tbody = document.getElementById('servicesListBody');
+        tbody.innerHTML = '<div class="col-12 text-center text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Đang tải...</div>';
+
+        fetch('@Url.Action("GetServices", "DoctorDashboard")')
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    currentServices = result.data;
+                    tbody.innerHTML = '';
+                    if (!currentServices.length) {
+                        tbody.innerHTML = '<div class="col-12 text-center text-muted">Không có dịch vụ nào</div>';
+                        return;
+                    }
+                    currentServices.forEach(s => {
+                        let iconClass = 'fa-stethoscope', bgClass = 'bg-blue-soft';
+                        if (s.name.includes('Huyết áp') || s.name.includes('Triệu chứng')) { iconClass = 'fa-heartbeat'; bgClass = 'bg-red-soft'; }
+                        else if (s.name.includes('Huyết học')) { iconClass = 'fa-tint'; bgClass = 'bg-blue-soft'; }
+                        else if (s.name.includes('Điện tâm đồ') || s.name.includes('Mạch vành')) { iconClass = 'fa-wave-square'; bgClass = 'bg-purple-soft'; }
+
+                        let descHtml = '';
+                        if (s.description) {
+                            descHtml = '<ul class="list-unstyled mt-3 mb-0 small text-muted border-top pt-2">';
+                            s.description.split('|').forEach(item => { descHtml += `<li class="mb-1"><i class="fas fa-check text-success me-1" style="font-size:.75rem"></i>${item}</li>`; });
+                            descHtml += '</ul>';
+                        }
+                        const col = document.createElement('div');
+                        col.className = 'col-lg-4 col-md-6 mb-3';
+                        col.innerHTML = `
+                            <div class="p-3 h-100 d-flex flex-column border rounded-3 position-relative" style="cursor:pointer;background:#f8fafc;" onclick="toggleCheckbox(${s.id})">
+                                <div class="position-absolute top-0 end-0 p-2">
+                                    <input class="form-check-input service-checkbox fs-5" type="checkbox" id="chk_service_${s.id}" value="${s.id}" data-price="${s.price}" onchange="calculateTotal()" onclick="event.stopPropagation()">
+                                </div>
+                                <div class="mb-2"><i class="fas ${iconClass} text-primary"></i></div>
+                                <h6 class="fw-bold text-dark mb-1">${s.name}</h6>
+                                <p class="text-danger fw-bold mb-0">${s.price.toLocaleString('vi-VN')} đ</p>
+                                <div class="mt-auto">${descHtml}</div>
+                            </div>`;
+                        tbody.appendChild(col);
+                    });
+                } else {
+                    tbody.innerHTML = `<div class="col-12 text-center text-danger">Lỗi: ${result.message}</div>`;
+                }
+            })
+            .catch(() => { tbody.innerHTML = '<div class="col-12 text-center text-danger">Đã có lỗi xảy ra.</div>'; });
+
+        new bootstrap.Modal(document.getElementById('serviceModal')).show();
+    }
+
+    function toggleCheckbox(id) {
+        const chk = document.getElementById('chk_service_' + id);
+        if (chk) { chk.checked = !chk.checked; calculateTotal(); }
+    }
+
+    function calculateTotal() {
+        let total = 0;
+        document.querySelectorAll('.service-checkbox:checked').forEach(cb => { total += parseFloat(cb.getAttribute('data-price')); });
+        document.getElementById('totalAmountText').textContent = total.toLocaleString('vi-VN') + ' đ';
+    }
+
+    function submitServices() {
+        const patientId   = document.getElementById('modalPatientId').value;
+        const selectedIds = Array.from(document.querySelectorAll('.service-checkbox:checked')).map(cb => parseInt(cb.value));
+        if (!selectedIds.length) { Swal.fire('Lỗi', 'Vui lòng chọn ít nhất một dịch vụ.', 'warning'); return; }
+
+        const btn = document.getElementById('btnSubmitServices');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+
+        fetch('@Url.Action("CreatePayment", "DoctorDashboard")', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' },
+            body: JSON.stringify({ patientId: parseInt(patientId), serviceIds: selectedIds })
+        })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                Swal.fire('Thành công', result.message, 'success').then(() => {
+                    const modalEl  = document.getElementById('serviceModal');
+                    const waitingId = modalEl.getAttribute('data-waiting-id');
+                    bootstrap.Modal.getInstance(modalEl).hide();
+                    if (waitingId && waitingId !== '0') {
+                        const actionCell = $('#action-cell-' + waitingId);
+                        actionCell.html(`
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                        onclick="openServiceModal(${waitingId}, ${patientId}, '${document.getElementById('modalPatientName').textContent}')">
+                                    <i class="fas fa-plus-circle me-1"></i> Thêm dịch vụ
+                                </button>
+                                <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-3 py-2 fw-bold d-flex align-items-center">
+                                    <i class="fas fa-hourglass-half me-1"></i> Chờ thanh toán
+                                </span>
+                            </div>`);
+                        // Di chuyển hàng xuống dưới cùng (tạm ngưng)
+                        const row = $('#waiting-row-' + waitingId);
+                        row.parent().append(row);
+                    } else {
+                        window.location.reload();
+                    }
+                });
+            } else {
+                Swal.fire('Lỗi', result.message, 'error');
+            }
+        })
+        .catch(() => Swal.fire('Lỗi', 'Đã xảy ra lỗi kết nối.', 'error'))
+        .finally(() => { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Gửi yêu cầu thanh toán'; });
+    }
+</script>
+}

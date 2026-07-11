@@ -31,6 +31,8 @@ public partial class Patient
 
     public virtual ICollection<EmailNotification> EmailNotifications { get; set; } = new List<EmailNotification>();
 
+    public virtual ICollection<EmergencyContact> EmergencyContacts { get; set; } = new List<EmergencyContact>();
+
     public string? CitizenId { get; set; }
 
     public virtual User User { get; set; } = null!;
@@ -38,4 +40,8 @@ public partial class Patient
     public virtual ICollection<WarningAlert> WarningAlerts { get; set; } = new List<WarningAlert>();
     public virtual PatientThreshold? PatientThreshold { get; set; }
     public virtual PatientHabit? PatientHabit { get; set; }
+
+    public virtual ICollection<AppointmentSlot> AppointmentSlots { get; set; } = new List<AppointmentSlot>();
+
+    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

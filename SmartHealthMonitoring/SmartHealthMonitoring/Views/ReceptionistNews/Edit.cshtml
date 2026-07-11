@@ -1,0 +1,267 @@
+@model SmartHealthMonitoring.Models.HealthNewsPost
+
+@{
+    ViewData["Title"] = "Chỉnh sửa bài tin tức";
+    Layout = "_AdminLayout";
+}
+
+<style>
+    .create-news-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border-radius: 16px;
+        padding: 1.8rem 2.5rem;
+        color: #fff;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .create-news-header::before {
+        content: '';
+        position: absolute;
+        width: 250px; height: 250px;
+        background: radial-gradient(circle, rgba(26,115,200,0.3) 0%, transparent 70%);
+        top: -70px; right: -60px;
+        border-radius: 50%;
+    }
+    .ai-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 20px;
+        padding: 4px 14px;
+        font-size: 0.8rem;
+        margin-top: 8px;
+    }
+    .form-card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 4px 20px rgba(0,0,0,.08);
+        overflow: hidden;
+    }
+    .form-card .card-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #e0eaf4;
+        padding: 1rem 1.5rem;
+        font-weight: 700;
+        color: #1a2340;
+        font-size: 0.95rem;
+    }
+    .form-card .card-body { padding: 1.5rem; }
+    .form-label {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+    .form-control, .form-select {
+        border: 1.5px solid #e0eaf4;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #1a73c8;
+        box-shadow: 0 0 0 3px rgba(26,115,200,.1);
+    }
+    .content-editor {
+        min-height: 380px;
+        font-family: 'Segoe UI', monospace;
+        font-size: 0.88rem;
+    }
+    .preview-panel {
+        border: 2px dashed #c8d8e8;
+        border-radius: 12px;
+        padding: 1.5rem;
+        background: #f8fbff;
+        min-height: 200px;
+    }
+    .preview-panel h4 { color: #1a2340; font-weight: 700; font-size: 1.1rem; margin-bottom: 10px; }
+    .preview-panel .preview-body { font-size: 0.88rem; color: #374151; line-height: 1.7; }
+    .btn-publish {
+        background: linear-gradient(135deg, #059669, #10b981);
+        border: none; color: white;
+        border-radius: 10px; padding: 10px 28px;
+        font-weight: 700; font-size: 0.9rem;
+        transition: all .2s;
+        box-shadow: 0 4px 14px rgba(5,150,105,.3);
+    }
+    .btn-publish:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(5,150,105,.4); color: white; }
+    .btn-draft {
+        background: #f59e0b; border: none; color: white;
+        border-radius: 10px; padding: 10px 28px;
+        font-weight: 700; font-size: 0.9rem;
+        transition: all .2s;
+    }
+    .btn-draft:hover { background: #d97706; color: white; }
+    .char-count { font-size: 0.75rem; color: #8a9bb0; text-align: right; margin-top: 4px; }
+</style>
+
+<div class="create-news-header">
+    <div style="position:relative;z-index:1;">
+        <h4 class="mb-1 fw-bold">
+            <i class="fas fa-edit me-2"></i>Chỉnh sửa bài tin tức
+        </h4>
+        @if (!string.IsNullOrEmpty(Model.Source) && Model.Source != "Manual")
+        {
+            <div class="ai-indicator">
+                <i class="fas fa-robot"></i>
+                AI tạo từ @(Model.Source == "PatientStatistics" ? "Thống kê Lâm sàng" : "Thống kê Thói quen")
+            </div>
+        }
+    </div>
+</div>
+
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post" id="newsForm" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="Id"     value="@Model.Id" />
+    <input type="hidden" name="Source" value="@Model.Source" />
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            @if(Model.Status == "Draft" && !string.IsNullOrEmpty(Model.RejectionReason))
+            {
+                <div class="alert alert-danger mb-4 d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                    <div>
+                        <h6 class="alert-heading mb-1 fw-bold">Bài viết bị từ chối!</h6>
+                        <p class="mb-0"><strong>Lý do:</strong> @Model.RejectionReason</p>
+                    </div>
+                </div>
+            }
+            <div class="card form-card mb-4">
+                <div class="card-header"><i class="fas fa-pen me-2 text-primary"></i>Nội dung bài viết</div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label class="form-label" for="Title">Tiêu đề bài viết <span class="text-danger">*</span></label>
+                        <input id="Title" name="Title" class="form-control"
+                               value="@Model.Title"
+                               placeholder="Nhập tiêu đề hấp dẫn..." maxlength="200"
+                               oninput="updateCharCount('Title','titleCount',120)" required />
+                        <div class="char-count"><span id="titleCount">@(Model.Title?.Length ?? 0)</span>/120 ký tự</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label" for="Summary">Tóm tắt (hiển thị trên trang chủ) <span class="text-danger">*</span></label>
+                        <textarea id="Summary" name="Summary" class="form-control" rows="3"
+                                  maxlength="500"
+                                  oninput="updateCharCount('Summary','summaryCount',300)">@Model.Summary</textarea>
+                        <div class="char-count"><span id="summaryCount">@(Model.Summary?.Length ?? 0)</span>/300 ký tự</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="Content">Nội dung đầy đủ <span class="text-danger">*</span></label>
+                        <textarea id="Content" name="Content" class="form-control">@Model.Content</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card form-card mb-4">
+                <div class="card-header"><i class="fas fa-cog me-2 text-secondary"></i>Cài đặt</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Ảnh đại diện</label>
+                        <input type="hidden" name="ThumbnailUrl" value="@Model.ThumbnailUrl" />
+                        <input type="file" name="uploadImage" class="form-control" accept="image/*"
+                               onchange="previewUpload(this)" />
+                        <div class="mt-2 text-muted" style="font-size:0.8rem;">(Có thể tải ảnh mới lên thay thế)</div>
+                        <div class="mt-2">
+                            <img id="thumbPreview"
+                                 src="@(string.IsNullOrEmpty(Model.ThumbnailUrl) ? "/images/banner.jpg" : Model.ThumbnailUrl)"
+                                 alt="Thumbnail preview"
+                                 style="width:100%;height:140px;object-fit:cover;border-radius:10px;border:2px solid #e0eaf4;" />
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Trạng thái hiện tại</label>
+                        <div>
+                            @{
+                                var statusBadge = Model.Status switch {
+                                    "Published" => ("badge bg-success", "✅ Đã đăng"),
+                                    "Hidden"    => ("badge bg-danger",  "🙈 Đã ẩn"),
+                                    _           => ("badge bg-warning text-dark", "📝 Nháp")
+                                };
+                            }
+                            <span class="@statusBadge.Item1 rounded-pill px-3 py-2">@statusBadge.Item2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card form-card">
+                <div class="card-header"><i class="fas fa-paper-plane me-2 text-success"></i>Gửi duyệt</div>
+                <div class="card-body">
+                    <p class="text-muted" style="font-size:0.82rem;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Chọn <strong>Gửi duyệt</strong> để gửi yêu cầu đăng bài cho Quản trị viên, hoặc <strong>Lưu nháp</strong> để chỉnh sửa sau.
+                    </p>
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="action" value="publish" class="btn btn-publish">
+                            <i class="fas fa-paper-plane me-2"></i>Gửi duyệt
+                        </button>
+                        <button type="submit" name="action" value="draft" class="btn btn-draft">
+                            <i class="fas fa-save me-2"></i>Lưu nháp
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary rounded-3">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+<!-- TinyMCE Rich Text Editor CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
+
+<script>
+    // Khởi tạo TinyMCE
+    tinymce.init({
+        selector: '#Content',
+        height: 500,
+        menubar: false,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+            'bold italic forecolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | help',
+        content_style: 'body { font-family:Inter,sans-serif; font-size:14px }',
+        setup: function (editor) {
+            editor.on('change', function () {
+                editor.save();
+            });
+        }
+    });
+
+    function updateCharCount(inputId, countId, max) {
+        const val = document.getElementById(inputId).value.length;
+        document.getElementById(countId).textContent = val;
+        document.getElementById(countId).style.color = val > max ? '#dc3545' : '#8a9bb0';
+    }
+    
+    function previewUpload(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('thumbPreview').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    document.getElementById('Title').addEventListener('input', () => { updateCharCount('Title','titleCount',120); });
+    document.getElementById('Summary').addEventListener('input', () => updateCharCount('Summary','summaryCount',300));
+    updateCharCount('Title','titleCount',120);
+    updateCharCount('Summary','summaryCount',300);
+</script>
+}

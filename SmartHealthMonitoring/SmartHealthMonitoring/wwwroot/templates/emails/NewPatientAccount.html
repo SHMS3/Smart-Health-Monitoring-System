@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #0ea5e9;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #0ea5e9;
+            margin: 0;
+        }
+        .content {
+            font-size: 16px;
+        }
+        .credentials {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .credentials ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .credentials li {
+            margin-bottom: 10px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #64748b;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SmartHealth Clinic</h1>
+        </div>
+        <div class="content">
+            <p>Xin chào <strong>{{FullName}}</strong>,</p>
+            <p>Hồ sơ bệnh nhân của bạn đã được đăng ký thành công trên hệ thống của chúng tôi.</p>
+            <p>Dưới đây là thông tin tài khoản để bạn có thể đăng nhập và theo dõi sức khỏe của mình:</p>
+            
+            <div class="credentials">
+                <ul>
+                    <li><strong>Email đăng nhập:</strong> {{Email}}</li>
+                    <li><strong>Mật khẩu:</strong> {{Password}}</li>
+                </ul>
+            </div>
+            
+            <p><em>Lưu ý: Bạn nên đăng nhập vào hệ thống và đổi mật khẩu trong lần truy cập đầu tiên để đảm bảo tính bảo mật.</em></p>
+        </div>
+        <div class="footer">
+            <p>Cảm ơn bạn đã tin tưởng SmartHealth.</p>
+            <p>&copy; 2026 SmartHealth Clinic. Mọi quyền được bảo lưu.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -19,6 +19,8 @@ public partial class SmartHealthMonitoringContext : DbContext
 
     public virtual DbSet<AiriskPrediction> AiriskPredictions { get; set; }
 
+    public virtual DbSet<AiAlertSetting> AiAlertSettings { get; set; }
+
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
     public virtual DbSet<ChatMessage> ChatMessages { get; set; }
@@ -32,6 +34,8 @@ public partial class SmartHealthMonitoringContext : DbContext
     public virtual DbSet<Doctor> Doctors { get; set; }
 
     public virtual DbSet<EmailNotification> EmailNotifications { get; set; }
+
+    public virtual DbSet<EmergencyContact> EmergencyContacts { get; set; }
 
     public virtual DbSet<Patient> Patients { get; set; }
 
@@ -48,6 +52,16 @@ public partial class SmartHealthMonitoringContext : DbContext
     public virtual DbSet<TelemedicineChatSession> TelemedicineChatSessions { get; set; }
 
     public virtual DbSet<HealthNewsPost> HealthNewsPosts { get; set; }
+
+    public virtual DbSet<Service> Services { get; set; }
+    public virtual DbSet<Payment> Payments { get; set; }
+    public virtual DbSet<PaymentDetail> PaymentDetails { get; set; }
+    public virtual DbSet<WaitingPatient> WaitingPatients { get; set; }
+
+    // ── Appointment Booking System ─────────────────────────────────────────────
+    public virtual DbSet<DoctorWorkSchedule> DoctorWorkSchedules { get; set; }
+    public virtual DbSet<AppointmentSlot> AppointmentSlots { get; set; }
+    public virtual DbSet<Appointment> Appointments { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -121,6 +135,40 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .HasForeignKey(d => d.PatientId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__AIRiskPre__Patie__628FA481");
+        });
+
+        modelBuilder.Entity<AiAlertSetting>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("AiAlertSettings");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.EmergencyAgeMax).HasDefaultValue((byte)120);
+            entity.Property(e => e.EmergencyAgeMin).HasDefaultValue((byte)0);
+            entity.Property(e => e.EmergencyRiskLevelThreshold).HasDefaultValue((byte)3);
+            entity.Property(e => e.EmergencyRiskScoreThreshold).HasColumnType("decimal(5, 4)").HasDefaultValue(0.70m);
+            entity.Property(e => e.EmergencySex).HasDefaultValue((byte)2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
+
+            entity.HasOne(d => d.UpdatedByAdmin)
+                .WithMany()
+                .HasForeignKey(d => d.UpdatedByAdminId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_AiAlertSettings_UpdatedByAdmin");
+
+            entity.HasData(new AiAlertSetting
+            {
+                Id = AiAlertSetting.DefaultId,
+                EmergencyAgeMin = 0,
+                EmergencyAgeMax = 120,
+                EmergencyRiskLevelThreshold = 3,
+                EmergencyRiskScoreThreshold = 0.70m,
+                EmergencySex = 2,
+                CreatedAt = new DateTime(2026, 6, 29, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 6, 29, 0, 0, 0, DateTimeKind.Utc)
+            });
         });
 
         modelBuilder.Entity<ChatMessage>(entity =>
@@ -216,6 +264,9 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.Property(e => e.Sex)
                 .HasColumnType("tinyint");
 
+            entity.Property(e => e.RoomNumber)
+                .HasMaxLength(20);
+
             entity.HasOne(d => d.User).WithMany(p => p.Doctors)
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -245,6 +296,32 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .HasForeignKey(d => d.PatientId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__EmailNoti__Patie__76969D2E");
+        });
+
+        modelBuilder.Entity<EmergencyContact>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_EmergencyContacts");
+
+            entity.ToTable("EmergencyContacts");
+
+            entity.HasIndex(e => new { e.PatientId, e.IsDeleted, e.IsActive }, "IX_EmergencyContacts_Patient_Status");
+
+            entity.Property(e => e.FullName).HasMaxLength(100);
+            entity.Property(e => e.Relationship).HasMaxLength(50);
+            entity.Property(e => e.Email)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.Phone)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+
+            entity.HasOne(d => d.Patient).WithMany(p => p.EmergencyContacts)
+                .HasForeignKey(d => d.PatientId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_EmergencyContacts_Patients");
         });
 
         modelBuilder.Entity<Patient>(entity =>
@@ -462,7 +539,7 @@ public partial class SmartHealthMonitoringContext : DbContext
 
         // 1. Users (10 Bác sĩ ID 1-10, 10 Bệnh nhân ID 11-20)
         modelBuilder.Entity<User>().HasData(
-            new User { Id = 1, Email = "    ", PasswordHash = "hash123", FullName = "Nguyễn Văn An", Role = 1, CreatedAt = baseDate },
+            new User { Id = 1, Email = "dr.an@smarthealth.vn", PasswordHash = "hash123", FullName = "Nguyễn Văn An", Role = 1, CreatedAt = baseDate },
             new User { Id = 2, Email = "dr.binh@smarthealth.vn", PasswordHash = "hash123", FullName = "Trần Thị Bình", Role = 1, CreatedAt = baseDate },
             new User { Id = 3, Email = "dr.cuong@smarthealth.vn", PasswordHash = "hash123", FullName = "Phạm Minh Cường", Role = 1, CreatedAt = baseDate },
             new User { Id = 4, Email = "dr.dung@smarthealth.vn", PasswordHash = "hash123", FullName = "Lê Tuấn Dũng", Role = 1, CreatedAt = baseDate },
@@ -481,22 +558,24 @@ public partial class SmartHealthMonitoringContext : DbContext
             new User { Id = 16, Email = "patient.thuy@gmail.com", PasswordHash = "hash123", FullName = "Lê Thanh Thủy", Role = 0, CreatedAt = baseDate },
             new User { Id = 17, Email = "patient.hai@gmail.com", PasswordHash = "hash123", FullName = "Đặng Quang Hải", Role = 0, CreatedAt = baseDate },
             new User { Id = 18, Email = "patient.yen@gmail.com", PasswordHash = "hash123", FullName = "Võ Hoàng Yến", Role = 0, CreatedAt = baseDate },
-            new User { Id = 19, Email = "patient.phong@gmail.com", PasswordHash = "hash123", FullName = "Ngô Đình Phong", Role = 0, CreatedAt = baseDate },
-            new User { Id = 20, Email = "patient.mai@gmail.com", PasswordHash = "hash123", FullName = "Đoàn Ngọc Mai", Role = 0, CreatedAt = baseDate }
+
+            new User { Id = 19, Email = "patient.phong@gmail.com", PasswordHash = "hash123", FullName = "Ngô Đình Phong", Role = 2, CreatedAt = baseDate },
+            
+            new User { Id = 20, Email = "patient.mai@gmail.com", PasswordHash = "hash123", FullName = "Đoàn Ngọc Mai", Role = 3, CreatedAt = baseDate }
         );
 
         // 2. Doctors 
         modelBuilder.Entity<Doctor>().HasData(
-            new Doctor { Id = 1, UserId = 1, Specialty = "Tim mạch can thiệp", IsOnShift = true },
-            new Doctor { Id = 2, UserId = 2, Specialty = "Nhịp học tim mạch", IsOnShift = false },
-            new Doctor { Id = 3, UserId = 3, Specialty = "Nội tim mạch", IsOnShift = true },
-            new Doctor { Id = 4, UserId = 4, Specialty = "Phẫu thuật tim", IsOnShift = false },
-            new Doctor { Id = 5, UserId = 5, Specialty = "Nội tim mạch", IsOnShift = true },
-            new Doctor { Id = 6, UserId = 6, Specialty = "Tim mạch nhi", IsOnShift = false },
-            new Doctor { Id = 7, UserId = 7, Specialty = "Chẩn đoán hình ảnh", IsOnShift = true },
-            new Doctor { Id = 8, UserId = 8, Specialty = "Nội tim mạch", IsOnShift = false },
-            new Doctor { Id = 9, UserId = 9, Specialty = "Tim mạch can thiệp", IsOnShift = true },
-            new Doctor { Id = 10, UserId = 10, Specialty = "Nội tim mạch", IsOnShift = false }
+            new Doctor { Id = 1, UserId = 1, Specialty = "Tim mạch can thiệp", IsOnShift = true, RoomNumber = "P.101" },
+            new Doctor { Id = 2, UserId = 2, Specialty = "Nhịp học tim mạch", IsOnShift = false, RoomNumber = "P.102" },
+            new Doctor { Id = 3, UserId = 3, Specialty = "Nội tim mạch", IsOnShift = true, RoomNumber = "P.103" },
+            new Doctor { Id = 4, UserId = 4, Specialty = "Phẫu thuật tim", IsOnShift = false, RoomNumber = "P.201" },
+            new Doctor { Id = 5, UserId = 5, Specialty = "Nội tim mạch", IsOnShift = true, RoomNumber = "P.202" },
+            new Doctor { Id = 6, UserId = 6, Specialty = "Tim mạch nhi", IsOnShift = false, RoomNumber = "P.203" },
+            new Doctor { Id = 7, UserId = 7, Specialty = "Chẩn đoán hình ảnh", IsOnShift = true, RoomNumber = "P.301" },
+            new Doctor { Id = 8, UserId = 8, Specialty = "Nội tim mạch", IsOnShift = false, RoomNumber = "P.302" },
+            new Doctor { Id = 9, UserId = 9, Specialty = "Tim mạch can thiệp", IsOnShift = true, RoomNumber = "P.303" },
+            new Doctor { Id = 10, UserId = 10, Specialty = "Nội tim mạch", IsOnShift = false, RoomNumber = "P.304" }
         );
 
         // 3. Patients (Đã thêm DateOfBirth và Sex)
@@ -732,6 +811,118 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.Property(e => e.ThumbnailUrl).HasMaxLength(500);
             entity.Property(e => e.AuthorName).HasMaxLength(100);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+        });
+
+        modelBuilder.Entity<Service>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("Services");
+        });
+
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("Payments");
+            entity.HasOne(d => d.Doctor).WithMany().HasForeignKey(d => d.DoctorId).OnDelete(DeleteBehavior.NoAction);
+            entity.HasOne(d => d.Patient).WithMany().HasForeignKey(d => d.PatientId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<PaymentDetail>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("PaymentDetails");
+            entity.HasOne(d => d.Payment).WithMany(p => p.PaymentDetails).HasForeignKey(d => d.PaymentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.Service).WithMany(p => p.PaymentDetails).HasForeignKey(d => d.ServiceId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // ── Appointment Booking System ──────────────────────────────────────────
+        modelBuilder.Entity<DoctorWorkSchedule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("DoctorWorkSchedules");
+            entity.HasOne(d => d.Doctor)
+                  .WithMany(d => d.WorkSchedules)
+                  .HasForeignKey(d => d.DoctorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AppointmentSlot>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("AppointmentSlots");
+
+            // Optimistic Concurrency - SQL Server ROWVERSION
+            entity.Property(e => e.RowVersion)
+                  .IsRowVersion()
+                  .IsConcurrencyToken();
+
+            // Unique: một bác sĩ không thể có 2 slot trùng giờ
+            entity.HasIndex(e => new { e.DoctorId, e.SlotStart })
+                  .IsUnique()
+                  .HasDatabaseName("UX_AppointmentSlot_Doctor_Start");
+
+            entity.Property(e => e.Status)
+                  .HasConversion<int>();
+
+            entity.HasOne(e => e.Doctor)
+                  .WithMany(d => d.AppointmentSlots)
+                  .HasForeignKey(e => e.DoctorId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Patient)
+                  .WithMany(p => p.AppointmentSlots)
+                  .HasForeignKey(e => e.PatientId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Appointment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("Appointments");
+
+            entity.Property(e => e.Status)
+                  .HasConversion<int>();
+
+            entity.HasOne(a => a.Slot)
+                  .WithOne(s => s.Appointment)
+                  .HasForeignKey<Appointment>(a => a.SlotId)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(a => a.Patient)
+                  .WithMany(p => p.Appointments)
+                  .HasForeignKey(a => a.PatientId)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(a => a.Doctor)
+                  .WithMany(d => d.Appointments)
+                  .HasForeignKey(a => a.DoctorId)
+                  .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(a => a.ClinicalRecord)
+                  .WithMany()
+                  .HasForeignKey(a => a.ClinicalRecordId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<WaitingPatient>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("WaitingPatients");
+
+            entity.HasOne(d => d.Patient)
+                .WithMany()
+                .HasForeignKey(d => d.PatientId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(d => d.Receptionist)
+                .WithMany()
+                .HasForeignKey(d => d.ReceptionistId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(d => d.Doctor)
+                .WithMany()
+                .HasForeignKey(d => d.DoctorId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         OnModelCreatingPartial(modelBuilder);

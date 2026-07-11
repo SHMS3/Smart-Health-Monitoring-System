@@ -23,12 +23,17 @@ namespace SmartHealthMonitoring
 
             // 1. Đăng ký DB Context
             builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
-                options.UseSqlServer(connectionString ?? builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(connectionString ?? builder.Configuration.GetConnectionString("DefaultConnection"),
+                    sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()));
 
             // 2. Cấu hình kết nối MinIO
+            var minioEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9000";
+            var minioAccessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY") ?? "admin";
+            var minioSecretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY") ?? "admin123";
+
             builder.Services.AddMinio(configureClient => configureClient
-                .WithEndpoint("localhost:9000")
-                .WithCredentials("admin", "admin123")
+                .WithEndpoint(minioEndpoint)
+                .WithCredentials(minioAccessKey, minioSecretKey)
                 .WithSSL(false)
                 .Build());
 
@@ -61,8 +66,13 @@ namespace SmartHealthMonitoring
             
             // Đăng ký Background Worker quét hồ sơ lâm sàng mới (DA-1.3)
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AI.AiPredictionWorker>();
-            // Đăng ký Background Worker nhắc nhở ghi log chỉ số sinh hiệu (gửi email sau 1 giờ)
-            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.DailyVitalLogReminderWorker>();
+            // Tắt Background Worker nhắc nhở ghi log chỉ số sinh hiệu để không tự động gửi email cho bệnh nhân.
+            // builder.Services.AddHostedService<SmartHealthMonitoring.Workers.DailyVitalLogReminderWorker>();
+            // Đặt lịch: sinh slot tự động mỗi ngày lúc 00:05
+            // builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentSlotGeneratorWorker>();
+            // Đặt lịch: dọn dẹp SoftLock hết hạn và đánh dấu No-show mỗi 2 phút
+            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentCleanupWorker>();
+
             // ====================================================================
 
             // 6.5. Session (dùng để lưu OTP xác thực số điện thoại)
@@ -94,12 +104,24 @@ namespace SmartHealthMonitoring
             var app = builder.Build();
 
 
-            using (var scope = app.Services.CreateScope())
+            // Chạy migration trong background để tránh block luồng Kestrel khởi chạy port binding (gây 502 Bad Gateway)
+            _ = Task.Run(() =>
             {
-                var services = scope.ServiceProvider;
-                var context = services.GetRequiredService<SmartHealthMonitoringContext>();
-                 //SeedData.Initialize(context);
-            }
+                using (var scope = app.Services.CreateScope())
+                {
+                    var services = scope.ServiceProvider;
+                    try
+                    {
+                        var context = services.GetRequiredService<SmartHealthMonitoringContext>();
+                        context.Database.Migrate();
+                        Console.WriteLine("[Database] Auto-migration successfully executed.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Database] Auto-migration failed: {ex.Message}");
+                    }
+                }
+            });
 
             if (!app.Environment.IsDevelopment())
             {
@@ -128,6 +150,7 @@ namespace SmartHealthMonitoring
             // SignalR Hub endpoint cho Telemedicine Chat
             app.MapHub<ChatHub>("/chatHub");
             app.MapHub<AuditLogHub>("/auditLogHub");
+            app.MapHub<AppointmentHub>("/appointmentHub");
 
             app.Run();
         }

@@ -252,23 +252,35 @@ public class AiPredictionService : IAiPredictionService
             int   age = CalculateAge(record.Patient.DateOfBirth.ToDateTime(TimeOnly.MinValue));
             float sex = record.Patient.Sex;
 
-            float fbs     = (record.FastingBs > 120 || record.FastingBs == 1) ? 1f : 0f;
-            float oldpeak = (float)record.OldPeak + 0.001f; // +0.001 de tranh log(0)
+            // Fallback theo tuổi/giới cho các field null (gói chưa mua)
+            var (normalBP, normalMaxHR, normalChol) = GetNormalValues(age, sex);
+
+            float restingBp  = record.RestingBp.HasValue    ? (float)record.RestingBp.Value    : normalBP;
+            float chol       = record.Cholesterol.HasValue  ? (float)record.Cholesterol.Value  : normalChol;
+            float maxHR      = record.MaxHeartRate.HasValue ? (float)record.MaxHeartRate.Value : normalMaxHR;
+            float fbs        = (record.FastingBs.HasValue && (record.FastingBs.Value > 120 || record.FastingBs.Value == 1)) ? 1f : 0f;
+            float oldpeak    = record.OldPeak.HasValue      ? (float)record.OldPeak.Value + 0.001f : 0.001f;
+            float exang      = record.ExerciseAngina.HasValue ? (float)record.ExerciseAngina.Value : 0f;
+            float slope      = record.Stslope.HasValue      ? (float)record.Stslope.Value      : 2f;
+            float ca         = record.MajorVessels.HasValue ? (float)record.MajorVessels.Value : 0f;
+            byte  cpRaw      = record.ChestPainType   ?? (byte)3; // Asymptomatic if null
+            byte  restecgRaw = record.RestEcg         ?? (byte)0; // Normal if null
+            byte  thalRaw    = record.ThalResult       ?? (byte)1; // Normal if null
 
             var featureValues = BuildFeatureVector(
                 age:        age,
                 sex:        sex,
-                trestbps:   record.RestingBp,
-                chol:       record.Cholesterol,
+                trestbps:   restingBp,
+                chol:       chol,
                 fbs:        fbs,
-                thalach:    record.MaxHeartRate,
-                exang:      record.ExerciseAngina,
+                thalach:    maxHR,
+                exang:      exang,
                 oldpeakRaw: oldpeak,
-                slope:      record.Stslope,
-                ca:         record.MajorVessels,
-                cpRaw:      record.ChestPainType,
-                restecgRaw: record.RestEcg,
-                thalRaw:    record.ThalResult
+                slope:      slope,
+                ca:         ca,
+                cpRaw:      cpRaw,
+                restecgRaw: restecgRaw,
+                thalRaw:    thalRaw
             );
 
             return RunInference(featureValues, modelType, $"{modelType}_Clinical_1.0");
@@ -288,8 +300,14 @@ public class AiPredictionService : IAiPredictionService
     ///                          ChestPainLevel → cp, HasExerciseAngina → exang
     /// ClinicalRecord cung cap: Cholesterol, FastingBS, RestECG, OldPeak, STSlope, MajorVessels, ThalResult
     /// Neu ClinicalRecord null hoac da cu → dung gia tri trung binh lam sang lam fallback.
+    ///
+    /// purchasedServiceNames: Danh sach ten dich vu da thanh toan (lowercase).
+    ///   - "huyết áp & triệu chứng" → nhom cp/exang/bp
+    ///   - "phân tích huyết học"    → nhom chol/fbs
+    ///   - "điện tâm đồ & mạch vành" → nhom ecg/oldpeak/slope/ca/thal
+    /// Neu null hoac empty → dung fallback an toan cho tat ca.
     /// </summary>
-    public AiriskPrediction PredictCombined(DailyVitalLog log, ClinicalRecord? clinicalRecord, Patient patient, string modelType = "KNN")
+    public AiriskPrediction PredictCombined(DailyVitalLog log, ClinicalRecord? clinicalRecord, Patient patient, string modelType = "KNN", IReadOnlyList<string>? purchasedServiceNames = null)
     {
         try
         {
@@ -299,7 +317,12 @@ public class AiPredictionService : IAiPredictionService
             int   age = CalculateAge(patient.DateOfBirth.ToDateTime(TimeOnly.MinValue));
             float sex = patient.Sex;
 
-            // Chi so tu DailyVitalLog (luon dung - du lieu moi nhat)
+            // ── Ghi log các gói dịch vụ đã mua (chỉ để debug, không dùng để quyết định fallback nữa) ──
+            _logger.LogDebug(
+                "[PredictCombined] PurchasedServices={Svcs} (Fallback giờ đây dựa vào null-check trực tiếp từ ClinicalRecord)",
+                purchasedServiceNames == null ? "ALL" : string.Join(", ", purchasedServiceNames));
+
+            // ── Chi so tu DailyVitalLog (luon dung - du lieu moi nhat) ──────────
             float trestbps = log.SystolicBp;
             float exang    = log.HasExerciseAngina ? 1f : 0f;
             byte  cpRaw    = log.ChestPainLevel;
@@ -322,20 +345,62 @@ public class AiPredictionService : IAiPredictionService
                 "[HRConvert] Nhip nghi={RHR}bpm, Tuoi={Age} -> HR max ly thuyet={TMax:F0}, Phat={Pen:P0} -> HR max uoc tinh={Thalach:F0}bpm",
                 restingHR, age, theoreticalMaxHR, hrPenalty, thalach);
 
-            // Chi so tu ClinicalRecord gan nhat (neu co, khong qua 90 ngay)
-            // Fallback = gia tri trung binh lam sang tu UCI Heart Disease Dataset
-            float chol = clinicalRecord != null ? (float)clinicalRecord.Cholesterol : 246f;
-            float fbs  = clinicalRecord != null
-                             ? ((clinicalRecord.FastingBs > 120 || clinicalRecord.FastingBs == 1) ? 1f : 0f)
-                             : 0f;
-            float oldpeak = clinicalRecord != null
-                                ? (float)clinicalRecord.OldPeak + 0.001f
-                                : 0.001f; // Fallback = 0 (khong co ST depression = binh thuong)
-            float slope   = clinicalRecord != null ? (float)clinicalRecord.Stslope      : 1f; // 1=Flat
-            float ca      = clinicalRecord != null ? (float)clinicalRecord.MajorVessels : 0f;
+            // ── Chi so tu ClinicalRecord ─────────────────────────────────────────
+            // Fallback thong minh theo GOI DICH VU DA MUA:
+            //   - Goi chua mua → dung gia tri trung binh nguoi khoe manh (UCI mean)
+            //   - Dam bao mo hinh ONNX luon nhan du 18 features hop le
 
-            byte restecgRaw = clinicalRecord != null ? clinicalRecord.RestEcg    : (byte)1; // 1=Normal
-            byte thalRaw    = clinicalRecord != null ? clinicalRecord.ThalResult  : (byte)1; // 1=Normal
+            // Nhom Huyết học: Cholesterol, FastingBS
+            // Fallback: kiểm tra null trực tiếp từ ClinicalRecord (không còn dùng hasBloodPackage nữa)
+            var (normalBP, normalMaxHR, normalChol) = GetNormalValues(age, sex);
+            _logger.LogDebug(
+                "[NormalValues] Age={A}, Sex={S} → BP={BP}, MaxHR={HR}, Chol={C}",
+                age, sex, normalBP, normalMaxHR, normalChol);
+
+            float chol;
+            float fbs;
+            if (clinicalRecord?.Cholesterol != null)
+            {
+                // Có dữ liệu thực tế trong DB → dùng luôn
+                chol = (float)clinicalRecord.Cholesterol.Value;
+                fbs  = (clinicalRecord.FastingBs.HasValue && (clinicalRecord.FastingBs.Value > 120 || clinicalRecord.FastingBs.Value == 1)) ? 1f : 0f;
+                _logger.LogDebug("[Blood] Dùng giá trị thực từ ClinicalRecord: chol={C}, fbs={F}", chol, fbs);
+            }
+            else
+            {
+                // Cholesterol = null trong DB → gói chưa mua hoặc chưa đo → fallback theo tuổi/giới
+                chol = normalChol;
+                fbs  = 0f;
+                _logger.LogDebug("[Blood] Cholesterol=null → fallback theo tuổi/giới: chol={C}", chol);
+            }
+
+            // Nhom Điện tâm đồ & Mạch vành: OldPeak, STSlope, RestECG, MajorVessels, ThalResult
+            // Fallback: kiểm tra null trực tiếp từ ClinicalRecord
+            float oldpeak;
+            float slope;
+            float ca;
+            byte  restecgRaw;
+            byte  thalRaw;
+            if (clinicalRecord?.OldPeak != null)
+            {
+                // Có dữ liệu ECG thực tế → dùng
+                oldpeak    = (float)clinicalRecord.OldPeak.Value + 0.001f;
+                slope      = clinicalRecord.Stslope.HasValue ? (float)clinicalRecord.Stslope.Value : 2f;
+                ca         = clinicalRecord.MajorVessels.HasValue ? (float)clinicalRecord.MajorVessels.Value : 0f;
+                restecgRaw = clinicalRecord.RestEcg ?? (byte)0;
+                thalRaw    = clinicalRecord.ThalResult ?? (byte)1;
+                _logger.LogDebug("[ECG] Dùng giá trị thực từ ClinicalRecord");
+            }
+            else
+            {
+                // OldPeak = null trong DB → gói chưa mua hoặc chưa đo → fallback bình thường
+                oldpeak    = 0.001f; // ST depression = 0 → không bất thường
+                slope      = 2f;     // Upsloping = bình thường nhất
+                ca         = 0f;     // 0 động mạch tắc → tốt
+                restecgRaw = (byte)0; // Normal ECG
+                thalRaw    = (byte)1; // Normal thalassemia
+                _logger.LogDebug("[ECG] OldPeak=null → fallback bình thường (oldpeak=0, slope=Up, ca=0)");
+            }
 
             var featureValues = BuildFeatureVector(
                 age:        age,
@@ -364,6 +429,78 @@ public class AiPredictionService : IAiPredictionService
             _logger.LogError(ex, "[AI] Loi du doan ket hop (Model={Model})", modelType);
             throw;
         }
+    }
+
+
+    // =========================================================================
+    // Clinical Normal Values by Age & Sex
+    // =========================================================================
+
+    /// <summary>
+    /// Tra ve gia tri sinh ly BINH THUONG cho 1 benh nhan cu the dua tren tuoi va gioi tinh.
+    /// Tham chieu:
+    ///   - Huyết ap: ACC/AHA 2017 guideline
+    ///   - Cholesterol: NCEP-ATP III / AHA by age-sex strata
+    ///   - Nhip tim toi da: Haskell-Fox (220-age), hieu chinh gioi (nu cao hon 5-7 bpm)
+    ///   - Oldpeak, STSlope, ca, ECG, Thal: khong thay doi theo tuoi (gia tri categorical on dinh)
+    /// </summary>
+    private static (float RestingBP, float MaxHR, float Cholesterol) GetNormalValues(int age, float sex)
+    {
+        // ── Huyết áp tâm thu nghỉ (mmHg) ────────────────────────────────────────
+        // Nam: thap hon nu truoc 50t, tu 50t tro len tuong duong
+        // Nu:  tang nhanh sau man kinh (~50t)
+        float restingBP = sex >= 1f // 1 = Nam
+            ? age switch
+            {
+                < 30 => 115f,
+                < 40 => 120f,
+                < 50 => 124f,
+                < 60 => 128f,
+                < 70 => 132f,
+                _    => 136f
+            }
+            : age switch // Nu
+            {
+                < 30 => 110f,
+                < 40 => 114f,
+                < 50 => 118f,
+                < 60 => 128f, // Tăng mạnh sau mãn kinh
+                < 70 => 134f,
+                _    => 138f
+            };
+
+        // ── Nhịp tim tối đa khi gắng sức (bpm) ─────────────────────────────────
+        // Haskell-Fox: 220 - age (cho nam)
+        // Hiệu chỉnh nữ: +5 bpm (trung bình nữ đạt HR tối đa cao hơn)
+        float maxHR = (220f - age) + (sex >= 1f ? 0f : 5f);
+        // Clamp về khoảng sinh lý (100-200 bpm)
+        maxHR = Math.Clamp(maxHR, 100f, 200f);
+
+        // ── Cholesterol toàn phần (mg/dL) ───────────────────────────────────────
+        // NCEP-ATP III / AHA normals theo lứa tuổi và giới:
+        //   Nam: tăng dần đến 50t rồi ổn định
+        //   Nữ: tăng mạnh sau mãn kinh (50t), đỉnh ở 60-70t
+        float chol = sex >= 1f // Nam
+            ? age switch
+            {
+                < 30 => 180f,
+                < 40 => 195f,
+                < 50 => 210f,
+                < 60 => 220f,
+                < 70 => 215f,
+                _    => 210f
+            }
+            : age switch // Nu
+            {
+                < 30 => 170f,
+                < 40 => 185f,
+                < 50 => 200f,
+                < 60 => 230f, // Post-menopause jump
+                < 70 => 240f,
+                _    => 235f
+            };
+
+        return (restingBP, maxHR, chol);
     }
 
     // =========================================================================

@@ -138,35 +138,56 @@
 <div class="container pt-5 mt-4 pb-5">
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-        <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-1">
-                    @if (User.IsInRole("1"))
-                    {
-                        <li class="breadcrumb-item">
-                            <a asp-controller="DoctorDashboard" asp-action="Index" class="text-decoration-none text-muted">Danh sách Bệnh nhân</a>
-                        </li>
-                    }
-                </ol>
-            </nav>
+        <div> 
             <h2 class="h3 mb-0 fw-bold text-dark">Hồ sơ Bệnh án</h2>
         </div>
         <div>
             @if (User.IsInRole("1"))
             {
-                <a asp-controller="ClinicalExam"
-                   asp-action="Create"
-                   asp-route-patientId="@Model.PatientId"
-                   class="btn btn-add-record me-2">
-                    <i class="fas fa-notes-medical me-1"></i> Thêm mới Hồ sơ
-                </a>
+                @if (Model.HasClinicalRecordToday && Model.HasConfiguredThresholds)
+                {
+                    <form asp-controller="DoctorDashboard" asp-action="CompleteExam" method="post" class="d-inline">
+                        <input type="hidden" name="patientId" value="@Model.PatientId" />
+                        <button type="submit" class="btn btn-success me-2 fw-bold shadow-sm">
+                            <i class="fas fa-check-circle me-1"></i> Khám xong
+                        </button>
+                    </form>
+                }
 
-                <a asp-controller="ClinicalExam"
-                   asp-action="SettingPatientThreshold"
-                   asp-route-patientId="@Model.PatientId"
-                   class="btn btn-warning fw-bold text-dark shadow-sm">
-                    <i class="fas fa-cog me-1"></i> Cấu hình ngưỡng
-                </a>
+                @if (!Model.HasClinicalRecordToday)
+                {
+                    @if (Model.HasPaidPaymentToday)
+                    {
+                        <a asp-controller="ClinicalExam"
+                           asp-action="Create"
+                           asp-route-patientId="@Model.PatientId"
+                           class="btn btn-add-record me-2">
+                            <i class="fas fa-notes-medical me-1"></i> Thêm mới Hồ sơ
+                        </a>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-secondary me-2" onclick="Swal.fire('Chưa thanh toán', 'Vui lòng yêu cầu bệnh nhân thanh toán phí dịch vụ tại quầy lễ tân trước khi thêm hồ sơ mới.', 'warning')">
+                            <i class="fas fa-notes-medical me-1"></i> Thêm mới Hồ sơ
+                        </button>
+                    }
+                }
+
+                @if (Model.Records.TotalCount > 0)
+                {
+                    <a asp-controller="ClinicalExam"
+                       asp-action="SettingPatientThreshold"
+                       asp-route-patientId="@Model.PatientId"
+                       class="btn btn-warning fw-bold text-dark shadow-sm">
+                        <i class="fas fa-cog me-1"></i> Cấu hình ngưỡng
+                    </a>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-warning fw-bold text-dark shadow-sm opacity-50" onclick="Swal.fire('Chưa có hồ sơ', 'Bệnh nhân cần có ít nhất một hồ sơ bệnh án trước khi cấu hình ngưỡng.', 'info')">
+                        <i class="fas fa-cog me-1"></i> Cấu hình ngưỡng
+                    </button>
+                }
             }
         </div>
     </div>
@@ -221,11 +242,7 @@
                 <i class="fas fa-stethoscope me-2"></i> Cận lâm sàng (Tại viện)
             </button>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link @(Model.ActiveTab == "diary-content" ? "active" : "") rounded-pill px-4 fw-bold ms-2" id="diary-tab" data-bs-toggle="pill" data-bs-target="#diary-content" type="button" role="tab" onclick="document.getElementById('ActiveTabInput').value='diary-content'">
-                <i class="fas fa-home me-2"></i> Sổ tay theo dõi (Tại nhà)
-            </button>
-        </li>
+       
     </ul>
 
     <input type="hidden" id="ActiveTabInput" value="@Model.ActiveTab" />
@@ -268,39 +285,58 @@
                                         <div class="text-muted small"><i class="far fa-clock me-1"></i> @record.VisitDate.ToString("HH:mm")</div>
                                     </td>
                                     <td>
-                                        <span class="fw-bold text-dark">@record.RestingBP</span> <span class="text-muted small">mmHg</span>
-                                    </td>
-                                    <td>
-                                        <span class="fw-bold text-dark">@record.Cholesterol</span> <span class="text-muted small">mg/dl</span>
-                                    </td>
-                                    <td>
-                                        @if(record.MaxHeartRate > 150)
+                                        @if (record.RestingBP.HasValue)
                                         {
-                                            <span class="badge badge-soft-danger px-2 py-1 rounded-3 border border-danger border-opacity-25"><i class="fas fa-heartbeat me-1"></i> @record.MaxHeartRate bpm</span>
+                                            <span class="fw-bold text-dark">@record.RestingBP</span> <span class="text-muted small">mmHg</span>
                                         }
                                         else
                                         {
-                                            <span class="fw-bold text-dark">@record.MaxHeartRate</span> <span class="text-muted small">bpm</span>
+                                            <span class="badge bg-light text-muted border px-2 py-1 small"><i class="fas fa-minus me-1"></i>N/A</span>
                                         }
                                     </td>
                                     <td>
-                                        <span class="badge badge-soft-primary px-3 py-2 rounded-pill border border-primary border-opacity-25">
-                                            @record.ChestPainTypeDisplay
-                                        </span>
+                                        @if (record.Cholesterol.HasValue)
+                                        {
+                                            <span class="fw-bold text-dark">@record.Cholesterol</span> <span class="text-muted small">mg/dl</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-muted border px-2 py-1 small"><i class="fas fa-minus me-1"></i>N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (record.MaxHeartRate.HasValue)
+                                        {
+                                            @if(record.MaxHeartRate > 150)
+                                            {
+                                                <span class="badge badge-soft-danger px-2 py-1 rounded-3 border border-danger border-opacity-25"><i class="fas fa-heartbeat me-1"></i> @record.MaxHeartRate bpm</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="fw-bold text-dark">@record.MaxHeartRate</span> <span class="text-muted small">bpm</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-muted border px-2 py-1 small"><i class="fas fa-minus me-1"></i>N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (record.ChestPainTypeDisplay != null)
+                                        {
+                                            <span class="badge badge-soft-primary px-3 py-2 rounded-pill border border-primary border-opacity-25">
+                                                @record.ChestPainTypeDisplay
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-muted border px-2 py-1 small"><i class="fas fa-minus me-1"></i>N/A</span>
+                                        }
                                     </td>
                                     <td class="text-end pe-4">
                                         <button type="button" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3 shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#detailModal-@record.Id">
                                             <i class="fas fa-eye me-1"></i> Chi tiết
                                         </button>
-
-                                        @if (User.IsInRole("1"))
-                                        {
-                                            <form asp-action="Delete" asp-route-id="@record.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn đánh dấu hồ sơ này là HỦY BỎ?');">
-                                                <button type="submit" class="btn btn-sm btn-light text-danger rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0;" title="Hủy hồ sơ">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-                                        }
 
                                         @if (User.IsInRole("1"))
                                         {
@@ -355,124 +391,6 @@
             </div>
         </div>
 
-        <div class="tab-pane fade @(Model.ActiveTab == "diary-content" ? "show active" : "")" id="diary-content" role="tabpanel" tabindex="0">
-            <div class="card border-0 shadow-sm rounded-4 bg-transparent mb-4">
-                <div class="card-body p-3">
-                    <form method="get" asp-action="Index" class="d-flex align-items-center gap-2">
-                        <input type="hidden" name="id" value="@Model.PatientId" />
-                        <input type="hidden" name="activeTab" value="diary-content" />
-                        <input type="hidden" name="page" value="@Model.Records.Page" />
-                        <label class="fw-bold mb-0">Tìm kiếm theo ngày:</label>
-                        <input type="date" name="searchDate" class="form-control w-auto" value="@(Model.SearchDate?.ToString("yyyy-MM-dd"))" />
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Lọc</button>
-                        @if (Model.SearchDate.HasValue)
-                        {
-                            <a asp-action="Index" asp-route-id="@Model.PatientId" asp-route-activeTab="diary-content" asp-route-page="@Model.Records.Page" class="btn btn-light border"><i class="fas fa-undo"></i> Xóa lọc</a>
-                        }
-                    </form>
-                </div>
-            </div>
-            <div class="card border-0 shadow-sm rounded-4 bg-transparent">
-                <div class="table-responsive">
-                    <table class="table table-modern align-middle mb-0 text-nowrap">
-                        <thead>
-                            <tr>
-                                <th class="ps-4">Thời gian ghi</th>
-                                <th>Huyết áp (Thu/Trương)</th>
-                                <th>Nhịp tim tĩnh</th>
-                                <th>Triệu chứng tự báo</th>
-                                <th class="text-end pe-4">Ghi chú</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (!Model.DailyLogs.Items.Any())
-                            {
-                                <tr>
-                                    <td colspan="5" class="text-center py-5 bg-white rounded-4 shadow-sm border-0">
-                                        <div class="text-muted mb-3 mt-3">
-                                            <i class="fas fa-book-medical opacity-25" style="font-size: 3rem;"></i>
-                                        </div>
-                                        <h6 class="fw-bold text-dark">Chưa có dữ liệu sổ tay</h6>
-                                        <p class="text-muted small mb-3">Bệnh nhân chưa ghi nhận chỉ số nào tại nhà.</p>
-                                    </td>
-                                </tr>
-                            }
-                            
-                            @foreach(var log in Model.DailyLogs.Items)
-                            {
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="fw-bold text-dark">@log.LoggedAt.ToString("dd/MM/yyyy")</div>
-                                        <div class="text-muted small"><i class="far fa-clock me-1"></i> @log.LoggedAt.ToString("HH:mm")</div>
-                                    </td>
-                                    <td>
-                                        <span class="text-danger fw-bold fs-6">@log.SystolicBp</span> 
-                                        <span class="text-muted mx-1">/</span> 
-                                        <span class="text-dark fw-bold">@log.DiastolicBp</span> 
-                                        <span class="text-muted small">mmHg</span>
-                                    </td>
-                                    <td>
-                                        <span class="fw-bold text-dark">@log.HeartRate</span> <span class="text-muted small">bpm</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-light text-dark border border-secondary border-opacity-25 px-2 py-1">
-                                            Mức độ đau: @log.ChestPainLevel
-                                        </span>
-                                        @if(log.HasExerciseAngina) 
-                                        { 
-                                            <span class="badge bg-warning text-dark ms-1 px-2 py-1 shadow-sm">
-                                                <i class="fas fa-bolt text-danger me-1"></i>Đau khi vận động
-                                            </span> 
-                                        }
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        @if(log.UpdateCount > 0)
-                                        {
-                                            <span class="badge bg-light text-muted border px-2 py-1" title="Bệnh nhân đã sửa lại kết quả này">
-                                                <i class="fas fa-pen-alt me-1"></i> Đã sửa (@log.UpdateCount)
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted small">Bản ghi gốc</span>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                @if (Model.DailyLogs.TotalPages > 1)
-                {
-                    <div class="card-footer bg-white border-0 shadow-sm rounded-4 p-4 mt-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
-                        <span class="text-muted small">
-                            Hiển thị trang <strong>@Model.DailyLogs.Page</strong> / @Model.DailyLogs.TotalPages (Tổng số: <strong>@Model.DailyLogs.TotalCount</strong> ngày có dữ liệu)
-                        </span>
-                        
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination pagination-sm mb-0">
-                                <li class="page-item @(Model.DailyLogs.Page == 1 ? "disabled" : "")">
-                                    <a class="page-link rounded-start-pill px-3" asp-action="Index" asp-route-id="@Model.PatientId" asp-route-diaryPage="@(Model.DailyLogs.Page - 1)" asp-route-page="@Model.Records.Page" asp-route-searchDate="@Model.SearchDate?.ToString("yyyy-MM-dd")" asp-route-activeTab="diary-content">Trước</a>
-                                </li>
-
-                                @for (int i = 1; i <= Model.DailyLogs.TotalPages; i++)
-                                {
-                                    <li class="page-item @(i == Model.DailyLogs.Page ? "active" : "")">
-                                        <a class="page-link px-3" asp-action="Index" asp-route-id="@Model.PatientId" asp-route-diaryPage="@i" asp-route-page="@Model.Records.Page" asp-route-searchDate="@Model.SearchDate?.ToString("yyyy-MM-dd")" asp-route-activeTab="diary-content">@i</a>
-                                    </li>
-                                }
-
-                                <li class="page-item @(Model.DailyLogs.Page == Model.DailyLogs.TotalPages ? "disabled" : "")">
-                                    <a class="page-link rounded-end-pill px-3" asp-action="Index" asp-route-id="@Model.PatientId" asp-route-diaryPage="@(Model.DailyLogs.Page + 1)" asp-route-page="@Model.Records.Page" asp-route-searchDate="@Model.SearchDate?.ToString("yyyy-MM-dd")" asp-route-activeTab="diary-content">Sau</a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                }
-            </div>
-        </div>
-
     </div>
 </div>
 
@@ -494,75 +412,119 @@
                 
                 <div class="modal-body p-4">
                     <div class="row g-4">
-                        <div class="col-md-4">
-                            <div class="modal-detail-group">
-                                <div class="modal-detail-title text-danger"><i class="fas fa-heartbeat me-2"></i>Sinh hiệu & Triệu chứng</div>
-                                <ul class="list-unstyled mb-0 small">
-                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-                                        <span class="text-muted">Đau ngực:</span> <strong class="text-dark text-end">@record.ChestPainTypeDisplay</strong>
-                                    </li>
-                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-                                        <span class="text-muted">Huyết áp nghỉ:</span> <strong class="text-dark">@record.RestingBP mmHg</strong>
-                                    </li>
-                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-                                        <span class="text-muted">Nhịp tim MAX:</span> <strong class="text-danger">@record.MaxHeartRate bpm</strong>
-                                    </li>
-                                    <li class="d-flex justify-content-between">
-                                        <span class="text-muted">Đau ngực gắng sức:</span> <strong class="text-dark">@(record.ExerciseAngina == 1 ? "Có (Yes)" : "Không")</strong>
-                                    </li>
-                                </ul>
+                        @* Cột 1: Sinh hiệu & Triệu chứng *@
+                        @if (record.RestingBP.HasValue || record.ChestPainTypeDisplay != null || record.MaxHeartRate.HasValue || record.ExerciseAngina.HasValue)
+                        {
+                            <div class="col-md-4">
+                                <div class="modal-detail-group">
+                                    <div class="modal-detail-title text-danger"><i class="fas fa-heartbeat me-2"></i>Sinh hiệu &amp; Triệu chứng</div>
+                                    <ul class="list-unstyled mb-0 small">
+                                        @if (record.ChestPainTypeDisplay != null)
+                                        {
+                                            <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                                <span class="text-muted">Đau ngực:</span> <strong class="text-dark text-end">@record.ChestPainTypeDisplay</strong>
+                                            </li>
+                                        }
+                                        @if (record.RestingBP.HasValue)
+                                        {
+                                            <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                                <span class="text-muted">Huyết áp nghỉ:</span> <strong class="text-dark">@record.RestingBP mmHg</strong>
+                                            </li>
+                                        }
+                                        @if (record.MaxHeartRate.HasValue)
+                                        {
+                                            <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                                <span class="text-muted">Nhịp tim MAX:</span> <strong class="text-danger">@record.MaxHeartRate bpm</strong>
+                                            </li>
+                                        }
+                                        @if (record.ExerciseAngina.HasValue)
+                                        {
+                                            <li class="d-flex justify-content-between">
+                                                <span class="text-muted">Đau ngực gắng sức:</span> <strong class="text-dark">@(record.ExerciseAngina == 1 ? "Có (Yes)" : "Không")</strong>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="modal-detail-group">
-                                <div class="modal-detail-title text-info"><i class="fas fa-tint me-2"></i>Huyết học</div>
-                                <ul class="list-unstyled mb-0 small">
-                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-                                        <span class="text-muted">Cholesterol:</span> <strong class="text-dark">@record.Cholesterol mg/dl</strong>
-                                    </li>
-                                    <li class="d-flex justify-content-between">
-                                        <span class="text-muted">Đường huyết đói >120:</span> 
-                                        <strong class="@(record.FastingBS == 1 ? "text-danger" : "text-success")">
-                                            @(record.FastingBS == 1 ? "Cao" : "Bình thường")
-                                        </strong>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+                        }
 
-                        <!-- Cột 3: Điện tâm đồ & Mạch vành -->
-                        <div class="col-md-4">
-                            <div class="modal-detail-group">
-                                <div class="modal-detail-title text-primary"><i class="fas fa-wave-square me-2"></i>Điện tâm đồ & Mạch</div>
-                                <ul class="list-unstyled mb-3 small">
-                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-                                        <span class="text-muted">ECG nghỉ:</span> 
-                                        <strong class="text-dark text-end ms-2">@(record.RestECG == 0 ? "Normal" : record.RestECG == 1 ? "ST-T" : "LVH")</strong>
-                                    </li>
-                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-                                        <span class="text-muted">Độ dốc ST:</span> <strong class="text-dark text-end">@(record.STSlope == 1 ? "Upsloping" : record.STSlope == 2 ? "Flat" : "Downsloping")</strong>
-                                    </li>
-                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-                                        <span class="text-muted">OldPeak:</span> <strong class="text-dark">@record.OldPeak</strong>
-                                    </li>
-                                    <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
-                                        <span class="text-muted">Mạch vành (0-3):</span> <strong class="text-dark">@record.MajorVessels</strong>
-                                    </li>
-                                    <li class="d-flex justify-content-between">
-                                        <span class="text-muted">Thal:</span> 
-                                        <strong class="text-dark text-end ms-2">@(record.ThalResult == 1 ? "Normal" : record.ThalResult == 2 ? "Fixed Defect" : "Reversable")</strong>
-                                    </li>
-                                </ul>
-
-                                @if (!string.IsNullOrEmpty(record.EcgImageUrl))
-                                {
-                                    <button class="btn btn-sm btn-outline-primary w-100 fw-bold mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#ecgImage-@record.Id">
-                                        <i class="fas fa-image me-2"></i> Xem biểu đồ ECG gốc
-                                    </button>
-                                }
+                        @* Cột 2: Huyết học *@
+                        @if (record.Cholesterol.HasValue || record.FastingBS.HasValue)
+                        {
+                            <div class="col-md-4">
+                                <div class="modal-detail-group">
+                                    <div class="modal-detail-title text-info"><i class="fas fa-tint me-2"></i>Huyết học</div>
+                                    <ul class="list-unstyled mb-0 small">
+                                        @if (record.Cholesterol.HasValue)
+                                        {
+                                            <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                                <span class="text-muted">Cholesterol:</span> <strong class="text-dark">@record.Cholesterol mg/dl</strong>
+                                            </li>
+                                        }
+                                        @if (record.FastingBS.HasValue)
+                                        {
+                                            <li class="d-flex justify-content-between">
+                                                <span class="text-muted">Đường huyết đói &gt;120:</span> 
+                                                <strong class="@(record.FastingBS == 1 ? "text-danger" : "text-success")">
+                                                    @(record.FastingBS == 1 ? "Cao" : "Bình thường")
+                                                </strong>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
+                        }
+
+                        @* Cột 3: Điện tâm đồ & Mạch vành *@
+                        @if (record.RestECG.HasValue || record.STSlope.HasValue || record.OldPeak.HasValue || record.MajorVessels.HasValue || record.ThalResult.HasValue)
+                        {
+                            <div class="col-md-4">
+                                <div class="modal-detail-group">
+                                    <div class="modal-detail-title text-primary"><i class="fas fa-wave-square me-2"></i>Điện tâm đồ &amp; Mạch</div>
+                                    <ul class="list-unstyled mb-3 small">
+                                        @if (record.RestECG.HasValue)
+                                        {
+                                            <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                                <span class="text-muted">ECG nghỉ:</span> 
+                                                <strong class="text-dark text-end ms-2">@(record.RestECG == 0 ? "Normal" : record.RestECG == 1 ? "ST-T" : "LVH")</strong>
+                                            </li>
+                                        }
+                                        @if (record.STSlope.HasValue)
+                                        {
+                                            <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                                <span class="text-muted">Độ dốc ST:</span> <strong class="text-dark text-end">@(record.STSlope == 1 ? "Upsloping" : record.STSlope == 2 ? "Flat" : "Downsloping")</strong>
+                                            </li>
+                                        }
+                                        @if (record.OldPeak.HasValue)
+                                        {
+                                            <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                                <span class="text-muted">OldPeak:</span> <strong class="text-dark">@record.OldPeak</strong>
+                                            </li>
+                                        }
+                                        @if (record.MajorVessels.HasValue)
+                                        {
+                                            <li class="mb-3 d-flex justify-content-between border-bottom pb-2">
+                                                <span class="text-muted">Mạch vành (0-3):</span> <strong class="text-dark">@record.MajorVessels</strong>
+                                            </li>
+                                        }
+                                        @if (record.ThalResult.HasValue)
+                                        {
+                                            <li class="d-flex justify-content-between">
+                                                <span class="text-muted">Thal:</span> 
+                                                <strong class="text-dark text-end ms-2">@(record.ThalResult == 1 ? "Normal" : record.ThalResult == 2 ? "Fixed Defect" : "Reversable")</strong>
+                                            </li>
+                                        }
+                                    </ul>
+
+                                    @if (!string.IsNullOrEmpty(record.EcgImageUrl))
+                                    {
+                                        <button class="btn btn-sm btn-outline-primary w-100 fw-bold mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#ecgImage-@record.Id">
+                                            <i class="fas fa-image me-2"></i> Xem biểu đồ ECG gốc
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
 
                     @if (!string.IsNullOrEmpty(record.EcgImageUrl))
@@ -670,4 +632,8 @@
             </div>
         </div>
     }
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 }

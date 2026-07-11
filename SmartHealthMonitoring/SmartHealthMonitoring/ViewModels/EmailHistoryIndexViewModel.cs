@@ -38,13 +38,22 @@ namespace SmartHealthMonitoring.ViewModels
         public List<EmailHistoryDto> Emails { get; set; } = new List<EmailHistoryDto>();
         public byte? FilterStatus { get; set; }
         public string? FilterEmailType { get; set; }
+        public string? FilterKeyword { get; set; }
+        public int? FilterPatientId { get; set; }
+        public string? FilterSender { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
+        public int CurrentPage { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        public int TotalItems { get; set; }
+        public int TotalPages { get; set; }
+        public int StartItem => TotalItems == 0 ? 0 : ((CurrentPage - 1) * PageSize) + 1;
+        public int EndItem => Math.Min(CurrentPage * PageSize, TotalItems);
         public EmailStats Stats { get; set; } = new();
 
         public List<SelectListItem> StatusOptions { get; set; } = new List<SelectListItem>
         {
-            new SelectListItem { Value = "", Text = "Tất cả" },
+            new SelectListItem { Value = "", Text = "Trạng thái" },
             new SelectListItem { Value = "0", Text = "Chờ gửi" },
             new SelectListItem { Value = "1", Text = "Thành công" },
             new SelectListItem { Value = "2", Text = "Thất bại" }
@@ -52,9 +61,12 @@ namespace SmartHealthMonitoring.ViewModels
 
         public List<SelectListItem> EmailTypeOptions { get; set; } = new List<SelectListItem>
         {
-            new SelectListItem { Value = "", Text = "Tất cả loại" },
+            new SelectListItem { Value = "", Text = "Loại email" },
             new SelectListItem { Value = "Mời tái khám", Text = "Mời tái khám" },
             new SelectListItem { Value = "Cảnh báo sức khỏe", Text = "Cảnh báo sức khỏe" }
         };
+
+        public List<SelectListItem> PatientOptions { get; set; } = new List<SelectListItem>();
+        public List<SelectListItem> SenderOptions { get; set; } = new List<SelectListItem>();
     }
 }
