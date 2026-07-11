@@ -13,11 +13,13 @@ namespace SmartHealthMonitoring.Services.AI
            byte? status,
            string? keyword,
            int page,
-           int pageSize);
+           int pageSize,
+           int? claimedByDoctorId = null);
 
         Task<int> GetTotalAlertsAsync(
             byte? status,
-            string? keyword);
+            string? keyword,
+            int? claimedByDoctorId = null);
 
         Task<ServiceResult> ClaimAlertAsync(
      int alertId,
