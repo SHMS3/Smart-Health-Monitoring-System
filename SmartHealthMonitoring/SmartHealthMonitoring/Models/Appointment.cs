@@ -40,6 +40,12 @@ public class Appointment
 
     public DateTime? UpdatedAt { get; set; }
 
+    /// <summary>NTF-02: đã gửi nhắc nhở trước 24 giờ</summary>
+    public bool IsReminded24h { get; set; }
+
+    /// <summary>NTF-02: đã gửi nhắc nhở trước 2 giờ</summary>
+    public bool IsReminded2h { get; set; }
+
     // Navigation
     public virtual AppointmentSlot Slot { get; set; } = null!;
     public virtual Patient Patient { get; set; } = null!;

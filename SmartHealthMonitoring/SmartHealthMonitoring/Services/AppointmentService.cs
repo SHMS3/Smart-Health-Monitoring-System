@@ -218,6 +218,7 @@ public class AppointmentService : IAppointmentService
         // Nhả slot về Available
         appointment.Slot.Status    = AppointmentSlotStatus.Available;
         appointment.Slot.PatientId = null;
+        appointment.Slot.SoftLockedUntil = null;
 
         await _context.SaveChangesAsync();
         return (true, "Đã huỷ lịch hẹn thành công.");

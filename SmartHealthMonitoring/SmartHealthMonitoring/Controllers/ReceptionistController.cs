@@ -25,15 +25,18 @@ namespace SmartHealthMonitoring.Controllers
         private readonly SmartHealthMonitoringContext _context;
         private readonly IEmailService _emailService;
         private readonly IAppointmentService _appointmentService;
+        private readonly IEmailTriggerService _emailTriggerService;
 
         public ReceptionistController(
             SmartHealthMonitoringContext context,
             IEmailService emailService,
-            IAppointmentService appointmentService)
+            IAppointmentService appointmentService,
+            IEmailTriggerService emailTriggerService)
         {
             _context = context;
             _emailService = emailService;
             _appointmentService = appointmentService;
+            _emailTriggerService = emailTriggerService;
         }
 
         // GET: /Receptionist/Index – Danh sách phiếu thanh toán (Chỉ Pending)
@@ -636,7 +639,7 @@ namespace SmartHealthMonitoring.Controllers
             return View(pendingList);
         }
 
-        // POST: /Receptionist/ApproveBooking
+        // POST: /Receptionist/ApproveBooking  (BOOK-08)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveBooking(int appointmentId)
@@ -644,6 +647,16 @@ namespace SmartHealthMonitoring.Controllers
             var success = await _appointmentService.ApproveAppointmentBookingAsync(appointmentId);
             if (success)
             {
+                // NTF-01: Email xác nhận đặt lịch + QR Check-in
+                try
+                {
+                    await _emailTriggerService.SendBookingConfirmationCheckInAsync(appointmentId);
+                }
+                catch (Exception emailEx)
+                {
+                    Console.WriteLine($"[ApproveBooking Email] {emailEx.Message}");
+                }
+
                 TempData["Success"] = "Đã phê duyệt yêu cầu đặt lịch hẹn thành công.";
             }
             else

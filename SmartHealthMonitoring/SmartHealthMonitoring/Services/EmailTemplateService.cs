@@ -115,6 +115,62 @@ public class EmailTemplateService : IEmailTemplateService
                 "{{RiskLevel}}",
                 "{{DetectedAt}}"
             }
+        },
+        new()
+        {
+            TemplateName = "DoctorAcceptedCheckInTemplate.html",
+            DisplayName = "QR Check-in khi bác sĩ tiếp nhận",
+            Description = "Gửi cho bệnh nhân ngay khi bác sĩ tiếp nhận thành công trong hàng đợi khám.",
+            DefaultSubject = "Bác sĩ đã tiếp nhận - QR Check-in của bạn - Smart Health",
+            IsUsedInSystem = true,
+            Tokens = new()
+            {
+                "{{PatientName}}",
+                "{{DoctorName}}",
+                "{{Specialty}}",
+                "{{RoomNumber}}",
+                "{{SequenceNumber}}",
+                "{{AcceptedAt}}",
+                "{{CheckInCode}}",
+                "{{QrCodeImage}}"
+            }
+        },
+        new()
+        {
+            TemplateName = "AppointmentBookingConfirmationTemplate.html",
+            DisplayName = "Xác nhận đặt lịch + QR Check-in",
+            Description = "NTF-01: Gửi khi lễ tân duyệt đặt lịch (BOOK-08) thành công.",
+            DefaultSubject = "Xác nhận đặt lịch thành công - QR Check-in - Smart Health",
+            IsUsedInSystem = true,
+            Tokens = new()
+            {
+                "{{PatientName}}",
+                "{{DoctorName}}",
+                "{{Specialty}}",
+                "{{RoomNumber}}",
+                "{{AppointmentTime}}",
+                "{{AppointmentId}}",
+                "{{CheckInCode}}",
+                "{{QrCodeImage}}"
+            }
+        },
+        new()
+        {
+            TemplateName = "AppointmentReminderTemplate.html",
+            DisplayName = "Nhắc lịch khám 24h/2h",
+            Description = "NTF-02: Email nhắc trước giờ khám 24 giờ hoặc 2 giờ.",
+            DefaultSubject = "Nhắc lịch khám - còn {{ReminderLabel}} - Smart Health",
+            IsUsedInSystem = true,
+            Tokens = new()
+            {
+                "{{PatientName}}",
+                "{{DoctorName}}",
+                "{{Specialty}}",
+                "{{RoomNumber}}",
+                "{{AppointmentTime}}",
+                "{{AppointmentId}}",
+                "{{ReminderLabel}}"
+            }
         }
     };
 

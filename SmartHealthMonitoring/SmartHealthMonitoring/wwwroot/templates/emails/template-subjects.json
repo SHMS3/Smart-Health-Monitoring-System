@@ -4,5 +4,8 @@
   "SosEmergencyContactTemplate.html": "[SOS] C\u1EA3nh b\u00E1o kh\u1EA9n c\u1EA5p cho {{PatientName}}",
   "VitalLogReminderTemplate.html": "NH\u1EAEC NH\u1EDE: Vui l\u00F2ng ghi nh\u1EADn ch\u1EC9 s\u1ED1 s\u1EE9c kh\u1ECFe h\u1EB1ng ng\u00E0y - Smart Health",
   "PatientHealthReportTemplate.html": "B\u00E1o c\u00E1o T\u00ECnh tr\u1EA1ng Y t\u1EBF - Smart Health",
-  "WarningAlertTemplate.html": "C\u1EA2NH B\u00C1O: Ch\u1EC9 s\u1ED1 s\u1EE9c kh\u1ECFe b\u1EA5t th\u01B0\u1EDDng - Smart Health"
+  "WarningAlertTemplate.html": "C\u1EA2NH B\u00C1O: Ch\u1EC9 s\u1ED1 s\u1EE9c kh\u1ECFe b\u1EA5t th\u01B0\u1EDDng - Smart Health",
+  "DoctorAcceptedCheckInTemplate.html": "B\u00E1c s\u0129 \u0111\u00E3 ti\u1EBFp nh\u1EADn - QR Check-in c\u1EE7a b\u1EA1n - Smart Health",
+  "AppointmentBookingConfirmationTemplate.html": "X\u00E1c nh\u1EADn \u0111\u1EB7t l\u1ECBch th\u00E0nh c\u00F4ng - QR Check-in - Smart Health",
+  "AppointmentReminderTemplate.html": "Nh\u1EAFc l\u1ECBch kh\u00E1m - c\u00F2n {{ReminderLabel}} - Smart Health"
 }

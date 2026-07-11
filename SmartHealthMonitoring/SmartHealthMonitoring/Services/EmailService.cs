@@ -21,7 +21,14 @@ namespace SmartHealthMonitoring.Services
             _env = env;
         }
 
-        public async Task SendEmailAsync(string toEmail, string subject, string htmlContent)
+        public Task SendEmailAsync(string toEmail, string subject, string htmlContent)
+            => SendEmailAsync(toEmail, subject, htmlContent, null);
+
+        public async Task SendEmailAsync(
+            string toEmail,
+            string subject,
+            string htmlContent,
+            IReadOnlyDictionary<string, byte[]>? inlineImages)
         {
             try
             {
@@ -32,6 +39,21 @@ namespace SmartHealthMonitoring.Services
                 email.Subject = subject;
 
                 var builder = new BodyBuilder { HtmlBody = htmlContent };
+
+                if (inlineImages != null)
+                {
+                    foreach (var (contentId, bytes) in inlineImages)
+                    {
+                        if (string.IsNullOrWhiteSpace(contentId) || bytes == null || bytes.Length == 0)
+                            continue;
+
+                        var resource = builder.LinkedResources.Add(contentId + ".png", bytes);
+                        resource.ContentId = contentId;
+                        resource.ContentType.MediaType = "image";
+                        resource.ContentType.MediaSubtype = "png";
+                    }
+                }
+
                 email.Body = builder.ToMessageBody();
 
                 using var smtp = new SmtpClient();

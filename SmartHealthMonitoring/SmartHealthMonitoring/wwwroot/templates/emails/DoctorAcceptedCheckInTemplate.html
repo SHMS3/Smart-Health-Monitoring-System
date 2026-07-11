@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+            max-width: 650px;
+            margin: 0 auto;
+            overflow: hidden;
+            border: 1px solid #d4e9f7;
+        }
+
+        .header {
+            background-color: #0f766e;
+            color: #fff;
+            padding: 22px 25px;
+        }
+
+        .header h2 {
+            margin: 0 0 4px;
+            font-size: 20px;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.85;
+        }
+
+        .body-content {
+            padding: 28px 30px;
+            line-height: 1.7;
+        }
+
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 18px;
+        }
+
+        .notice-box {
+            background-color: #ecfdf5;
+            border-left: 4px solid #0f766e;
+            padding: 16px;
+            border-radius: 0 6px 6px 0;
+            margin: 20px 0;
+        }
+
+        .notice-box p {
+            margin: 0 0 6px;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .info-table th {
+            background-color: #e6f4f1;
+            text-align: left;
+            padding: 10px 14px;
+            border: 1px solid #b7e0d8;
+            color: #0f766e;
+            font-size: 14px;
+            width: 35%;
+        }
+
+        .info-table td {
+            padding: 10px 14px;
+            border: 1px solid #b7e0d8;
+            font-size: 14px;
+        }
+
+        .qr-section {
+            text-align: center;
+            margin: 28px 0 12px;
+            padding: 20px;
+            background-color: #f8fafc;
+            border: 1px dashed #94a3b8;
+            border-radius: 8px;
+        }
+
+        .qr-section img {
+            width: 220px;
+            height: 220px;
+            display: inline-block;
+            border: 4px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .qr-code-text {
+            margin-top: 12px;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 12px;
+            color: #475569;
+            word-break: break-all;
+        }
+
+        .footer {
+            background-color: #f7f9fa;
+            color: #999;
+            text-align: center;
+            padding: 14px;
+            font-size: 12px;
+            border-top: 1px solid #e4eaf0;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+<div class="header">
+<h2>Bác sĩ đã tiếp nhận - QR Check-in</h2>
+<p>Mang theo email này khi đến quầy / phòng khám</p>
+</div>
+<div class="body-content">
+<div class="greeting">Kính gửi <strong>{{PatientName}}</strong>,</div>
+<div class="notice-box">
+<p><strong>Bác sĩ {{DoctorName}}</strong> đã tiếp nhận lịch khám của bạn thành công.</p>
+<p>Vui lòng xuất trình mã QR Check-in bên dưới tại quầy lễ tân khi đến khám.</p>
+</div>
+<table class="info-table">
+<tbody>
+<tr>
+<th>Bác sĩ tiếp nhận</th>
+<td>{{DoctorName}}</td>
+</tr>
+<tr>
+<th>Chuyên khoa</th>
+<td>{{Specialty}}</td>
+</tr>
+<tr>
+<th>Phòng khám</th>
+<td>{{RoomNumber}}</td>
+</tr>
+<tr>
+<th>Số thứ tự</th>
+<td>{{SequenceNumber}}</td>
+</tr>
+<tr>
+<th>Thời gian tiếp nhận</th>
+<td>{{AcceptedAt}}</td>
+</tr>
+</tbody>
+</table>
+<div class="qr-section">
+<p style="margin:0 0 12px;font-weight:600;color:#0f766e;">Mã QR Check-in</p>
+<img src="{{QrCodeImage}}" alt="QR Check-in" />
+<p class="qr-code-text">{{CheckInCode}}</p>
+</div>
+<p>Nếu không thể quét QR, hãy cung cấp mã Check-in ở trên cho nhân viên lễ tân.</p>
+</div>
+<div class="footer">&copy; 2026 Smart Health Monitoring System — Nền tảng Y tế tích hợp AI</div>
+</div>
+</body>
+
+</html>
