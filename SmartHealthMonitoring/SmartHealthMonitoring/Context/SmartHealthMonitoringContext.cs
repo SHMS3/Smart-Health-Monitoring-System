@@ -8,6 +8,7 @@ namespace SmartHealthMonitoring.Context;
 public partial class SmartHealthMonitoringContext : DbContext
 {
     public SmartHealthMonitoringContext()
+
     {
     }
 
@@ -45,6 +46,8 @@ public partial class SmartHealthMonitoringContext : DbContext
     public virtual DbSet<TelemedicineChatMessage> TelemedicineChatMessages { get; set; }
 
     public virtual DbSet<TelemedicineChatSession> TelemedicineChatSessions { get; set; }
+
+    public virtual DbSet<HealthNewsPost> HealthNewsPosts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -716,6 +719,19 @@ public partial class SmartHealthMonitoringContext : DbContext
             // Index tối ưu truy vấn lịch sử chat theo session
             entity.HasIndex(e => new { e.SessionId, e.SentAt })
                 .HasDatabaseName("IX_TelemedicineChat_Session_Time");
+        });
+
+        modelBuilder.Entity<HealthNewsPost>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("HealthNewsPosts");
+            entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.Summary).HasMaxLength(1000);
+            entity.Property(e => e.Source).HasMaxLength(50).HasDefaultValue("Manual");
+            entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Draft");
+            entity.Property(e => e.ThumbnailUrl).HasMaxLength(500);
+            entity.Property(e => e.AuthorName).HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
         });
 
         OnModelCreatingPartial(modelBuilder);

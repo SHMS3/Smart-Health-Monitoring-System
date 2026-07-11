@@ -157,38 +157,54 @@
         font-size: 0.78rem; font-weight: 600; color: #1a2340;
     }
 
-    /* ══ NEWS ══ */
-    .news-tabs { display: flex; gap: 0; margin-bottom: 28px; justify-content: center; }
-    .news-tab {
-        padding: 9px 22px; font-size: 0.85rem; font-weight: 600;
-        border: 1.5px solid #1a73c8; cursor: pointer;
-        background: white; color: #1a73c8; transition: .2s;
+    /* ══ NEWS CAROUSEL ══ */
+    .news-card-carousel {
+        background: white; border-radius: 12px; overflow: hidden;
+        border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        display: flex; flex-direction: column; height: 100%;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
-    .news-tab:first-child { border-radius: 6px 0 0 6px; }
-    .news-tab:last-child  { border-radius: 0 6px 6px 0; }
-    .news-tab.active { background: #1a73c8; color: white; }
-    .news-card-main {
-        border-radius: 12px; overflow: hidden;
-        background: white; border: 1px solid #e0eaf4;
-        height: 100%;
+    .news-card-carousel:hover {
+        transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1);
     }
-    .news-card-main img { width: 100%; height: 240px; object-fit: cover; }
-    .news-card-body { padding: 18px; }
-    .news-date { font-size: 0.76rem; color: #8a9bb0; display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
-    .news-card-title { font-size: 1rem; font-weight: 700; color: #1a2340; margin-bottom: 8px; line-height: 1.4; }
-    .news-card-desc { font-size: 0.82rem; color: #607080; line-height: 1.6; margin-bottom: 12px; }
-    .btn-news { background: #1a73c8; color: white; border: none; border-radius: 6px; padding: 9px 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: .2s; text-decoration: none; }
-    .btn-news:hover { background: #135fa5; color: white; }
-    .news-card-sm {
-        background: white; border: 1px solid #e0eaf4;
-        border-radius: 10px; overflow: hidden;
-        display: flex; flex-direction: column;
-        transition: box-shadow .2s;
+    .news-card-carousel img {
+        width: 100%; height: 200px; object-fit: cover;
     }
-    .news-card-sm:hover { box-shadow: 0 4px 16px rgba(26,115,200,.1); }
-    .news-card-sm img { width: 100%; height: 130px; object-fit: cover; }
-    .news-card-sm-body { padding: 12px; }
-    .news-card-sm-title { font-size: 0.85rem; font-weight: 600; color: #1a2340; margin-bottom: 6px; line-height: 1.4; }
+    .news-card-body-c {
+        padding: 24px; flex-grow: 1; display: flex; flex-direction: column;
+    }
+    .news-category {
+        font-size: 0.75rem; font-weight: 700; color: #d32f2f;
+        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+    }
+    .news-title-c {
+        font-size: 1.1rem; font-weight: 800; color: #1a2340;
+        margin-bottom: 12px; line-height: 1.4;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .news-desc-c {
+        font-size: 0.85rem; color: #607080; line-height: 1.6;
+        margin-bottom: 20px; flex-grow: 1;
+        display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .news-link-c {
+        font-size: 0.85rem; font-weight: 700; color: #d32f2f;
+        text-decoration: none; transition: color 0.2s;
+        display: inline-flex; align-items: center;
+    }
+    .news-link-c:hover { color: #b71c1c; text-decoration: underline; }
+    
+    .carousel-indicators-custom {
+        display: flex; justify-content: center; gap: 8px; margin-top: 30px;
+    }
+    .carousel-indicators-custom button {
+        width: 8px; height: 8px; border-radius: 50%;
+        background-color: #fce4e4; border: none; padding: 0;
+        transition: background-color 0.3s, transform 0.3s;
+    }
+    .carousel-indicators-custom button.active {
+        background-color: #d32f2f; transform: scale(1.2);
+    }
 
     /* ══ CTA ══ */
     .cta-cl {
@@ -622,44 +638,60 @@
 <section class="section-cl section-cl-gray">
     <div class="container container-xl">
         <h2 class="section-heading">TIN TỨC <span>NỔI BẬT</span></h2>
-        <p class="section-sub">Cập nhật kiến thức tim mạch và thông tin sức khỏe mới nhất từ chuyên gia.</p>
+        <p class="section-sub">Cập nhật kiến thức tim mạch và thông tin sức khỏe mới nhất từ bệnh viện.</p>
 
-        <div class="news-tabs">
-            <button class="news-tab active">Tổng hợp</button>
-            <button class="news-tab">Tim mạch</button>
-            <button class="news-tab">Sức khỏe AI</button>
-        </div>
+        <div id="newsCarousel" class="carousel slide" data-bs-ride="carousel">
+            @{ var healthNews = ViewBag.HealthNews as List<SmartHealthMonitoring.Models.HealthNewsPost>; }
+            @if (healthNews != null && healthNews.Any())
+            {
+                var chunks = healthNews.Select((x, i) => new { Index = i, Value = x })
+                                       .GroupBy(x => x.Index / 3)
+                                       .Select(x => x.Select(v => v.Value).ToList())
+                                       .ToList();
 
-        <div class="row g-3">
-            <!-- Tin lớn -->
-            <div class="col-md-5">
-                <div class="news-card-main h-100">
-                    <img src="/images/banner.jpg" alt="Tin tức tim mạch" />
-                    <div class="news-card-body">
-                        <div class="news-date"><i class="fas fa-calendar-alt"></i> 13/06/2026</div>
-                        <div class="news-card-title">5 dấu hiệu cảnh báo bệnh tim mạch cần biết sớm</div>
-                        <p class="news-card-desc">Bệnh tim mạch thường tiến triển âm thầm. Phát hiện sớm các dấu hiệu bất thường giúp điều trị hiệu quả hơn và giảm nguy cơ biến chứng nguy hiểm...</p>
-                        <a href="#" class="btn-news">Xem thêm</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tin nhỏ -->
-            <div class="col-md-7">
-                <div class="row g-3">
-                    @for(int i = 1; i <= 4; i++) {
-                    <div class="col-6">
-                        <div class="news-card-sm">
-                            <img src="/images/banner.jpg" alt="Tin @i" />
-                            <div class="news-card-sm-body">
-                                <div class="news-date" style="font-size:0.72rem;"><i class="fas fa-calendar-alt"></i> 13/06/2026</div>
-                                <div class="news-card-sm-title">AI phát hiện rối loạn nhịp tim qua phân tích dữ liệu – Tin @i</div>
+                <div class="carousel-inner">
+                    @for (int i = 0; i < chunks.Count; i++)
+                    {
+                        var chunk = chunks[i];
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <div class="row g-4">
+                                @foreach (var news in chunk)
+                                {
+                                    <div class="col-md-4">
+                                        <div class="news-card-carousel h-100">
+                                            <img src="@(string.IsNullOrEmpty(news.ThumbnailUrl) ? "/images/banner.jpg" : news.ThumbnailUrl)" alt="@news.Title" />
+                                            <div class="news-card-body-c">
+                                                <div class="news-category">@(news.PublishedAt?.ToString("dd/MM/yyyy") ?? "TIN TỨC")</div>
+                                                <div class="news-title-c">@news.Title</div>
+                                                <p class="news-desc-c">@news.Summary</p>
+                                                <a asp-action="NewsDetail" asp-route-id="@news.Id" class="news-link-c">Xem chi tiết <i class="fas fa-arrow-right ms-2"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         </div>
-                    </div>
                     }
                 </div>
-            </div>
+
+                <!-- Carousel Indicators (Dots) -->
+                @if (chunks.Count > 1)
+                {
+                    <div class="carousel-indicators-custom">
+                        @for (int i = 0; i < chunks.Count; i++)
+                        {
+                            <button type="button" data-bs-target="#newsCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i+1)"></button>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted py-5 w-100">
+                    <i class="fas fa-newspaper fa-3x mb-3 text-light"></i>
+                    <p><em>Chưa có bài tin tức nào được xuất bản.</em></p>
+                </div>
+            }
         </div>
     </div>
 </section>

@@ -4,6 +4,7 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using SmartHealthMonitoring.Models.Configurations;
 using System.Text;
+using SmartHealthMonitoring.Interfaces;
 
 namespace SmartHealthMonitoring.Services
 {

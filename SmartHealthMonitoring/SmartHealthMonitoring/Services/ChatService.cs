@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels;
 
