@@ -138,6 +138,17 @@ public class AppointmentController : Controller
             .FirstOrDefaultAsync(s => s.Id == slotId);
         if (slot == null) return NotFound();
 
+        var hasActiveOrPending = await _context.Appointments.AnyAsync(a =>
+            a.PatientId == patient.Id &&
+            (a.Status == AppointmentStatus.Confirmed || 
+             a.Status == AppointmentStatus.Pending || 
+             a.Status == AppointmentStatus.CancellationPending));
+        if (hasActiveOrPending)
+        {
+            TempData["Error"] = "Bạn đang có lịch khám chưa hoàn thành hoặc yêu cầu đặt lịch đang chờ duyệt. Không thể đặt thêm lịch mới.";
+            return RedirectToAction(nameof(FindDoctor));
+        }
+
         // Cố gắng giữ chỗ (SoftLock) khung giờ cho bệnh nhân hiện tại
         var (lockSuccess, lockMessage) = await _appointmentService.SoftLockSlotAsync(slotId, patient.Id);
         if (!lockSuccess)
@@ -205,6 +216,17 @@ public class AppointmentController : Controller
 
         if (slot == null) return NotFound();
 
+        var hasActiveOrPending = await _context.Appointments.AnyAsync(a =>
+            a.PatientId == patient.Id &&
+            (a.Status == AppointmentStatus.Confirmed || 
+             a.Status == AppointmentStatus.Pending || 
+             a.Status == AppointmentStatus.CancellationPending));
+        if (hasActiveOrPending)
+        {
+            TempData["Error"] = "Bạn đang có lịch khám chưa hoàn thành hoặc yêu cầu đặt lịch đang chờ duyệt. Không thể đặt thêm lịch mới.";
+            return RedirectToAction(nameof(FindDoctor));
+        }
+
         ViewBag.SlotId = slotId;
         ViewBag.DoctorName = slot.Doctor.User.FullName;
         ViewBag.Specialty = slot.Doctor.Specialty;
@@ -243,6 +265,17 @@ public class AppointmentController : Controller
 
         var (patient, _) = await GetCurrentUserAsync();
         if (patient == null) return Forbid();
+
+        var hasActiveOrPending = await _context.Appointments.AnyAsync(a =>
+            a.PatientId == patient.Id &&
+            (a.Status == AppointmentStatus.Confirmed || 
+             a.Status == AppointmentStatus.Pending || 
+             a.Status == AppointmentStatus.CancellationPending));
+        if (hasActiveOrPending)
+        {
+            TempData["Error"] = "Bạn đang có lịch khám chưa hoàn thành hoặc yêu cầu đặt lịch đang chờ duyệt. Không thể đặt thêm lịch mới.";
+            return RedirectToAction(nameof(FindDoctor));
+        }
 
         var slot = await _context.AppointmentSlots
             .Include(s => s.Doctor).ThenInclude(d => d.User)
@@ -284,6 +317,17 @@ public class AppointmentController : Controller
 
         var (patient, _) = await GetCurrentUserAsync();
         if (patient == null) return Forbid();
+
+        var hasActiveOrPending = await _context.Appointments.AnyAsync(a =>
+            a.PatientId == patient.Id &&
+            (a.Status == AppointmentStatus.Confirmed || 
+             a.Status == AppointmentStatus.Pending || 
+             a.Status == AppointmentStatus.CancellationPending));
+        if (hasActiveOrPending)
+        {
+            TempData["Error"] = "Bạn đang có lịch khám chưa hoàn thành hoặc yêu cầu đặt lịch đang chờ duyệt. Không thể đặt thêm lịch mới.";
+            return RedirectToAction(nameof(FindDoctor));
+        }
 
         var (success, message, appointment) = await _appointmentService.CreatePendingAppointmentAsync(slotId, patient.Id, patientNote);
 
@@ -426,6 +470,10 @@ public class AppointmentController : Controller
         if (patient == null) return Forbid();
 
         var appointments = await _appointmentService.GetPatientAppointmentsAsync(patient.Id);
+
+        // SCH-07: Load waitlist items
+        ViewBag.WaitlistItems = await _appointmentService.GetPatientWaitlistAsync(patient.Id);
+
         return View(appointments);
     }
 
@@ -547,6 +595,243 @@ public class AppointmentController : Controller
             s.Status
         }));
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SCH-05: CANCEL DIRECT (AJAX)
+    // ═══════════════════════════════════════════════════════════════
+
+    // POST: /Appointment/CancelDirect (AJAX JSON)
+    [HttpPost]
+    [Authorize(Roles = "0")]
+    public async Task<IActionResult> CancelDirect([FromBody] CancelDirectRequest request)
+    {
+        var (patient, _) = await GetCurrentUserAsync();
+        if (patient == null) return Json(new { success = false, message = "Unauthorized" });
+
+        var (success, message) = await _appointmentService.CancelDirectAsync(request.AppointmentId, patient.Id);
+        return Json(new { success, message });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SCH-06: RESCHEDULE
+    // ═══════════════════════════════════════════════════════════════
+
+    // GET: /Appointment/Reschedule?appointmentId=5
+    [HttpGet]
+    [Authorize(Roles = "0")]
+    public async Task<IActionResult> Reschedule(int appointmentId)
+    {
+        var (patient, _) = await GetCurrentUserAsync();
+        if (patient == null) return Forbid();
+
+        var appointment = await _context.Appointments
+            .Include(a => a.Slot)
+            .Include(a => a.Doctor).ThenInclude(d => d.User)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId && a.PatientId == patient.Id);
+
+        if (appointment == null) return NotFound();
+
+        if (appointment.Status != SmartHealthMonitoring.Models.AppointmentStatus.Confirmed)
+        {
+            TempData["Error"] = "Chỉ có thể dời lịch hẹn đã xác nhận.";
+            return RedirectToAction(nameof(MyAppointments));
+        }
+
+        var vm = new RescheduleViewModel
+        {
+            AppointmentId = appointment.Id,
+            DoctorId = appointment.DoctorId,
+            DoctorName = appointment.Doctor.User.FullName,
+            Specialty = appointment.Doctor.Specialty,
+            RoomNumber = appointment.Doctor.RoomNumber,
+            CurrentSlotStart = appointment.Slot.SlotStart,
+            CurrentSlotEnd = appointment.Slot.SlotEnd
+        };
+
+        return View(vm);
+    }
+
+    // GET: /Appointment/RescheduleVerifyOtp?appointmentId=5&newSlotId=10
+    [HttpGet]
+    [Authorize(Roles = "0")]
+    public async Task<IActionResult> RescheduleVerifyOtp(int appointmentId, int newSlotId)
+    {
+        var (patient, _) = await GetCurrentUserAsync();
+        if (patient == null) return Forbid();
+
+        var appointment = await _context.Appointments
+            .Include(a => a.Slot)
+            .Include(a => a.Doctor).ThenInclude(d => d.User)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId && a.PatientId == patient.Id);
+
+        if (appointment == null) return NotFound();
+
+        var newSlot = await _context.AppointmentSlots.FindAsync(newSlotId);
+        if (newSlot == null) return NotFound();
+
+        // SoftLock slot mới
+        var (lockSuccess, lockMessage) = await _appointmentService.SoftLockSlotAsync(newSlotId, patient.Id);
+        if (!lockSuccess)
+        {
+            TempData["Error"] = lockMessage;
+            return RedirectToAction(nameof(Reschedule), new { appointmentId });
+        }
+
+        // Sinh OTP
+        var otp = new Random().Next(100000, 999999).ToString();
+        HttpContext.Session.SetString($"RescheduleOtp_{appointmentId}_{newSlotId}", otp);
+        HttpContext.Session.SetString($"RescheduleOtpTime_{appointmentId}_{newSlotId}", DateTime.UtcNow.ToString("o"));
+
+        // Gửi email OTP
+        var subject = "Mã OTP xác thực dời lịch khám - SmartHealth";
+        var emailBody = $@"
+            <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 8px; max-width: 600px;'>
+                <h2 style='color: #6366f1;'>Xác thực dời lịch khám</h2>
+                <p>Kính chào <strong>{patient.User.FullName}</strong>,</p>
+                <p>Bạn đang dời lịch hẹn khám <strong>{appointment.Doctor.Specialty}</strong> với BS. <strong>{appointment.Doctor.User.FullName}</strong>.</p>
+                <p>Từ: <strong>{appointment.Slot.SlotStart:HH:mm dd/MM/yyyy}</strong> → Sang: <strong>{newSlot.SlotStart:HH:mm dd/MM/yyyy}</strong></p>
+                <p>Mã OTP xác thực:</p>
+                <div style='background-color: #f7f9fa; padding: 15px; border-radius: 6px; text-align: center; font-size: 24px; font-weight: bold; color: #6366f1; letter-spacing: 5px; margin: 20px 0;'>
+                    {otp}
+                </div>
+                <p style='color: #888; font-size: 12px;'>Mã OTP có hiệu lực trong 10 phút.</p>
+            </div>";
+
+        var toEmail = patient.User.Email;
+        var serviceScopeFactory = HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>();
+        _ = Task.Run(async () =>
+        {
+            using var scope = serviceScopeFactory.CreateScope();
+            var emailSvc = scope.ServiceProvider.GetRequiredService<IEmailService>();
+            try { await emailSvc.SendEmailAsync(toEmail, subject, emailBody); }
+            catch { /* ignore */ }
+        });
+
+        ViewBag.AppointmentId = appointmentId;
+        ViewBag.NewSlotId = newSlotId;
+        ViewBag.DoctorName = appointment.Doctor.User.FullName;
+        ViewBag.Specialty = appointment.Doctor.Specialty;
+        ViewBag.OldSlot = $"{appointment.Slot.SlotStart:HH:mm} – {appointment.Slot.SlotEnd:HH:mm}, {appointment.Slot.SlotStart:dd/MM/yyyy}";
+        ViewBag.NewSlot = $"{newSlot.SlotStart:HH:mm} – {newSlot.SlotEnd:HH:mm}, {newSlot.SlotStart:dd/MM/yyyy}";
+
+        return View();
+    }
+
+    // POST: /Appointment/RescheduleVerifyOtp
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "0")]
+    public async Task<IActionResult> RescheduleVerifyOtp(int appointmentId, int newSlotId, string otpCode)
+    {
+        var key = $"RescheduleOtp_{appointmentId}_{newSlotId}";
+        var timeKey = $"RescheduleOtpTime_{appointmentId}_{newSlotId}";
+        var storedOtp = HttpContext.Session.GetString(key);
+        var storedOtpTimeStr = HttpContext.Session.GetString(timeKey);
+
+        var (patient, _) = await GetCurrentUserAsync();
+        var appointment = await _context.Appointments
+            .Include(a => a.Slot)
+            .Include(a => a.Doctor).ThenInclude(d => d.User)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId && a.PatientId == patient!.Id);
+        var newSlot = await _context.AppointmentSlots.FindAsync(newSlotId);
+
+        if (appointment == null || newSlot == null) return NotFound();
+
+        ViewBag.AppointmentId = appointmentId;
+        ViewBag.NewSlotId = newSlotId;
+        ViewBag.DoctorName = appointment.Doctor.User.FullName;
+        ViewBag.Specialty = appointment.Doctor.Specialty;
+        ViewBag.OldSlot = $"{appointment.Slot.SlotStart:HH:mm} – {appointment.Slot.SlotEnd:HH:mm}, {appointment.Slot.SlotStart:dd/MM/yyyy}";
+        ViewBag.NewSlot = $"{newSlot.SlotStart:HH:mm} – {newSlot.SlotEnd:HH:mm}, {newSlot.SlotStart:dd/MM/yyyy}";
+
+        if (string.IsNullOrEmpty(storedOtp) || storedOtp != otpCode?.Trim())
+        {
+            ModelState.AddModelError("", "Mã OTP không chính xác.");
+            return View();
+        }
+
+        if (DateTime.TryParse(storedOtpTimeStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out var otpTime))
+        {
+            if (DateTime.UtcNow - otpTime > TimeSpan.FromMinutes(10))
+            {
+                ModelState.AddModelError("", "Mã OTP đã hết hạn. Vui lòng thử lại.");
+                return View();
+            }
+        }
+
+        // OTP OK → thực hiện reschedule
+        var (success, message, newAppt) = await _appointmentService.RescheduleAppointmentAsync(
+            appointmentId, newSlotId, patient!.Id);
+
+        HttpContext.Session.Remove(key);
+        HttpContext.Session.Remove(timeKey);
+
+        if (!success || newAppt == null)
+        {
+            TempData["Error"] = message;
+            return RedirectToAction(nameof(MyAppointments));
+        }
+
+        // Gửi email xác nhận dời lịch
+        var emailSubject = "Thông tin dời lịch hẹn khám - SmartHealth";
+        var emailBody = $@"
+            <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e1e8ed;border-radius:8px;overflow:hidden'>
+                <div style='background:linear-gradient(135deg,#6366f1,#818cf8);color:white;padding:24px;text-align:center'>
+                    <h2 style='margin:0'>DỜI LỊCH HẸN KHÁM THÀNH CÔNG</h2>
+                </div>
+                <div style='padding:24px'>
+                    <p>Kính gửi <strong>{patient.User.FullName}</strong>,</p>
+                    <p>Lịch hẹn của bạn đã được dời thành công. Vui lòng chờ nhân viên xác nhận.</p>
+                    <div style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:16px;margin:16px 0'>
+                        <p style='margin:4px 0'><strong>Bác sĩ:</strong> BS. {appointment.Doctor.User.FullName}</p>
+                        <p style='margin:4px 0'><strong>Lịch cũ:</strong> <del>{appointment.Slot.SlotStart:HH:mm} - {appointment.Slot.SlotEnd:HH:mm}, {appointment.Slot.SlotStart:dd/MM/yyyy}</del></p>
+                        <p style='margin:4px 0;color:#16a34a'><strong>Lịch mới:</strong> {newSlot.SlotStart:HH:mm} - {newSlot.SlotEnd:HH:mm}, {newSlot.SlotStart:dd/MM/yyyy}</p>
+                    </div>
+                </div>
+            </div>";
+
+        var toEmail = patient.User.Email;
+        var scopeFactory = HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>();
+        _ = Task.Run(async () =>
+        {
+            using var scope = scopeFactory.CreateScope();
+            var emailSvc = scope.ServiceProvider.GetRequiredService<IEmailService>();
+            try { await emailSvc.SendEmailAsync(toEmail, emailSubject, emailBody); }
+            catch { /* ignore */ }
+        });
+
+        TempData["Success"] = message;
+        return RedirectToAction(nameof(MyAppointments));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SCH-07: WAITLIST
+    // ═══════════════════════════════════════════════════════════════
+
+    // POST: /Appointment/JoinWaitlist (AJAX)
+    [HttpPost]
+    [Authorize(Roles = "0")]
+    public async Task<IActionResult> JoinWaitlist([FromBody] JoinWaitlistRequest request)
+    {
+        var (patient, _) = await GetCurrentUserAsync();
+        if (patient == null) return Json(new { success = false, message = "Unauthorized" });
+
+        var (success, message) = await _appointmentService.JoinWaitlistAsync(
+            patient.Id, request.DoctorId, request.WatchDate);
+        return Json(new { success, message });
+    }
+
+    // POST: /Appointment/LeaveWaitlist (AJAX)
+    [HttpPost]
+    [Authorize(Roles = "0")]
+    public async Task<IActionResult> LeaveWaitlist([FromBody] LeaveWaitlistRequest request)
+    {
+        var (patient, _) = await GetCurrentUserAsync();
+        if (patient == null) return Json(new { success = false, message = "Unauthorized" });
+
+        var result = await _appointmentService.RemoveFromWaitlistAsync(request.WaitlistId, patient.Id);
+        return Json(new { success = result });
+    }
 }
 
 // ─── ViewModels ───────────────────────────────────────────────────
@@ -567,4 +852,31 @@ public class BookAppointmentViewModel
     public DateTime SlotEnd { get; set; }
     public string? PatientNote { get; set; }
     public DateTime SoftLockedUntil { get; set; }
+}
+
+public class RescheduleViewModel
+{
+    public int AppointmentId { get; set; }
+    public int DoctorId { get; set; }
+    public string DoctorName { get; set; } = "";
+    public string Specialty { get; set; } = "";
+    public string? RoomNumber { get; set; }
+    public DateTime CurrentSlotStart { get; set; }
+    public DateTime CurrentSlotEnd { get; set; }
+}
+
+public class CancelDirectRequest
+{
+    public int AppointmentId { get; set; }
+}
+
+public class JoinWaitlistRequest
+{
+    public int DoctorId { get; set; }
+    public DateOnly WatchDate { get; set; }
+}
+
+public class LeaveWaitlistRequest
+{
+    public int WaitlistId { get; set; }
 }
