@@ -1,0 +1,453 @@
+@model SmartHealthMonitoring.ViewModels.Admin.AdminNoShowReportViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Báo cáo No-show & Tỷ lệ huỷ";
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var monthStart = new DateOnly(today.Year, today.Month, 1);
+    var doctorLabels = Model.DoctorStats.Select(d => d.DoctorName).ToList();
+    var noShowRates = Model.DoctorStats.Select(d => d.NoShowRate).ToList();
+    var cancelRates = Model.DoctorStats.Select(d => d.CancelRate).ToList();
+    var cancelPatientRates = Model.DoctorStats.Select(d => d.CancelByPatientRate).ToList();
+    var cancelDoctorRates = Model.DoctorStats.Select(d => d.CancelByDoctorRate).ToList();
+}
+
+@section Styles {
+<style>
+    .ns-filter {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 20px;
+    }
+    .ns-kpi-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+    @@media (max-width: 992px) {
+        .ns-kpi-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    .ns-kpi {
+        border-radius: 16px;
+        padding: 20px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        min-height: 120px;
+        box-shadow: 0 10px 20px -5px rgba(0,0,0,.1);
+    }
+    .ns-kpi::after {
+        content: '';
+        position: absolute;
+        right: -12px; bottom: -18px;
+        width: 90px; height: 90px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.12);
+    }
+    .ns-kpi.blue { background: linear-gradient(135deg, #0284c7, #0ea5e9); }
+    .ns-kpi.red { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .ns-kpi.amber { background: linear-gradient(135deg, #d97706, #f59e0b); }
+    .ns-kpi.green { background: linear-gradient(135deg, #059669, #10b981); }
+    .ns-kpi-label {
+        font-size: .8rem;
+        font-weight: 600;
+        opacity: .9;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        margin-bottom: 8px;
+    }
+    .ns-kpi-value {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2.1rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .ns-kpi-sub { font-size: .8rem; opacity: .85; margin-top: 8px; }
+
+    .ns-chart-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,.02);
+    }
+    .ns-chart-header {
+        padding: 18px 22px 0;
+    }
+    .ns-chart-header h3 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+    .ns-chart-header p {
+        color: #64748b;
+        font-size: .85rem;
+        margin: 6px 0 0;
+    }
+    .ns-chart-body {
+        padding: 18px 22px 22px;
+        flex: 1;
+        min-height: 320px;
+        position: relative;
+    }
+    .ns-chart-body.tall { min-height: 380px; }
+
+    .rate-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 700;
+    }
+    .rate-high { background: #fee2e2; color: #b91c1c; }
+    .rate-mid { background: #fef3c7; color: #b45309; }
+    .rate-low { background: #dcfce7; color: #166534; }
+    .rate-zero { background: #f1f5f9; color: #64748b; }
+
+    .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+        color: #94a3b8;
+    }
+</style>
+}
+
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Báo cáo No-show &amp; Tỷ lệ huỷ</h1>
+        <p class="text-muted mt-2 mb-0">
+            Thống kê % bệnh nhân bỏ lịch / huỷ lịch theo từng bác sĩ
+            · <strong>@Model.FromDate.ToString("dd/MM/yyyy")</strong> – <strong>@Model.ToDate.ToString("dd/MM/yyyy")</strong>
+        </p>
+    </div>
+    <a asp-controller="AdminCalendar" asp-action="Index" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+        <i class="fas fa-calendar-alt me-1"></i> Xem lịch tuần
+    </a>
+</div>
+
+<form method="get" asp-action="NoShowReport" class="ns-filter">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold text-secondary mb-1">Từ ngày</label>
+            <input type="date" name="from" class="form-control" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold text-secondary mb-1">Đến ngày</label>
+            <input type="date" name="to" class="form-control" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-6 d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                <i class="fas fa-filter me-1"></i> Lọc
+            </button>
+            <a class="btn btn-outline-secondary rounded-pill px-3"
+               asp-action="NoShowReport"
+               asp-route-from="@today.AddDays(-7).ToString("yyyy-MM-dd")"
+               asp-route-to="@today.ToString("yyyy-MM-dd")">7 ngày</a>
+            <a class="btn btn-outline-secondary rounded-pill px-3"
+               asp-action="NoShowReport"
+               asp-route-from="@today.AddDays(-30).ToString("yyyy-MM-dd")"
+               asp-route-to="@today.ToString("yyyy-MM-dd")">30 ngày</a>
+            <a class="btn btn-outline-secondary rounded-pill px-3"
+               asp-action="NoShowReport"
+               asp-route-from="@monthStart.ToString("yyyy-MM-dd")"
+               asp-route-to="@today.ToString("yyyy-MM-dd")">Tháng này</a>
+        </div>
+    </div>
+</form>
+
+<div class="ns-kpi-row">
+    <div class="ns-kpi blue">
+        <div class="ns-kpi-label">Tổng lịch (đã vào quy trình)</div>
+        <div class="ns-kpi-value">@Model.TotalAppointments</div>
+        <div class="ns-kpi-sub">Không tính Pending chưa duyệt</div>
+    </div>
+    <div class="ns-kpi red">
+        <div class="ns-kpi-label">Tỷ lệ No-show</div>
+        <div class="ns-kpi-value">@Model.OverallNoShowRate%</div>
+        <div class="ns-kpi-sub">@Model.NoShowCount lịch không đến</div>
+    </div>
+    <div class="ns-kpi amber">
+        <div class="ns-kpi-label">Tỷ lệ huỷ</div>
+        <div class="ns-kpi-value">@Model.OverallCancelRate%</div>
+        <div class="ns-kpi-sub">BN: @Model.CancelledByPatientCount · BS: @Model.CancelledByDoctorCount</div>
+    </div>
+    <div class="ns-kpi green">
+        <div class="ns-kpi-label">Hoàn thành</div>
+        <div class="ns-kpi-value">@Model.CompletedCount</div>
+        <div class="ns-kpi-sub">Đang xác nhận: @Model.ConfirmedCount</div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        <div class="ns-chart-card">
+            <div class="ns-chart-header">
+                <h3><i class="fas fa-chart-pie me-2 text-primary"></i>Phân bố kết quả lịch hẹn</h3>
+                <p>Toàn phòng khám trong khoảng đã chọn</p>
+            </div>
+            <div class="ns-chart-body">
+                @if (Model.TotalAppointments == 0)
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-chart-pie fa-2x mb-3 d-block opacity-50"></i>
+                        Không có dữ liệu trong khoảng này.
+                    </div>
+                }
+                else
+                {
+                    <canvas id="outcomePieChart"></canvas>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="ns-chart-card">
+            <div class="ns-chart-header">
+                <h3><i class="fas fa-chart-column me-2 text-primary"></i>% No-show &amp; Huỷ theo bác sĩ</h3>
+                <p>So sánh tỷ lệ bỏ lịch / huỷ lịch từng bác sĩ</p>
+            </div>
+            <div class="ns-chart-body tall">
+                @if (!Model.DoctorStats.Any())
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-chart-bar fa-2x mb-3 d-block opacity-50"></i>
+                        Chưa có bác sĩ nào có lịch trong khoảng này.
+                    </div>
+                }
+                else
+                {
+                    <canvas id="doctorBarChart"></canvas>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.DoctorStats.Any())
+{
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="ns-chart-card">
+                <div class="ns-chart-header">
+                    <h3><i class="fas fa-chart-bar me-2 text-primary"></i>Chi tiết huỷ: Bệnh nhân vs Bác sĩ (%)</h3>
+                    <p>Tỷ lệ huỷ theo bên khởi tạo, theo từng bác sĩ</p>
+                </div>
+                <div class="ns-chart-body tall">
+                    <canvas id="cancelSplitBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="admin-card p-0 overflow-hidden">
+    <div class="px-4 pt-4 pb-2">
+        <h3 class="mb-1" style="font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:700;color:#0f172a;">
+            <i class="fas fa-table me-2 text-primary"></i>Bảng chi tiết theo bác sĩ
+        </h3>
+        <p class="text-muted small mb-3">Sắp xếp theo tỷ lệ No-show giảm dần</p>
+    </div>
+    @if (!Model.DoctorStats.Any())
+    {
+        <div class="empty-state">Không có dữ liệu để hiển thị.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Bác sĩ</th>
+                        <th>Chuyên khoa</th>
+                        <th>Tổng lịch</th>
+                        <th>No-show</th>
+                        <th>% No-show</th>
+                        <th>BN huỷ</th>
+                        <th>BS huỷ</th>
+                        <th>% Huỷ</th>
+                        <th>Hoàn thành</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var d in Model.DoctorStats)
+                    {
+                        string RateClass(double rate) => rate >= 20 ? "rate-high" : rate >= 10 ? "rate-mid" : rate > 0 ? "rate-low" : "rate-zero";
+                        <tr>
+                            <td class="fw-semibold">@d.DoctorName</td>
+                            <td>@d.Specialty</td>
+                            <td>@d.Total</td>
+                            <td>@d.NoShowCount</td>
+                            <td><span class="rate-badge @RateClass(d.NoShowRate)">@d.NoShowRate%</span></td>
+                            <td>@d.CancelledByPatientCount</td>
+                            <td>@d.CancelledByDoctorCount</td>
+                            <td><span class="rate-badge @RateClass(d.CancelRate)">@d.CancelRate%</span></td>
+                            <td>@d.CompletedCount</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const doctorLabels = @Html.Raw(Json.Serialize(doctorLabels));
+    const noShowRates = @Html.Raw(Json.Serialize(noShowRates));
+    const cancelRates = @Html.Raw(Json.Serialize(cancelRates));
+    const cancelPatientRates = @Html.Raw(Json.Serialize(cancelPatientRates));
+    const cancelDoctorRates = @Html.Raw(Json.Serialize(cancelDoctorRates));
+    const outcomeLabels = @Html.Raw(Json.Serialize(Model.OutcomeLabels));
+    const outcomeValues = @Html.Raw(Json.Serialize(Model.OutcomeValues));
+    const outcomeColors = @Html.Raw(Json.Serialize(Model.OutcomeColors));
+
+    const pieEl = document.getElementById('outcomePieChart');
+    if (pieEl && outcomeValues.length) {
+        new Chart(pieEl, {
+            type: 'doughnut',
+            data: {
+                labels: outcomeLabels,
+                datasets: [{
+                    data: outcomeValues,
+                    backgroundColor: outcomeColors,
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 14, font: { size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = total ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                                return ` ${ctx.label}: ${ctx.raw} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const barEl = document.getElementById('doctorBarChart');
+    if (barEl && doctorLabels.length) {
+        new Chart(barEl, {
+            type: 'bar',
+            data: {
+                labels: doctorLabels,
+                datasets: [
+                    {
+                        label: '% No-show',
+                        data: noShowRates,
+                        backgroundColor: 'rgba(239, 68, 68, 0.85)',
+                        borderRadius: 6,
+                        maxBarThickness: 36
+                    },
+                    {
+                        label: '% Huỷ (BN + BS)',
+                        data: cancelRates,
+                        backgroundColor: 'rgba(245, 158, 11, 0.85)',
+                        borderRadius: 6,
+                        maxBarThickness: 36
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0,
+                            font: { size: 11 }
+                        },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: '%', font: { size: 12 } },
+                        ticks: { callback: v => v + '%' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top', align: 'end' },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}%`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const splitEl = document.getElementById('cancelSplitBarChart');
+    if (splitEl && doctorLabels.length) {
+        new Chart(splitEl, {
+            type: 'bar',
+            data: {
+                labels: doctorLabels,
+                datasets: [
+                    {
+                        label: '% BN huỷ',
+                        data: cancelPatientRates,
+                        backgroundColor: 'rgba(245, 158, 11, 0.9)',
+                        borderRadius: 6,
+                        maxBarThickness: 32
+                    },
+                    {
+                        label: '% BS huỷ',
+                        data: cancelDoctorRates,
+                        backgroundColor: 'rgba(249, 115, 22, 0.9)',
+                        borderRadius: 6,
+                        maxBarThickness: 32
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: { maxRotation: 45, font: { size: 11 } },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        stacked: false,
+                        ticks: { callback: v => v + '%' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top', align: 'end' },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}%`
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+}

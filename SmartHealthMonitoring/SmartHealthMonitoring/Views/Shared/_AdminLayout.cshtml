@@ -387,6 +387,15 @@
                 <a asp-controller="AdminDashboard" asp-action="HabitStatistics" class="nav-item-link @(controller == "AdminDashboard" && action == "HabitStatistics" ? "active" : "")">
                     <i class="fas fa-heartbeat"></i> Thống kê Thói quen
                 </a>
+                <a asp-controller="AdminCalendar" asp-action="Index" class="nav-item-link @(controller == "AdminCalendar" && action == "Index" ? "active" : "")">
+                    <i class="fas fa-calendar-alt"></i> Lịch đặt khám
+                </a>
+                <a asp-controller="AdminCalendar" asp-action="NoShowReport" class="nav-item-link @(controller == "AdminCalendar" && action == "NoShowReport" ? "active" : "")">
+                    <i class="fas fa-user-slash"></i> No-show &amp; Huỷ lịch
+                </a>
+                <a asp-controller="AdminCalendar" asp-action="Heatmap" class="nav-item-link @(controller == "AdminCalendar" && action == "Heatmap" ? "active" : "")">
+                    <i class="fas fa-th"></i> Heatmap giờ cao điểm
+                </a>
                 <a asp-controller="AdminNews" asp-action="Index" class="nav-item-link @(controller == "AdminNews" ? "active" : "")">
                     <i class="fas fa-newspaper"></i> Quản lý Tin tức
                 </a>
