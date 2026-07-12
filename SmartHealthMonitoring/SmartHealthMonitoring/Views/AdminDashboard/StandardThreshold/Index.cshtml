@@ -2,7 +2,7 @@
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Quản lý Ngưỡng Chuẩn";
-    string SexLabel(byte sex) => sex == 1 ? "Nam" : sex == 0 ? "Nữ" : "Chung";
+
     string SexBadge(byte sex) => sex == 1
         ? "<span class='badge sex-badge-male'><i class='fa-solid fa-mars me-1'></i>Nam</span>"
         : sex == 0

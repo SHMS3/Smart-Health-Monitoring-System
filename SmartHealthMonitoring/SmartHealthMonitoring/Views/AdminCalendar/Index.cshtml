@@ -1,0 +1,634 @@
+@model SmartHealthMonitoring.ViewModels.Admin.AdminCalendarPageViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Lịch đặt khám — Calendar Dashboard";
+    var weekLabel = $"{Model.WeekStart:dd/MM} – {Model.WeekEnd:dd/MM/yyyy}";
+}
+
+@section Styles {
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet" />
+<style>
+    .cal-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .cal-page-header .page-title { margin: 0; }
+    .cal-subtitle { color: #64748b; margin: 6px 0 0; font-size: .95rem; }
+
+    .cal-stat-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+    @@media (max-width: 992px) {
+        .cal-stat-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    .cal-stat {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 16px 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .cal-stat-icon {
+        width: 44px; height: 44px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; flex-shrink: 0;
+    }
+    .cal-stat-icon.blue { background: #e0f2fe; color: #0284c7; }
+    .cal-stat-icon.green { background: #d1fae5; color: #059669; }
+    .cal-stat-icon.amber { background: #fef3c7; color: #d97706; }
+    .cal-stat-icon.slate { background: #f1f5f9; color: #475569; }
+    .cal-stat-value {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        font-size: 1.5rem;
+        color: #0f172a;
+        line-height: 1;
+    }
+    .cal-stat-label { font-size: .78rem; color: #64748b; margin-top: 4px; font-weight: 500; }
+
+    .cal-layout {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 18px;
+        align-items: start;
+    }
+    @@media (max-width: 1100px) {
+        .cal-layout { grid-template-columns: 1fr; }
+    }
+
+    .cal-sidebar {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 18px;
+        position: sticky;
+        top: 80px;
+        max-height: calc(100vh - 110px);
+        overflow-y: auto;
+    }
+    .cal-sidebar h3 {
+        font-family: 'Outfit', sans-serif;
+        font-size: .95rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .cal-filter-actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .cal-filter-actions button {
+        flex: 1;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 6px 8px;
+        font-size: .75rem;
+        font-weight: 600;
+        color: #475569;
+        cursor: pointer;
+        transition: all .15s;
+    }
+    .cal-filter-actions button:hover {
+        background: #0ea5e9;
+        border-color: #0ea5e9;
+        color: #fff;
+    }
+
+    .doctor-filter-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 8px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background .15s;
+        margin-bottom: 2px;
+    }
+    .doctor-filter-item:hover { background: #f8fafc; }
+    .doctor-filter-item input { margin-top: 3px; accent-color: #0ea5e9; cursor: pointer; }
+    .doctor-dot {
+        width: 10px; height: 10px; border-radius: 50%;
+        margin-top: 5px; flex-shrink: 0;
+    }
+    .doctor-meta { min-width: 0; flex: 1; }
+    .doctor-name {
+        font-weight: 600;
+        font-size: .88rem;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .doctor-spec {
+        font-size: .72rem;
+        color: #94a3b8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .doctor-room {
+        font-size: .7rem;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 1px 6px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-top: 3px;
+    }
+
+    .cal-legend {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid #f1f5f9;
+    }
+    .legend-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: .78rem;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+    .legend-swatch {
+        width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0;
+    }
+
+    .cal-main {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 16px 18px 20px;
+        min-height: 720px;
+        overflow: hidden;
+    }
+
+    /* FullCalendar overrides to match admin theme */
+    #adminCalendar { min-height: 680px; }
+    .fc {
+        --fc-border-color: #e2e8f0;
+        --fc-today-bg-color: rgba(14, 165, 233, 0.06);
+        --fc-page-bg-color: #fff;
+        --fc-neutral-bg-color: #f8fafc;
+        --fc-list-event-hover-bg-color: #f0f9ff;
+        font-family: 'Inter', sans-serif;
+    }
+    .fc .fc-toolbar-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.15rem !important;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .fc .fc-button {
+        background: #fff !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #334155 !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: .82rem !important;
+        box-shadow: none !important;
+        text-transform: none !important;
+        padding: 6px 12px !important;
+    }
+    .fc .fc-button:hover {
+        background: #f0f9ff !important;
+        border-color: #0ea5e9 !important;
+        color: #0284c7 !important;
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active,
+    .fc .fc-button-primary:not(:disabled):active {
+        background: #0ea5e9 !important;
+        border-color: #0ea5e9 !important;
+        color: #fff !important;
+    }
+    .fc .fc-button-primary:disabled {
+        opacity: .45;
+    }
+    .fc .fc-col-header-cell-cushion {
+        font-weight: 700;
+        font-size: .78rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+        padding: 10px 4px !important;
+    }
+    .fc .fc-timegrid-slot-label-cushion {
+        font-size: .72rem;
+        color: #94a3b8;
+    }
+    .fc .fc-event {
+        border-radius: 6px !important;
+        border-width: 0 0 0 3px !important;
+        font-size: .72rem !important;
+        font-weight: 600;
+        padding: 2px 4px;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(0,0,0,.06);
+    }
+    .fc .fc-event:hover {
+        filter: brightness(1.05);
+        box-shadow: 0 4px 10px rgba(0,0,0,.12);
+    }
+    .fc .fc-timegrid-now-indicator-line {
+        border-color: #ef4444;
+    }
+    .fc .fc-timegrid-now-indicator-arrow {
+        border-top-color: #ef4444;
+        border-bottom-color: #ef4444;
+    }
+
+    /* Detail modal */
+    .cal-modal-backdrop {
+        position: fixed; inset: 0;
+        background: rgba(15, 23, 42, .45);
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .cal-modal-backdrop.show { display: flex; }
+    .cal-modal {
+        background: #fff;
+        border-radius: 18px;
+        width: 100%;
+        max-width: 440px;
+        box-shadow: 0 25px 50px rgba(0,0,0,.2);
+        overflow: hidden;
+        animation: calModalIn .25s ease;
+    }
+    @@keyframes calModalIn {
+        from { transform: translateY(12px) scale(.98); opacity: 0; }
+        to { transform: none; opacity: 1; }
+    }
+    .cal-modal-header {
+        padding: 18px 22px;
+        background: linear-gradient(135deg, #0b1c2e, #0e3a5f);
+        color: #fff;
+    }
+    .cal-modal-header h4 {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin: 0;
+    }
+    .cal-modal-body { padding: 20px 22px; }
+    .cal-detail-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 14px;
+        font-size: .9rem;
+    }
+    .cal-detail-row i {
+        width: 20px;
+        color: #0ea5e9;
+        margin-top: 2px;
+        text-align: center;
+    }
+    .cal-detail-label {
+        font-size: .72rem;
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+        margin-bottom: 2px;
+    }
+    .cal-detail-value { color: #1e293b; font-weight: 500; }
+    .cal-status-pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 700;
+    }
+    .cal-modal-footer {
+        padding: 14px 22px 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    .cal-modal-footer button {
+        border-radius: 10px;
+        padding: 8px 16px;
+        font-weight: 600;
+        font-size: .85rem;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #475569;
+        cursor: pointer;
+    }
+    .cal-modal-footer button:hover { background: #f8fafc; }
+</style>
+}
+
+<div class="cal-page-header">
+    <div>
+        <h1 class="page-title">Lịch đặt khám</h1>
+        <p class="cal-subtitle">
+            Tổng quan lịch hẹn tất cả bác sĩ · Tuần <strong>@weekLabel</strong>
+        </p>
+    </div>
+</div>
+
+<div class="cal-stat-row">
+    <div class="cal-stat">
+        <div class="cal-stat-icon blue"><i class="fas fa-calendar-check"></i></div>
+        <div>
+            <div class="cal-stat-value">@Model.TotalAppointments</div>
+            <div class="cal-stat-label">Tổng lịch tuần này</div>
+        </div>
+    </div>
+    <div class="cal-stat">
+        <div class="cal-stat-icon green"><i class="fas fa-check-circle"></i></div>
+        <div>
+            <div class="cal-stat-value">@Model.ConfirmedCount</div>
+            <div class="cal-stat-label">Đã xác nhận</div>
+        </div>
+    </div>
+    <div class="cal-stat">
+        <div class="cal-stat-icon amber"><i class="fas fa-clock"></i></div>
+        <div>
+            <div class="cal-stat-value">@Model.PendingCount</div>
+            <div class="cal-stat-label">Chờ duyệt</div>
+        </div>
+    </div>
+    <div class="cal-stat">
+        <div class="cal-stat-icon slate"><i class="fas fa-ban"></i></div>
+        <div>
+            <div class="cal-stat-value">@Model.BlockedSlotCount</div>
+            <div class="cal-stat-label">Slot bị chặn</div>
+        </div>
+    </div>
+</div>
+
+<div class="cal-layout">
+    <aside class="cal-sidebar">
+        <h3><i class="fas fa-user-md" style="color:#0ea5e9"></i> Bác sĩ (@Model.Doctors.Count)</h3>
+        <div class="cal-filter-actions">
+            <button type="button" id="btnSelectAllDoctors">Chọn tất cả</button>
+            <button type="button" id="btnClearDoctors">Bỏ chọn</button>
+        </div>
+        <div id="doctorFilterList">
+            @foreach (var d in Model.Doctors)
+            {
+                <label class="doctor-filter-item" data-doctor-id="@d.DoctorId">
+                    <input type="checkbox" class="doctor-cb" value="@d.DoctorId" checked />
+                    <span class="doctor-dot" style="background:@d.Color"></span>
+                    <span class="doctor-meta">
+                        <div class="doctor-name">@d.FullName</div>
+                        <div class="doctor-spec">@d.Specialty</div>
+                        @if (!string.IsNullOrEmpty(d.RoomNumber))
+                        {
+                            <span class="doctor-room">@d.RoomNumber</span>
+                        }
+                    </span>
+                </label>
+            }
+            @if (!Model.Doctors.Any())
+            {
+                <p class="text-muted small mb-0">Chưa có bác sĩ nào trong hệ thống.</p>
+            }
+        </div>
+
+        <div class="cal-legend">
+            <h3><i class="fas fa-palette" style="color:#0ea5e9"></i> Chú thích</h3>
+            <div class="legend-row">
+                <span class="legend-swatch" style="background:#0ea5e9"></span> Màu theo bác sĩ
+            </div>
+            <div class="legend-row">
+                <span class="legend-swatch" style="background:#94a3b8"></span> Slot bị chặn
+            </div>
+            <div class="legend-row">
+                <span class="legend-swatch" style="background:#86efac"></span> Sự kiện nhạt = đã xong
+            </div>
+        </div>
+    </aside>
+
+    <div class="cal-main">
+        <div id="adminCalendar"></div>
+    </div>
+</div>
+
+<div class="cal-modal-backdrop" id="eventModal" role="dialog" aria-modal="true">
+    <div class="cal-modal">
+        <div class="cal-modal-header">
+            <h4 id="modalTitle">Chi tiết lịch hẹn</h4>
+        </div>
+        <div class="cal-modal-body" id="modalBody"></div>
+        <div class="cal-modal-footer">
+            <button type="button" id="btnCloseModal">Đóng</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@@fullcalendar/core@6.1.15/locales/vi.global.min.js"></script>
+<script>
+(function () {
+    const eventsUrl = '@Url.Action("Events", "AdminCalendar")';
+    const initialDate = '@Model.WeekStart.ToString("yyyy-MM-dd")';
+    let calendar;
+    let visibleDoctorIds = new Set(
+        Array.from(document.querySelectorAll('.doctor-cb')).map(cb => parseInt(cb.value, 10))
+    );
+
+    function getVisibleDoctorIds() {
+        return Array.from(document.querySelectorAll('.doctor-cb:checked'))
+            .map(cb => parseInt(cb.value, 10));
+    }
+
+    function refetch() {
+        visibleDoctorIds = new Set(getVisibleDoctorIds());
+        if (calendar) calendar.refetchEvents();
+    }
+
+    document.querySelectorAll('.doctor-cb').forEach(cb => {
+        cb.addEventListener('change', refetch);
+    });
+    document.getElementById('btnSelectAllDoctors')?.addEventListener('click', () => {
+        document.querySelectorAll('.doctor-cb').forEach(cb => { cb.checked = true; });
+        refetch();
+    });
+    document.getElementById('btnClearDoctors')?.addEventListener('click', () => {
+        document.querySelectorAll('.doctor-cb').forEach(cb => { cb.checked = false; });
+        refetch();
+    });
+
+    function statusPill(status, label) {
+        const map = {
+            Confirmed: '#dcfce7|#166534',
+            Pending: '#fef3c7|#92400e',
+            CancellationPending: '#ffe4e6|#9f1239',
+            Completed: '#e0e7ff|#3730a3',
+            NoShow: '#f1f5f9|#475569',
+            Blocked: '#e2e8f0|#334155'
+        };
+        const [bg, fg] = (map[status] || '#e0f2fe|#0369a1').split('|');
+        return `<span class="cal-status-pill" style="background:${bg};color:${fg}">${label}</span>`;
+    }
+
+    function openModal(props, start, end) {
+        const title = props.eventKind === 'blocked'
+            ? 'Slot bị chặn'
+            : 'Chi tiết lịch hẹn';
+        document.getElementById('modalTitle').textContent = title;
+
+        const timeStr = formatRange(start, end);
+        const note = props.patientNote
+            ? `<div class="cal-detail-row"><i class="fas fa-sticky-note"></i><div><div class="cal-detail-label">Ghi chú BN</div><div class="cal-detail-value">${escapeHtml(props.patientNote)}</div></div></div>`
+            : '';
+
+        document.getElementById('modalBody').innerHTML = `
+            <div class="cal-detail-row">
+                <i class="fas fa-clock"></i>
+                <div>
+                    <div class="cal-detail-label">Thời gian</div>
+                    <div class="cal-detail-value">${timeStr}</div>
+                </div>
+            </div>
+            <div class="cal-detail-row">
+                <i class="fas fa-user-md"></i>
+                <div>
+                    <div class="cal-detail-label">Bác sĩ</div>
+                    <div class="cal-detail-value">${escapeHtml(props.doctorName || '')}
+                        ${props.specialty ? ' · ' + escapeHtml(props.specialty) : ''}
+                    </div>
+                </div>
+            </div>
+            ${props.roomNumber ? `
+            <div class="cal-detail-row">
+                <i class="fas fa-door-open"></i>
+                <div>
+                    <div class="cal-detail-label">Phòng</div>
+                    <div class="cal-detail-value">${escapeHtml(props.roomNumber)}</div>
+                </div>
+            </div>` : ''}
+            ${props.patientName ? `
+            <div class="cal-detail-row">
+                <i class="fas fa-user-injured"></i>
+                <div>
+                    <div class="cal-detail-label">Bệnh nhân</div>
+                    <div class="cal-detail-value">${escapeHtml(props.patientName)}</div>
+                </div>
+            </div>` : ''}
+            <div class="cal-detail-row">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <div class="cal-detail-label">Trạng thái</div>
+                    <div class="cal-detail-value">${statusPill(props.status, props.statusLabel || props.status)}</div>
+                </div>
+            </div>
+            ${note}
+        `;
+        document.getElementById('eventModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('eventModal').classList.remove('show');
+    }
+
+    document.getElementById('btnCloseModal')?.addEventListener('click', closeModal);
+    document.getElementById('eventModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'eventModal') closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    function formatRange(start, end) {
+        const opts = { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' };
+        const tOpts = { hour: '2-digit', minute: '2-digit', hour12: false };
+        const d = start.toLocaleDateString('vi-VN', opts);
+        const t1 = start.toLocaleTimeString('vi-VN', tOpts);
+        const t2 = end ? end.toLocaleTimeString('vi-VN', tOpts) : '';
+        return t2 ? `${d} · ${t1} – ${t2}` : `${d} · ${t1}`;
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    const el = document.getElementById('adminCalendar');
+    calendar = new FullCalendar.Calendar(el, {
+        locale: 'vi',
+        initialView: 'timeGridWeek',
+        initialDate: initialDate,
+        firstDay: 1,
+        height: 'auto',
+        expandRows: true,
+        slotMinTime: '07:00:00',
+        slotMaxTime: '20:00:00',
+        slotDuration: '00:30:00',
+        allDaySlot: false,
+        nowIndicator: true,
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'timeGridWeek,timeGridDay,listWeek'
+        },
+        buttonText: {
+            today: 'Hôm nay',
+            week: 'Tuần',
+            day: 'Ngày',
+            list: 'Danh sách'
+        },
+        events: function (info, success, failure) {
+            const ids = getVisibleDoctorIds();
+            if (ids.length === 0) {
+                success([]);
+                return;
+            }
+            const params = new URLSearchParams({
+                start: info.startStr,
+                end: info.endStr
+            });
+            fetch(eventsUrl + '?' + params.toString(), { credentials: 'same-origin' })
+                .then(r => {
+                    if (!r.ok) throw new Error('Không tải được lịch');
+                    return r.json();
+                })
+                .then(data => {
+                    const filtered = (data || []).filter(ev => {
+                        const docId = ev.extendedProps?.doctorId;
+                        return ids.includes(docId);
+                    });
+                    success(filtered);
+                })
+                .catch(err => failure(err));
+        },
+        eventClick: function (info) {
+            info.jsEvent.preventDefault();
+            openModal(info.event.extendedProps, info.event.start, info.event.end);
+        },
+        eventDidMount: function (info) {
+            const p = info.event.extendedProps;
+            const tip = [
+                p.doctorName,
+                p.patientName,
+                p.statusLabel
+            ].filter(Boolean).join(' · ');
+            if (tip) info.el.setAttribute('title', tip);
+        }
+    });
+    calendar.render();
+})();
+</script>
+}

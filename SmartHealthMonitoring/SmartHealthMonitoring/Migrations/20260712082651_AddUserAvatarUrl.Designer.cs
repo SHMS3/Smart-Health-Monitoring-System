@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartHealthMonitoring.Context;
 
@@ -11,9 +12,11 @@ using SmartHealthMonitoring.Context;
 namespace SmartHealthMonitoring.Migrations
 {
     [DbContext(typeof(SmartHealthMonitoringContext))]
-    partial class SmartHealthMonitoringContextModelSnapshot : ModelSnapshot
+    [Migration("20260712082651_AddUserAvatarUrl")]
+    partial class AddUserAvatarUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -282,12 +285,6 @@ namespace SmartHealthMonitoring.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<bool>("IsReminded24h")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsReminded2h")
-                        .HasColumnType("bit");
-
                     b.Property<int>("PatientId")
                         .HasColumnType("int");
 
@@ -469,7 +466,7 @@ namespace SmartHealthMonitoring.Migrations
 
                     b.HasIndex("SessionId");
 
-                    b.ToTable("ChatMessages", (string)null);
+                    b.ToTable("ChatMessages");
 
                     b.HasData(
                         new
@@ -578,7 +575,7 @@ namespace SmartHealthMonitoring.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("ChatbotSessions", (string)null);
+                    b.ToTable("ChatbotSessions");
 
                     b.HasData(
                         new
@@ -718,7 +715,7 @@ namespace SmartHealthMonitoring.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("ClinicalRecords", (string)null);
+                    b.ToTable("ClinicalRecords");
 
                     b.HasData(
                         new
@@ -970,7 +967,7 @@ namespace SmartHealthMonitoring.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("DailyVitalLogs", (string)null);
+                    b.ToTable("DailyVitalLogs");
 
                     b.HasData(
                         new
@@ -1177,7 +1174,7 @@ namespace SmartHealthMonitoring.Migrations
                     b.HasIndex(new[] { "IsOnShift" }, "IX_Doctors_Shift")
                         .HasFilter("([IsDeleted]=(0))");
 
-                    b.ToTable("Doctors", (string)null);
+                    b.ToTable("Doctors");
 
                     b.HasData(
                         new
@@ -1381,7 +1378,7 @@ namespace SmartHealthMonitoring.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("EmailNotifications", (string)null);
+                    b.ToTable("EmailNotifications");
 
                     b.HasData(
                         new
@@ -1682,7 +1679,7 @@ namespace SmartHealthMonitoring.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Patients", (string)null);
+                    b.ToTable("Patients");
 
                     b.HasData(
                         new
@@ -2520,7 +2517,7 @@ namespace SmartHealthMonitoring.Migrations
                     b.HasIndex(new[] { "Email" }, "UQ__Users__A9D1053469C9F0C2")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
 
                     b.HasData(
                         new
@@ -2820,7 +2817,7 @@ namespace SmartHealthMonitoring.Migrations
                     b.HasIndex(new[] { "PredictionId" }, "UQ__WarningA__BAE4C1A10BC9FF16")
                         .IsUnique();
 
-                    b.ToTable("WarningAlerts", (string)null);
+                    b.ToTable("WarningAlerts");
 
                     b.HasData(
                         new

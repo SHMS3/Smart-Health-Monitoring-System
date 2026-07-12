@@ -64,6 +64,24 @@ public class AppointmentService : IAppointmentService
             .ToListAsync();
     }
 
+    public async Task<List<AppointmentSlot>> GetAvailableSlotsRangeForDoctorsAsync(List<int> doctorIds, DateOnly startDate, DateOnly endDate)
+    {
+        var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var end   = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+
+        return await _context.AppointmentSlots
+            .Where(s =>
+                doctorIds.Contains(s.DoctorId) &&
+                s.SlotStart >= start &&
+                s.SlotStart <= end &&
+                (s.Status == AppointmentSlotStatus.Available ||
+                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow)))
+            .OrderBy(s => s.SlotStart)
+            .ToListAsync();
+    }
+
+
+
     public async Task<List<Appointment>> GetPatientAppointmentsAsync(int patientId)
     {
         return await _context.Appointments
@@ -216,6 +234,7 @@ public class AppointmentService : IAppointmentService
         // Nhả slot về Available
         appointment.Slot.Status    = AppointmentSlotStatus.Available;
         appointment.Slot.PatientId = null;
+        appointment.Slot.SoftLockedUntil = null;
 
         await _context.SaveChangesAsync();
         return (true, "Đã huỷ lịch hẹn thành công.");

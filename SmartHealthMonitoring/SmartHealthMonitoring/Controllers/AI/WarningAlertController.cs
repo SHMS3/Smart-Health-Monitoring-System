@@ -5,7 +5,7 @@ using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.Models;
-using SmartHealthMonitoring.Services;
+
 using SmartHealthMonitoring.Services.AI;
 using SmartHealthMonitoring.ViewModels;
 using System.Security.Claims;
@@ -47,25 +47,8 @@ namespace SmartHealthMonitoring.Controllers.AI
         }
 
 
-        public async Task<IActionResult> Dashboard(byte? status, string? keyword, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Dashboard(byte? status, string? keyword, int page = 1, int pageSize = 10, bool onlyMyAlerts = false)
         {
-            var totalRecords = await _warningAlertService.GetTotalAlertsAsync(status, keyword);
-            int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
-            if (totalPages < 1) totalPages = 1;
-            page = Math.Max(1, Math.Min(page, totalPages));
-
-            var alerts = await _warningAlertService.GetAlertsAsync(
-                status,
-                keyword,
-                page,
-                pageSize);
-
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = totalPages;
-            ViewBag.Keyword = keyword;
-            ViewBag.Status = status;
-            ViewBag.TotalRecords = totalRecords;
-
             // Truyền doctorId để UI chỉ hiển thị Resolution note cho đúng bác sĩ đã claim
             int? doctorId = null;
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -74,6 +57,27 @@ namespace SmartHealthMonitoring.Controllers.AI
                 var doctor = await _doctorService.GetDoctorByUserIdAsync(userId);
                 doctorId = doctor?.Id;
             }
+
+            int? filterDoctorId = onlyMyAlerts ? doctorId : null;
+
+            var totalRecords = await _warningAlertService.GetTotalAlertsAsync(status, keyword, filterDoctorId);
+            int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            if (totalPages < 1) totalPages = 1;
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var alerts = await _warningAlertService.GetAlertsAsync(
+                status,
+                keyword,
+                page,
+                pageSize,
+                filterDoctorId);
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.Keyword = keyword;
+            ViewBag.Status = status;
+            ViewBag.TotalRecords = totalRecords;
+            ViewBag.OnlyMyAlerts = onlyMyAlerts;
 
             ViewData["DoctorId"] = doctorId;
             ViewData["CurrentPage"] = page;
@@ -228,9 +232,19 @@ namespace SmartHealthMonitoring.Controllers.AI
             return RedirectToAction(nameof(Dashboard));
         }
         [HttpGet]
-        public async Task<IActionResult> Filter(byte? status, string? keyword, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Filter(byte? status, string? keyword, int page = 1, int pageSize = 10, bool onlyMyAlerts = false)
         {
-            var totalRecords = await _warningAlertService.GetTotalAlertsAsync(status, keyword);
+            int? doctorId = null;
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out var userId))
+            {
+                var doctor = await _doctorService.GetDoctorByUserIdAsync(userId);
+                doctorId = doctor?.Id;
+            }
+
+            int? filterDoctorId = onlyMyAlerts ? doctorId : null;
+
+            var totalRecords = await _warningAlertService.GetTotalAlertsAsync(status, keyword, filterDoctorId);
             int totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
             if (totalPages < 1) totalPages = 1;
             page = Math.Max(1, Math.Min(page, totalPages));
@@ -239,21 +253,14 @@ namespace SmartHealthMonitoring.Controllers.AI
                 status,
                 keyword,
                 page,
-                pageSize);
+                pageSize,
+                filterDoctorId);
 
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.Status = status;
             ViewBag.Keyword = keyword;
 
-            // Cũng cần truyền ViewData["DoctorId"] cho _AlertTable
-            int? doctorId = null;
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out var userId))
-            {
-                var doctor = await _doctorService.GetDoctorByUserIdAsync(userId);
-                doctorId = doctor?.Id;
-            }
             ViewData["DoctorId"] = doctorId;
 
             return PartialView("_AlertTable", alerts);

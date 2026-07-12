@@ -1,7 +1,6 @@
 @model List<SmartHealthMonitoring.Controllers.DoctorSlotViewModel>
 @{
     ViewData["Title"] = "Đặt lịch khám";
-    var selectedDate = (DateOnly)ViewBag.SelectedDate;
     var specialties  = ViewBag.Specialties as List<string> ?? new();
 }
 
@@ -51,30 +50,86 @@
 </style>
 
 <div class="container pt-5 mt-3 pb-5">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
     <div class="page-header">
         <h1 class="h3 mb-1 fw-bold">🏥 Đặt lịch khám bệnh</h1>
         <p class="mb-0 opacity-75">Chọn bác sĩ và khung giờ phù hợp với bạn.</p>
     </div>
 
     <!-- Filter -->
-    <form method="get" class="filter-bar">
-        <div>
-            <label class="form-label small text-muted mb-1">Chuyên khoa</label>
-            <select name="specialty" class="form-select" style="min-width:180px">
-                <option value="">Tất cả chuyên khoa</option>
-                @foreach (var sp in specialties)
-                {
-                    <option value="@sp" selected="@(ViewBag.Specialty == sp ? "selected" : null)">@sp</option>
-                }
-            </select>
+    <form method="get" class="filter-bar" onsubmit="return validateDates()">
+        <div class="row g-3 w-100">
+            <!-- Hàng 1 -->
+            <div class="col-md-4 col-sm-6">
+                <label class="form-label small text-muted mb-1">Tên bác sĩ</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="fas fa-user-md text-muted"></i></span>
+                    <input type="text" name="doctorName" class="form-control" value="@ViewBag.DoctorName" placeholder="Nhập tên bác sĩ...">
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <label class="form-label small text-muted mb-1">Từ ngày</label>
+                <input type="date" id="fromDate" name="fromDate" class="form-control" value="@(((DateOnly)ViewBag.FromDate).ToString("yyyy-MM-dd"))" min="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")">
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <label class="form-label small text-muted mb-1">Đến ngày</label>
+                <input type="date" id="toDate" name="toDate" class="form-control" value="@(((DateOnly)ViewBag.ToDate).ToString("yyyy-MM-dd"))" min="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")">
+            </div>
+
+            <!-- Hàng 2 -->
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label small text-muted mb-1">Chuyên khoa</label>
+                <select name="specialty" class="form-select">
+                    <option value="">Tất cả chuyên khoa</option>
+                    @foreach (var sp in specialties)
+                    {
+                        <option value="@sp" selected="@(ViewBag.Specialty == sp ? "selected" : null)">@sp</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label class="form-label small text-muted mb-1">Giới tính</label>
+                <select name="gender" class="form-select">
+                    <option value="">Tất cả</option>
+                    <option value="1" selected="@(ViewBag.Gender != null && (byte)ViewBag.Gender == 1 ? "selected" : null)">Nam</option>
+                    <option value="0" selected="@(ViewBag.Gender != null && (byte)ViewBag.Gender == 0 ? "selected" : null)">Nữ</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label class="form-label small text-muted mb-1">Buổi khám</label>
+                <select name="session" class="form-select">
+                    <option value="">Cả ngày</option>
+                    <option value="Morning" selected="@(ViewBag.Session == "Morning" ? "selected" : null)">Sáng (trước 12h)</option>
+                    <option value="Afternoon" selected="@(ViewBag.Session == "Afternoon" ? "selected" : null)">Chiều (sau 12h)</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label class="form-label small text-muted mb-1">Số phòng</label>
+                <select name="roomNumber" class="form-select">
+                    <option value="">Tất cả phòng</option>
+                    @if (ViewBag.RoomNumbers != null)
+                    {
+                        foreach (string rm in ViewBag.RoomNumbers)
+                        {
+                            <option value="@rm" selected="@(ViewBag.RoomNumber == rm ? "selected" : null)">@rm</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 col-sm-12 d-flex align-items-end">
+                <button type="submit" class="btn fw-semibold rounded-3 w-100" style="background:#27ae60;color:white;padding:10px 24px">
+                    <i class="fas fa-search me-2"></i>Tìm kiếm
+                </button>
+            </div>
         </div>
-        <div>
-            <label class="form-label small text-muted mb-1">Ngày khám</label>
-            <input type="date" name="date" class="form-control" value="@selectedDate.ToString("yyyy-MM-dd")" min="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")">
-        </div>
-        <button type="submit" class="btn fw-semibold rounded-3" style="background:#27ae60;color:white;padding:10px 24px">
-            <i class="fas fa-search me-2"></i>Tìm kiếm
-        </button>
     </form>
 
     <!-- Doctor list + slots -->
@@ -119,7 +174,7 @@
                                 <div class="d-flex flex-wrap gap-2">
                                     @foreach(var slot in dateGroup.Value)
                                     {
-                                        <a href="/Appointment/Book?slotId=@slot.Id" class="slot-btn available">
+                                        <a href="/Appointment/VerifyOtp?slotId=@slot.Id" class="slot-btn available">
                                             @slot.SlotStart.ToString("HH:mm") - @slot.SlotEnd.ToString("HH:mm")
                                         </a>
                                     }
@@ -139,6 +194,16 @@
 
 @section Scripts {
     <script>
+        function validateDates() {
+            var from = document.getElementById("fromDate").value;
+            var to = document.getElementById("toDate").value;
+            if (from && to && from > to) {
+                alert("Ngày bắt đầu không được lớn hơn ngày kết thúc!");
+                return false;
+            }
+            return true;
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
             // Khởi tạo kết nối SignalR tới appointmentHub
             const appointmentConnection = new signalR.HubConnectionBuilder()

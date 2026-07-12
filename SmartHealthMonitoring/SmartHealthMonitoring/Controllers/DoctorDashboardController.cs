@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels;
@@ -19,10 +20,14 @@ namespace SmartHealthMonitoring.Controllers
     public class DoctorDashboardController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
+        private readonly IEmailTriggerService _emailTriggerService;
 
-        public DoctorDashboardController(SmartHealthMonitoringContext context)
+        public DoctorDashboardController(
+            SmartHealthMonitoringContext context,
+            IEmailTriggerService emailTriggerService)
         {
             _context = context;
+            _emailTriggerService = emailTriggerService;
         }
 
         [HttpGet]
@@ -294,6 +299,17 @@ namespace SmartHealthMonitoring.Controllers
                 if (rowsAffected == 0)
                 {
                     return Json(new { success = false, message = "Cảnh báo: Bệnh nhân này vừa được một bác sĩ khác tiếp nhận!" });
+                }
+
+                // Gửi email template + QR Check-in ngay khi bác sĩ tiếp nhận thành công
+                try
+                {
+                    await _emailTriggerService.SendDoctorAcceptedCheckInAsync(request.WaitingId, doctor.Id);
+                }
+                catch (Exception emailEx)
+                {
+                    // Không chặn luồng tiếp nhận nếu gửi mail lỗi
+                    Console.WriteLine($"[AcceptPatient Email] {emailEx.Message}");
                 }
 
                 return Json(new { success = true, patientId = waitingPatient.PatientId });

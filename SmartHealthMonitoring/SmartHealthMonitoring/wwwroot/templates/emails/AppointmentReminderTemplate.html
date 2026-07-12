@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+            max-width: 650px;
+            margin: 0 auto;
+            overflow: hidden;
+            border: 1px solid #d4e9f7;
+        }
+
+        .header {
+            background-color: #0369a1;
+            color: #fff;
+            padding: 22px 25px;
+        }
+
+        .header h2 {
+            margin: 0 0 4px;
+            font-size: 20px;
+        }
+
+        .body-content {
+            padding: 28px 30px;
+            line-height: 1.7;
+        }
+
+        .notice-box {
+            background-color: #e0f2fe;
+            border-left: 4px solid #0369a1;
+            padding: 16px;
+            border-radius: 0 6px 6px 0;
+            margin: 20px 0;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .info-table th {
+            background-color: #e0f2fe;
+            text-align: left;
+            padding: 10px 14px;
+            border: 1px solid #bae6fd;
+            color: #0369a1;
+            font-size: 14px;
+            width: 35%;
+        }
+
+        .info-table td {
+            padding: 10px 14px;
+            border: 1px solid #bae6fd;
+            font-size: 14px;
+        }
+
+        .footer {
+            background-color: #f7f9fa;
+            color: #999;
+            text-align: center;
+            padding: 14px;
+            font-size: 12px;
+            border-top: 1px solid #e4eaf0;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+<div class="header">
+<h2>Nhắc lịch khám - còn {{ReminderLabel}}</h2>
+</div>
+<div class="body-content">
+<p>Kính gửi <strong>{{PatientName}}</strong>,</p>
+<div class="notice-box">
+<p>Đây là lời nhắc lịch khám của bạn tại Smart Health. Thời gian hẹn còn khoảng <strong>{{ReminderLabel}}</strong>.</p>
+</div>
+<table class="info-table">
+<tbody>
+<tr>
+<th>Bác sĩ</th>
+<td>{{DoctorName}}</td>
+</tr>
+<tr>
+<th>Chuyên khoa</th>
+<td>{{Specialty}}</td>
+</tr>
+<tr>
+<th>Phòng khám</th>
+<td>{{RoomNumber}}</td>
+</tr>
+<tr>
+<th>Thời gian khám</th>
+<td>{{AppointmentTime}}</td>
+</tr>
+<tr>
+<th>Mã lịch hẹn</th>
+<td>#{{AppointmentId}}</td>
+</tr>
+</tbody>
+</table>
+<p>Vui lòng đến đúng giờ. Nếu cần đổi/huỷ lịch, hãy liên hệ phòng khám sớm.</p>
+</div>
+<div class="footer">&copy; 2026 Smart Health Monitoring System</div>
+</div>
+</body>
+
+</html>
