@@ -72,6 +72,8 @@ namespace SmartHealthMonitoring
             // builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentSlotGeneratorWorker>();
             // Đặt lịch: dọn dẹp SoftLock hết hạn và đánh dấu No-show mỗi 2 phút
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentCleanupWorker>();
+            // NTF-02: nhắc lịch hẹn Email/SMS trước 24h và 2h (quét mỗi 5 phút)
+            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentReminderWorker>();
 
             // ====================================================================
 

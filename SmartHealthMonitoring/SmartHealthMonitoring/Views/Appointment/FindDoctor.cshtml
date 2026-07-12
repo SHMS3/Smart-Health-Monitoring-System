@@ -50,6 +50,15 @@
 </style>
 
 <div class="container pt-5 mt-3 pb-5">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
     <div class="page-header">
         <h1 class="h3 mb-1 fw-bold">🏥 Đặt lịch khám bệnh</h1>
         <p class="mb-0 opacity-75">Chọn bác sĩ và khung giờ phù hợp với bạn.</p>

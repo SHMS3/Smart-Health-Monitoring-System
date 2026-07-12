@@ -15,17 +15,20 @@ namespace SmartHealthMonitoring.Services
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _emailTemplateService;
         private readonly IAiAlertSettingsService _aiAlertSettingsService;
+        private readonly IQrCheckInService _qrCheckInService;
 
         public EmailTriggerService(
             SmartHealthMonitoringContext context,
             IEmailService emailService,
             IEmailTemplateService emailTemplateService,
-            IAiAlertSettingsService aiAlertSettingsService)
+            IAiAlertSettingsService aiAlertSettingsService,
+            IQrCheckInService qrCheckInService)
         {
             _context = context;
             _emailService = emailService;
             _emailTemplateService = emailTemplateService;
             _aiAlertSettingsService = aiAlertSettingsService;
+            _qrCheckInService = qrCheckInService;
         }
 
         public async Task SendAppointmentInvitationAsync(int alertId, int sentByDoctorId, DateTime? appointmentDate = null)
@@ -282,6 +285,296 @@ namespace SmartHealthMonitoring.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"[SendDailyVitalLogReminderAsync Error] {ex.Message}");
+            }
+        }
+
+        public async Task SendDoctorAcceptedCheckInAsync(int waitingId, int doctorId)
+        {
+            try
+            {
+                var waiting = await _context.WaitingPatients
+                    .Include(w => w.Patient).ThenInclude(p => p.User)
+                    .Include(w => w.Doctor).ThenInclude(d => d!.User)
+                    .FirstOrDefaultAsync(w => w.Id == waitingId);
+
+                if (waiting?.Patient?.User?.Email == null)
+                    return;
+
+                var doctor = waiting.Doctor
+                    ?? await _context.Doctors
+                        .Include(d => d.User)
+                        .FirstOrDefaultAsync(d => d.Id == doctorId);
+
+                if (doctor == null)
+                    return;
+
+                var acceptedAt = waiting.AcceptedAt ?? DateTime.UtcNow;
+                var checkInCode = _qrCheckInService.BuildCheckInCode(
+                    waiting.Id,
+                    waiting.PatientId,
+                    doctor.Id,
+                    waiting.SequenceNumber,
+                    acceptedAt);
+
+                const string qrContentId = "qrcheckin";
+                var qrPng = _qrCheckInService.GeneratePng(checkInCode);
+                var qrDataUri = _qrCheckInService.GenerateDataUri(checkInCode);
+
+                var patientEmail = waiting.Patient.User.Email;
+                var patientName = waiting.Patient.User.FullName ?? "Bệnh nhân";
+                var doctorName = doctor.User?.FullName ?? "Bác sĩ Smart Health";
+
+                var replacements = new Dictionary<string, string>
+                {
+                    { "{{PatientName}}", patientName },
+                    { "{{DoctorName}}", doctorName },
+                    { "{{Specialty}}", doctor.Specialty ?? "Chưa cập nhật" },
+                    { "{{RoomNumber}}", string.IsNullOrWhiteSpace(doctor.RoomNumber) ? "Chưa phân phòng" : doctor.RoomNumber },
+                    { "{{SequenceNumber}}", waiting.SequenceNumber.ToString() },
+                    { "{{AcceptedAt}}", acceptedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") },
+                    { "{{CheckInCode}}", checkInCode },
+                    // Lưu body lịch sử email bằng data-URI; khi gửi thật dùng cid:
+                    { "{{QrCodeImage}}", qrDataUri }
+                };
+
+                const string templateName = "DoctorAcceptedCheckInTemplate.html";
+                var subject = _emailTemplateService.GetSubject(templateName, replacements);
+                var htmlBodyForHistory = _emailTemplateService.RenderBody(templateName, replacements);
+
+                var notification = new EmailNotification
+                {
+                    AlertId = null,
+                    PatientId = waiting.PatientId,
+                    ToEmail = patientEmail,
+                    Subject = subject,
+                    Body = htmlBodyForHistory,
+                    Status = 0,
+                    IsSent = false,
+                    SentByDoctorId = doctorId,
+                    CreatedAt = DateTime.Now
+                };
+                _context.EmailNotifications.Add(notification);
+                await _context.SaveChangesAsync();
+
+                if (string.IsNullOrEmpty(htmlBodyForHistory))
+                {
+                    notification.Status = 2;
+                    notification.IsSent = false;
+                    notification.ErrorMessage = "Template không tìm thấy.";
+                    await _context.SaveChangesAsync();
+                    return;
+                }
+
+                try
+                {
+                    // Email client cần cid: để hiện QR inline
+                    replacements["{{QrCodeImage}}"] = $"cid:{qrContentId}";
+                    var htmlBodyToSend = _emailTemplateService.RenderBody(templateName, replacements);
+
+                    await _emailService.SendEmailAsync(
+                        patientEmail,
+                        subject,
+                        htmlBodyToSend,
+                        new Dictionary<string, byte[]> { { qrContentId, qrPng } });
+
+                    notification.Status = 1;
+                    notification.IsSent = true;
+                    notification.SentAt = DateTime.Now;
+                }
+                catch (Exception ex)
+                {
+                    notification.Status = 2;
+                    notification.IsSent = false;
+                    notification.ErrorMessage = ex.Message;
+                    Console.WriteLine($"[EmailError] {ex.Message}");
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SendDoctorAcceptedCheckInAsync Error] {ex.Message}");
+            }
+        }
+
+        public async Task SendBookingConfirmationCheckInAsync(int appointmentId)
+        {
+            try
+            {
+                var appointment = await _context.Appointments
+                    .Include(a => a.Slot)
+                    .Include(a => a.Patient).ThenInclude(p => p.User)
+                    .Include(a => a.Doctor).ThenInclude(d => d.User)
+                    .FirstOrDefaultAsync(a => a.Id == appointmentId);
+
+                if (appointment?.Patient?.User?.Email == null || appointment.Slot == null || appointment.Doctor == null)
+                    return;
+
+                var checkInCode = _qrCheckInService.BuildAppointmentCheckInCode(
+                    appointment.Id,
+                    appointment.PatientId,
+                    appointment.DoctorId,
+                    appointment.Slot.SlotStart);
+
+                const string qrContentId = "qrcheckin";
+                var qrPng = _qrCheckInService.GeneratePng(checkInCode);
+                var qrDataUri = _qrCheckInService.GenerateDataUri(checkInCode);
+
+                var patientEmail = appointment.Patient.User.Email;
+                var patientName = appointment.Patient.User.FullName ?? "Bệnh nhân";
+                var doctorName = appointment.Doctor.User?.FullName ?? "Bác sĩ Smart Health";
+                var appointmentTime =
+                    $"{appointment.Slot.SlotStart:HH:mm} - {appointment.Slot.SlotEnd:HH:mm} (Ngày {appointment.Slot.SlotStart:dd/MM/yyyy})";
+
+                var replacements = new Dictionary<string, string>
+                {
+                    { "{{PatientName}}", patientName },
+                    { "{{DoctorName}}", doctorName },
+                    { "{{Specialty}}", appointment.Doctor.Specialty ?? "Chưa cập nhật" },
+                    { "{{RoomNumber}}", string.IsNullOrWhiteSpace(appointment.Doctor.RoomNumber) ? "Chưa phân phòng" : appointment.Doctor.RoomNumber },
+                    { "{{AppointmentTime}}", appointmentTime },
+                    { "{{AppointmentId}}", appointment.Id.ToString() },
+                    { "{{CheckInCode}}", checkInCode },
+                    { "{{QrCodeImage}}", qrDataUri }
+                };
+
+                const string templateName = "AppointmentBookingConfirmationTemplate.html";
+                var subject = _emailTemplateService.GetSubject(templateName, replacements);
+                var htmlBodyForHistory = _emailTemplateService.RenderBody(templateName, replacements);
+
+                var notification = new EmailNotification
+                {
+                    AlertId = null,
+                    PatientId = appointment.PatientId,
+                    ToEmail = patientEmail,
+                    Subject = subject,
+                    Body = htmlBodyForHistory,
+                    Status = 0,
+                    IsSent = false,
+                    SentByDoctorId = appointment.DoctorId,
+                    CreatedAt = DateTime.Now
+                };
+                _context.EmailNotifications.Add(notification);
+                await _context.SaveChangesAsync();
+
+                if (string.IsNullOrEmpty(htmlBodyForHistory))
+                {
+                    notification.Status = 2;
+                    notification.IsSent = false;
+                    notification.ErrorMessage = "Template không tìm thấy.";
+                    await _context.SaveChangesAsync();
+                    return;
+                }
+
+                try
+                {
+                    replacements["{{QrCodeImage}}"] = $"cid:{qrContentId}";
+                    var htmlBodyToSend = _emailTemplateService.RenderBody(templateName, replacements);
+
+                    await _emailService.SendEmailAsync(
+                        patientEmail,
+                        subject,
+                        htmlBodyToSend,
+                        new Dictionary<string, byte[]> { { qrContentId, qrPng } });
+
+                    notification.Status = 1;
+                    notification.IsSent = true;
+                    notification.SentAt = DateTime.Now;
+                }
+                catch (Exception ex)
+                {
+                    notification.Status = 2;
+                    notification.IsSent = false;
+                    notification.ErrorMessage = ex.Message;
+                    Console.WriteLine($"[EmailError] {ex.Message}");
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SendBookingConfirmationCheckInAsync Error] {ex.Message}");
+            }
+        }
+
+        public async Task SendAppointmentReminderAsync(int appointmentId, string reminderLabel)
+        {
+            try
+            {
+                var appointment = await _context.Appointments
+                    .Include(a => a.Slot)
+                    .Include(a => a.Patient).ThenInclude(p => p.User)
+                    .Include(a => a.Doctor).ThenInclude(d => d.User)
+                    .FirstOrDefaultAsync(a => a.Id == appointmentId);
+
+                if (appointment?.Patient?.User?.Email == null || appointment.Slot == null || appointment.Doctor == null)
+                    return;
+
+                var patientEmail = appointment.Patient.User.Email;
+                var patientName = appointment.Patient.User.FullName ?? "Bệnh nhân";
+                var doctorName = appointment.Doctor.User?.FullName ?? "Bác sĩ Smart Health";
+                var appointmentTime =
+                    $"{appointment.Slot.SlotStart:HH:mm} - {appointment.Slot.SlotEnd:HH:mm} (Ngày {appointment.Slot.SlotStart:dd/MM/yyyy})";
+
+                var replacements = new Dictionary<string, string>
+                {
+                    { "{{PatientName}}", patientName },
+                    { "{{DoctorName}}", doctorName },
+                    { "{{Specialty}}", appointment.Doctor.Specialty ?? "Chưa cập nhật" },
+                    { "{{RoomNumber}}", string.IsNullOrWhiteSpace(appointment.Doctor.RoomNumber) ? "Chưa phân phòng" : appointment.Doctor.RoomNumber },
+                    { "{{AppointmentTime}}", appointmentTime },
+                    { "{{AppointmentId}}", appointment.Id.ToString() },
+                    { "{{ReminderLabel}}", reminderLabel }
+                };
+
+                const string templateName = "AppointmentReminderTemplate.html";
+                var subject = _emailTemplateService.GetSubject(templateName, replacements);
+                var htmlBody = _emailTemplateService.RenderBody(templateName, replacements);
+
+                var notification = new EmailNotification
+                {
+                    AlertId = null,
+                    PatientId = appointment.PatientId,
+                    ToEmail = patientEmail,
+                    Subject = subject,
+                    Body = htmlBody,
+                    Status = 0,
+                    IsSent = false,
+                    SentByDoctorId = null,
+                    CreatedAt = DateTime.Now
+                };
+                _context.EmailNotifications.Add(notification);
+                await _context.SaveChangesAsync();
+
+                if (string.IsNullOrEmpty(htmlBody))
+                {
+                    notification.Status = 2;
+                    notification.IsSent = false;
+                    notification.ErrorMessage = "Template không tìm thấy.";
+                    await _context.SaveChangesAsync();
+                    return;
+                }
+
+                try
+                {
+                    await _emailService.SendEmailAsync(patientEmail, subject, htmlBody);
+                    notification.Status = 1;
+                    notification.IsSent = true;
+                    notification.SentAt = DateTime.Now;
+                }
+                catch (Exception ex)
+                {
+                    notification.Status = 2;
+                    notification.IsSent = false;
+                    notification.ErrorMessage = ex.Message;
+                    Console.WriteLine($"[EmailError] {ex.Message}");
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SendAppointmentReminderAsync Error] {ex.Message}");
             }
         }
     }

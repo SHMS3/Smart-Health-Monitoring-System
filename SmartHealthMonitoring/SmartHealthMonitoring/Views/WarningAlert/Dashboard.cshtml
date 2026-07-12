@@ -329,7 +329,7 @@
 
            <div class="alert-card-toolbar">
 
-    <div class="filter-group">
+    <div class="filter-group" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
 
         <a href="#"
            class="filter-pill filter-btn active"
@@ -354,6 +354,14 @@
            data-status="2">
             Đã xử lý
         </a>
+
+        <!-- My Alerts toggle check -->
+        <div class="form-check form-switch ms-2 d-flex align-items-center" style="gap: 6px; padding-left: 0; margin-bottom: 0;">
+            <input class="form-check-input" type="checkbox" id="onlyMyAlertsCheck" style="margin-left: 0; width: 36px; height: 18px; cursor: pointer;" @(ViewBag.OnlyMyAlerts == true ? "checked" : "") />
+            <label class="form-check-label fw-bold" for="onlyMyAlertsCheck" style="font-size: .82rem; color: #475569; cursor: pointer; user-select: none;">
+                Cảnh báo của tôi
+            </label>
+        </div>
 
     </div>
 
@@ -415,6 +423,7 @@
 
     let currentStatus = '';
     let currentPage = 1;
+    let onlyMyAlerts = $('#onlyMyAlertsCheck').is(':checked');
 
     function loadAlerts(status = '', keyword = '', page = 1)
     {
@@ -427,7 +436,8 @@
             data: {
                 status: status,
                 keyword: keyword,
-                page: page
+                page: page,
+                onlyMyAlerts: onlyMyAlerts
             },
 
             success: function (response)
@@ -466,6 +476,12 @@
 
         });
     }
+
+    // Only My Alerts Toggle
+    $('#onlyMyAlertsCheck').on('change', function () {
+        onlyMyAlerts = this.checked;
+        loadAlerts(currentStatus, $('#keyword').val(), 1);
+    });
 
     // Search
 

@@ -69,7 +69,7 @@ namespace SmartHealthMonitoring.Services.AI
 
 
 
-        public async Task<List<WarningAlert>> GetAlertsAsync(byte? status, string? keyword, int page, int pageSize)
+        public async Task<List<WarningAlert>> GetAlertsAsync(byte? status, string? keyword, int page, int pageSize, int? claimedByDoctorId = null)
         {
             var query = _context.WarningAlerts
                 .Where(x => !x.IsDeleted)
@@ -97,6 +97,13 @@ namespace SmartHealthMonitoring.Services.AI
                         .Contains(keyword));
             }
 
+            // Filter Doctor Claimed
+            if (claimedByDoctorId.HasValue)
+            {
+                query = query.Where(x =>
+                    x.ClaimedByDoctorId == claimedByDoctorId.Value);
+            }
+
             return await query
                 .OrderByDescending(x => x.FlaggedAt)
                 .Skip((page - 1) * pageSize)
@@ -104,7 +111,7 @@ namespace SmartHealthMonitoring.Services.AI
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalAlertsAsync(byte? status, string? keyword)
+        public async Task<int> GetTotalAlertsAsync(byte? status, string? keyword, int? claimedByDoctorId = null)
         {
             var query = _context.WarningAlerts
                 .Where(x => !x.IsDeleted)
@@ -123,6 +130,12 @@ namespace SmartHealthMonitoring.Services.AI
                 query = query.Where(x =>
                     x.Patient.User.FullName
                         .Contains(keyword));
+            }
+
+            if (claimedByDoctorId.HasValue)
+            {
+                query = query.Where(x =>
+                    x.ClaimedByDoctorId == claimedByDoctorId.Value);
             }
 
             return await query.CountAsync();

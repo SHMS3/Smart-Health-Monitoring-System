@@ -18,5 +18,20 @@ namespace SmartHealthMonitoring.Interfaces
         /// Gửi email nhắc nhở bệnh nhân ghi log chỉ số sinh hiệu hàng ngày.
         /// </summary>
         Task SendDailyVitalLogReminderAsync(int patientId, string lastLogTimeDisplay);
+
+        /// <summary>
+        /// Gửi email QR Check-in khi bác sĩ tiếp nhận bệnh nhân trong hàng đợi thành công.
+        /// </summary>
+        Task SendDoctorAcceptedCheckInAsync(int waitingId, int doctorId);
+
+        /// <summary>
+        /// NTF-01: Email xác nhận đặt lịch + QR Check-in khi BOOK-08 (duyệt lịch) thành công.
+        /// </summary>
+        Task SendBookingConfirmationCheckInAsync(int appointmentId);
+
+        /// <summary>
+        /// NTF-02: Email nhắc lịch hẹn (24h hoặc 2h trước giờ khám).
+        /// </summary>
+        Task SendAppointmentReminderAsync(int appointmentId, string reminderLabel);
     }
 }
