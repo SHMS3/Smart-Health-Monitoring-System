@@ -44,6 +44,16 @@ public class DoctorScheduleController : Controller
             .OrderBy(s => s.SlotStart)
             .ToListAsync();
 
+        // Xóa các slot Available nằm ngoài cửa sổ 7 ngày (ghost slots do worker cũ tạo ra)
+        var ghostSlots = await _context.AppointmentSlots
+            .Where(s => s.DoctorId == doctor.Id && s.SlotStart >= endDay && s.Status == AppointmentSlotStatus.Available)
+            .ToListAsync();
+        if (ghostSlots.Any())
+        {
+            _context.AppointmentSlots.RemoveRange(ghostSlots);
+            await _context.SaveChangesAsync();
+        }
+
         var viewModels = new List<DoctorSchedule7DaysViewModel>();
         for (int i = 0; i < 7; i++)
         {

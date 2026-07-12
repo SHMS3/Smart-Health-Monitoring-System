@@ -9,6 +9,7 @@ using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels;
 using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Services;
 
 namespace SmartHealthMonitoring.Controllers
 {
@@ -18,13 +19,15 @@ namespace SmartHealthMonitoring.Controllers
         private readonly SmartHealthMonitoringContext _context;
         private readonly IEmailService _emailService;
         private readonly ITwilioVerifyService _twilioVerify;
+        private readonly IMinioService _minioService;
 
-        public HomeController(ILogger<HomeController> logger, SmartHealthMonitoringContext context, IEmailService emailService, ITwilioVerifyService twilioVerify)
+        public HomeController(ILogger<HomeController> logger, SmartHealthMonitoringContext context, IEmailService emailService, ITwilioVerifyService twilioVerify, IMinioService minioService)
         {
             _logger = logger;
             _context = context;
             _emailService = emailService;
             _twilioVerify = twilioVerify;
+            _minioService = minioService;
         }
 
         public async Task<IActionResult> Index()
@@ -222,7 +225,8 @@ namespace SmartHealthMonitoring.Controllers
                 Email     = user.Email,
                 CreatedAt = user.CreatedAt,
                 IsGoogleAccount = string.IsNullOrEmpty(user.PasswordHash),
-                Role      = user.Role
+                Role      = user.Role,
+                AvatarUrl = user.AvatarUrl
             };
 
             // Nếu là Patient thì lấy thêm thông tin
@@ -373,6 +377,25 @@ namespace SmartHealthMonitoring.Controllers
                     doctor.Phone = model.Phone;
                     doctor.Address = model.Address;
                     _context.Doctors.Update(doctor);
+                }
+            }
+
+            // Xử lý upload ảnh đại diện (Avatar)
+            if (model.AvatarFile != null && model.AvatarFile.Length > 0)
+            {
+                var bucketName = "smarthealth-avatars";
+                var objectName = $"avatar-{user.Id}-{Guid.NewGuid()}{System.IO.Path.GetExtension(model.AvatarFile.FileName)}";
+                
+                using (var stream = model.AvatarFile.OpenReadStream())
+                {
+                    await _minioService.UploadFileAsync(bucketName, objectName, stream, model.AvatarFile.ContentType);
+                }
+                
+                user.AvatarUrl = objectName;
+                // Đảm bảo User entity được đánh dấu là thay đổi nếu chưa được Update() ở trên
+                if (user.Role == 1 || user.Role == 2) 
+                {
+                    _context.Users.Update(user);
                 }
             }
 
@@ -654,6 +677,63 @@ namespace SmartHealthMonitoring.Controllers
             ViewBag.InnerException = exception?.InnerException?.Message;
             
             return View();
+        }
+        // ==========================================
+        // POST: /Home/UploadAvatar
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatarFile)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToAction("Login", "Auth");
+
+            if (avatarFile != null && avatarFile.Length > 0)
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null)
+                {
+                    var bucketName = "smarthealth-avatars";
+                    var objectName = $"avatar-{user.Id}-{Guid.NewGuid()}{System.IO.Path.GetExtension(avatarFile.FileName)}";
+                    
+                    using (var stream = avatarFile.OpenReadStream())
+                    {
+                        await _minioService.UploadFileAsync(bucketName, objectName, stream, avatarFile.ContentType);
+                    }
+                    
+                    user.AvatarUrl = objectName;
+                    _context.Users.Update(user);
+                    await _context.SaveChangesAsync();
+                    
+                    TempData["SuccessMessage"] = "Cập nhật ảnh đại diện thành công!";
+                }
+            }
+            return RedirectToAction(nameof(Profile));
+        }
+
+        // ==========================================
+        // GET: /Avatar/{userId}
+        // ==========================================
+        [HttpGet("/Avatar/{userId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAvatar(int userId)
+        {
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null || string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                return Redirect("/assets/images/default-avatar.png"); // or wherever the default avatar is
+            }
+
+            try
+            {
+                var presignedUrl = await _minioService.GetPresignedUrlAsync("smarthealth-avatars", user.AvatarUrl, 10080);
+                return Redirect(presignedUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting presigned URL for avatar");
+                return Redirect("/assets/images/default-avatar.png");
+            }
         }
     }
 }

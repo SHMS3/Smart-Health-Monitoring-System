@@ -169,21 +169,31 @@ function toggleDay(checkbox) {
     const card = checkbox.closest('.day-card');
     const header = card.querySelector('.day-header');
     const dot = card.querySelector('.day-dot');
+    const container = card.querySelector('.slot-container');
+    const index = container.id.split('-')[1];
     
     if (checkbox.checked) {
         header.classList.remove('inactive');
         header.classList.add('active');
         dot.classList.remove('inactive');
         dot.classList.add('active');
+        
+        // Nếu bật lên nhưng chưa có ca nào, thêm ca mặc định
+        if (!container.querySelector('.slot-row')) {
+            addSlot(index, true); 
+        }
     } else {
         header.classList.remove('active');
         header.classList.add('inactive');
         dot.classList.remove('active');
         dot.classList.add('inactive');
+        
+        // Xóa hết ca và hiển thị Ngày nghỉ
+        container.innerHTML = '<p class="text-muted small text-center py-2 mb-0">Ngày nghỉ</p>';
     }
 }
 
-function addSlot(index) {
+function addSlot(index, skipToggleCheck = false) {
     const container = document.getElementById(`slots-${index}`);
     // Remove "Ngày nghỉ" placeholder if present
     const placeholder = container.querySelector('p');
@@ -195,15 +205,31 @@ function addSlot(index) {
         <input type="time" name="startTime" value="08:00" placeholder="Từ">
         <span class="text-muted">→</span>
         <input type="time" name="endTime" value="12:00" placeholder="Đến">
-        <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
+        <button type="button" class="btn-remove" onclick="removeSlot(this)" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
     `;
     container.appendChild(row);
     
     // Auto check the toggle
-    const card = container.closest('.day-card');
-    const toggle = card.querySelector('.day-toggle');
-    if (!toggle.checked) {
-        toggle.checked = true;
+    if (!skipToggleCheck) {
+        const card = container.closest('.day-card');
+        const toggle = card.querySelector('.day-toggle');
+        if (!toggle.checked) {
+            toggle.checked = true;
+            toggleDay(toggle);
+        }
+    }
+}
+
+function removeSlot(btn) {
+    const row = btn.closest('.slot-row');
+    const container = row.closest('.slot-container');
+    row.remove();
+    
+    // Nếu xóa hết các ca thì tự động tắt toggle
+    if (!container.querySelector('.slot-row')) {
+        const card = container.closest('.day-card');
+        const toggle = card.querySelector('.day-toggle');
+        toggle.checked = false;
         toggleDay(toggle);
     }
 }

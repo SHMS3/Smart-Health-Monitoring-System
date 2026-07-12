@@ -10,6 +10,7 @@ namespace SmartHealthMonitoring.ViewModels
         public string Email { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public bool IsGoogleAccount { get; set; } // PasswordHash rỗng = đăng nhập Google
+        public string? AvatarUrl { get; set; }
 
         // ── Thông tin bệnh nhân (chỉ dành cho Role = 0) ──
         public int? PatientId { get; set; }
@@ -112,5 +113,8 @@ namespace SmartHealthMonitoring.ViewModels
 
         [MaxLength(100, ErrorMessage = "Giấy phép hành nghề không được vượt quá 100 ký tự.")]
         public string? PracticeLicense { get; set; }
+
+        public string? AvatarUrl { get; set; }
+        public Microsoft.AspNetCore.Http.IFormFile? AvatarFile { get; set; }
     }
 }
