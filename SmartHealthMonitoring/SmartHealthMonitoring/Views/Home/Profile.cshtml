@@ -561,7 +561,23 @@
     ══════════════════════════════ *@
 
 	<div class="profile-hero">
-		<div class="avatar-circle">@initials</div>
+		<div style="position: relative; cursor: pointer;" onclick="document.getElementById('avatarUploadInput').click()" title="Nhấn để thay đổi ảnh đại diện">
+			@if (!string.IsNullOrEmpty(Model.AvatarUrl))
+			{
+				<img src="/Avatar/@Model.UserId" alt="Avatar" class="avatar-circle" style="object-fit: cover; border-radius: 50%;" />
+			}
+			else
+			{
+				<div class="avatar-circle">@initials</div>
+			}
+			<div style="position: absolute; bottom: 0; right: 0; background: #fff; color: #0ea5e9; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 2; border: 2px solid #0ea5e9;">
+				<i class="fas fa-camera" style="font-size: .85rem;"></i>
+			</div>
+		</div>
+		<form id="avatarUploadForm" asp-controller="Home" asp-action="UploadAvatar" method="post" enctype="multipart/form-data" style="display: none;">
+			@Html.AntiForgeryToken()
+			<input type="file" id="avatarUploadInput" name="avatarFile" accept="image/png, image/jpeg, image/jpg" onchange="document.getElementById('avatarUploadForm').submit()" />
+		</form>
 		<div class="hero-info">
 			<h1>@Model.FullName</h1>
 			<p class="hero-sub">@Model.Email</p>

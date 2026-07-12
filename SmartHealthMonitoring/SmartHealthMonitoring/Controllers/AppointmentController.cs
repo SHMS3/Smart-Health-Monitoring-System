@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
@@ -49,11 +50,13 @@ public class AppointmentController : Controller
     // BỆNH NHÂN - Tìm bác sĩ & xem lịch trống
     // ═══════════════════════════════════════════════════════════════
 
-    // GET: /Appointment/FindDoctor?specialty=Tim mạch&date=2024-07-01
+    // GET: /Appointment/FindDoctor
     [Authorize(Roles = "0")]
-    public async Task<IActionResult> FindDoctor(string? specialty, DateOnly? date)
+    public async Task<IActionResult> FindDoctor(string? specialty, string? doctorName, DateOnly? fromDate, DateOnly? toDate, byte? gender, string? session, string? roomNumber)
     {
-        var selectedDate = date ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var startDate = fromDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var endDate = toDate ?? startDate.AddDays(6);
+        if (endDate < startDate) endDate = startDate;
 
         var query = _context.Doctors
             .Include(d => d.User)
@@ -62,17 +65,35 @@ public class AppointmentController : Controller
         if (!string.IsNullOrWhiteSpace(specialty))
             query = query.Where(d => d.Specialty.Contains(specialty));
 
-        var doctors = await query.ToListAsync();
+        if (!string.IsNullOrWhiteSpace(doctorName))
+            query = query.Where(d => d.User.FullName.Contains(doctorName));
 
-        // Với mỗi bác sĩ, lấy số slot còn trống trong 7 ngày tới (từ selectedDate)
+        if (gender.HasValue)
+            query = query.Where(d => d.Sex == gender.Value);
+
+        if (!string.IsNullOrWhiteSpace(roomNumber))
+            query = query.Where(d => d.RoomNumber == roomNumber);
+
+        var doctors = await query.ToListAsync();
+        var doctorIds = doctors.Select(d => d.Id).ToList();
+
+        var allSlots = await _appointmentService.GetAvailableSlotsRangeForDoctorsAsync(doctorIds, startDate, endDate);
+
+        if (!string.IsNullOrEmpty(session))
+        {
+            if (session == "Morning")
+                allSlots = allSlots.Where(s => s.SlotStart.Hour < 12).ToList();
+            else if (session == "Afternoon")
+                allSlots = allSlots.Where(s => s.SlotStart.Hour >= 12).ToList();
+        }
+
+        var slotsByDoctor = allSlots.GroupBy(s => s.DoctorId).ToDictionary(g => g.Key, g => g.ToList());
+
         var doctorSlotsData = new List<DoctorSlotViewModel>();
-        var endDate = selectedDate.AddDays(6);
 
         foreach (var doc in doctors)
         {
-            var slots = await _appointmentService.GetAvailableSlotsRangeAsync(doc.Id, selectedDate, endDate);
-            
-            // Nhóm slot theo từng ngày
+            var slots = slotsByDoctor.GetValueOrDefault(doc.Id, new List<AppointmentSlot>());
             var weeklySlots = slots.GroupBy(s => DateOnly.FromDateTime(s.SlotStart.Date))
                                    .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -80,11 +101,10 @@ public class AppointmentController : Controller
             {
                 Doctor       = doc,
                 WeeklySlots  = weeklySlots,
-                SelectedDate = selectedDate
+                SelectedDate = startDate
             });
         }
 
-        // Sắp xếp: Ai có slot trống đưa lên trên cùng, sau đó xếp theo tên
         doctorSlotsData = doctorSlotsData
             .OrderByDescending(d => d.TotalAvailableSlots > 0)
             .ThenByDescending(d => d.TotalAvailableSlots)
@@ -92,8 +112,15 @@ public class AppointmentController : Controller
             .ToList();
 
         ViewBag.Specialty    = specialty;
-        ViewBag.SelectedDate = selectedDate;
+        ViewBag.DoctorName   = doctorName;
+        ViewBag.FromDate     = startDate;
+        ViewBag.ToDate       = endDate;
+        ViewBag.Gender       = gender;
+        ViewBag.Session      = session;
+        ViewBag.RoomNumber   = roomNumber;
+        
         ViewBag.Specialties  = await _context.Doctors.Select(d => d.Specialty).Distinct().ToListAsync();
+        ViewBag.RoomNumbers  = await _context.Doctors.Where(d => d.RoomNumber != null).Select(d => d.RoomNumber).Distinct().ToListAsync();
 
         return View(doctorSlotsData);
     }
@@ -140,14 +167,18 @@ public class AppointmentController : Controller
                 <p style='font-size: 12px; color: #aaa;'>Hệ thống Y tế SmartHealth - Đồng hành cùng sức khỏe của bạn.</p>
             </div>";
 
-        try
+        var toEmail = patient.User.Email;
+        var serviceScopeFactory = HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>();
+        _ = Task.Run(async () =>
         {
-            await _emailService.SendEmailAsync(patient.User.Email, subject, emailBody);
-        }
-        catch (Exception)
-        {
-            TempData["Error"] = "Không thể gửi email OTP. Vui lòng kiểm tra lại cấu hình mail.";
-        }
+            using var scope = serviceScopeFactory.CreateScope();
+            var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+            try
+            {
+                await emailService.SendEmailAsync(toEmail, subject, emailBody);
+            }
+            catch { /* Ignore warning in background */ }
+        });
 
         ViewBag.SlotId = slotId;
         ViewBag.DoctorName = slot.Doctor.User.FullName;
@@ -315,14 +346,18 @@ public class AppointmentController : Controller
                 </div>
             </div>";
 
-        try
+        var toEmail = patient.User.Email;
+        var serviceScopeFactory = HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>();
+        _ = Task.Run(async () =>
         {
-            await _emailService.SendEmailAsync(patient.User.Email, subject, emailBody);
-        }
-        catch (Exception)
-        {
-            // Email warning ignored
-        }
+            using var scope = serviceScopeFactory.CreateScope();
+            var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+            try
+            {
+                await emailService.SendEmailAsync(toEmail, subject, emailBody);
+            }
+            catch { /* Ignore warning in background */ }
+        });
 
         return RedirectToAction(nameof(BookingConfirmation), new { appointmentId = appointment.Id });
     }

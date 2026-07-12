@@ -752,14 +752,16 @@
                 {
                     var fullName = User.FindFirst("FullName")?.Value ?? "";
                     var lastName = fullName.Split(' ').LastOrDefault() ?? "";
+                    var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
                     <div class="header-auth">
-                        <a asp-controller="Home" asp-action="Profile" class="btn-login">
-                            <i class="fas fa-user me-1"></i> @lastName
+                        <a asp-controller="Home" asp-action="Profile" class="btn-login" style="display: flex; align-items: center; gap: 6px; padding: 4px 16px 4px 6px; border-radius: 50px;">
+                            <img src="/Avatar/@userIdClaim" alt="Avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #e2e8f0;" onerror="this.outerHTML='<i class=\'fas fa-user-circle\' style=\'font-size:1.5rem;color:#64748b;\'></i>'" />
+                            <span>@lastName</span>
                         </a>
                         <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn-login" style="border-color:#e53935;color:#e53935;">Đăng xuất</button>
+                            <button type="submit" class="btn-login" style="border-color:#e53935;color:#e53935;border-radius: 50px;padding: 8px 16px;">Đăng xuất</button>
                         </form>
                     </div>
                 }

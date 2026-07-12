@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace SmartHealthMonitoring.Models;
@@ -20,6 +20,8 @@ public partial class User
     public DateTime CreatedAt { get; set; }
 
     public string? LockReason { get; set; }
+
+    public string? AvatarUrl { get; set; }
 
     public virtual ICollection<Doctor> Doctors { get; set; } = new List<Doctor>();
 
