@@ -59,4 +59,26 @@ public interface IAppointmentService
 
     /// <summary>Từ chối yêu cầu hủy lịch</summary>
     Task<bool> RejectAppointmentCancellationAsync(int appointmentId);
+
+    // ═══ SCH-05: Cancel Direct (>= 1 giờ trước) ═══════════════════
+    /// <summary>Huỷ lịch trực tiếp nếu còn >= 1h trước giờ hẹn, nhả slot + SignalR</summary>
+    Task<(bool success, string message)> CancelDirectAsync(int appointmentId, int patientId);
+
+    // ═══ SCH-06: Reschedule ════════════════════════════════════════
+    /// <summary>Dời lịch: Transaction huỷ slot cũ + lock slot mới đồng thời</summary>
+    Task<(bool success, string message, Appointment? newAppointment)> RescheduleAppointmentAsync(
+        int appointmentId, int newSlotId, int patientId);
+
+    // ═══ SCH-07: Waitlist ══════════════════════════════════════════
+    /// <summary>Đăng ký nhận thông báo khi có slot trống</summary>
+    Task<(bool success, string message)> JoinWaitlistAsync(int patientId, int doctorId, DateOnly watchDate);
+
+    /// <summary>Lấy danh sách waitlist của bệnh nhân</summary>
+    Task<List<AppointmentWaitlist>> GetPatientWaitlistAsync(int patientId);
+
+    /// <summary>Huỷ đăng ký waitlist</summary>
+    Task<bool> RemoveFromWaitlistAsync(int waitlistId, int patientId);
+
+    /// <summary>Thông báo email cho waitlist subscribers khi slot được nhả</summary>
+    Task NotifyWaitlistSubscribersAsync(int doctorId, DateOnly date);
 }

@@ -160,7 +160,7 @@
                     <i class="fas fa-calendar-week me-1"></i>@item.TotalAvailableSlots slot trống trong 7 ngày
                 </div>
             </div>
-            <div class="slot-grid flex-column">
+             <div class="slot-grid flex-column">
                 @if (item.TotalAvailableSlots > 0)
                 {
                     foreach (var dateGroup in item.WeeklySlots.OrderBy(k => k.Key))
@@ -174,7 +174,7 @@
                                 <div class="d-flex flex-wrap gap-2">
                                     @foreach(var slot in dateGroup.Value)
                                     {
-                                        <a href="/Appointment/VerifyOtp?slotId=@slot.Id" class="slot-btn available">
+                                        <a href="/Appointment/VerifyOtp?slotId=@slot.Id" class="slot-btn available" id="slot-btn-@slot.Id">
                                             @slot.SlotStart.ToString("HH:mm") - @slot.SlotEnd.ToString("HH:mm")
                                         </a>
                                     }
@@ -185,12 +185,31 @@
                 }
                 else
                 {
-                    <div class="no-slots">Không có ca khám trống nào trong 7 ngày tới.</div>
+                    <div class="no-slots">Không có ca khám trống nào trong khoảng thời gian tìm kiếm.</div>
                 }
+
+                <!-- SCH-07: Form đăng ký theo dõi waitlist -->
+                <div class="border-top pt-3 mt-3 w-100">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="small text-muted fw-semibold"><i class="fas fa-bell me-1" style="color:#6366f1"></i>Đăng ký theo dõi slot trống:</span>
+                        <input type="date" class="form-control form-control-sm d-inline-block w-auto" 
+                               id="wl-date-@item.Doctor.Id" 
+                               min="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")" 
+                               value="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")" />
+                        <button class="btn btn-sm text-white btn-join-wl" 
+                                style="background:#6366f1; border-radius:8px; font-weight:600;"
+                                onclick="joinWaitlist(@item.Doctor.Id)">
+                            <i class="fas fa-paper-plane me-1"></i>Đăng ký nhận Email
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     }
 </div>
+
+<!-- Toast Container cho thông báo -->
+<div id="toastContainer" style="position:fixed; top:24px; right:24px; z-index:1100; display:flex; flex-direction:column; gap:10px;"></div>
 
 @section Scripts {
     <script>
@@ -202,6 +221,77 @@
                 return false;
             }
             return true;
+        }
+
+        // SCH-07: Đăng ký waitlist AJAX
+        function joinWaitlist(doctorId) {
+            const dateInput = document.getElementById(`wl-date-${doctorId}`);
+            if (!dateInput || !dateInput.value) {
+                showToast('error', 'Vui lòng chọn ngày cần theo dõi.');
+                return;
+            }
+            
+            fetch('/Appointment/JoinWaitlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    doctorId: doctorId,
+                    watchDate: dateInput.value
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', data.message);
+                } else {
+                    showToast('error', data.message || 'Không thể đăng ký.');
+                }
+            })
+            .catch(() => {
+                showToast('error', 'Có lỗi xảy ra, vui lòng thử lại.');
+            });
+        }
+
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.style.background = 'white';
+            toast.style.borderRadius = '14px';
+            toast.style.padding = '16px 22px';
+            toast.style.boxShadow = '0 8px 30px rgba(0,0,0,.12)';
+            toast.style.display = 'flex';
+            toast.style.alignItems = 'center';
+            toast.style.gap = '12px';
+            toast.style.minWidth = '300px';
+            toast.style.animation = 'slideInRight .4s ease';
+            toast.style.borderLeft = type === 'success' ? '4px solid #22c55e' : '4px solid #ef4444';
+            
+            // Keyframe animation definition inline if not defined
+            if (!document.getElementById('slideInRightKeyframe')) {
+                const style = document.createElement('style');
+                style.id = 'slideInRightKeyframe';
+                style.innerHTML = `
+                    @@keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}" 
+                   style="color:${type === 'success' ? '#22c55e' : '#ef4444'}; font-size:1.2rem"></i>
+                <span style="font-size:.88rem; font-weight:500">${message}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity .3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
         document.addEventListener("DOMContentLoaded", function () {

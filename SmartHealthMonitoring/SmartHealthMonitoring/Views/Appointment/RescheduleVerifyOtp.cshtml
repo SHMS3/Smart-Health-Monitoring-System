@@ -1,0 +1,147 @@
+@{
+    ViewData["Title"] = "Xác thực OTP dời lịch";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
+    .otp-card {
+        max-width: 520px; margin: 60px auto; background: white;
+        border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,.06);
+        padding: 40px; text-align: center;
+    }
+    .otp-icon {
+        width: 80px; height: 80px; border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #818cf8);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 24px; color: white; font-size: 2rem;
+    }
+    .otp-card h3 { font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+    .otp-card .subtitle { color: #64748b; font-size: .9rem; margin-bottom: 28px; }
+
+    .transfer-info {
+        background: #f8fafc; border-radius: 14px; padding: 20px;
+        margin-bottom: 28px; text-align: left;
+    }
+    .transfer-info .row-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: .88rem; }
+    .transfer-info .row-item .label { color: #64748b; }
+    .transfer-info .row-item .value { font-weight: 600; color: #1e293b; }
+    .transfer-info .arrow { text-align: center; font-size: 1.2rem; color: #6366f1; margin: 8px 0; }
+
+    .otp-inputs {
+        display: flex; gap: 10px; justify-content: center; margin-bottom: 24px;
+    }
+    .otp-inputs input {
+        width: 50px; height: 56px; border-radius: 12px; border: 2px solid #e2e8f0;
+        text-align: center; font-size: 1.4rem; font-weight: 700; color: #1e293b;
+        transition: border-color .2s;
+    }
+    .otp-inputs input:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+
+    .btn-verify {
+        background: linear-gradient(135deg, #6366f1, #818cf8); color: white;
+        border: none; padding: 14px 40px; border-radius: 14px; font-weight: 700;
+        font-size: 1rem; cursor: pointer; transition: all .2s; width: 100%;
+    }
+    .btn-verify:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,.3); }
+    .btn-verify:disabled { opacity: .5; cursor: not-allowed; }
+
+    .error-msg { color: #ef4444; font-size: .85rem; margin-bottom: 16px; }
+</style>
+
+<div class="container pt-5 mt-3 pb-5">
+    <div class="otp-card">
+        <div class="otp-icon"><i class="fas fa-shield-alt"></i></div>
+        <h3>Xác thực dời lịch</h3>
+        <p class="subtitle">Nhập mã OTP 6 chữ số đã được gửi tới email của bạn.</p>
+
+        <div class="transfer-info">
+            <div class="row-item">
+                <span class="label">Bác sĩ</span>
+                <span class="value">BS. @ViewBag.DoctorName</span>
+            </div>
+            <div class="row-item">
+                <span class="label">Chuyên khoa</span>
+                <span class="value">@ViewBag.Specialty</span>
+            </div>
+            <div class="row-item">
+                <span class="label">Lịch cũ</span>
+                <span class="value" style="text-decoration:line-through;color:#94a3b8">@ViewBag.OldSlot</span>
+            </div>
+            <div class="arrow">↓</div>
+            <div class="row-item">
+                <span class="label">Lịch mới</span>
+                <span class="value" style="color:#16a34a">@ViewBag.NewSlot</span>
+            </div>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="error-msg">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div><i class="fas fa-exclamation-circle me-1"></i>@error.ErrorMessage</div>
+                }
+            </div>
+        }
+
+        <form asp-action="RescheduleVerifyOtp" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="appointmentId" value="@ViewBag.AppointmentId" />
+            <input type="hidden" name="newSlotId" value="@ViewBag.NewSlotId" />
+            <input type="hidden" name="otpCode" id="otpFull" />
+
+            <div class="otp-inputs" id="otpInputs">
+                <input type="text" maxlength="1" data-idx="0" autofocus />
+                <input type="text" maxlength="1" data-idx="1" />
+                <input type="text" maxlength="1" data-idx="2" />
+                <input type="text" maxlength="1" data-idx="3" />
+                <input type="text" maxlength="1" data-idx="4" />
+                <input type="text" maxlength="1" data-idx="5" />
+            </div>
+
+            <button type="submit" class="btn-verify" id="btnVerify">
+                <i class="fas fa-check me-2"></i>Xác nhận dời lịch
+            </button>
+        </form>
+
+        <p style="margin-top: 20px; font-size: .82rem; color: #94a3b8;">
+            <i class="fas fa-info-circle me-1"></i>Mã OTP có hiệu lực trong 10 phút.
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const inputs = document.querySelectorAll('#otpInputs input');
+    const fullInput = document.getElementById('otpFull');
+
+    inputs.forEach((inp, i) => {
+        inp.addEventListener('input', () => {
+            inp.value = inp.value.replace(/\D/g, '');
+            if (inp.value && i < inputs.length - 1) inputs[i + 1].focus();
+            updateFull();
+        });
+        inp.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !inp.value && i > 0) {
+                inputs[i - 1].focus();
+                inputs[i - 1].value = '';
+                updateFull();
+            }
+        });
+        inp.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const paste = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+            paste.split('').forEach((ch, j) => { if (inputs[j]) inputs[j].value = ch; });
+            if (paste.length > 0 && paste.length <= 6) inputs[Math.min(paste.length, 5)].focus();
+            updateFull();
+        });
+    });
+
+    function updateFull() {
+        fullInput.value = Array.from(inputs).map(i => i.value).join('');
+    }
+})();
+</script>
+}

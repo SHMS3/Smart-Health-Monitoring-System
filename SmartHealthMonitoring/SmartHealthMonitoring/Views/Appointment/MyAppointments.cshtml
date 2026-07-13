@@ -1,46 +1,174 @@
 @model List<SmartHealthMonitoring.Models.Appointment>
 @{
     ViewData["Title"] = "Lịch hẹn của tôi";
-    var upcoming  = Model.Where(a => a.Slot.SlotStart >= DateTime.UtcNow && a.Status == SmartHealthMonitoring.Models.AppointmentStatus.Confirmed).ToList();
-    var past      = Model.Where(a => a.Slot.SlotStart < DateTime.UtcNow || a.Status != SmartHealthMonitoring.Models.AppointmentStatus.Confirmed).ToList();
+    var now = DateTime.UtcNow;
+
+    // SCH-04: Phân loại 3 tab
+    var upcoming = Model.Where(a =>
+        a.Slot.SlotStart >= now &&
+        (a.Status == SmartHealthMonitoring.Models.AppointmentStatus.Confirmed ||
+         a.Status == SmartHealthMonitoring.Models.AppointmentStatus.Pending ||
+         a.Status == SmartHealthMonitoring.Models.AppointmentStatus.CancellationPending))
+        .OrderBy(a => a.Slot.SlotStart).ToList();
+
+    var completed = Model.Where(a =>
+        a.Status == SmartHealthMonitoring.Models.AppointmentStatus.Completed)
+        .OrderByDescending(a => a.Slot.SlotStart).ToList();
+
+    var cancelled = Model.Where(a =>
+        a.Status == SmartHealthMonitoring.Models.AppointmentStatus.CancelledByPatient ||
+        a.Status == SmartHealthMonitoring.Models.AppointmentStatus.CancelledByDoctor ||
+        a.Status == SmartHealthMonitoring.Models.AppointmentStatus.NoShow)
+        .OrderByDescending(a => a.Slot.SlotStart).ToList();
+
+    // Waitlist
+    var waitlistItems = ViewBag.WaitlistItems as List<SmartHealthMonitoring.Models.AppointmentWaitlist> ?? new List<SmartHealthMonitoring.Models.AppointmentWaitlist>();
 }
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
     body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
-    .page-header { background: linear-gradient(135deg, #4338ca, #6366f1); color: white; border-radius: 20px; padding: 32px 40px; margin-bottom: 28px; }
-    .section-title { font-size: 1rem; font-weight: 700; color: #475569; margin-bottom: 16px; text-transform: uppercase; letter-spacing: .5px; }
+    .page-header {
+        background: linear-gradient(135deg, #4338ca, #6366f1);
+        color: white; border-radius: 20px; padding: 32px 40px; margin-bottom: 28px;
+        position: relative; overflow: hidden;
+    }
+    .page-header::after {
+        content: ''; position: absolute; top: -50%; right: -20%;
+        width: 300px; height: 300px; border-radius: 50%;
+        background: rgba(255,255,255,.08);
+    }
+
+    /* ── Tab Navigation ─────────────────────────────────────── */
+    .tab-nav {
+        display: flex; gap: 4px; background: #e2e8f0; border-radius: 14px;
+        padding: 4px; margin-bottom: 24px;
+    }
+    .tab-btn {
+        flex: 1; padding: 12px 20px; border-radius: 12px; border: none;
+        background: transparent; font-weight: 600; font-size: .9rem;
+        color: #64748b; cursor: pointer; transition: all .25s;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .tab-btn.active { background: white; color: #4338ca; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .tab-btn:hover:not(.active) { color: #334155; background: rgba(255,255,255,.5); }
+    .tab-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 22px; height: 22px; border-radius: 11px;
+        font-size: .72rem; font-weight: 700; padding: 0 6px;
+    }
+    .tab-badge.green { background: #dcfce7; color: #16a34a; }
+    .tab-badge.blue  { background: #dbeafe; color: #1d4ed8; }
+    .tab-badge.red   { background: #fee2e2; color: #dc2626; }
+
+    .tab-panel { display: none; animation: fadeIn .3s ease; }
+    .tab-panel.active { display: block; }
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Appointment Card ───────────────────────────────────── */
     .appt-card {
         background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.07);
         padding: 22px 28px; margin-bottom: 14px; display: flex; gap: 20px; align-items: center;
-        border-left: 4px solid transparent; transition: box-shadow .2s;
+        border-left: 4px solid transparent; transition: all .25s;
     }
-    .appt-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,.12); }
+    .appt-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,.12); transform: translateY(-1px); }
     .appt-card.confirmed { border-left-color: #22c55e; }
+    .appt-card.pending   { border-left-color: #f59e0b; }
+    .appt-card.cancel-pending { border-left-color: #f97316; }
     .appt-card.completed { border-left-color: #3b82f6; }
-    .appt-card.cancelled { border-left-color: #ef4444; opacity: .7; }
-    .appt-card.noshow   { border-left-color: #f59e0b; opacity: .7; }
+    .appt-card.cancelled { border-left-color: #ef4444; }
+    .appt-card.noshow    { border-left-color: #a855f7; }
+
     .appt-date-box {
-        background: #f0f4f8; border-radius: 12px; padding: 12px 16px;
-        text-align: center; min-width: 70px; flex-shrink: 0;
+        background: linear-gradient(135deg, #f0f4f8, #e8ecf1); border-radius: 14px; padding: 14px 18px;
+        text-align: center; min-width: 72px; flex-shrink: 0;
     }
-    .appt-date-box .day  { font-size: 1.8rem; font-weight: 700; color: #1e293b; line-height: 1; }
-    .appt-date-box .month { font-size: .75rem; color: #64748b; }
+    .appt-date-box .day   { font-size: 1.8rem; font-weight: 800; color: #1e293b; line-height: 1; }
+    .appt-date-box .month { font-size: .72rem; color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
     .appt-info { flex: 1; }
-    .appt-info .doctor { font-weight: 600; color: #1e293b; margin-bottom: 4px; }
-    .appt-info .meta   { font-size: .85rem; color: #64748b; }
+    .appt-info .doctor { font-weight: 600; color: #1e293b; margin-bottom: 4px; font-size: .95rem; }
+    .appt-info .meta   { font-size: .83rem; color: #64748b; }
+
+    /* ── Status badges ──────────────────────────────────────── */
     .status-badge {
-        padding: 4px 14px; border-radius: 20px; font-size: .78rem; font-weight: 600;
+        padding: 5px 14px; border-radius: 20px; font-size: .76rem; font-weight: 600;
+        white-space: nowrap;
     }
-    .status-confirmed { background: #dcfce7; color: #16a34a; }
-    .status-completed { background: #dbeafe; color: #1d4ed8; }
-    .status-cancelled { background: #fee2e2; color: #dc2626; }
-    .status-noshow    { background: #fef3c7; color: #d97706; }
-    .btn-cancel-appt {
-        padding: 6px 16px; border-radius: 8px; border: 1.5px solid #ef4444;
-        color: #ef4444; background: none; font-size: .83rem; cursor: pointer; transition: all .2s;
+    .status-confirmed       { background: #dcfce7; color: #16a34a; }
+    .status-pending         { background: #fef3c7; color: #d97706; }
+    .status-cancel-pending  { background: #ffedd5; color: #ea580c; }
+    .status-completed       { background: #dbeafe; color: #1d4ed8; }
+    .status-cancelled       { background: #fee2e2; color: #dc2626; }
+    .status-noshow          { background: #f3e8ff; color: #9333ea; }
+
+    /* ── Action buttons ─────────────────────────────────────── */
+    .btn-action {
+        padding: 7px 16px; border-radius: 10px; font-size: .8rem; font-weight: 600;
+        cursor: pointer; transition: all .2s; text-decoration: none; display: inline-flex;
+        align-items: center; gap: 5px; border: 1.5px solid;
     }
-    .btn-cancel-appt:hover { background: #ef4444; color: white; }
+    .btn-cancel  { border-color: #ef4444; color: #ef4444; background: none; }
+    .btn-cancel:hover { background: #ef4444; color: white; }
+    .btn-reschedule { border-color: #6366f1; color: #6366f1; background: none; }
+    .btn-reschedule:hover { background: #6366f1; color: white; }
+
+    /* ── Cancel Modal ───────────────────────────────────────── */
+    .modal-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45);
+        z-index: 1050; align-items: center; justify-content: center;
+        animation: fadeOverlay .2s ease;
+    }
+    .modal-overlay.show { display: flex; }
+    @@keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
+    .cancel-modal {
+        background: white; border-radius: 20px; padding: 36px; max-width: 460px; width: 90%;
+        box-shadow: 0 20px 60px rgba(0,0,0,.15); animation: slideUp .3s ease;
+    }
+    @@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .cancel-modal h4 { font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+    .cancel-modal .detail { background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 20px; font-size: .88rem; }
+    .cancel-modal .btn-row { display: flex; gap: 12px; }
+    .cancel-modal .btn-row button { flex: 1; padding: 12px; border-radius: 12px; font-weight: 600; border: none; cursor: pointer; transition: all .2s; }
+    .cancel-modal .btn-confirm-cancel { background: #ef4444; color: white; }
+    .cancel-modal .btn-confirm-cancel:hover { background: #dc2626; }
+    .cancel-modal .btn-dismiss { background: #e2e8f0; color: #475569; }
+    .cancel-modal .btn-dismiss:hover { background: #cbd5e1; }
+
+    /* ── Waitlist Section ───────────────────────────────────── */
+    .waitlist-card {
+        background: white; border-radius: 14px; padding: 18px 24px; margin-bottom: 10px;
+        display: flex; align-items: center; gap: 16px;
+        border-left: 4px solid #8b5cf6; box-shadow: 0 1px 8px rgba(0,0,0,.05);
+    }
+    .waitlist-card .wl-info { flex: 1; }
+    .btn-leave-wl {
+        padding: 5px 14px; border-radius: 8px; border: 1.5px solid #94a3b8;
+        color: #64748b; background: none; font-size: .78rem; font-weight: 600;
+        cursor: pointer; transition: all .2s;
+    }
+    .btn-leave-wl:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* ── Empty state ────────────────────────────────────────── */
+    .empty-state {
+        text-align: center; color: #94a3b8; padding: 48px 20px;
+        background: white; border-radius: 16px; margin-bottom: 14px;
+    }
+    .empty-state i { font-size: 2.5rem; margin-bottom: 12px; display: block; opacity: .3; }
+    .empty-state p { margin: 0; font-size: .92rem; }
+
+    /* ── Toast notification ─────────────────────────────────── */
+    .toast-container {
+        position: fixed; top: 24px; right: 24px; z-index: 1100;
+        display: flex; flex-direction: column; gap: 10px;
+    }
+    .toast-msg {
+        background: white; border-radius: 14px; padding: 16px 22px;
+        box-shadow: 0 8px 30px rgba(0,0,0,.12); display: flex; align-items: center; gap: 12px;
+        animation: slideInRight .4s ease; min-width: 300px;
+    }
+    .toast-msg.success { border-left: 4px solid #22c55e; }
+    .toast-msg.error   { border-left: 4px solid #ef4444; }
+    @@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 </style>
 
 <div class="container pt-5 mt-3 pb-5">
@@ -68,84 +196,311 @@
         </div>
     }
 
-    <!-- Sắp tới -->
-    <div class="section-title"><i class="fas fa-clock me-2 text-success"></i>Sắp tới (@upcoming.Count)</div>
-    @if (!upcoming.Any())
-    {
-        <div class="text-center text-muted py-4 mb-4">
-            <i class="fas fa-calendar-times fa-2x d-block mb-2 opacity-25"></i>
-            Không có lịch hẹn sắp tới.
-        </div>
-    }
-    @foreach (var a in upcoming.OrderBy(x => x.Slot.SlotStart))
-    {
-        <div class="appt-card confirmed">
-            <div class="appt-date-box">
-                <div class="day">@a.Slot.SlotStart.Day</div>
-                <div class="month">@a.Slot.SlotStart.ToString("MMM")</div>
-            </div>
-            <div class="appt-info">
-                <div class="doctor"><i class="fas fa-user-md me-1 text-muted"></i>BS. @a.Doctor.User.FullName</div>
-                <div class="meta">
-                    <i class="fas fa-clock me-1"></i>@a.Slot.SlotStart.ToString("HH:mm") – @a.Slot.SlotEnd.ToString("HH:mm")
-                    <span class="mx-2">·</span>
-                    <i class="fas fa-stethoscope me-1"></i>@a.Doctor.Specialty
-                </div>
-                @if (!string.IsNullOrEmpty(a.PatientNote))
-                {
-                    <div class="meta mt-1 text-muted"><i class="fas fa-sticky-note me-1"></i>@a.PatientNote</div>
-                }
-            </div>
-            <div class="d-flex flex-column align-items-end gap-2">
-                <span class="status-badge status-confirmed">✓ Đã xác nhận</span>
-                <a asp-action="SupportPortal" asp-route-appointmentId="@a.Id" class="btn-cancel-appt" style="text-decoration:none">
-                    Huỷ lịch
-                </a>
-            </div>
-        </div>
-    }
+    <!-- ═══ Tab Navigation ═══ -->
+    <div class="tab-nav" id="tabNav">
+        <button class="tab-btn active" data-tab="upcoming" onclick="switchTab('upcoming')">
+            <i class="fas fa-clock"></i> Sắp tới
+            <span class="tab-badge green" id="badgeUpcoming">@upcoming.Count</span>
+        </button>
+        <button class="tab-btn" data-tab="completed" onclick="switchTab('completed')">
+            <i class="fas fa-check-circle"></i> Đã hoàn thành
+            <span class="tab-badge blue" id="badgeCompleted">@completed.Count</span>
+        </button>
+        <button class="tab-btn" data-tab="cancelled" onclick="switchTab('cancelled')">
+            <i class="fas fa-times-circle"></i> Đã huỷ
+            <span class="tab-badge red" id="badgeCancelled">@cancelled.Count</span>
+        </button>
+    </div>
 
-    <!-- Lịch sử -->
-    @if (past.Any())
-    {
-        <div class="section-title mt-4"><i class="fas fa-history me-2 text-muted"></i>Lịch sử (@past.Count)</div>
-        @foreach (var a in past.OrderByDescending(x => x.Slot.SlotStart))
+    <!-- ═══ Tab: Sắp tới ═══ -->
+    <div class="tab-panel active" id="panel-upcoming">
+        @if (!upcoming.Any())
         {
+            <div class="empty-state">
+                <i class="fas fa-calendar-check"></i>
+                <p>Bạn chưa có lịch hẹn nào sắp tới.</p>
+            </div>
+        }
+        @foreach (var a in upcoming)
+        {
+            var canDirectCancel = (a.Slot.SlotStart - now).TotalHours >= 1;
             var statusClass = a.Status switch {
-                SmartHealthMonitoring.Models.AppointmentStatus.Completed => "completed",
-                SmartHealthMonitoring.Models.AppointmentStatus.CancelledByPatient or
-                SmartHealthMonitoring.Models.AppointmentStatus.CancelledByDoctor => "cancelled",
-                SmartHealthMonitoring.Models.AppointmentStatus.NoShow => "noshow",
+                SmartHealthMonitoring.Models.AppointmentStatus.Pending => "pending",
+                SmartHealthMonitoring.Models.AppointmentStatus.CancellationPending => "cancel-pending",
                 _ => "confirmed"
             };
             var statusLabel = a.Status switch {
-                SmartHealthMonitoring.Models.AppointmentStatus.Completed => "✓ Đã khám",
-                SmartHealthMonitoring.Models.AppointmentStatus.CancelledByPatient => "Bạn đã huỷ",
-                SmartHealthMonitoring.Models.AppointmentStatus.CancelledByDoctor => "Bác sĩ huỷ",
-                SmartHealthMonitoring.Models.AppointmentStatus.NoShow => "⚠ Không đến",
-                _ => "Đã xác nhận"
+                SmartHealthMonitoring.Models.AppointmentStatus.Pending => "⏳ Chờ duyệt",
+                SmartHealthMonitoring.Models.AppointmentStatus.CancellationPending => "⏳ Chờ duyệt huỷ",
+                _ => "✓ Đã xác nhận"
             };
-            <div class="appt-card @statusClass">
+            var statusBadgeClass = a.Status switch {
+                SmartHealthMonitoring.Models.AppointmentStatus.Pending => "status-pending",
+                SmartHealthMonitoring.Models.AppointmentStatus.CancellationPending => "status-cancel-pending",
+                _ => "status-confirmed"
+            };
+            <div class="appt-card @statusClass" id="appt-card-@a.Id">
                 <div class="appt-date-box">
                     <div class="day">@a.Slot.SlotStart.Day</div>
-                    <div class="month">@a.Slot.SlotStart.ToString("MMM")</div>
+                    <div class="month">@a.Slot.SlotStart.ToString("MMM yyyy")</div>
                 </div>
                 <div class="appt-info">
                     <div class="doctor"><i class="fas fa-user-md me-1 text-muted"></i>BS. @a.Doctor.User.FullName</div>
                     <div class="meta">
-                        <i class="fas fa-clock me-1"></i>@a.Slot.SlotStart.ToString("HH:mm")
-                        <span class="mx-2">·</span>@a.Doctor.Specialty
+                        <i class="fas fa-clock me-1"></i>@a.Slot.SlotStart.ToString("HH:mm") – @a.Slot.SlotEnd.ToString("HH:mm")
+                        <span class="mx-2">·</span>
+                        <i class="fas fa-stethoscope me-1"></i>@a.Doctor.Specialty
+                        @if (!string.IsNullOrEmpty(a.Doctor.RoomNumber))
+                        {
+                            <span class="mx-2">·</span>
+                            <i class="fas fa-door-open me-1"></i>@a.Doctor.RoomNumber
+                        }
                     </div>
+                    @if (!string.IsNullOrEmpty(a.PatientNote))
+                    {
+                        <div class="meta mt-1"><i class="fas fa-sticky-note me-1"></i>@a.PatientNote</div>
+                    }
                 </div>
-                <span class="status-badge status-@statusClass">@statusLabel</span>
+                <div class="d-flex flex-column align-items-end gap-2">
+                    <span class="status-badge @statusBadgeClass">@statusLabel</span>
+                    @if (a.Status == SmartHealthMonitoring.Models.AppointmentStatus.Confirmed)
+                    {
+                        <div class="d-flex gap-2">
+                            <a asp-action="Reschedule" asp-route-appointmentId="@a.Id" class="btn-action btn-reschedule">
+                                <i class="fas fa-calendar-alt"></i> Dời lịch
+                            </a>
+                            @if (canDirectCancel)
+                            {
+                                <button class="btn-action btn-cancel"
+                                        onclick="showCancelModal(@a.Id, 'BS. @a.Doctor.User.FullName', '@a.Slot.SlotStart.ToString("HH:mm") – @a.Slot.SlotEnd.ToString("HH:mm"), @a.Slot.SlotStart.ToString("dd/MM/yyyy")', '@a.Doctor.Specialty')">
+                                    <i class="fas fa-times"></i> Huỷ lịch
+                                </button>
+                            }
+                            else
+                            {
+                                <a asp-action="SupportPortal" asp-route-appointmentId="@a.Id" class="btn-action btn-cancel" title="Cần gửi yêu cầu huỷ do còn dưới 1 giờ">
+                                    <i class="fas fa-headset"></i> Yêu cầu huỷ
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
             </div>
         }
+    </div>
+
+    <!-- ═══ Tab: Đã hoàn thành ═══ -->
+    <div class="tab-panel" id="panel-completed">
+        @if (!completed.Any())
+        {
+            <div class="empty-state">
+                <i class="fas fa-clipboard-check"></i>
+                <p>Chưa có lịch hẹn đã hoàn thành.</p>
+            </div>
+        }
+        @foreach (var a in completed)
+        {
+            <div class="appt-card completed">
+                <div class="appt-date-box">
+                    <div class="day">@a.Slot.SlotStart.Day</div>
+                    <div class="month">@a.Slot.SlotStart.ToString("MMM yyyy")</div>
+                </div>
+                <div class="appt-info">
+                    <div class="doctor"><i class="fas fa-user-md me-1 text-muted"></i>BS. @a.Doctor.User.FullName</div>
+                    <div class="meta">
+                        <i class="fas fa-clock me-1"></i>@a.Slot.SlotStart.ToString("HH:mm") – @a.Slot.SlotEnd.ToString("HH:mm")
+                        <span class="mx-2">·</span>
+                        <i class="fas fa-stethoscope me-1"></i>@a.Doctor.Specialty
+                    </div>
+                </div>
+                <span class="status-badge status-completed">✓ Đã khám</span>
+            </div>
+        }
+    </div>
+
+    <!-- ═══ Tab: Đã huỷ ═══ -->
+    <div class="tab-panel" id="panel-cancelled">
+        @if (!cancelled.Any())
+        {
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <p>Không có lịch hẹn đã huỷ.</p>
+            </div>
+        }
+        @foreach (var a in cancelled)
+        {
+            var statusClass = a.Status switch {
+                SmartHealthMonitoring.Models.AppointmentStatus.NoShow => "noshow",
+                _ => "cancelled"
+            };
+            var statusLabel = a.Status switch {
+                SmartHealthMonitoring.Models.AppointmentStatus.CancelledByPatient => "Bạn đã huỷ",
+                SmartHealthMonitoring.Models.AppointmentStatus.CancelledByDoctor => "Bác sĩ huỷ",
+                SmartHealthMonitoring.Models.AppointmentStatus.NoShow => "Không đến",
+                _ => "Đã huỷ"
+            };
+            var badgeClass = a.Status switch {
+                SmartHealthMonitoring.Models.AppointmentStatus.NoShow => "status-noshow",
+                _ => "status-cancelled"
+            };
+            <div class="appt-card @statusClass">
+                <div class="appt-date-box">
+                    <div class="day">@a.Slot.SlotStart.Day</div>
+                    <div class="month">@a.Slot.SlotStart.ToString("MMM yyyy")</div>
+                </div>
+                <div class="appt-info">
+                    <div class="doctor"><i class="fas fa-user-md me-1 text-muted"></i>BS. @a.Doctor.User.FullName</div>
+                    <div class="meta">
+                        <i class="fas fa-clock me-1"></i>@a.Slot.SlotStart.ToString("HH:mm") – @a.Slot.SlotEnd.ToString("HH:mm")
+                        <span class="mx-2">·</span>
+                        <i class="fas fa-stethoscope me-1"></i>@a.Doctor.Specialty
+                    </div>
+                </div>
+                <span class="status-badge @badgeClass">@statusLabel</span>
+            </div>
+        }
+    </div>
+
+    <!-- ═══ Waitlist Section ═══ -->
+    @if (waitlistItems.Any())
+    {
+        <div style="margin-top: 32px;">
+            <h5 class="fw-bold mb-3"><i class="fas fa-bell me-2" style="color:#8b5cf6"></i>Danh sách theo dõi slot</h5>
+            @foreach (var wl in waitlistItems)
+            {
+                <div class="waitlist-card" id="wl-@wl.Id">
+                    <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#a78bfa);display:flex;align-items:center;justify-content:center;color:white;font-size:1.1rem;">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="wl-info">
+                        <div class="fw-semibold" style="font-size:.9rem;">BS. @wl.Doctor.User.FullName — @wl.Doctor.Specialty</div>
+                        <div style="font-size:.8rem;color:#64748b;">Theo dõi ngày @wl.WatchDate.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <button class="btn-leave-wl" onclick="leaveWaitlist(@wl.Id)">
+                        <i class="fas fa-times me-1"></i>Huỷ
+                    </button>
+                </div>
+            }
+        </div>
     }
 </div>
+
+<!-- ═══ Cancel Confirmation Modal ═══ -->
+<div class="modal-overlay" id="cancelModal">
+    <div class="cancel-modal">
+        <h4><i class="fas fa-exclamation-triangle me-2" style="color:#ef4444"></i>Xác nhận huỷ lịch</h4>
+        <p style="color:#64748b;font-size:.9rem;">Bạn có chắc chắn muốn huỷ lịch hẹn này? Hành động này không thể hoàn tác.</p>
+        <div class="detail">
+            <div><strong>Bác sĩ:</strong> <span id="cm-doctor"></span></div>
+            <div><strong>Thời gian:</strong> <span id="cm-time"></span></div>
+            <div><strong>Chuyên khoa:</strong> <span id="cm-specialty"></span></div>
+        </div>
+        <div class="btn-row">
+            <button class="btn-dismiss" onclick="closeCancelModal()">Không, giữ lại</button>
+            <button class="btn-confirm-cancel" id="btnConfirmCancel" onclick="confirmCancel()">
+                <i class="fas fa-trash-alt me-1"></i>Huỷ lịch hẹn
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
 
 @section Scripts {
 <script src="https://unpkg.com/@@microsoft/signalr@@8.0.0/dist/browser/signalr.min.js"></script>
 <script>
+// ─── Tab Switching ────────────────────────────────────────────────
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    document.getElementById(`panel-${tabName}`).classList.add('active');
+}
+
+// ─── Cancel Modal ─────────────────────────────────────────────────
+let cancelApptId = null;
+function showCancelModal(id, doctor, time, specialty) {
+    cancelApptId = id;
+    document.getElementById('cm-doctor').textContent = doctor;
+    document.getElementById('cm-time').textContent = time;
+    document.getElementById('cm-specialty').textContent = specialty;
+    document.getElementById('cancelModal').classList.add('show');
+}
+function closeCancelModal() {
+    document.getElementById('cancelModal').classList.remove('show');
+    cancelApptId = null;
+}
+function confirmCancel() {
+    if (!cancelApptId) return;
+    const btn = document.getElementById('btnConfirmCancel');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang huỷ...';
+
+    fetch('/Appointment/CancelDirect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' },
+        body: JSON.stringify({ appointmentId: cancelApptId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        closeCancelModal();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash-alt me-1"></i>Huỷ lịch hẹn';
+        if (data.success) {
+            showToast('success', 'Đã huỷ lịch hẹn thành công!');
+            const card = document.getElementById('appt-card-' + cancelApptId);
+            if (card) {
+                card.style.transition = 'all .4s';
+                card.style.opacity = '0';
+                card.style.transform = 'translateX(30px)';
+                setTimeout(() => card.remove(), 400);
+            }
+            // Update badge counts
+            const upBadge = document.getElementById('badgeUpcoming');
+            const canBadge = document.getElementById('badgeCancelled');
+            upBadge.textContent = Math.max(0, parseInt(upBadge.textContent) - 1);
+            canBadge.textContent = parseInt(canBadge.textContent) + 1;
+        } else {
+            showToast('error', data.message || 'Không thể huỷ lịch hẹn.');
+        }
+    })
+    .catch(() => {
+        closeCancelModal();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash-alt me-1"></i>Huỷ lịch hẹn';
+        showToast('error', 'Có lỗi xảy ra. Vui lòng thử lại.');
+    });
+}
+
+// ─── Leave Waitlist ───────────────────────────────────────────────
+function leaveWaitlist(wlId) {
+    if (!confirm('Bạn có chắc muốn huỷ theo dõi slot này?')) return;
+    fetch('/Appointment/LeaveWaitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ waitlistId: wlId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const el = document.getElementById('wl-' + wlId);
+            if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+            showToast('success', 'Đã huỷ theo dõi.');
+        }
+    });
+}
+
+// ─── Toast Notification ───────────────────────────────────────────
+function showToast(type, message) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast-msg ' + type;
+    toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}" style="color:${type === 'success' ? '#22c55e' : '#ef4444'};font-size:1.2rem"></i><span style="font-size:.88rem;font-weight:500">${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity .3s'; setTimeout(() => toast.remove(), 300); }, 4000);
+}
+
+// ─── SignalR ──────────────────────────────────────────────────────
 (function () {
     const myApptIds = [@string.Join(",", Model.Select(a => a.Id))];
     if (myApptIds.length === 0) return;
@@ -158,10 +513,8 @@
 
     conn.on('AppointmentStatusChanged', function (appointmentId, status) {
         if (myApptIds.includes(appointmentId)) {
-            console.log(`[SignalR] Your appointment #${appointmentId} status changed to: ${status}. Reloading page...`);
-            setTimeout(() => {
-                location.reload();
-            }, 500); // 500ms delay for DB write propagation and visual feel
+            console.log(`[SignalR] Appointment #${appointmentId} → ${status}. Reloading...`);
+            setTimeout(() => location.reload(), 500);
         }
     });
 
