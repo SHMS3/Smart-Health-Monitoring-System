@@ -1,0 +1,12 @@
+.env
+bin/
+obj/
+.vs/
+MinioData/
+minio.exe
+start_minio.ps1
+.git/
+.github/
+.gitignore
+*.user
+*.suo

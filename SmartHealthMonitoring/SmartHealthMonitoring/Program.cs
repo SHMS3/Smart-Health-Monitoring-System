@@ -15,7 +15,11 @@ namespace SmartHealthMonitoring
     {
         public static void Main(string[] args)
         {
-            Env.Load();
+            var envState = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+            if (envState.Equals("Development", StringComparison.OrdinalIgnoreCase))
+            {
+                Env.Load();
+            }
 
             var builder = WebApplication.CreateBuilder(args);
 
@@ -27,14 +31,16 @@ namespace SmartHealthMonitoring
                     sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()));
 
             // 2. Cấu hình kết nối MinIO
-            var minioEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9000";
-            var minioAccessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY") ?? "admin";
-            var minioSecretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY") ?? "admin123";
+            var minioEndpoint = builder.Configuration["MinioSettings:Endpoint"] ?? Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9000";
+            var minioAccessKey = builder.Configuration["MinioSettings:AccessKey"] ?? Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY") ?? "admin";
+            var minioSecretKey = builder.Configuration["MinioSettings:SecretKey"] ?? Environment.GetEnvironmentVariable("MINIO_SECRET_KEY") ?? "admin123";
+            var minioSecureStr = builder.Configuration["MinioSettings:Secure"] ?? Environment.GetEnvironmentVariable("MINIO_SECURE") ?? "false";
+            bool minioSecure = minioSecureStr.Equals("true", StringComparison.OrdinalIgnoreCase);
 
             builder.Services.AddMinio(configureClient => configureClient
                 .WithEndpoint(minioEndpoint)
                 .WithCredentials(minioAccessKey, minioSecretKey)
-                .WithSSL(false)
+                .WithSSL(minioSecure)
                 .Build());
 
             builder.Services.AddHttpClient<GeminiService>();
