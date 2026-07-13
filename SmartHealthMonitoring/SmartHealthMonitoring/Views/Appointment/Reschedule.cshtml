@@ -1,0 +1,206 @@
+@model SmartHealthMonitoring.Controllers.RescheduleViewModel
+@{
+    ViewData["Title"] = "Dời lịch hẹn";
+    var startDate = DateOnly.FromDateTime(DateTime.UtcNow);
+    var endDate = startDate.AddDays(13);
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; }
+    .reschedule-header {
+        background: linear-gradient(135deg, #6366f1, #818cf8);
+        color: white; border-radius: 20px; padding: 32px 40px; margin-bottom: 28px;
+        position: relative; overflow: hidden;
+    }
+    .reschedule-header::after {
+        content: ''; position: absolute; top: -50%; right: -15%;
+        width: 280px; height: 280px; border-radius: 50%;
+        background: rgba(255,255,255,.08);
+    }
+    .current-appt {
+        background: white; border-radius: 16px; padding: 24px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 24px;
+        border-left: 4px solid #f59e0b;
+    }
+    .current-appt h6 { font-weight: 700; color: #92400e; text-transform: uppercase; font-size: .78rem; letter-spacing: .5px; margin-bottom: 12px; }
+    .current-appt .detail { display: flex; gap: 24px; flex-wrap: wrap; }
+    .current-appt .detail-item { font-size: .88rem; color: #475569; }
+    .current-appt .detail-item strong { color: #1e293b; }
+
+    .date-picker-row {
+        display: flex; gap: 8px; overflow-x: auto; padding: 8px 0; margin-bottom: 20px;
+        scrollbar-width: none;
+    }
+    .date-picker-row::-webkit-scrollbar { display: none; }
+    .date-btn {
+        min-width: 70px; padding: 12px 14px; border-radius: 14px; border: 2px solid #e2e8f0;
+        background: white; cursor: pointer; text-align: center; transition: all .2s;
+        flex-shrink: 0;
+    }
+    .date-btn:hover { border-color: #818cf8; }
+    .date-btn.active { background: #6366f1; border-color: #6366f1; color: white; }
+    .date-btn .dow { font-size: .7rem; text-transform: uppercase; opacity: .6; }
+    .date-btn .d { font-size: 1.3rem; font-weight: 700; }
+    .date-btn .m { font-size: .7rem; opacity: .6; }
+    .date-btn.active .dow, .date-btn.active .d, .date-btn.active .m { color: white; opacity: 1; }
+
+    .slot-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px; margin-bottom: 28px;
+    }
+    .slot-item {
+        padding: 14px; border-radius: 12px; border: 2px solid #e2e8f0;
+        background: white; text-align: center; cursor: pointer;
+        transition: all .2s; font-weight: 600; font-size: .88rem;
+    }
+    .slot-item:hover { border-color: #818cf8; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99,102,241,.15); }
+    .slot-item.selected { background: #6366f1; border-color: #6366f1; color: white; }
+    .slot-item .time { font-size: .92rem; }
+
+    .empty-slots {
+        text-align: center; padding: 40px; color: #94a3b8;
+        background: white; border-radius: 14px;
+    }
+    .empty-slots i { font-size: 2rem; margin-bottom: 8px; opacity: .3; }
+
+    #loadingSlots { display: none; text-align: center; padding: 30px; color: #94a3b8; }
+
+    .btn-confirm-reschedule {
+        background: linear-gradient(135deg, #6366f1, #818cf8); color: white;
+        border: none; padding: 14px 36px; border-radius: 14px; font-weight: 700;
+        font-size: 1rem; cursor: pointer; transition: all .2s; display: none;
+    }
+    .btn-confirm-reschedule:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(99,102,241,.3); }
+    .btn-confirm-reschedule:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-back {
+        border: 1.5px solid #94a3b8; color: #64748b; background: none;
+        padding: 14px 28px; border-radius: 14px; font-weight: 600; cursor: pointer;
+        transition: all .2s; text-decoration: none;
+    }
+    .btn-back:hover { border-color: #475569; color: #1e293b; }
+</style>
+
+<div class="container pt-5 mt-3 pb-5">
+    <div class="reschedule-header">
+        <h1 class="h3 mb-1 fw-bold"><i class="fas fa-calendar-alt me-2"></i>Dời lịch hẹn</h1>
+        <p class="mb-0 opacity-75">Chọn khung giờ mới cho lịch hẹn của bạn với cùng bác sĩ.</p>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger rounded-3 border-0 shadow-sm mb-4">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+        </div>
+    }
+
+    <!-- Lịch hẹn hiện tại -->
+    <div class="current-appt">
+        <h6><i class="fas fa-calendar-minus me-1"></i>Lịch hẹn hiện tại (sẽ được dời)</h6>
+        <div class="detail">
+            <div class="detail-item"><i class="fas fa-user-md me-1 text-muted"></i> <strong>BS. @Model.DoctorName</strong></div>
+            <div class="detail-item"><i class="fas fa-stethoscope me-1 text-muted"></i> @Model.Specialty</div>
+            <div class="detail-item"><i class="fas fa-clock me-1 text-muted"></i> <strong>@Model.CurrentSlotStart.ToString("HH:mm") – @Model.CurrentSlotEnd.ToString("HH:mm")</strong></div>
+            <div class="detail-item"><i class="fas fa-calendar me-1 text-muted"></i> @Model.CurrentSlotStart.ToString("dd/MM/yyyy")</div>
+            @if (!string.IsNullOrEmpty(Model.RoomNumber))
+            {
+                <div class="detail-item"><i class="fas fa-door-open me-1 text-muted"></i> @Model.RoomNumber</div>
+            }
+        </div>
+    </div>
+
+    <!-- Chọn ngày mới -->
+    <h5 class="fw-bold mb-3"><i class="fas fa-calendar-day me-2 text-primary"></i>Chọn ngày mới</h5>
+    <div class="date-picker-row" id="dateRow">
+        @for (var d = startDate; d <= endDate; d = d.AddDays(1))
+        {
+            var isFirst = d == startDate;
+            var dayNames = new[] { "CN", "T2", "T3", "T4", "T5", "T6", "T7" };
+            var dow = dayNames[(int)d.DayOfWeek];
+            <div class="date-btn @(isFirst ? "active" : "")" data-date="@d.ToString("yyyy-MM-dd")" onclick="selectDate(this, '@d.ToString("yyyy-MM-dd")')">
+                <div class="dow">@dow</div>
+                <div class="d">@d.Day</div>
+                <div class="m">@d.ToString("MMM")</div>
+            </div>
+        }
+    </div>
+
+    <!-- Slot grid -->
+    <h5 class="fw-bold mb-3"><i class="fas fa-th me-2 text-primary"></i>Chọn giờ mới</h5>
+    <div id="loadingSlots"><i class="fas fa-spinner fa-spin me-2"></i>Đang tải khung giờ...</div>
+    <div class="slot-grid" id="slotGrid"></div>
+    <div class="empty-slots" id="emptySlots" style="display:none">
+        <i class="fas fa-calendar-times d-block mb-2"></i>
+        <p>Không có khung giờ trống trong ngày này.</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <a asp-action="MyAppointments" class="btn-back"><i class="fas fa-arrow-left me-2"></i>Quay lại</a>
+        <button class="btn-confirm-reschedule" id="btnConfirm" onclick="confirmReschedule()">
+            <i class="fas fa-check me-2"></i>Xác nhận dời lịch
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const doctorId = @Model.DoctorId;
+const appointmentId = @Model.AppointmentId;
+let selectedSlotId = null;
+
+// Load slots on init
+document.addEventListener('DOMContentLoaded', () => {
+    const firstDate = document.querySelector('.date-btn.active');
+    if (firstDate) loadSlots(firstDate.dataset.date);
+});
+
+function selectDate(btn, date) {
+    document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedSlotId = null;
+    document.getElementById('btnConfirm').style.display = 'none';
+    loadSlots(date);
+}
+
+function loadSlots(date) {
+    const grid = document.getElementById('slotGrid');
+    const empty = document.getElementById('emptySlots');
+    const loading = document.getElementById('loadingSlots');
+    grid.innerHTML = '';
+    empty.style.display = 'none';
+    loading.style.display = 'block';
+
+    fetch(`/Appointment/GetSlots?doctorId=${doctorId}&date=${date}`)
+        .then(r => r.json())
+        .then(slots => {
+            loading.style.display = 'none';
+            if (!slots.length) {
+                empty.style.display = 'block';
+                return;
+            }
+            slots.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'slot-item';
+                div.innerHTML = `<div class="time">${s.start} – ${s.end}</div>`;
+                div.onclick = () => selectSlot(div, s.id);
+                grid.appendChild(div);
+            });
+        })
+        .catch(() => { loading.style.display = 'none'; empty.style.display = 'block'; });
+}
+
+function selectSlot(el, slotId) {
+    document.querySelectorAll('.slot-item').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedSlotId = slotId;
+    document.getElementById('btnConfirm').style.display = 'inline-flex';
+}
+
+function confirmReschedule() {
+    if (!selectedSlotId) return;
+    // Redirect đến OTP verification
+    window.location.href = `/Appointment/RescheduleVerifyOtp?appointmentId=${appointmentId}&newSlotId=${selectedSlotId}`;
+}
+</script>
+}

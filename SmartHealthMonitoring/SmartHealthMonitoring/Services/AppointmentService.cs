@@ -16,15 +16,21 @@ public class AppointmentService : IAppointmentService
     private readonly SmartHealthMonitoringContext _context;
     private readonly ILogger<AppointmentService> _logger;
     private readonly IHubContext<AppointmentHub> _hubContext;
+    private readonly IEmailService _emailService;
+
+    /// <summary>SCH-05: Giới hạn huỷ trước ít nhất 1 giờ</summary>
+    private const int MinCancelHours = 1;
 
     public AppointmentService(
         SmartHealthMonitoringContext context,
         ILogger<AppointmentService> logger,
-        IHubContext<AppointmentHub> hubContext)
+        IHubContext<AppointmentHub> hubContext,
+        IEmailService emailService)
     {
         _context = context;
         _logger = logger;
         _hubContext = hubContext;
+        _emailService = emailService;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -164,6 +170,14 @@ public class AppointmentService : IAppointmentService
         if (slot == null)
             return (false, "Slot không tồn tại.", null);
 
+        var hasActiveOrPending = await _context.Appointments.AnyAsync(a =>
+            a.PatientId == patientId &&
+            (a.Status == AppointmentStatus.Confirmed || 
+             a.Status == AppointmentStatus.Pending || 
+             a.Status == AppointmentStatus.CancellationPending));
+        if (hasActiveOrPending)
+            return (false, "Bạn đang có lịch khám chưa hoàn thành hoặc yêu cầu đặt lịch đang chờ duyệt. Không thể đặt thêm lịch mới.", null);
+
         // Kiểm tra trạng thái trước khi đặt
         bool isOwnSoftLock = slot.Status == AppointmentSlotStatus.SoftLocked
                           && slot.PatientId == patientId
@@ -232,11 +246,27 @@ public class AppointmentService : IAppointmentService
         appointment.UpdatedAt = DateTime.UtcNow;
 
         // Nhả slot về Available
+        var slotId = appointment.Slot.Id;
+        var doctorId = appointment.Slot.DoctorId;
+        var slotDate = DateOnly.FromDateTime(appointment.Slot.SlotStart);
         appointment.Slot.Status    = AppointmentSlotStatus.Available;
         appointment.Slot.PatientId = null;
         appointment.Slot.SoftLockedUntil = null;
 
         await _context.SaveChangesAsync();
+
+        // Broadcast SignalR nhả slot
+        await _hubContext.Clients.All.SendAsync("SlotStatusChanged", slotId, "Available");
+        await _hubContext.Clients.All.SendAsync("AppointmentStatusChanged", appointmentId,
+            isDoctor ? "CancelledByDoctor" : "CancelledByPatient");
+
+        // SCH-07: Thông báo waitlist subscribers
+        _ = Task.Run(async () =>
+        {
+            try { await NotifyWaitlistSubscribersAsync(doctorId, slotDate); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Waitlist notify failed after cancel."); }
+        });
+
         return (true, "Đã huỷ lịch hẹn thành công.");
     }
 
@@ -296,6 +326,14 @@ public class AppointmentService : IAppointmentService
         var slot = await _context.AppointmentSlots.FirstOrDefaultAsync(s => s.Id == slotId);
         if (slot == null)
             return (false, "Slot không tồn tại.", null);
+
+        var hasActiveOrPending = await _context.Appointments.AnyAsync(a =>
+            a.PatientId == patientId &&
+            (a.Status == AppointmentStatus.Confirmed || 
+             a.Status == AppointmentStatus.Pending || 
+             a.Status == AppointmentStatus.CancellationPending));
+        if (hasActiveOrPending)
+            return (false, "Bạn đang có lịch khám chưa hoàn thành hoặc yêu cầu đặt lịch đang chờ duyệt. Không thể đặt thêm lịch mới.", null);
 
         if (slot.Status == AppointmentSlotStatus.Booked)
             return (false, "Khung giờ này đã có người đặt.", null);
@@ -493,5 +531,279 @@ public class AppointmentService : IAppointmentService
         await _context.SaveChangesAsync();
         await _hubContext.Clients.All.SendAsync("AppointmentStatusChanged", appointmentId, "Confirmed");
         return true;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SCH-05: CANCEL DIRECT (>= 1 giờ trước)
+    // ═══════════════════════════════════════════════════════════════
+
+    public async Task<(bool success, string message)> CancelDirectAsync(int appointmentId, int patientId)
+    {
+        var appointment = await _context.Appointments
+            .Include(a => a.Slot)
+            .FirstOrDefaultAsync(a => a.Id == appointmentId && a.PatientId == patientId);
+
+        if (appointment == null)
+            return (false, "Lịch hẹn không tồn tại hoặc không thuộc về bạn.");
+
+        if (appointment.Status != AppointmentStatus.Confirmed)
+            return (false, "Chỉ có thể huỷ lịch hẹn đã xác nhận.");
+
+        var hoursUntilAppt = (appointment.Slot.SlotStart - DateTime.UtcNow).TotalHours;
+        if (hoursUntilAppt < MinCancelHours)
+            return (false, $"Không thể huỷ trực tiếp khi còn dưới {MinCancelHours} giờ. Vui lòng gửi yêu cầu huỷ qua bộ phận hỗ trợ.");
+
+        // Huỷ appointment + nhả slot
+        appointment.Status = AppointmentStatus.CancelledByPatient;
+        appointment.UpdatedAt = DateTime.UtcNow;
+
+        var slotId = appointment.Slot.Id;
+        var doctorId = appointment.Slot.DoctorId;
+        var slotDate = DateOnly.FromDateTime(appointment.Slot.SlotStart);
+
+        appointment.Slot.Status = AppointmentSlotStatus.Available;
+        appointment.Slot.PatientId = null;
+        appointment.Slot.SoftLockedUntil = null;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Patient {PatientId} cancelled appointment {AppointmentId} directly.", patientId, appointmentId);
+
+        // Broadcast SignalR
+        await _hubContext.Clients.All.SendAsync("SlotStatusChanged", slotId, "Available");
+        await _hubContext.Clients.All.SendAsync("AppointmentStatusChanged", appointmentId, "CancelledByPatient");
+
+        // SCH-07: Thông báo waitlist
+        _ = Task.Run(async () =>
+        {
+            try { await NotifyWaitlistSubscribersAsync(doctorId, slotDate); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Waitlist notify failed after direct cancel."); }
+        });
+
+        return (true, "Đã huỷ lịch hẹn thành công.");
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SCH-06: RESCHEDULE (Transaction atomic)
+    // ═══════════════════════════════════════════════════════════════
+
+    public async Task<(bool success, string message, Appointment? newAppointment)> RescheduleAppointmentAsync(
+        int appointmentId, int newSlotId, int patientId)
+    {
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            // 1. Validate old appointment
+            var oldAppt = await _context.Appointments
+                .Include(a => a.Slot)
+                .FirstOrDefaultAsync(a => a.Id == appointmentId && a.PatientId == patientId);
+
+            if (oldAppt == null)
+                return (false, "Lịch hẹn không tồn tại hoặc không thuộc về bạn.", null);
+
+            if (oldAppt.Status != AppointmentStatus.Confirmed)
+                return (false, "Chỉ có thể dời lịch hẹn đã xác nhận.", null);
+
+            var hoursUntilAppt = (oldAppt.Slot.SlotStart - DateTime.UtcNow).TotalHours;
+            if (hoursUntilAppt < MinCancelHours)
+                return (false, $"Không thể dời lịch khi còn dưới {MinCancelHours} giờ trước giờ hẹn.", null);
+
+            // 2. Validate new slot
+            var newSlot = await _context.AppointmentSlots
+                .FirstOrDefaultAsync(s => s.Id == newSlotId);
+
+            if (newSlot == null)
+                return (false, "Slot mới không tồn tại.", null);
+
+            if (newSlot.DoctorId != oldAppt.DoctorId)
+                return (false, "Chỉ có thể dời lịch trong cùng bác sĩ.", null);
+
+            bool isOwnSoftLock = newSlot.Status == AppointmentSlotStatus.SoftLocked
+                              && newSlot.PatientId == patientId
+                              && newSlot.SoftLockedUntil >= DateTime.UtcNow;
+
+            if (newSlot.Status == AppointmentSlotStatus.Booked)
+                return (false, "Khung giờ mới đã có người đặt.", null);
+
+            if (newSlot.Status == AppointmentSlotStatus.Blocked)
+                return (false, "Bác sĩ đã chặn khung giờ mới.", null);
+
+            if (newSlot.Status == AppointmentSlotStatus.SoftLocked && !isOwnSoftLock)
+                return (false, "Khung giờ mới đang được người khác giữ chỗ.", null);
+
+            // 3. Cancel old appointment → release old slot
+            var oldSlotId = oldAppt.Slot.Id;
+            var oldSlotDate = DateOnly.FromDateTime(oldAppt.Slot.SlotStart);
+
+            oldAppt.Status = AppointmentStatus.CancelledByPatient;
+            oldAppt.DoctorNote = "[Hệ thống] Bệnh nhân dời lịch sang slot mới.";
+            oldAppt.UpdatedAt = DateTime.UtcNow;
+
+            oldAppt.Slot.Status = AppointmentSlotStatus.Available;
+            oldAppt.Slot.PatientId = null;
+            oldAppt.Slot.SoftLockedUntil = null;
+
+            // 4. Book new slot + create new appointment (Pending - chờ duyệt)
+            newSlot.Status = AppointmentSlotStatus.SoftLocked;
+            newSlot.PatientId = patientId;
+            newSlot.SoftLockedUntil = DateTime.MaxValue; // SoftLock vĩnh viễn chờ duyệt
+
+            var newAppt = new Appointment
+            {
+                SlotId = newSlotId,
+                PatientId = patientId,
+                DoctorId = newSlot.DoctorId,
+                Status = AppointmentStatus.Pending,
+                PatientNote = oldAppt.PatientNote,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Appointments.Add(newAppt);
+
+            // 5. Commit transaction
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            _logger.LogInformation("Patient {PatientId} rescheduled appointment {OldId} → new slot {NewSlotId}.",
+                patientId, appointmentId, newSlotId);
+
+            // SignalR broadcasts
+            await _hubContext.Clients.All.SendAsync("SlotStatusChanged", oldSlotId, "Available");
+            await _hubContext.Clients.All.SendAsync("SlotStatusChanged", newSlotId, "SoftLocked");
+            await _hubContext.Clients.All.SendAsync("AppointmentStatusChanged", appointmentId, "CancelledByPatient");
+
+            // Broadcast NewBookingRequest cho staff duyệt
+            var fullAppt = await _context.Appointments
+                .AsNoTracking()
+                .Include(a => a.Slot)
+                .Include(a => a.Patient).ThenInclude(p => p.User)
+                .Include(a => a.Doctor).ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(a => a.Id == newAppt.Id);
+
+            if (fullAppt != null)
+            {
+                await _hubContext.Clients.Group("Staff").SendAsync("NewBookingRequest", new
+                {
+                    appointmentId = fullAppt.Id,
+                    patientName = fullAppt.Patient.User.FullName,
+                    patientPhone = fullAppt.Patient.Phone ?? "",
+                    patientEmail = fullAppt.Patient.User.Email,
+                    doctorName = fullAppt.Doctor.User.FullName,
+                    specialty = fullAppt.Doctor.Specialty,
+                    slotStart = fullAppt.Slot.SlotStart.ToString("HH:mm"),
+                    slotEnd = fullAppt.Slot.SlotEnd.ToString("HH:mm"),
+                    slotDate = fullAppt.Slot.SlotStart.ToString("dd/MM/yyyy"),
+                    patientNote = "[Dời lịch] " + (fullAppt.PatientNote ?? "")
+                });
+            }
+
+            // Notify waitlist cho old slot date
+            _ = Task.Run(async () =>
+            {
+                try { await NotifyWaitlistSubscribersAsync(oldAppt.DoctorId, oldSlotDate); }
+                catch { /* ignore */ }
+            });
+
+            return (true, "Dời lịch thành công! Vui lòng chờ nhân viên duyệt.", newAppt);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await transaction.RollbackAsync();
+            return (false, "Khung giờ mới vừa được người khác đặt. Vui lòng chọn giờ khác.", null);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SCH-07: WAITLIST
+    // ═══════════════════════════════════════════════════════════════
+
+    public async Task<(bool success, string message)> JoinWaitlistAsync(int patientId, int doctorId, DateOnly watchDate)
+    {
+        // Kiểm tra trùng
+        var exists = await _context.AppointmentWaitlists.AnyAsync(w =>
+            w.PatientId == patientId && w.DoctorId == doctorId && w.WatchDate == watchDate && w.IsActive);
+
+        if (exists)
+            return (false, "Bạn đã đăng ký theo dõi ngày này rồi.");
+
+        _context.AppointmentWaitlists.Add(new AppointmentWaitlist
+        {
+            PatientId = patientId,
+            DoctorId = doctorId,
+            WatchDate = watchDate,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync();
+        return (true, "Đã đăng ký nhận thông báo khi có slot trống.");
+    }
+
+    public async Task<List<AppointmentWaitlist>> GetPatientWaitlistAsync(int patientId)
+    {
+        return await _context.AppointmentWaitlists
+            .AsNoTracking()
+            .Include(w => w.Doctor).ThenInclude(d => d.User)
+            .Where(w => w.PatientId == patientId && w.IsActive && w.WatchDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+            .OrderBy(w => w.WatchDate)
+            .ToListAsync();
+    }
+
+    public async Task<bool> RemoveFromWaitlistAsync(int waitlistId, int patientId)
+    {
+        var entry = await _context.AppointmentWaitlists
+            .FirstOrDefaultAsync(w => w.Id == waitlistId && w.PatientId == patientId);
+
+        if (entry == null) return false;
+
+        entry.IsActive = false;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task NotifyWaitlistSubscribersAsync(int doctorId, DateOnly date)
+    {
+        var subscribers = await _context.AppointmentWaitlists
+            .Include(w => w.Patient).ThenInclude(p => p.User)
+            .Include(w => w.Doctor).ThenInclude(d => d.User)
+            .Where(w => w.DoctorId == doctorId && w.WatchDate == date && w.IsActive && !w.IsNotified)
+            .ToListAsync();
+
+        foreach (var sub in subscribers)
+        {
+            try
+            {
+                var subject = "Thông báo: Đã có slot trống cho lịch hẹn bạn quan tâm — SmartHealth";
+                var body = $@"
+                    <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e1e8ed;border-radius:8px;overflow:hidden'>
+                        <div style='background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:white;padding:24px;text-align:center'>
+                            <h2 style='margin:0;font-size:20px'>🔔 ĐÃ CÓ SLOT TRỐNG</h2>
+                        </div>
+                        <div style='padding:24px'>
+                            <p>Kính chào <strong>{sub.Patient.User.FullName}</strong>,</p>
+                            <p>Chúng tôi vui mừng thông báo: Đã có slot trống cho bác sĩ <strong>{sub.Doctor.User.FullName}</strong> ({sub.Doctor.Specialty}) vào ngày <strong>{date:dd/MM/yyyy}</strong>.</p>
+                            <p>Hãy nhanh tay đặt lịch trước khi hết chỗ!</p>
+                            <div style='text-align:center;margin:24px 0'>
+                                <a href='/Appointment/FindDoctor' style='display:inline-block;background:#8b5cf6;color:white;padding:12px 28px;border-radius:30px;text-decoration:none;font-weight:600'>Đặt lịch ngay</a>
+                            </div>
+                        </div>
+                        <div style='background:#f1f5f9;padding:16px;text-align:center;font-size:12px;color:#64748b'>
+                            Đây là email tự động từ Hệ thống Y tế SmartHealth.
+                        </div>
+                    </div>";
+
+                await _emailService.SendEmailAsync(sub.Patient.User.Email, subject, body);
+
+                sub.IsNotified = true;
+                sub.NotifiedAt = DateTime.UtcNow;
+                sub.IsActive = false; // Tự tắt sau khi thông báo
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to notify waitlist subscriber {Id}.", sub.Id);
+            }
+        }
+
+        if (subscribers.Any())
+            await _context.SaveChangesAsync();
     }
 }
