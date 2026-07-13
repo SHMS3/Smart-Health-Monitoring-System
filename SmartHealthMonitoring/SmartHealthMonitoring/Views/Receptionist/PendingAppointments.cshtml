@@ -314,10 +314,7 @@
     });
 
     conn.start()
-        .then(() => {
-            console.log('[SignalR] Staff connected to AppointmentHub');
-            conn.invoke('JoinStaffGroup').catch(err => console.error('[SignalR] Error joining Staff group:', err));
-        })
+        .then(() => console.log('[SignalR] Staff connected to AppointmentHub'))
         .catch(err => console.error('[SignalR] Lỗi:', err));
 })();
 </script>
