@@ -30,11 +30,13 @@ namespace SmartHealthMonitoring
             var minioEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9000";
             var minioAccessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY") ?? "admin";
             var minioSecretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY") ?? "admin123";
+            var minioSecureStr = Environment.GetEnvironmentVariable("MINIO_SECURE") ?? "false";
+            bool minioSecure = minioSecureStr.Equals("true", StringComparison.OrdinalIgnoreCase);
 
             builder.Services.AddMinio(configureClient => configureClient
                 .WithEndpoint(minioEndpoint)
                 .WithCredentials(minioAccessKey, minioSecretKey)
-                .WithSSL(false)
+                .WithSSL(minioSecure)
                 .Build());
 
             builder.Services.AddHttpClient<GeminiService>();
