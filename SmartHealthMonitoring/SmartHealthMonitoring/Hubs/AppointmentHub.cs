@@ -18,8 +18,14 @@ public class AppointmentHub : Hub
         if (role == "2" || role == "3")
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, "Staff");
-            Console.WriteLine($"[AppointmentHub] User {userId} joined group 'Staff'");
+            Console.WriteLine($"[AppointmentHub] User {userId} joined group 'Staff' on connect");
         }
         await base.OnConnectedAsync();
+    }
+
+    public async Task JoinStaffGroup()
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, "Staff");
+        Console.WriteLine($"[AppointmentHub] Connection {Context.ConnectionId} explicitly joined 'Staff' group via client invocation.");
     }
 }

@@ -62,6 +62,7 @@ public partial class SmartHealthMonitoringContext : DbContext
     public virtual DbSet<DoctorWorkSchedule> DoctorWorkSchedules { get; set; }
     public virtual DbSet<AppointmentSlot> AppointmentSlots { get; set; }
     public virtual DbSet<Appointment> Appointments { get; set; }
+    public virtual DbSet<AppointmentWaitlist> AppointmentWaitlists { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -922,6 +923,26 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.HasOne(d => d.Doctor)
                 .WithMany()
                 .HasForeignKey(d => d.DoctorId)
+                .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // ── SCH-07: AppointmentWaitlist ───────────────────────────────────────
+        modelBuilder.Entity<AppointmentWaitlist>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("AppointmentWaitlists");
+
+            entity.HasIndex(e => new { e.PatientId, e.DoctorId, e.WatchDate })
+                .HasDatabaseName("IX_Waitlist_Patient_Doctor_Date");
+
+            entity.HasOne(e => e.Patient)
+                .WithMany()
+                .HasForeignKey(e => e.PatientId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.Doctor)
+                .WithMany()
+                .HasForeignKey(e => e.DoctorId)
                 .OnDelete(DeleteBehavior.NoAction);
         });
 
