@@ -17,6 +17,77 @@ namespace SmartHealthMonitoring.Services
 
         }
 
+        // 3. Hàm quét OCR CCCD bằng Gemini Vision (trả về JSON thô)
+        public async Task<string> ScanCitizenIdAsync(byte[] imageBytes, string mimeType)
+        {
+            var modelUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent";
+            var base64Data = Convert.ToBase64String(imageBytes);
+
+            var systemPrompt = "Bạn là chuyên gia OCR trích xuất thông tin Căn cước công dân (CCCD) Việt Nam. Hãy đọc kỹ ảnh mặt trước CCCD được cung cấp và trả về dữ liệu định dạng JSON chính xác. Không trả về markdown, không có ```json hay ```. Chỉ trả về chuỗi JSON thô có các trường sau:\n{\n  \"citizenId\": \"12 chữ số\",\n  \"fullName\": \"HỌ VÀ TÊN VIẾT HOA\",\n  \"dateOfBirth\": \"yyyy-MM-dd\",\n  \"sexDisplay\": \"Nam\" hoặc \"Nữ\",\n  \"address\": \"địa chỉ thường trú\"\n}";
+
+            var payload = new
+            {
+                contents = new[]
+                {
+                    new
+                    {
+                        parts = new object[]
+                        {
+                            new { text = systemPrompt },
+                            new
+                            {
+                                inlineData = new
+                                {
+                                    mimeType = mimeType,
+                                    data = base64Data
+                                }
+                            }
+                        }
+                    }
+                },
+                generationConfig = new
+                {
+                    temperature = 0.1,
+                    responseMimeType = "application/json"
+                }
+            };
+
+            var jsonPayload = JsonSerializer.Serialize(payload);
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, modelUrl);
+            request.Headers.Add("x-goog-api-key", _apiKey);
+            request.Content = content;
+
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Gemini OCR failed ({response.StatusCode}): {error}");
+            }
+
+            var responseString = await response.Content.ReadAsStringAsync();
+            using var document = JsonDocument.Parse(responseString);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("candidates", out var candidates) && candidates.GetArrayLength() > 0)
+            {
+                var firstCandidate = candidates[0];
+                if (firstCandidate.TryGetProperty("content", out var resContent) &&
+                    resContent.TryGetProperty("parts", out var parts) && parts.GetArrayLength() > 0)
+                {
+                    var sb = new StringBuilder();
+                    foreach (var part in parts.EnumerateArray())
+                    {
+                        if (part.TryGetProperty("text", out var textProp))
+                            sb.Append(textProp.GetString());
+                    }
+                    return sb.ToString();
+                }
+            }
+            throw new Exception("Không thể đọc được thông tin từ ảnh CCCD.");
+        }
+
         public async Task<string> AskAsync(string currentMessage, List<ChatMessage> history, string systemContext = "")
         {
             var apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent"; 

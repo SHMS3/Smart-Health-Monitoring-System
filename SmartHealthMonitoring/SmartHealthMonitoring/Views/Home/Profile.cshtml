@@ -775,6 +775,7 @@
 							}
 						</span>
 					</div>
+
 					@if (Model.Role == 1)
 					{
 						<div class="info-row">
@@ -814,7 +815,7 @@
 			@if (Model.Role == 0 || Model.Role == 1)
 			{
 				<div class="section-body" id="editMode" style="display:none; border-top: 1px solid #f1f5f9;">
-					<form asp-controller="Home" asp-action="UpdateProfile" method="post" id="editProfileForm">
+					<form asp-controller="Home" asp-action="UpdateProfile" method="post" id="editProfileForm" enctype="multipart/form-data">
 						@Html.AntiForgeryToken()
 						<div class="form-grid-2">
 							@if (Model.Role == 0)
@@ -888,11 +889,58 @@
 
 							@if (Model.Role == 0)
 							{
+								<div class="form-group-p" style="grid-column: 1 / -1; margin-top: 10px;">
+									<label class="fw-bold" style="color: #0f172a; font-size: 15px;">Tải lên ảnh thẻ Căn cước công dân (CCCD)</label>
+									<div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px;">
+										<!-- Mặt trước card -->
+										<div style="flex: 1; min-width: 250px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 15px; text-align: center; position: relative; border-color: #0284c7;">
+											<span style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 13px; color: #0284c7;"><i class="fas fa-magic"></i> Mặt trước CCCD (Quét thông tin tự động)</span>
+											<input type="file" name="CitizenIdFrontFile" id="citizenIdFrontFile" accept="image/*" style="display: none;" onchange="onFrontCccdSelected(this)" />
+											<div id="frontPreviewContainer" style="margin-bottom: 10px; height: 110px; display: flex; align-items: center; justify-content: center;">
+												@if (!string.IsNullOrEmpty(Model.CitizenIdFrontUrl))
+												{
+													<img id="frontCccdPreview" src="@Model.CitizenIdFrontUrl" style="max-height: 100px; max-width: 100%; border-radius: 4px; object-fit: contain;" />
+												}
+												else
+												{
+													<div id="frontCccdPlaceholder" style="color: #94a3b8; font-size: 28px;"><i class="fas fa-id-card"></i></div>
+												}
+											</div>
+											<button type="button" class="btn-link-action" style="font-size: 13px; font-weight: 600; text-decoration: none;" onclick="document.getElementById('citizenIdFrontFile').click()">
+												<i class="fas fa-camera"></i> Chọn hoặc Chụp ảnh
+											</button>
+											<div id="frontScanSpinner" style="display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.9); border-radius:8px; align-items:center; justify-content:center; flex-direction:column; z-index: 10;">
+												<div class="spinner-border text-primary" role="status" style="width: 28px; height: 28px; border-width: 3px; animation: spin 1s linear infinite;"></div>
+												<span style="font-size: 12px; margin-top: 8px; font-weight: 600; color: #0284c7;">AI đang quét thông tin...</span>
+											</div>
+										</div>
+
+										<!-- Mặt sau card -->
+										<div style="flex: 1; min-width: 250px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 15px; text-align: center;">
+											<span style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 13px; color: #475569;">Mặt sau CCCD</span>
+											<input type="file" name="CitizenIdBackFile" id="citizenIdBackFile" accept="image/*" style="display: none;" onchange="onBackCccdSelected(this)" />
+											<div id="backPreviewContainer" style="margin-bottom: 10px; height: 110px; display: flex; align-items: center; justify-content: center;">
+												@if (!string.IsNullOrEmpty(Model.CitizenIdBackUrl))
+												{
+													<img id="backCccdPreview" src="@Model.CitizenIdBackUrl" style="max-height: 100px; max-width: 100%; border-radius: 4px; object-fit: contain;" />
+												}
+												else
+												{
+													<div id="backCccdPlaceholder" style="color: #94a3b8; font-size: 28px;"><i class="fas fa-id-card"></i></div>
+												}
+											</div>
+											<button type="button" class="btn-link-action" style="font-size: 13px; font-weight: 600; text-decoration: none;" onclick="document.getElementById('citizenIdBackFile').click()">
+												<i class="fas fa-camera"></i> Chọn hoặc Chụp ảnh
+											</button>
+										</div>
+									</div>
+								</div>
+
 								<div class="form-group-p">
 									<label>Số CCCD / CMND</label>
-									<input name="CitizenId" value="@Model.CitizenId" class="form-input-p"
+									<input name="CitizenId" id="citizenIdInput" value="@Model.CitizenId" class="form-input-p"
 										   maxlength="12" inputmode="numeric" pattern="\d{12}"
-										   placeholder="12 chữ số (VD: 079204012345)" />
+										   placeholder="Hãy quét mặt trước CCCD để điền thông tin" required readonly style="background-color: #f1f5f9; cursor: not-allowed;" />
 									<span class="field-validation-error" data-valmsg-for="CitizenId"></span>
 								</div>
 							}
@@ -1521,6 +1569,86 @@
 			};
 			update();
 			window._otpTimer = setInterval(update, 1000);
+		}
+
+		function onFrontCccdSelected(input) {
+			if (input.files && input.files[0]) {
+				const file = input.files[0];
+				
+				// Hiển thị preview
+				const reader = new FileReader();
+				reader.onload = function (e) {
+					const previewContainer = document.getElementById('frontPreviewContainer');
+					previewContainer.innerHTML = `<img id="frontCccdPreview" src="${e.target.result}" style="max-height: 100px; max-width: 100%; border-radius: 4px; object-fit: contain;" />`;
+				};
+				reader.readAsDataURL(file);
+
+				// Gọi API nhận diện bằng AI
+				const spinner = document.getElementById('frontScanSpinner');
+				spinner.style.display = 'flex';
+
+				const formData = new FormData();
+				formData.append('file', file);
+				formData.append('__RequestVerificationToken', antiForgeryToken);
+
+				fetch('/Home/ScanCccd', {
+					method: 'POST',
+					body: formData
+				})
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Ảnh mờ hoặc không hợp lệ.');
+					}
+					return response.json();
+				})
+				.then(data => {
+					// Điền dữ liệu vào form
+					if (data.citizenId) {
+						document.getElementById('citizenIdInput').value = data.citizenId;
+					}
+					if (data.fullName) {
+						const fullNameInput = document.querySelector('input[name="FullName"]');
+						if (fullNameInput) fullNameInput.value = data.fullName;
+					}
+					if (data.dateOfBirth) {
+						const dobInput = document.querySelector('input[name="DateOfBirth"]');
+						if (dobInput) dobInput.value = data.dateOfBirth;
+					}
+					if (data.sexDisplay) {
+						const sexSelect = document.querySelector('select[name="Sex"]');
+						if (sexSelect) {
+							if (data.sexDisplay === "Nam") {
+								sexSelect.value = "1";
+							} else if (data.sexDisplay === "Nữ") {
+								sexSelect.value = "0";
+							}
+						}
+					}
+					if (data.address) {
+						const addressInput = document.querySelector('input[name="Address"]');
+						if (addressInput) addressInput.value = data.address;
+					}
+				})
+				.catch(error => {
+					console.error(error);
+					alert("Không thể nhận diện tự động từ ảnh này. Vui lòng thử lại với ảnh rõ nét hơn hoặc tự điền thông tin.");
+				})
+				.finally(() => {
+					spinner.style.display = 'none';
+				});
+			}
+		}
+
+		function onBackCccdSelected(input) {
+			if (input.files && input.files[0]) {
+				const file = input.files[0];
+				const reader = new FileReader();
+				reader.onload = function (e) {
+					const previewContainer = document.getElementById('backPreviewContainer');
+					previewContainer.innerHTML = `<img id="backCccdPreview" src="${e.target.result}" style="max-height: 100px; max-width: 100%; border-radius: 4px; object-fit: contain;" />`;
+				};
+				reader.readAsDataURL(file);
+			}
 		}
 	</script>
 

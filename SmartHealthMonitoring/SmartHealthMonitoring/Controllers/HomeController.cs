@@ -20,14 +20,16 @@ namespace SmartHealthMonitoring.Controllers
         private readonly IEmailService _emailService;
         private readonly ITwilioVerifyService _twilioVerify;
         private readonly IMinioService _minioService;
+        private readonly GeminiService _geminiService;
 
-        public HomeController(ILogger<HomeController> logger, SmartHealthMonitoringContext context, IEmailService emailService, ITwilioVerifyService twilioVerify, IMinioService minioService)
+        public HomeController(ILogger<HomeController> logger, SmartHealthMonitoringContext context, IEmailService emailService, ITwilioVerifyService twilioVerify, IMinioService minioService, GeminiService geminiService)
         {
             _logger = logger;
             _context = context;
             _emailService = emailService;
             _twilioVerify = twilioVerify;
             _minioService = minioService;
+            _geminiService = geminiService;
         }
 
         public async Task<IActionResult> Index()
@@ -361,6 +363,23 @@ namespace SmartHealthMonitoring.Controllers
                     patient.Phone       = model.Phone;
                     patient.Address     = model.Address;
                     patient.CitizenId   = model.CitizenId;
+
+                    // Xử lý upload ảnh CCCD mặt trước
+                    if (model.CitizenIdFrontFile != null && model.CitizenIdFrontFile.Length > 0)
+                    {
+                        var frontKey = $"cccd-front-{patient.Id}";
+                        using var stream = model.CitizenIdFrontFile.OpenReadStream();
+                        await _minioService.UploadFileAsync("smarthealth-cccds", frontKey, stream, model.CitizenIdFrontFile.ContentType);
+                    }
+
+                    // Xử lý upload ảnh CCCD mặt sau
+                    if (model.CitizenIdBackFile != null && model.CitizenIdBackFile.Length > 0)
+                    {
+                        var backKey = $"cccd-back-{patient.Id}";
+                        using var stream = model.CitizenIdBackFile.OpenReadStream();
+                        await _minioService.UploadFileAsync("smarthealth-cccds", backKey, stream, model.CitizenIdBackFile.ContentType);
+                    }
+
                     _context.Patients.Update(patient);
                 }
             }
@@ -415,6 +434,34 @@ namespace SmartHealthMonitoring.Controllers
 
             TempData["SuccessMessage"] = "Cập nhật thông tin thành công!";
             return RedirectToAction(nameof(Profile));
+        }
+
+        // ==========================================
+        // POST: /Home/ScanCccd — OCR ảnh CCCD qua Gemini API
+        // ==========================================
+        [HttpPost("/Home/ScanCccd")]
+        [Authorize]
+        public async Task<IActionResult> ScanCccd(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { success = false, message = "Vui lòng chọn hoặc chụp ảnh mặt trước CCCD." });
+            }
+
+            try
+            {
+                using var ms = new MemoryStream();
+                await file.CopyToAsync(ms);
+                var imageBytes = ms.ToArray();
+
+                var jsonResult = await _geminiService.ScanCitizenIdAsync(imageBytes, file.ContentType);
+                return Content(jsonResult, "application/json");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to scan CCCD image using Gemini");
+                return StatusCode(500, new { success = false, message = "Không thể trích xuất được thông tin từ ảnh này. Vui lòng chọn ảnh rõ nét hơn hoặc tự điền." });
+            }
         }
 
         // ==========================================
