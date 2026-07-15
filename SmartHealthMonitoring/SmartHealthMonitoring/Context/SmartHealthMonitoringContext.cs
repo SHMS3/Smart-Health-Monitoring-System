@@ -946,6 +946,33 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .OnDelete(DeleteBehavior.NoAction);
         });
 
+        modelBuilder.Entity<Service>().HasData(
+            new Service 
+            { 
+                Id = 1, 
+                Name = "Huyết áp & Triệu chứng", 
+                Price = 150000.00m, 
+                Description = "Loại đau ngực (Chest Pain Type)|Đau ngực gắng sức (Exercise Angina)|Huyết áp nghỉ (Resting BP - mmHg)|Nhịp tim tối đa (Max Heart Rate)", 
+                IsActive = true 
+            },
+            new Service 
+            { 
+                Id = 2, 
+                Name = "Phân tích Huyết học", 
+                Price = 200000.00m, 
+                Description = "Cholesterol toàn phần (mg/dL)|Đường huyết lúc đói (Fasting Blood Sugar)|Kết quả Thal (Thalassemia)", 
+                IsActive = true 
+            },
+            new Service 
+            { 
+                Id = 3, 
+                Name = "Điện tâm đồ & Mạch vành", 
+                Price = 250000.00m, 
+                Description = "Điện tâm đồ nghỉ (Resting ECG)|Độ trầm cảm đoạn ST (OldPeak)|Độ dốc đoạn ST (ST Slope)|Số mạch vành chính (Major Vessels)|Ảnh ECG (tải lên từ máy)", 
+                IsActive = true 
+            }
+        );
+
         OnModelCreatingPartial(modelBuilder);
     }
 
