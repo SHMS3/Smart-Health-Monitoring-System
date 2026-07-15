@@ -247,6 +247,15 @@ namespace SmartHealthMonitoring.Controllers
                     vm.Address         = patient.Address;
                     vm.CitizenId       = patient.CitizenId;
 
+                    // Lấy link ảnh CCCD 2 mặt từ MinIO cho bệnh nhân nếu đã có CitizenId
+                    if (!string.IsNullOrEmpty(patient.CitizenId))
+                    {
+                        var frontKey = $"cccd-front-{patient.Id}";
+                        var backKey = $"cccd-back-{patient.Id}";
+                        vm.CitizenIdFrontUrl = await _minioService.GetPresignedUrlAsync("smarthealth-cccds", frontKey, 10080);
+                        vm.CitizenIdBackUrl = await _minioService.GetPresignedUrlAsync("smarthealth-cccds", backKey, 10080);
+                    }
+
                     // Thống kê nhanh
                     vm.TotalVitalLogs       = await _context.DailyVitalLogs.CountAsync(v => v.PatientId == patient.Id);
                     vm.TotalClinicalRecords = await _context.ClinicalRecords.CountAsync(c => c.PatientId == patient.Id);
@@ -305,6 +314,15 @@ namespace SmartHealthMonitoring.Controllers
                     vm.IsPhoneVerified = doctor.IsPhoneVerified;
                     vm.DateOfBirth     = doctor.DateOfBirth;
                     vm.Sex             = doctor.Sex;
+
+                    // Lấy link ảnh CCCD 2 mặt từ MinIO cho bác sĩ nếu đã có CitizenId
+                    if (!string.IsNullOrEmpty(doctor.CitizenId))
+                    {
+                        var frontKey = $"cccd-front-{doctor.Id}";
+                        var backKey = $"cccd-back-{doctor.Id}";
+                        vm.CitizenIdFrontUrl = await _minioService.GetPresignedUrlAsync("smarthealth-cccds", frontKey, 10080);
+                        vm.CitizenIdBackUrl = await _minioService.GetPresignedUrlAsync("smarthealth-cccds", backKey, 10080);
+                    }
                 }
             }
 
@@ -327,7 +345,7 @@ namespace SmartHealthMonitoring.Controllers
             if (user == null) return RedirectToAction("Login", "Auth");
 
             // Kiểm tra validation bổ sung theo vai trò
-            if (user.Role == 0) // Patient
+            if (user.Role == 0 || user.Role == 1) // Patient or Doctor
             {
                 if (model.DateOfBirth == null)
                     ModelState.AddModelError(nameof(model.DateOfBirth), "Vui lòng chọn ngày sinh.");
@@ -341,8 +359,8 @@ namespace SmartHealthMonitoring.Controllers
                 return RedirectToAction(nameof(Profile));
             }
 
-            // Cập nhật tên trong bảng Users (chỉ dành cho Bệnh nhân)
-            if (user.Role == 0)
+            // Cập nhật tên trong bảng Users (Bệnh nhân và Bác sĩ)
+            if (user.Role == 0 || user.Role == 1)
             {
                 user.FullName = model.FullName;
                 _context.Users.Update(user);
@@ -393,8 +411,28 @@ namespace SmartHealthMonitoring.Controllers
                     if (doctor.Phone != model.Phone)
                         doctor.IsPhoneVerified = false;
 
-                    doctor.Phone = model.Phone;
-                    doctor.Address = model.Address;
+                    doctor.DateOfBirth = model.DateOfBirth!.Value;
+                    doctor.Sex         = model.Sex!.Value;
+                    doctor.Phone       = model.Phone;
+                    doctor.Address     = model.Address;
+                    doctor.CitizenId   = model.CitizenId;
+
+                    // Xử lý upload ảnh CCCD mặt trước
+                    if (model.CitizenIdFrontFile != null && model.CitizenIdFrontFile.Length > 0)
+                    {
+                        var frontKey = $"cccd-front-{doctor.Id}";
+                        using var stream = model.CitizenIdFrontFile.OpenReadStream();
+                        await _minioService.UploadFileAsync("smarthealth-cccds", frontKey, stream, model.CitizenIdFrontFile.ContentType);
+                    }
+
+                    // Xử lý upload ảnh CCCD mặt sau
+                    if (model.CitizenIdBackFile != null && model.CitizenIdBackFile.Length > 0)
+                    {
+                        var backKey = $"cccd-back-{doctor.Id}";
+                        using var stream = model.CitizenIdBackFile.OpenReadStream();
+                        await _minioService.UploadFileAsync("smarthealth-cccds", backKey, stream, model.CitizenIdBackFile.ContentType);
+                    }
+
                     _context.Doctors.Update(doctor);
                 }
             }
