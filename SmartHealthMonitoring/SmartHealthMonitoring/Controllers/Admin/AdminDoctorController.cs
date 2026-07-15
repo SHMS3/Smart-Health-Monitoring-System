@@ -82,45 +82,57 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 return View(model);
             }
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var strategy = _context.Database.CreateExecutionStrategy();
             try
             {
                 string randomPassword = GenerateRandomPassword(8);
-                var user = new User
+                await strategy.ExecuteAsync(async () =>
                 {
-                    FullName = model.FullName,
-                    Email = model.Email,
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(randomPassword),
-                    Role = 1,
-                    CreatedAt = DateTime.Now,
-                    IsDeleted = false
-                };
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        var user = new User
+                        {
+                            FullName = string.IsNullOrWhiteSpace(model.FullName) ? "Bác sĩ chưa cập nhật" : model.FullName,
+                            Email = model.Email,
+                            PasswordHash = BCrypt.Net.BCrypt.HashPassword(randomPassword),
+                            Role = 1,
+                            CreatedAt = DateTime.Now,
+                            IsDeleted = false
+                        };
+                        _context.Users.Add(user);
+                        await _context.SaveChangesAsync();
 
-                var doctor = new Doctor
-                {
-                    UserId = user.Id,
-                    Specialty = model.Specialty,
-                    CitizenId = model.CitizenId,
-                    PracticeLicense = model.PracticeLicense,
-                    DateOfBirth = model.DateOfBirth,
-                    Sex = model.Sex,
-                    IsOnShift = true,
-                    IsDeleted = false
-                };
-                _context.Doctors.Add(doctor);
-                await _context.SaveChangesAsync();
+                        var doctor = new Doctor
+                        {
+                            UserId = user.Id,
+                            Specialty = model.Specialty,
+                            CitizenId = model.CitizenId,
+                            PracticeLicense = model.PracticeLicense,
+                            DateOfBirth = model.DateOfBirth,
+                            Sex = model.Sex,
+                            IsOnShift = true,
+                            IsDeleted = false
+                        };
+                        _context.Doctors.Add(doctor);
+                        await _context.SaveChangesAsync();
 
-                await _auditLogService.LogAsync(
-                    "Create",
-                    "Doctor",
-                    doctor.Id.ToString(),
-                    $"Tạo tài khoản bác sĩ {user.FullName} ({user.Email}).",
-                    user.Id,
-                    user.FullName);
+                        await _auditLogService.LogAsync(
+                            "Create",
+                            "Doctor",
+                            doctor.Id.ToString(),
+                            $"Tạo tài khoản bác sĩ {user.FullName} ({user.Email}).",
+                            user.Id,
+                            user.FullName);
 
-                await transaction.CommitAsync();
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                });
 
                 // Send email to the doctor
                 string loginUrl = Url.Action("Login", "Auth", new { returnUrl = "/Home/Profile?tab=security" }, Request.Scheme) ?? "";
@@ -128,7 +140,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
                     <div style='font-family:Arial,sans-serif;background:#f8f9fa;padding:20px'>
                         <div style='max-width:600px;margin:0 auto;background:#fff;border-radius:12px;padding:30px;box-shadow:0 4px 15px rgba(0,0,0,.1)'>
                             <h2 style='color:#0f172a'>Tài khoản Bác sĩ được tạo thành công!</h2>
-                            <p style='color:#333;font-size:16px;'>Kính gửi Bác sĩ <strong>{model.FullName}</strong>,</p>
+                            <p style='color:#333;font-size:16px;'>Kính gửi Bác sĩ <strong>{(string.IsNullOrWhiteSpace(model.FullName) ? "chưa cập nhật" : model.FullName)}</strong>,</p>
                             <p style='color:#333;font-size:16px;'>Hệ thống SmartHealth đã cấp phát tài khoản chuyên gia cho bạn. Dưới đây là thông tin đăng nhập:</p>
                             <div style='background:#f1f5f9;padding:15px;border-radius:8px;margin:20px 0;'>
                                 <p style='margin:0 0 10px;'><strong>Email đăng nhập:</strong> {model.Email}</p>
@@ -150,7 +162,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
                 TempData["Error"] = "Lỗi hệ thống: " + ex.Message;
                 return View(model);
             }
@@ -200,43 +211,50 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 return View(model);
             }
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var strategy = _context.Database.CreateExecutionStrategy();
             try
             {
-                var oldFullName = doctor.User.FullName;
-                var oldEmail = doctor.User.Email;
-                var oldSpecialty = doctor.Specialty;
-                var oldShiftStatus = doctor.IsOnShift;
+                await strategy.ExecuteAsync(async () =>
+                {
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        var oldFullName = doctor.User.FullName;
+                        var oldEmail = doctor.User.Email;
+                        var oldSpecialty = doctor.Specialty;
+                        var oldShiftStatus = doctor.IsOnShift;
 
-                doctor.User.FullName = model.FullName;
-                doctor.User.Email = model.Email;
-                _context.Users.Update(doctor.User);
+                        doctor.User.Email = model.Email;
+                        _context.Users.Update(doctor.User);
 
-                doctor.Specialty = model.Specialty;
-                doctor.CitizenId = model.CitizenId;
-                doctor.PracticeLicense = model.PracticeLicense;
-                doctor.DateOfBirth = model.DateOfBirth;
-                doctor.Sex = model.Sex;
-                doctor.IsOnShift = model.IsOnShift;
-                _context.Doctors.Update(doctor);
+                        doctor.Specialty = model.Specialty;
+                        doctor.PracticeLicense = model.PracticeLicense;
+                        doctor.IsOnShift = model.IsOnShift;
+                        _context.Doctors.Update(doctor);
 
-                await _context.SaveChangesAsync();
-                await _auditLogService.LogAsync(
-                    "Update",
-                    "Doctor",
-                    doctor.Id.ToString(),
-                    $"Cập nhật bác sĩ {oldFullName} -> {model.FullName}; email {oldEmail} -> {model.Email}; chuyên khoa {oldSpecialty} -> {model.Specialty}; trạng thái trực {oldShiftStatus} -> {model.IsOnShift}.",
-                    doctor.UserId,
-                    model.FullName);
+                        await _context.SaveChangesAsync();
+                        await _auditLogService.LogAsync(
+                            "Update",
+                            "Doctor",
+                            doctor.Id.ToString(),
+                            $"Cập nhật bác sĩ {oldFullName}; email {oldEmail} -> {model.Email}; chuyên khoa {oldSpecialty} -> {model.Specialty}; trạng thái trực {oldShiftStatus} -> {model.IsOnShift}.",
+                            doctor.UserId,
+                            oldFullName);
 
-                await transaction.CommitAsync();
+                        await transaction.CommitAsync();
+                    }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                });
 
                 TempData["Success"] = "Cập nhật thông tin bác sĩ thành công.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
                 TempData["Error"] = "Lỗi hệ thống: " + ex.Message;
                 return View(model);
             }

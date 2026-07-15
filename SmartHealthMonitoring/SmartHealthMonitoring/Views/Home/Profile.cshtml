@@ -794,21 +794,6 @@
 					}
 
 				</div>
-				@if (Model.Role == 1)
-				{
-					<div style="display:flex; align-items:flex-start; gap:14px; margin-top:20px; padding:16px 20px; background:rgba(99,102,241,.04); border-radius:12px; border-top: 1px solid #f1f5f9;">
-						<div style="width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-							<i class="fas fa-user-shield" style="color:#6366f1;"></i>
-						</div>
-						<div>
-							<div style="font-weight:700;color:#0f172a;font-size:.9rem;margin-bottom:4px;">Thông tin được quản lý bởi Admin</div>
-							<div style="font-size:.82rem;color:#64748b;line-height:1.6;">
-								Tài khoản bác sĩ được quản lý bởi bệnh viện. Bạn chỉ có thể tự thay đổi số điện thoại và địa chỉ nhà. Để thay đổi các thông tin khác, vui lòng liên hệ bộ phận quản trị.<br />
-								<strong>Bạn vẫn có thể đổi mật khẩu</strong> trong tab <em>Bảo mật</em>.
-							</div>
-						</div>
-					</div>
-				}
 			</div>
 
 			@* Edit form — Bệnh nhân và Bác sĩ đều chỉnh sửa được *@
@@ -818,7 +803,7 @@
 					<form asp-controller="Home" asp-action="UpdateProfile" method="post" id="editProfileForm" enctype="multipart/form-data">
 						@Html.AntiForgeryToken()
 						<div class="form-grid-2">
-							@if (Model.Role == 0)
+							@if (Model.Role == 0 || Model.Role == 1)
 							{
 								<div class="form-group-p">
 									<label>Họ và tên</label>
@@ -887,7 +872,7 @@
 								<span class="field-validation-error" data-valmsg-for="Address"></span>
 							</div>
 
-							@if (Model.Role == 0)
+							@if (Model.Role == 0 || Model.Role == 1)
 							{
 								<div class="form-group-p" style="grid-column: 1 / -1; margin-top: 10px;">
 									<label class="fw-bold" style="color: #0f172a; font-size: 15px;">Tải lên ảnh thẻ Căn cước công dân (CCCD)</label>

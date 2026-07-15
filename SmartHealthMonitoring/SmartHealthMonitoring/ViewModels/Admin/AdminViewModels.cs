@@ -35,8 +35,7 @@ namespace SmartHealthMonitoring.ViewModels.Admin
 
     public class DoctorCreateViewModel
     {
-        [Required(ErrorMessage = "Vui lòng nhập họ tên")]
-        public string FullName { get; set; } = null!;
+        public string? FullName { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập Email")]
         [EmailAddress(ErrorMessage = "Email không hợp lệ")]
@@ -61,8 +60,7 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         public int UserId { get; set; }
         public int DoctorId { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng nhập họ tên")]
-        public string FullName { get; set; } = null!;
+        public string? FullName { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập Email")]
         [EmailAddress(ErrorMessage = "Email không hợp lệ")]

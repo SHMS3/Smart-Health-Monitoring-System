@@ -56,12 +56,6 @@
 
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <label asp-for="FullName" class="modern-form-label">Họ và tên <span class="required-star">*</span></label>
-                            <input asp-for="FullName" class="form-control modern-input" placeholder="Nhập họ tên đầy đủ..." />
-                            <span asp-validation-for="FullName" class="text-danger small mt-1 d-block fw-medium"></span>
-                        </div>
-
-                        <div class="col-md-6">
                             <label asp-for="Email" class="modern-form-label">Địa chỉ Email <span class="required-star">*</span></label>
                             <input asp-for="Email" type="email" class="form-control modern-input" placeholder="name@hospital.com" />
                             <span asp-validation-for="Email" class="text-danger small mt-1 d-block fw-medium"></span>
@@ -71,28 +65,6 @@
                             <label asp-for="Specialty" class="modern-form-label">Chuyên khoa khám <span class="required-star">*</span></label>
                             <input asp-for="Specialty" class="form-control modern-input" placeholder="Ví dụ: Tim mạch, Nội tiết..." />
                             <span asp-validation-for="Specialty" class="text-danger small mt-1 d-block fw-medium"></span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="Sex" class="modern-form-label">Giới tính</label>
-                            <select asp-for="Sex" class="form-select modern-input">
-                                <option value="">-- Chọn giới tính --</option>
-                                <option value="1">Nam</option>
-                                <option value="0">Nữ</option>
-                            </select>
-                            <span asp-validation-for="Sex" class="text-danger small mt-1 d-block fw-medium"></span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="DateOfBirth" class="modern-form-label">Ngày sinh</label>
-                            <input asp-for="DateOfBirth" type="date" class="form-control modern-input" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" />
-                            <span asp-validation-for="DateOfBirth" class="text-danger small mt-1 d-block fw-medium"></span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label asp-for="CitizenId" class="modern-form-label">Số CCCD / CMND</label>
-                            <input asp-for="CitizenId" class="form-control modern-input" maxlength="12" placeholder="Nhập 12 chữ số..." />
-                            <span asp-validation-for="CitizenId" class="text-danger small mt-1 d-block fw-medium"></span>
                         </div>
 
                         <div class="col-md-12">
