@@ -13,21 +13,18 @@ namespace SmartHealthMonitoring.Services
     {
         private readonly SmartHealthMonitoringContext _context;
         private readonly IEmailService _emailService;
-        private readonly IEmailTemplateService _emailTemplateService;
-        private readonly IAiAlertSettingsService _aiAlertSettingsService;
+        private readonly EmailTemplateService _emailTemplateService;
         private readonly IQrCheckInService _qrCheckInService;
 
         public EmailTriggerService(
             SmartHealthMonitoringContext context,
             IEmailService emailService,
-            IEmailTemplateService emailTemplateService,
-            IAiAlertSettingsService aiAlertSettingsService,
+            EmailTemplateService emailTemplateService,
             IQrCheckInService qrCheckInService)
         {
             _context = context;
             _emailService = emailService;
             _emailTemplateService = emailTemplateService;
-            _aiAlertSettingsService = aiAlertSettingsService;
             _qrCheckInService = qrCheckInService;
         }
 
@@ -65,7 +62,7 @@ namespace SmartHealthMonitoring.Services
                     string subject = "Thư Mời Tái Khám - Smart Health Monitoring";
                     const string templateName = "AppointmentInvitationTemplate.html";
                     subject = _emailTemplateService.GetSubject(templateName, replacements);
-                    string htmlBody = _emailTemplateService.RenderBody(templateName, replacements);
+                    string htmlBody = _emailService.GetHtmlContentFromFile(templateName, replacements);
 
                     var notification = new EmailNotification
                     {
@@ -131,7 +128,8 @@ namespace SmartHealthMonitoring.Services
                     // Lấy WarningAlert để gán AlertId (Foreign Key bắt buộc trong EmailNotification)
                     var alert = await _context.WarningAlerts
                         .FirstOrDefaultAsync(a => a.PredictionId == predictionId && !a.IsDeleted);
-                    if (alert == null || !_aiAlertSettingsService.IsHighPriority(prediction))
+                    // ponytail: one rule until configurable alert settings have a real caller.
+                    if (alert == null || prediction.RiskLevel < 2)
                     {
                         return;
                     }
@@ -152,7 +150,7 @@ namespace SmartHealthMonitoring.Services
                     string subject = "CẢNH BÁO SỨC KHỎE KHẨN CẤP - Cần tới khám ngay";
                     const string templateName = "HealthWarningTemplate.html";
                     subject = _emailTemplateService.GetSubject(templateName, replacements);
-                    string htmlBody = _emailTemplateService.RenderBody(templateName, replacements);
+                    string htmlBody = _emailService.GetHtmlContentFromFile(templateName, replacements);
 
                     var alreadySent = await _context.EmailNotifications.AnyAsync(n =>
                         n.AlertId == alert.Id &&
@@ -238,7 +236,7 @@ namespace SmartHealthMonitoring.Services
                     string subject = "NHẮC NHỞ: Vui lòng ghi nhận chỉ số sức khỏe hàng ngày - Smart Health";
                     const string templateName = "VitalLogReminderTemplate.html";
                     subject = _emailTemplateService.GetSubject(templateName, replacements);
-                    string htmlBody = _emailTemplateService.RenderBody(templateName, replacements);
+                    string htmlBody = _emailService.GetHtmlContentFromFile(templateName, replacements);
 
                     var notification = new EmailNotification
                     {
@@ -339,7 +337,7 @@ namespace SmartHealthMonitoring.Services
 
                 const string templateName = "DoctorAcceptedCheckInTemplate.html";
                 var subject = _emailTemplateService.GetSubject(templateName, replacements);
-                var htmlBodyForHistory = _emailTemplateService.RenderBody(templateName, replacements);
+                var htmlBodyForHistory = _emailService.GetHtmlContentFromFile(templateName, replacements);
 
                 var notification = new EmailNotification
                 {
@@ -369,7 +367,7 @@ namespace SmartHealthMonitoring.Services
                 {
                     // Email client cần cid: để hiện QR inline
                     replacements["{{QrCodeImage}}"] = $"cid:{qrContentId}";
-                    var htmlBodyToSend = _emailTemplateService.RenderBody(templateName, replacements);
+                    var htmlBodyToSend = _emailService.GetHtmlContentFromFile(templateName, replacements);
 
                     await _emailService.SendEmailAsync(
                         patientEmail,
@@ -440,7 +438,7 @@ namespace SmartHealthMonitoring.Services
 
                 const string templateName = "AppointmentBookingConfirmationTemplate.html";
                 var subject = _emailTemplateService.GetSubject(templateName, replacements);
-                var htmlBodyForHistory = _emailTemplateService.RenderBody(templateName, replacements);
+                var htmlBodyForHistory = _emailService.GetHtmlContentFromFile(templateName, replacements);
 
                 var notification = new EmailNotification
                 {
@@ -469,7 +467,7 @@ namespace SmartHealthMonitoring.Services
                 try
                 {
                     replacements["{{QrCodeImage}}"] = $"cid:{qrContentId}";
-                    var htmlBodyToSend = _emailTemplateService.RenderBody(templateName, replacements);
+                    var htmlBodyToSend = _emailService.GetHtmlContentFromFile(templateName, replacements);
 
                     await _emailService.SendEmailAsync(
                         patientEmail,
@@ -529,7 +527,7 @@ namespace SmartHealthMonitoring.Services
 
                 const string templateName = "AppointmentReminderTemplate.html";
                 var subject = _emailTemplateService.GetSubject(templateName, replacements);
-                var htmlBody = _emailTemplateService.RenderBody(templateName, replacements);
+                var htmlBody = _emailService.GetHtmlContentFromFile(templateName, replacements);
 
                 var notification = new EmailNotification
                 {

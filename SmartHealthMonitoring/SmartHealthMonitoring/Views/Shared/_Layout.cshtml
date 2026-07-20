@@ -1,4 +1,4 @@
-@inject SmartHealthMonitoring.Interfaces.IPatientUiSettingsService PatientUiSettingsService
+@inject SmartHealthMonitoring.Services.PatientUiSettingsService PatientUiSettingsService
 @{
     var patientUi = await PatientUiSettingsService.GetSettingsAsync();
     var patientUiHotlineDigits = new string((patientUi.HotlinePhone ?? string.Empty).Where(char.IsDigit).ToArray());
