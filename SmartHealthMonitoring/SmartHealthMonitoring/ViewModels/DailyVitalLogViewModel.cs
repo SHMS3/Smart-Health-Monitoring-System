@@ -8,15 +8,16 @@ namespace SmartHealthMonitoring.ViewModels
         public int Id { get; set; }
         public DateTime LoggedAt { get; set; }
 
+        [Required(ErrorMessage = "Vui lòng nhập Huyết áp tâm thu")]
         [Range(50, 250, ErrorMessage = "Huyết áp tâm thu không hợp lệ (50-250)")]
-        public short SystolicBp { get; set; }   
-
+        public short? SystolicBp { get; set; }
+        [Required(ErrorMessage = "Vui lòng nhập Huyết áp tâm trương")]
         [Range(30, 150, ErrorMessage = "Huyết áp tâm trương không hợp lệ (30-150)")]
-        public short DiastolicBp { get; set; }
-        public string BloodPressureDisplay => $"{SystolicBp}/{DiastolicBp} mmHg";
-
+        public short? DiastolicBp { get; set; }
+        [Required(ErrorMessage = "Vui lòng nhập Nhịp tim")]
         [Range(30, 250, ErrorMessage = "Nhịp tim không hợp lệ (30-250)")]
-        public short HeartRate { get; set; }
+        public short? HeartRate { get; set; }
+        public string BloodPressureDisplay => $"{SystolicBp}/{DiastolicBp} mmHg";
 
         [Range(0, 10, ErrorMessage = "Mức độ đau phải từ 0 đến 10")]
         public byte ChestPainLevel { get; set; }

@@ -157,6 +157,12 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
+            if (model.DateOfBirth > DateOnly.FromDateTime(DateTime.Now))
+            {
+                ModelState.AddModelError("DateOfBirth", "Ngày sinh không được lớn hơn ngày hiện tại.");
+                return View(model);
+            }
+
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
 
             var strategy = _context.Database.CreateExecutionStrategy();

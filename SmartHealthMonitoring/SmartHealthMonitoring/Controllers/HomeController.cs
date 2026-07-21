@@ -44,9 +44,6 @@ namespace SmartHealthMonitoring.Controllers
             return View();
         }
 
-        // ==========================================
-        // GET: /Home/News
-        // ==========================================
         public async Task<IActionResult> News(string? keyword, int page = 1)
         {
             int pageSize = 6;
@@ -75,9 +72,6 @@ namespace SmartHealthMonitoring.Controllers
             return View(newsList);
         }
 
-        // ==========================================
-        // GET: /Home/NewsDetail/{id}
-        // ==========================================
         public async Task<IActionResult> NewsDetail(int id)
         {
             var news = await _context.HealthNewsPosts

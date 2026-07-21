@@ -185,7 +185,7 @@ namespace SmartHealthMonitoring.Services
 
             return sb.ToString();
         }
-        // =========================================================================
+
 
         // =========================================================================
         // HABIT RAG BUILDER: Dịch thói quen sang văn bản cho AI
@@ -288,7 +288,6 @@ namespace SmartHealthMonitoring.Services
             };
         }
 
-        // 2. Thêm hàm xóa cuộc trò chuyện
         public async Task<bool> DeleteConversationAsync(int sessionId, int userId)
         {
             var patient = await _patientRepository.GetByUserIdAsync(userId);
