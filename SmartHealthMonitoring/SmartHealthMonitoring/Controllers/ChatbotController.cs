@@ -40,14 +40,13 @@ namespace SmartHealthMonitoring.Controllers
         }
     
 
-        // 1. Cập nhật hàm History
         [HttpGet]
         public async Task<IActionResult> History(DateTime? fromDate, DateTime? toDate, int page = 1)
         {
             try
             {
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-                int pageSize = 4; // Giảm xuống 4 để với 5 record hiện có, sẽ có 2 trang (dễ dàng nhìn thấy thanh phân trang)
+                int pageSize = 4; 
 
                 var result = await _chatbotService.GetHistoryAsync(userId, fromDate, toDate, page, pageSize);
 
@@ -64,7 +63,6 @@ namespace SmartHealthMonitoring.Controllers
             }
         }
 
-        // 2. Thêm hàm Details (Chi tiết)
         [HttpGet]
         public async Task<IActionResult> Details(int sessionId)
         {
@@ -75,8 +73,6 @@ namespace SmartHealthMonitoring.Controllers
 
                 if (session == null) return NotFound();
 
-                // (Tùy chọn) Nên check thêm session.PatientId có khớp với user đang login không để bảo mật
-
                 return View(session);
             }
             catch (Exception)
@@ -85,7 +81,6 @@ namespace SmartHealthMonitoring.Controllers
             }
         }
 
-        // 3. Thêm hàm Delete (Xóa)
         [HttpPost]
         public async Task<IActionResult> Delete(int sessionId)
         {

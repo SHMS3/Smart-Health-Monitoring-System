@@ -16,7 +16,7 @@ namespace SmartHealthMonitoring.ViewModels
         [Required(ErrorMessage = "Họ và tên là bắt buộc.")]
         [StringLength(100, ErrorMessage = "Họ và tên không được vượt quá 100 ký tự.")]
         [Display(Name = "Họ và tên")]
-        public string FullName { get; set; } = null!;
+        public string FullName { get; set; } = null!;   
 
         [Required(ErrorMessage = "Email là bắt buộc.")]
         [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
@@ -33,9 +33,10 @@ namespace SmartHealthMonitoring.ViewModels
         public byte Sex { get; set; }
 
         [Phone(ErrorMessage = "Số điện thoại không hợp lệ.")]
-        [StringLength(15, ErrorMessage = "Số điện thoại quá dài.")]
+        [StringLength(10, ErrorMessage = "Số điện thoại quá dài.")]
+        [Required(ErrorMessage = "Số điện thoại là bắt buộc.")]
         [Display(Name = "Số điện thoại")]
-        public string? Phone { get; set; }
+        public string Phone { get; set; }
 
         [StringLength(255, ErrorMessage = "Địa chỉ quá dài.")]
         [Display(Name = "Địa chỉ")]

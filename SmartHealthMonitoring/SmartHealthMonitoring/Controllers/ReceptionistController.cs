@@ -14,11 +14,9 @@ using System.Security.Claims;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "2,3")] // Admin and Receptionist
+    [Authorize(Roles = "2,3")] 
     public class ReceptionistController : Controller
     {
-        // ─── Cấu hình VietQR của phòng khám ───────────────────────────────────────
-        // Thay bằng thông tin ngân hàng thực của phòng khám
         private const string BANK_ID = "MB";          // Mã ngân hàng (MBBank)
         private const string ACCOUNT_NO = "1508200456788";  // Số tài khoản
         private const string ACCOUNT_NAME = "PHAM THE SON"; // Tên chủ TK
@@ -39,7 +37,6 @@ namespace SmartHealthMonitoring.Controllers
             _emailTriggerService = emailTriggerService;
         }
 
-        // GET: /Receptionist/Index – Danh sách phiếu thanh toán (Chỉ Pending)
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
             var query = _context.Payments
@@ -66,10 +63,8 @@ namespace SmartHealthMonitoring.Controllers
             return View(result);
         }
 
-        // GET: /Receptionist/PaymentHistory – Lịch sử thanh toán (Paid) với Filter ngày
         public async Task<IActionResult> PaymentHistory(DateTime? fromDate, DateTime? toDate, int page = 1, int pageSize = 10)
         {
-            // Mặc định lấy ngày hôm nay nếu không có tham số
             if (!fromDate.HasValue) fromDate = DateTime.Today;
             if (!toDate.HasValue) toDate = DateTime.Today;
 
@@ -78,7 +73,6 @@ namespace SmartHealthMonitoring.Controllers
                 .Include(p => p.Doctor).ThenInclude(d => d.User)
                 .Where(p => p.Status == "Paid");
 
-            // Lọc theo ngày (CreatedAt bao gồm cả giờ, nên toDate cần tính hết ngày)
             var start = fromDate.Value.Date;
             var end = toDate.Value.Date.AddDays(1).AddTicks(-1);
 
@@ -106,7 +100,6 @@ namespace SmartHealthMonitoring.Controllers
             return View(result);
         }
 
-        // GET: /Receptionist/Details/5 – Xem chi tiết phiếu (read-only)
         public async Task<IActionResult> Details(int id)
         {
             var payment = await _context.Payments
@@ -119,7 +112,6 @@ namespace SmartHealthMonitoring.Controllers
             return View(payment);
         }
 
-        // GET: /Receptionist/Checkout/5 – Trang thanh toán hóa đơn
         public async Task<IActionResult> Checkout(int id)
         {
             var payment = await _context.Payments
@@ -135,7 +127,6 @@ namespace SmartHealthMonitoring.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            // Tạo nội dung chuyển khoản cố định theo mã phiếu
             var transferContent = $"THANHTOAN HD{payment.Id:D5}";
 
             ViewBag.BankId = BANK_ID;
@@ -143,7 +134,6 @@ namespace SmartHealthMonitoring.Controllers
             ViewBag.AccountName = ACCOUNT_NAME;
             ViewBag.TransferContent = transferContent;
 
-            // Build VietQR image URL (quick link, không cần API key)
             var vietQrUrl = $"https://img.vietqr.io/image/{BANK_ID}-{ACCOUNT_NO}-compact2.png" +
                             $"?amount={payment.TotalAmount:F0}" +
                             $"&addInfo={Uri.EscapeDataString(transferContent)}" +
@@ -153,7 +143,6 @@ namespace SmartHealthMonitoring.Controllers
             return View(payment);
         }
 
-        // POST: /Receptionist/ConfirmCash – Xác nhận thanh toán tiền mặt
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConfirmCash(int id)
@@ -231,7 +220,6 @@ namespace SmartHealthMonitoring.Controllers
             return Ok(new { success = false, message = "Không tìm thấy phiếu phù hợp" });
         }
 
-        // GET: /Receptionist/Patients – Danh sách bệnh nhân
         public async Task<IActionResult> Patients(string search, int page = 1, int pageSize = 10)
         {
             var query = _context.Patients
@@ -275,7 +263,6 @@ namespace SmartHealthMonitoring.Controllers
             return View(viewModel);
         }
 
-        // GET: /Receptionist/PatientDetails/5
         public async Task<IActionResult> PatientDetails(int id)
         {
             var patient = await _context.Patients
@@ -290,7 +277,6 @@ namespace SmartHealthMonitoring.Controllers
             return View(patient);
         }
 
-        // GET: /Receptionist/RegisterPatient
         public IActionResult RegisterPatient()
         {
             return View(new ReceptionistRegisterPatientViewModel());
@@ -309,9 +295,35 @@ namespace SmartHealthMonitoring.Controllers
             bool emailExists = await _context.Users
                 .AnyAsync(u => u.Email == model.Email && !u.IsDeleted);
 
+            bool phoneExists = await _context.Users
+     .AnyAsync(u => u.Patients.Any(p => p.Phone == model.Phone) ||
+                    u.Doctors.Any(d => d.Phone == model.Phone));
+
+            bool citizenId = await _context.Users
+   .AnyAsync(u => u.Patients.Any(p => p.CitizenId == model.CitizenId) ||
+                  u.Doctors.Any(d => d.CitizenId == model.CitizenId));
+
             if (emailExists)
             {
                 ModelState.AddModelError("Email", "Email này đã được sử dụng trong hệ thống.");
+                return View(model);
+            }
+
+            if (phoneExists)
+            {
+                ModelState.AddModelError("Phone", "Số điện thoại này đã được sử dụng trong hệ thống.");
+                return View(model);
+            }
+
+            if (citizenId)
+            {
+                ModelState.AddModelError("CitizenId", "CCCD này đã được sử dụng trong hệ thống.");
+                return View(model);
+            }
+
+            if (model.DateOfBirth > DateOnly.FromDateTime(DateTime.Now))
+            {
+                ModelState.AddModelError("DateOfBirth", "Ngày sinh không được lớn hơn ngày hiện tại.");
                 return View(model);
             }
 
@@ -319,71 +331,82 @@ namespace SmartHealthMonitoring.Controllers
             string randomPassword = GenerateRandomPassword(8);
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(randomPassword);
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var strategy = _context.Database.CreateExecutionStrategy();
             try
             {
-                var user = new User
+                return await strategy.ExecuteAsync(async () =>
                 {
-                    FullName = model.FullName,
-                    Email = model.Email,
-                    PasswordHash = passwordHash,
-                    Role = 0, // Patient Role
-                    IsDeleted = false,
-                    CreatedAt = DateTime.UtcNow
-                };
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        var user = new User
+                        {
+                            FullName = model.FullName,
+                            Email = model.Email,
+                            PasswordHash = passwordHash,
+                            Role = 0, // Patient Role
+                            IsDeleted = false,
+                            CreatedAt = DateTime.UtcNow
+                        };
 
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
+                        _context.Users.Add(user);
+                        await _context.SaveChangesAsync();
 
-                var patient = new Patient
-                {
-                    UserId = user.Id,
-                    DateOfBirth = model.DateOfBirth,
-                    Sex = model.Sex,
-                    Phone = model.Phone,
-                    Address = model.Address,
-                    CitizenId = model.CitizenId,
-                    IsDeleted = false
-                };
+                        var patient = new Patient
+                        {
+                            UserId = user.Id,
+                            DateOfBirth = model.DateOfBirth,
+                            Sex = model.Sex,
+                            Phone = model.Phone,
+                            Address = model.Address,
+                            CitizenId = model.CitizenId,
+                            IsDeleted = false
+                        };
 
-                _context.Patients.Add(patient);
-                await _context.SaveChangesAsync();
+                        _context.Patients.Add(patient);
+                        await _context.SaveChangesAsync();
 
-                await transaction.CommitAsync();
+                        await transaction.CommitAsync();
 
-                // Send email to patient
-                var replacements = new Dictionary<string, string>
-                {
-                    { "{{FullName}}", model.FullName },
-                    { "{{Email}}", model.Email },
-                    { "{{Password}}", randomPassword }
-                };
+                        // Send email to patient
+                        var replacements = new Dictionary<string, string>
+                        {
+                            { "{{FullName}}", model.FullName },
+                            { "{{Email}}", model.Email },
+                            { "{{Password}}", randomPassword }
+                        };
 
-                var htmlContent = _emailService.GetHtmlContentFromFile("NewPatientAccount.html", replacements);
-                if (string.IsNullOrEmpty(htmlContent))
-                {
-                    // Fallback content if template is missing
-                    htmlContent = $@"
-                        <h2>Xin chào {model.FullName},</h2>
-                        <p>Hồ sơ bệnh nhân của bạn đã được đăng ký thành công tại SmartHealth.</p>
-                        <p>Thông tin tài khoản của bạn để đăng nhập vào hệ thống:</p>
-                        <ul>
-                            <li><strong>Email:</strong> {model.Email}</li>
-                            <li><strong>Mật khẩu:</strong> {randomPassword}</li>
-                        </ul>
-                        <p>Vui lòng đăng nhập và đổi mật khẩu sớm nhất có thể để đảm bảo bảo mật.</p>
-                        <p>Trân trọng,</p>
-                        <p>SmartHealth Clinic</p>";
-                }
+                        var htmlContent = _emailService.GetHtmlContentFromFile("NewPatientAccount.html", replacements);
+                        if (string.IsNullOrEmpty(htmlContent))
+                        {
+                            // Fallback content if template is missing
+                            htmlContent = $@"
+                                <h2>Xin chào {model.FullName},</h2>
+                                <p>Hồ sơ bệnh nhân của bạn đã được đăng ký thành công tại SmartHealth.</p>
+                                <p>Thông tin tài khoản của bạn để đăng nhập vào hệ thống:</p>
+                                <ul>
+                                    <li><strong>Email:</strong> {model.Email}</li>
+                                    <li><strong>Mật khẩu:</strong> {randomPassword}</li>
+                                </ul>
+                                <p>Vui lòng đăng nhập và đổi mật khẩu sớm nhất có thể để đảm bảo bảo mật.</p>
+                                <p>Trân trọng,</p>
+                                <p>SmartHealth Clinic</p>";
+                        }
 
-                await _emailService.SendEmailAsync(model.Email, "Tài khoản bệnh nhân - SmartHealth Clinic", htmlContent);
+                        await _emailService.SendEmailAsync(model.Email, "Tài khoản bệnh nhân - SmartHealth Clinic", htmlContent);
 
-                TempData["Success"] = "Đăng ký bệnh nhân thành công. Mật khẩu đã được gửi qua email.";
-                return RedirectToAction(nameof(Patients));
+                        TempData["Success"] = "Đăng ký bệnh nhân thành công. Mật khẩu đã được gửi qua email.";
+                        return RedirectToAction(nameof(Patients));
+                    }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                });
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
                 ModelState.AddModelError(string.Empty, "Đã xảy ra lỗi khi đăng ký bệnh nhân: " + ex.Message);
                 return View(model);
             }
@@ -575,9 +598,6 @@ namespace SmartHealthMonitoring.Controllers
             return Json(new { success = true, data = slots });
         }
 
-        /// <summary>
-        /// Generate slots cho ngày cụ thể từ DoctorWorkSchedules (gọi khi Worker chưa sinh slot).
-        /// </summary>
         private async Task GenerateSlotsForDateAsync(DateTime localDate, TimeZoneInfo vnZone)
         {
             // DayOfWeek trong DB: 0=CN,1=T2,...,6=T7 – khớp với System.DayOfWeek (Sunday=0)
