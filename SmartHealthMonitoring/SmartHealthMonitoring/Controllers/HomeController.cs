@@ -690,6 +690,11 @@ namespace SmartHealthMonitoring.Controllers
 
             if (avatarFile != null && avatarFile.Length > 0)
             {
+                if (avatarFile.Length > 5 * 1024 * 1024)
+                {
+                    TempData["ErrorMessage"] = "Kích thước ảnh không được vượt quá 5MB!";
+                    return RedirectToAction(nameof(Profile));
+                }
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null)
                 {

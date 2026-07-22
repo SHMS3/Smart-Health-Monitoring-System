@@ -74,14 +74,16 @@ public class AppointmentService : IAppointmentService
     {
         var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var end   = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var now   = DateTime.Now;
 
         return await _context.AppointmentSlots
             .Where(s =>
                 doctorIds.Contains(s.DoctorId) &&
                 s.SlotStart >= start &&
+                s.SlotStart >= now &&
                 s.SlotStart <= end &&
                 (s.Status == AppointmentSlotStatus.Available ||
-                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow)))
+                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < now)))
             .OrderBy(s => s.SlotStart)
             .ToListAsync();
     }

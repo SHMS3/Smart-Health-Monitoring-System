@@ -105,6 +105,19 @@ public class AppointmentController : Controller
             });
         }
 
+        bool hasFilter = !string.IsNullOrWhiteSpace(specialty) || 
+                         !string.IsNullOrWhiteSpace(doctorName) || 
+                         gender.HasValue || 
+                         !string.IsNullOrWhiteSpace(session) || 
+                         !string.IsNullOrWhiteSpace(roomNumber) || 
+                         fromDate.HasValue || 
+                         toDate.HasValue;
+
+        if (hasFilter)
+        {
+            doctorSlotsData = doctorSlotsData.Where(d => d.TotalAvailableSlots > 0).ToList();
+        }
+
         doctorSlotsData = doctorSlotsData
             .OrderByDescending(d => d.TotalAvailableSlots > 0)
             .ThenByDescending(d => d.TotalAvailableSlots)

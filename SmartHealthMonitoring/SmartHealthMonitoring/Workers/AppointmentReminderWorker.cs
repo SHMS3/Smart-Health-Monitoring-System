@@ -26,7 +26,7 @@ public class AppointmentReminderWorker : BackgroundService
         _scopeFactory = scopeFactory;
         _logger = logger;
     }
-
+   
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("AppointmentReminderWorker bắt đầu chạy (mỗi 5 phút).");
