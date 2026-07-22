@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
@@ -156,58 +157,75 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
+            if (model.DateOfBirth > DateOnly.FromDateTime(DateTime.Now))
+            {
+                ModelState.AddModelError("DateOfBirth", "Ngày sinh không được lớn hơn ngày hiện tại.");
+                return View(model);
+            }
+
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var strategy = _context.Database.CreateExecutionStrategy();
             try
             {
-                var user = new User
+                return await strategy.ExecuteAsync(async () =>
                 {
-                    FullName = model.FullName,
-                    Email = model.Email,
-                    PasswordHash = passwordHash,
-                    Role = 0, // Patient
-                    IsDeleted = false,
-                    CreatedAt = DateTime.UtcNow
-                };
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        var user = new User
+                        {
+                            FullName = model.FullName,
+                            Email = model.Email,
+                            PasswordHash = passwordHash,
+                            Role = 0, // Patient
+                            IsDeleted = false,
+                            CreatedAt = DateTime.UtcNow
+                        };
 
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
+                        _context.Users.Add(user);
+                        await _context.SaveChangesAsync();
 
-                var patient = new Patient
-                {
-                    UserId = user.Id,
-                    DateOfBirth = model.DateOfBirth,
-                    Sex = model.Sex,
-                    Phone = model.Phone,
-                    IsDeleted = false
-                };
+                        var patient = new Patient
+                        {
+                            UserId = user.Id,
+                            DateOfBirth = model.DateOfBirth,
+                            Sex = model.Sex,
+                            Phone = model.Phone,
+                            IsDeleted = false
+                        };
 
-                _context.Patients.Add(patient);
-                await _context.SaveChangesAsync();
+                        _context.Patients.Add(patient);
+                        await _context.SaveChangesAsync();
 
-                await transaction.CommitAsync();
+                        await transaction.CommitAsync();
 
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.Email),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim("FullName", user.FullName),
-                    new Claim(ClaimTypes.Role, "0")
-                };
+                        var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                            new Claim(ClaimTypes.Name, user.Email),
+                            new Claim(ClaimTypes.Email, user.Email),
+                            new Claim("FullName", user.FullName),
+                            new Claim(ClaimTypes.Role, "0")
+                        };
 
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity),
-                    new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24) });
+                        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                        await HttpContext.SignInAsync(
+                            CookieAuthenticationDefaults.AuthenticationScheme,
+                            new ClaimsPrincipal(claimsIdentity),
+                            new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24) });
 
-                return RedirectByRole(0);
+                        return RedirectByRole(0);
+                    }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                });
             }
             catch
             {
-                await transaction.RollbackAsync();
                 ModelState.AddModelError(string.Empty, "Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại.");
                 return View(model);
             }
@@ -223,7 +241,8 @@ namespace SmartHealthMonitoring.Controllers
         }
 
 
-        [HttpGet]
+        [HttpGet("/Auth/GoogleResponse")]
+        [AllowAnonymous]
         public async Task<IActionResult> GoogleResponse(string? returnUrl = null)
         {
             var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -241,35 +260,47 @@ namespace SmartHealthMonitoring.Controllers
 
             if (user == null)
             {
-                using var transaction = await _context.Database.BeginTransactionAsync();
+                var googleStrategy = _context.Database.CreateExecutionStrategy();
                 try
                 {
-                    user = new User
+                    user = await googleStrategy.ExecuteAsync(async () =>
                     {
-                        FullName = googleName,
-                        Email = googleEmail,
-                        PasswordHash = string.Empty,
-                        Role = 0,
-                        IsDeleted = false,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    _context.Users.Add(user);
-                    await _context.SaveChangesAsync();
+                        await using var transaction = await _context.Database.BeginTransactionAsync();
+                        try
+                        {
+                            var newUser = new User
+                            {
+                                FullName = googleName,
+                                Email = googleEmail,
+                                PasswordHash = string.Empty,
+                                Role = 0,
+                                IsDeleted = false,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            _context.Users.Add(newUser);
+                            await _context.SaveChangesAsync();
 
-                    var patient = new Patient
-                    {
-                        UserId = user.Id,
-                        DateOfBirth = new DateOnly(2000, 1, 1),
-                        Sex = 0,
-                        IsDeleted = false
-                    };
-                    _context.Patients.Add(patient);
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
+                            var patient = new Patient
+                            {
+                                UserId = newUser.Id,
+                                DateOfBirth = new DateOnly(2000, 1, 1),
+                                Sex = 0,
+                                IsDeleted = false
+                            };
+                            _context.Patients.Add(patient);
+                            await _context.SaveChangesAsync();
+                            await transaction.CommitAsync();
+                            return newUser;
+                        }
+                        catch
+                        {
+                            await transaction.RollbackAsync();
+                            throw;
+                        }
+                    });
                 }
                 catch
                 {
-                    await transaction.RollbackAsync();
                     return RedirectToAction(nameof(Login));
                 }
             }

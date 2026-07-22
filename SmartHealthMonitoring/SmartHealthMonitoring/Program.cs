@@ -15,7 +15,11 @@ namespace SmartHealthMonitoring
     {
         public static void Main(string[] args)
         {
-            Env.Load();
+            var envState = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+            if (envState.Equals("Development", StringComparison.OrdinalIgnoreCase))
+            {
+                Env.Load();
+            }
 
             var builder = WebApplication.CreateBuilder(args);
 

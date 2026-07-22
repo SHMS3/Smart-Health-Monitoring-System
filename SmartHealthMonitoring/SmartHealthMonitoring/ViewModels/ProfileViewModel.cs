@@ -22,6 +22,8 @@ namespace SmartHealthMonitoring.ViewModels
 
         // ── Căn cước & Giấy phép ──
         public string? CitizenId { get; set; }
+        public string? CitizenIdFrontUrl { get; set; }
+        public string? CitizenIdBackUrl { get; set; }
         public string? PracticeLicense { get; set; }
         public string? Specialty { get; set; }
 
@@ -116,5 +118,7 @@ namespace SmartHealthMonitoring.ViewModels
 
         public string? AvatarUrl { get; set; }
         public Microsoft.AspNetCore.Http.IFormFile? AvatarFile { get; set; }
+        public Microsoft.AspNetCore.Http.IFormFile? CitizenIdFrontFile { get; set; }
+        public Microsoft.AspNetCore.Http.IFormFile? CitizenIdBackFile { get; set; }
     }
 }

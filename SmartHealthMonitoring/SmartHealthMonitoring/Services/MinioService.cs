@@ -1,4 +1,4 @@
-﻿using Minio;
+using Minio;
 using Minio.DataModel.Args;
 using System.IO;
 using System.Threading.Tasks;

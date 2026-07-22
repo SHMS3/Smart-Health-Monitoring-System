@@ -87,9 +87,9 @@ namespace SmartHealthMonitoring.Services
                 PatientId = patient.Id,
                 LoggedAt = DateTime.Now,
 
-                SystolicBp = model.SystolicBp,
-                DiastolicBp = model.DiastolicBp,
-                HeartRate = model.HeartRate,
+                SystolicBp = model.SystolicBp!.Value,
+                DiastolicBp = model.DiastolicBp!.Value,
+                HeartRate = model.HeartRate!.Value,
                 ChestPainLevel = model.ChestPainLevel,
                 HasExerciseAngina = model.HasExerciseAngina,
 
@@ -173,9 +173,9 @@ namespace SmartHealthMonitoring.Services
                     "Đã dùng hết 2 lượt chỉnh sửa.");
             }
 
-            entity.SystolicBp = model.SystolicBp;
-            entity.DiastolicBp = model.DiastolicBp;
-            entity.HeartRate = model.HeartRate;
+            entity.SystolicBp = model.SystolicBp!.Value;
+            entity.DiastolicBp = model.DiastolicBp!.Value;
+            entity.HeartRate = model.HeartRate!.Value;
             entity.ChestPainLevel = model.ChestPainLevel;
             entity.HasExerciseAngina = model.HasExerciseAngina;
             entity.UpdateCount++;
@@ -206,7 +206,7 @@ namespace SmartHealthMonitoring.Services
             DateTime startDate;
             if (days == 1)
             {
-                startDate = DateTime.Today; // Từ 0h00 hôm nay
+                startDate = DateTime.Today; 
             }
             else
             {

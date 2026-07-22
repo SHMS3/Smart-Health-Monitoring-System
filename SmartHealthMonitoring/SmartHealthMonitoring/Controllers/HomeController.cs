@@ -20,14 +20,16 @@ namespace SmartHealthMonitoring.Controllers
         private readonly IEmailService _emailService;
         private readonly ITwilioVerifyService _twilioVerify;
         private readonly IMinioService _minioService;
+        private readonly GeminiService _geminiService;
 
-        public HomeController(ILogger<HomeController> logger, SmartHealthMonitoringContext context, IEmailService emailService, ITwilioVerifyService twilioVerify, IMinioService minioService)
+        public HomeController(ILogger<HomeController> logger, SmartHealthMonitoringContext context, IEmailService emailService, ITwilioVerifyService twilioVerify, IMinioService minioService, GeminiService geminiService)
         {
             _logger = logger;
             _context = context;
             _emailService = emailService;
             _twilioVerify = twilioVerify;
             _minioService = minioService;
+            _geminiService = geminiService;
         }
 
         public async Task<IActionResult> Index()
@@ -42,9 +44,6 @@ namespace SmartHealthMonitoring.Controllers
             return View();
         }
 
-        // ==========================================
-        // GET: /Home/News
-        // ==========================================
         public async Task<IActionResult> News(string? keyword, int page = 1)
         {
             int pageSize = 6;
@@ -73,9 +72,6 @@ namespace SmartHealthMonitoring.Controllers
             return View(newsList);
         }
 
-        // ==========================================
-        // GET: /Home/NewsDetail/{id}
-        // ==========================================
         public async Task<IActionResult> NewsDetail(int id)
         {
             var news = await _context.HealthNewsPosts
@@ -245,6 +241,15 @@ namespace SmartHealthMonitoring.Controllers
                     vm.Address         = patient.Address;
                     vm.CitizenId       = patient.CitizenId;
 
+                    // Lấy link ảnh CCCD 2 mặt từ MinIO cho bệnh nhân nếu đã có CitizenId
+                    if (!string.IsNullOrEmpty(patient.CitizenId))
+                    {
+                        var frontKey = $"cccd-front-{patient.Id}";
+                        var backKey = $"cccd-back-{patient.Id}";
+                        vm.CitizenIdFrontUrl = await _minioService.GetPresignedUrlAsync("smarthealth-cccds", frontKey, 10080);
+                        vm.CitizenIdBackUrl = await _minioService.GetPresignedUrlAsync("smarthealth-cccds", backKey, 10080);
+                    }
+
                     // Thống kê nhanh
                     vm.TotalVitalLogs       = await _context.DailyVitalLogs.CountAsync(v => v.PatientId == patient.Id);
                     vm.TotalClinicalRecords = await _context.ClinicalRecords.CountAsync(c => c.PatientId == patient.Id);
@@ -303,6 +308,15 @@ namespace SmartHealthMonitoring.Controllers
                     vm.IsPhoneVerified = doctor.IsPhoneVerified;
                     vm.DateOfBirth     = doctor.DateOfBirth;
                     vm.Sex             = doctor.Sex;
+
+                    // Lấy link ảnh CCCD 2 mặt từ MinIO cho bác sĩ nếu đã có CitizenId
+                    if (!string.IsNullOrEmpty(doctor.CitizenId))
+                    {
+                        var frontKey = $"cccd-front-{doctor.Id}";
+                        var backKey = $"cccd-back-{doctor.Id}";
+                        vm.CitizenIdFrontUrl = await _minioService.GetPresignedUrlAsync("smarthealth-cccds", frontKey, 10080);
+                        vm.CitizenIdBackUrl = await _minioService.GetPresignedUrlAsync("smarthealth-cccds", backKey, 10080);
+                    }
                 }
             }
 
@@ -325,7 +339,7 @@ namespace SmartHealthMonitoring.Controllers
             if (user == null) return RedirectToAction("Login", "Auth");
 
             // Kiểm tra validation bổ sung theo vai trò
-            if (user.Role == 0) // Patient
+            if (user.Role == 0 || user.Role == 1) // Patient or Doctor
             {
                 if (model.DateOfBirth == null)
                     ModelState.AddModelError(nameof(model.DateOfBirth), "Vui lòng chọn ngày sinh.");
@@ -339,8 +353,8 @@ namespace SmartHealthMonitoring.Controllers
                 return RedirectToAction(nameof(Profile));
             }
 
-            // Cập nhật tên trong bảng Users (chỉ dành cho Bệnh nhân)
-            if (user.Role == 0)
+            // Cập nhật tên trong bảng Users (Bệnh nhân và Bác sĩ)
+            if (user.Role == 0 || user.Role == 1)
             {
                 user.FullName = model.FullName;
                 _context.Users.Update(user);
@@ -361,6 +375,23 @@ namespace SmartHealthMonitoring.Controllers
                     patient.Phone       = model.Phone;
                     patient.Address     = model.Address;
                     patient.CitizenId   = model.CitizenId;
+
+                    // Xử lý upload ảnh CCCD mặt trước
+                    if (model.CitizenIdFrontFile != null && model.CitizenIdFrontFile.Length > 0)
+                    {
+                        var frontKey = $"cccd-front-{patient.Id}";
+                        using var stream = model.CitizenIdFrontFile.OpenReadStream();
+                        await _minioService.UploadFileAsync("smarthealth-cccds", frontKey, stream, model.CitizenIdFrontFile.ContentType);
+                    }
+
+                    // Xử lý upload ảnh CCCD mặt sau
+                    if (model.CitizenIdBackFile != null && model.CitizenIdBackFile.Length > 0)
+                    {
+                        var backKey = $"cccd-back-{patient.Id}";
+                        using var stream = model.CitizenIdBackFile.OpenReadStream();
+                        await _minioService.UploadFileAsync("smarthealth-cccds", backKey, stream, model.CitizenIdBackFile.ContentType);
+                    }
+
                     _context.Patients.Update(patient);
                 }
             }
@@ -374,8 +405,28 @@ namespace SmartHealthMonitoring.Controllers
                     if (doctor.Phone != model.Phone)
                         doctor.IsPhoneVerified = false;
 
-                    doctor.Phone = model.Phone;
-                    doctor.Address = model.Address;
+                    doctor.DateOfBirth = model.DateOfBirth!.Value;
+                    doctor.Sex         = model.Sex!.Value;
+                    doctor.Phone       = model.Phone;
+                    doctor.Address     = model.Address;
+                    doctor.CitizenId   = model.CitizenId;
+
+                    // Xử lý upload ảnh CCCD mặt trước
+                    if (model.CitizenIdFrontFile != null && model.CitizenIdFrontFile.Length > 0)
+                    {
+                        var frontKey = $"cccd-front-{doctor.Id}";
+                        using var stream = model.CitizenIdFrontFile.OpenReadStream();
+                        await _minioService.UploadFileAsync("smarthealth-cccds", frontKey, stream, model.CitizenIdFrontFile.ContentType);
+                    }
+
+                    // Xử lý upload ảnh CCCD mặt sau
+                    if (model.CitizenIdBackFile != null && model.CitizenIdBackFile.Length > 0)
+                    {
+                        var backKey = $"cccd-back-{doctor.Id}";
+                        using var stream = model.CitizenIdBackFile.OpenReadStream();
+                        await _minioService.UploadFileAsync("smarthealth-cccds", backKey, stream, model.CitizenIdBackFile.ContentType);
+                    }
+
                     _context.Doctors.Update(doctor);
                 }
             }
@@ -415,6 +466,34 @@ namespace SmartHealthMonitoring.Controllers
 
             TempData["SuccessMessage"] = "Cập nhật thông tin thành công!";
             return RedirectToAction(nameof(Profile));
+        }
+
+        // ==========================================
+        // POST: /Home/ScanCccd — OCR ảnh CCCD qua Gemini API
+        // ==========================================
+        [HttpPost("/Home/ScanCccd")]
+        [Authorize]
+        public async Task<IActionResult> ScanCccd(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { success = false, message = "Vui lòng chọn hoặc chụp ảnh mặt trước CCCD." });
+            }
+
+            try
+            {
+                using var ms = new MemoryStream();
+                await file.CopyToAsync(ms);
+                var imageBytes = ms.ToArray();
+
+                var jsonResult = await _geminiService.ScanCitizenIdAsync(imageBytes, file.ContentType);
+                return Content(jsonResult, "application/json");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to scan CCCD image using Gemini");
+                return StatusCode(500, new { success = false, message = "Không thể trích xuất được thông tin từ ảnh này. Vui lòng chọn ảnh rõ nét hơn hoặc tự điền." });
+            }
         }
 
         // ==========================================

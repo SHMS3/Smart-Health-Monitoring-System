@@ -592,126 +592,135 @@ public class AppointmentService : IAppointmentService
     public async Task<(bool success, string message, Appointment? newAppointment)> RescheduleAppointmentAsync(
         int appointmentId, int newSlotId, int patientId)
     {
-        await using var transaction = await _context.Database.BeginTransactionAsync();
-        try
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
         {
-            // 1. Validate old appointment
-            var oldAppt = await _context.Appointments
-                .Include(a => a.Slot)
-                .FirstOrDefaultAsync(a => a.Id == appointmentId && a.PatientId == patientId);
-
-            if (oldAppt == null)
-                return (false, "Lịch hẹn không tồn tại hoặc không thuộc về bạn.", null);
-
-            if (oldAppt.Status != AppointmentStatus.Confirmed)
-                return (false, "Chỉ có thể dời lịch hẹn đã xác nhận.", null);
-
-            var hoursUntilAppt = (oldAppt.Slot.SlotStart - DateTime.UtcNow).TotalHours;
-            if (hoursUntilAppt < MinCancelHours)
-                return (false, $"Không thể dời lịch khi còn dưới {MinCancelHours} giờ trước giờ hẹn.", null);
-
-            // 2. Validate new slot
-            var newSlot = await _context.AppointmentSlots
-                .FirstOrDefaultAsync(s => s.Id == newSlotId);
-
-            if (newSlot == null)
-                return (false, "Slot mới không tồn tại.", null);
-
-            if (newSlot.DoctorId != oldAppt.DoctorId)
-                return (false, "Chỉ có thể dời lịch trong cùng bác sĩ.", null);
-
-            bool isOwnSoftLock = newSlot.Status == AppointmentSlotStatus.SoftLocked
-                              && newSlot.PatientId == patientId
-                              && newSlot.SoftLockedUntil >= DateTime.UtcNow;
-
-            if (newSlot.Status == AppointmentSlotStatus.Booked)
-                return (false, "Khung giờ mới đã có người đặt.", null);
-
-            if (newSlot.Status == AppointmentSlotStatus.Blocked)
-                return (false, "Bác sĩ đã chặn khung giờ mới.", null);
-
-            if (newSlot.Status == AppointmentSlotStatus.SoftLocked && !isOwnSoftLock)
-                return (false, "Khung giờ mới đang được người khác giữ chỗ.", null);
-
-            // 3. Cancel old appointment → release old slot
-            var oldSlotId = oldAppt.Slot.Id;
-            var oldSlotDate = DateOnly.FromDateTime(oldAppt.Slot.SlotStart);
-
-            oldAppt.Status = AppointmentStatus.CancelledByPatient;
-            oldAppt.DoctorNote = "[Hệ thống] Bệnh nhân dời lịch sang slot mới.";
-            oldAppt.UpdatedAt = DateTime.UtcNow;
-
-            oldAppt.Slot.Status = AppointmentSlotStatus.Available;
-            oldAppt.Slot.PatientId = null;
-            oldAppt.Slot.SoftLockedUntil = null;
-
-            // 4. Book new slot + create new appointment (Pending - chờ duyệt)
-            newSlot.Status = AppointmentSlotStatus.SoftLocked;
-            newSlot.PatientId = patientId;
-            newSlot.SoftLockedUntil = DateTime.MaxValue; // SoftLock vĩnh viễn chờ duyệt
-
-            var newAppt = new Appointment
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                SlotId = newSlotId,
-                PatientId = patientId,
-                DoctorId = newSlot.DoctorId,
-                Status = AppointmentStatus.Pending,
-                PatientNote = oldAppt.PatientNote,
-                CreatedAt = DateTime.UtcNow
-            };
-            _context.Appointments.Add(newAppt);
+                // 1. Validate old appointment
+                var oldAppt = await _context.Appointments
+                    .Include(a => a.Slot)
+                    .FirstOrDefaultAsync(a => a.Id == appointmentId && a.PatientId == patientId);
 
-            // 5. Commit transaction
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+                if (oldAppt == null)
+                    return (false, "Lịch hẹn không tồn tại hoặc không thuộc về bạn.", null);
 
-            _logger.LogInformation("Patient {PatientId} rescheduled appointment {OldId} → new slot {NewSlotId}.",
-                patientId, appointmentId, newSlotId);
+                if (oldAppt.Status != AppointmentStatus.Confirmed)
+                    return (false, "Chỉ có thể dời lịch hẹn đã xác nhận.", null);
 
-            // SignalR broadcasts
-            await _hubContext.Clients.All.SendAsync("SlotStatusChanged", oldSlotId, "Available");
-            await _hubContext.Clients.All.SendAsync("SlotStatusChanged", newSlotId, "SoftLocked");
-            await _hubContext.Clients.All.SendAsync("AppointmentStatusChanged", appointmentId, "CancelledByPatient");
+                var hoursUntilAppt = (oldAppt.Slot.SlotStart - DateTime.UtcNow).TotalHours;
+                if (hoursUntilAppt < MinCancelHours)
+                    return (false, $"Không thể dời lịch khi còn dưới {MinCancelHours} giờ trước giờ hẹn.", null);
 
-            // Broadcast NewBookingRequest cho staff duyệt
-            var fullAppt = await _context.Appointments
-                .AsNoTracking()
-                .Include(a => a.Slot)
-                .Include(a => a.Patient).ThenInclude(p => p.User)
-                .Include(a => a.Doctor).ThenInclude(d => d.User)
-                .FirstOrDefaultAsync(a => a.Id == newAppt.Id);
+                // 2. Validate new slot
+                var newSlot = await _context.AppointmentSlots
+                    .FirstOrDefaultAsync(s => s.Id == newSlotId);
 
-            if (fullAppt != null)
-            {
-                await _hubContext.Clients.Group("Staff").SendAsync("NewBookingRequest", new
+                if (newSlot == null)
+                    return (false, "Slot mới không tồn tại.", null);
+
+                if (newSlot.DoctorId != oldAppt.DoctorId)
+                    return (false, "Chỉ có thể dời lịch trong cùng bác sĩ.", null);
+
+                bool isOwnSoftLock = newSlot.Status == AppointmentSlotStatus.SoftLocked
+                                  && newSlot.PatientId == patientId
+                                  && newSlot.SoftLockedUntil >= DateTime.UtcNow;
+
+                if (newSlot.Status == AppointmentSlotStatus.Booked)
+                    return (false, "Khung giờ mới đã có người đặt.", null);
+
+                if (newSlot.Status == AppointmentSlotStatus.Blocked)
+                    return (false, "Bác sĩ đã chặn khung giờ mới.", null);
+
+                if (newSlot.Status == AppointmentSlotStatus.SoftLocked && !isOwnSoftLock)
+                    return (false, "Khung giờ mới đang được người khác giữ chỗ.", null);
+
+                // 3. Cancel old appointment → release old slot
+                var oldSlotId = oldAppt.Slot.Id;
+                var oldSlotDate = DateOnly.FromDateTime(oldAppt.Slot.SlotStart);
+
+                oldAppt.Status = AppointmentStatus.CancelledByPatient;
+                oldAppt.DoctorNote = "[Hệ thống] Bệnh nhân dời lịch sang slot mới.";
+                oldAppt.UpdatedAt = DateTime.UtcNow;
+
+                oldAppt.Slot.Status = AppointmentSlotStatus.Available;
+                oldAppt.Slot.PatientId = null;
+                oldAppt.Slot.SoftLockedUntil = null;
+
+                // 4. Book new slot + create new appointment (Pending - chờ duyệt)
+                newSlot.Status = AppointmentSlotStatus.SoftLocked;
+                newSlot.PatientId = patientId;
+                newSlot.SoftLockedUntil = DateTime.MaxValue; // SoftLock vĩnh viễn chờ duyệt
+
+                var newAppt = new Appointment
                 {
-                    appointmentId = fullAppt.Id,
-                    patientName = fullAppt.Patient.User.FullName,
-                    patientPhone = fullAppt.Patient.Phone ?? "",
-                    patientEmail = fullAppt.Patient.User.Email,
-                    doctorName = fullAppt.Doctor.User.FullName,
-                    specialty = fullAppt.Doctor.Specialty,
-                    slotStart = fullAppt.Slot.SlotStart.ToString("HH:mm"),
-                    slotEnd = fullAppt.Slot.SlotEnd.ToString("HH:mm"),
-                    slotDate = fullAppt.Slot.SlotStart.ToString("dd/MM/yyyy"),
-                    patientNote = "[Dời lịch] " + (fullAppt.PatientNote ?? "")
+                    SlotId = newSlotId,
+                    PatientId = patientId,
+                    DoctorId = newSlot.DoctorId,
+                    Status = AppointmentStatus.Pending,
+                    PatientNote = oldAppt.PatientNote,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Appointments.Add(newAppt);
+
+                // 5. Commit transaction
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("Patient {PatientId} rescheduled appointment {OldId} → new slot {NewSlotId}.",
+                    patientId, appointmentId, newSlotId);
+
+                // SignalR broadcasts
+                await _hubContext.Clients.All.SendAsync("SlotStatusChanged", oldSlotId, "Available");
+                await _hubContext.Clients.All.SendAsync("SlotStatusChanged", newSlotId, "SoftLocked");
+                await _hubContext.Clients.All.SendAsync("AppointmentStatusChanged", appointmentId, "CancelledByPatient");
+
+                // Broadcast NewBookingRequest cho staff duyệt
+                var fullAppt = await _context.Appointments
+                    .AsNoTracking()
+                    .Include(a => a.Slot)
+                    .Include(a => a.Patient).ThenInclude(p => p.User)
+                    .Include(a => a.Doctor).ThenInclude(d => d.User)
+                    .FirstOrDefaultAsync(a => a.Id == newAppt.Id);
+
+                if (fullAppt != null)
+                {
+                    await _hubContext.Clients.Group("Staff").SendAsync("NewBookingRequest", new
+                    {
+                        appointmentId = fullAppt.Id,
+                        patientName = fullAppt.Patient.User.FullName,
+                        patientPhone = fullAppt.Patient.Phone ?? "",
+                        patientEmail = fullAppt.Patient.User.Email,
+                        doctorName = fullAppt.Doctor.User.FullName,
+                        specialty = fullAppt.Doctor.Specialty,
+                        slotStart = fullAppt.Slot.SlotStart.ToString("HH:mm"),
+                        slotEnd = fullAppt.Slot.SlotEnd.ToString("HH:mm"),
+                        slotDate = fullAppt.Slot.SlotStart.ToString("dd/MM/yyyy"),
+                        patientNote = "[Dời lịch] " + (fullAppt.PatientNote ?? "")
+                    });
+                }
+
+                // Notify waitlist cho old slot date
+                _ = Task.Run(async () =>
+                {
+                    try { await NotifyWaitlistSubscribersAsync(oldAppt.DoctorId, oldSlotDate); }
+                    catch { /* ignore */ }
                 });
+
+                return (true, "Dời lịch thành công! Vui lòng chờ nhân viên duyệt.", newAppt);
             }
-
-            // Notify waitlist cho old slot date
-            _ = Task.Run(async () =>
+            catch (DbUpdateConcurrencyException)
             {
-                try { await NotifyWaitlistSubscribersAsync(oldAppt.DoctorId, oldSlotDate); }
-                catch { /* ignore */ }
-            });
-
-            return (true, "Dời lịch thành công! Vui lòng chờ nhân viên duyệt.", newAppt);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            await transaction.RollbackAsync();
-            return (false, "Khung giờ mới vừa được người khác đặt. Vui lòng chọn giờ khác.", null);
-        }
+                await transaction.RollbackAsync();
+                return (false, "Khung giờ mới vừa được người khác đặt. Vui lòng chọn giờ khác.", null);
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        });
     }
 
     // ═══════════════════════════════════════════════════════════════
