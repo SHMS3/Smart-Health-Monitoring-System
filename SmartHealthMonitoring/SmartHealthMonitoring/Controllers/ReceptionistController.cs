@@ -321,9 +321,28 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            if (model.DateOfBirth > DateOnly.FromDateTime(DateTime.Now))
+            // === VALIDATE NGÀY SINH (lớp bảo vệ thứ 2 sau attribute) ===
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var minDate = new DateOnly(1900, 1, 1);
+
+            if (model.DateOfBirth < minDate)
             {
-                ModelState.AddModelError("DateOfBirth", "Ngày sinh không được lớn hơn ngày hiện tại.");
+                ModelState.AddModelError("DateOfBirth", $"Ngày sinh không hợp lệ. Năm sinh phải từ {minDate.Year} trở đi.");
+                return View(model);
+            }
+
+            if (model.DateOfBirth > today)
+            {
+                ModelState.AddModelError("DateOfBirth", "Ngày sinh không hợp lệ. Ngày sinh không được lớn hơn ngày hiện tại.");
+                return View(model);
+            }
+
+            int age = today.Year - model.DateOfBirth.Year;
+            if (model.DateOfBirth > today.AddYears(-age)) age--;
+
+            if (age > 150)
+            {
+                ModelState.AddModelError("DateOfBirth", "Ngày sinh không hợp lệ. Tuổi không được vượt quá 150.");
                 return View(model);
             }
 

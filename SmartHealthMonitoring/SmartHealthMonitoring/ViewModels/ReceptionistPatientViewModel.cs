@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using SmartHealthMonitoring.Attributes;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.Common;
 
@@ -26,6 +27,7 @@ namespace SmartHealthMonitoring.ViewModels
         [Required(ErrorMessage = "Ngày sinh là bắt buộc.")]
         [DataType(DataType.Date)]
         [Display(Name = "Ngày sinh")]
+        [ValidDateOfBirth]
         public DateOnly DateOfBirth { get; set; }
 
         [Required(ErrorMessage = "Giới tính là bắt buộc.")]
