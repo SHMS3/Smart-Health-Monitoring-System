@@ -84,15 +84,15 @@
 					<span class="fs-7 @(Model.SystolicBp >= Model.SystolicBpDanger ? "text-danger fw-medium" : Model.SystolicBp >= Model.SystolicBpWarning ? "text-warning fw-medium" : "text-success")">
 						@if (Model.SystolicBp >= Model.SystolicBpDanger)
 						{
-							<span>&#9888;&#65039; Nguy hiểm (&ge;@Model.SystolicBpDanger)</span>
+							<span>⚠️ Nguy hiểm (≥@Model.SystolicBpDanger)</span>
 						}
 						else if (Model.SystolicBp >= Model.SystolicBpWarning)
 						{
-							<span>&#9888; Cảnh báo (&ge;@Model.SystolicBpWarning)</span>
+							<span>⚠ Cảnh báo (≥@Model.SystolicBpWarning)</span>
 						}
 						else
 						{
-							<span>&#10003; Bình thường (&lt;@Model.SystolicBpWarning)</span>
+							<span>✓ Bình thường (&lt;@Model.SystolicBpWarning)</span>
 						}
 					</span>
 					<div class="safe-range-badge mt-2">
@@ -101,7 +101,7 @@
 						<span class="range-divider mx-1">|</span>
 						Cảnh báo: <strong>@Model.SystolicBpWarning – @(Model.SystolicBpDanger - 1)</strong>
 						<span class="range-divider mx-1">|</span>
-						Nguy hiểm: <strong>&ge; @Model.SystolicBpDanger</strong>
+						Nguy hiểm: <strong>≥ @Model.SystolicBpDanger</strong>
 					</div>
 				</div>
 			</div>
@@ -113,15 +113,15 @@
 					<span class="fs-7 @(Model.DiastolicBp >= Model.DiastolicBpDanger ? "text-danger fw-medium" : Model.DiastolicBp >= Model.DiastolicBpWarning ? "text-warning fw-medium" : "text-success")">
 						@if (Model.DiastolicBp >= Model.DiastolicBpDanger)
 						{
-							<span>&#9888;&#65039; Nguy hiểm (&ge;@Model.DiastolicBpDanger)</span>
+							<span>⚠️ Nguy hiểm (≥@Model.DiastolicBpDanger)</span>
 						}
 						else if (Model.DiastolicBp >= Model.DiastolicBpWarning)
 						{
-							<span>&#9888; Cảnh báo (&ge;@Model.DiastolicBpWarning)</span>
+							<span>⚠ Cảnh báo (≥@Model.DiastolicBpWarning)</span>
 						}
 						else
 						{
-							<span>&#10003; Bình thường (&lt;@Model.DiastolicBpWarning)</span>
+							<span>✓ Bình thường (&lt;@Model.DiastolicBpWarning)</span>
 						}
 					</span>
 					<div class="safe-range-badge mt-2">
@@ -130,7 +130,7 @@
 						<span class="range-divider mx-1">|</span>
 						Cảnh báo: <strong>@Model.DiastolicBpWarning – @(Model.DiastolicBpDanger - 1)</strong>
 						<span class="range-divider mx-1">|</span>
-						Nguy hiểm: <strong>&ge; @Model.DiastolicBpDanger</strong>
+						Nguy hiểm: <strong>≥ @Model.DiastolicBpDanger</strong>
 					</div>
 				</div>
 			</div>
@@ -142,22 +142,22 @@
 					<span class="fs-7 @(Model.HeartRate <= Model.HeartRateDangerMin || Model.HeartRate >= Model.HeartRateDangerMax ? "text-danger fw-medium" : Model.HeartRate <= Model.HeartRateWarningMin || Model.HeartRate >= Model.HeartRateWarningMax ? "text-warning fw-medium" : "text-success")">
 						@if (Model.HeartRate <= Model.HeartRateDangerMin || Model.HeartRate >= Model.HeartRateDangerMax)
 						{
-							<span>&#9888;&#65039; Nguy hiểm (&le;@Model.HeartRateDangerMin hoặc &ge;@Model.HeartRateDangerMax)</span>
+							<span>⚠️ Nguy hiểm (≤@Model.HeartRateDangerMin hoặc ≥@Model.HeartRateDangerMax)</span>
 						}
 						else if (Model.HeartRate <= Model.HeartRateWarningMin || Model.HeartRate >= Model.HeartRateWarningMax)
 						{
-							<span>&#9888; Cảnh báo (tốt nhất: @Model.HeartRateWarningMin–@Model.HeartRateWarningMax)</span>
+							<span>⚠ Cảnh báo (tốt nhất: @Model.HeartRateWarningMin–@Model.HeartRateWarningMax)</span>
 						}
 						else
 						{
-							<span>&#10003; Bình thường (@Model.HeartRateWarningMin–@Model.HeartRateWarningMax)</span>
+							<span>✓ Bình thường (@Model.HeartRateWarningMin–@Model.HeartRateWarningMax)</span>
 						}
 					</span>
 					<div class="safe-range-badge mt-2">
 						<i class="bi bi-shield-check me-1"></i>
 						Ngưỡng an toàn: <strong>@Model.HeartRateWarningMin – @Model.HeartRateWarningMax bpm</strong>
 						<span class="range-divider mx-1">|</span>
-						Nguy hiểm: <strong>&le;@Model.HeartRateDangerMin hoặc &ge;@Model.HeartRateDangerMax</strong>
+						Nguy hiểm: <strong>≤@Model.HeartRateDangerMin hoặc ≥@Model.HeartRateDangerMax</strong>
 					</div>
 				</div>
 			</div>
@@ -169,15 +169,15 @@
 					<span class="fs-7 @(Model.ChestPainLevel == 0 ? "text-success" : Model.ChestPainLevel <= 3 ? "text-warning fw-medium" : "text-danger fw-medium")">
 						@if (Model.ChestPainLevel == 0)
 						{
-							<span>&#10003; Không đau</span>
+							<span>✓ Không đau</span>
 						}
 						else if (Model.ChestPainLevel <= 3)
 						{
-							<span>&#9888; Đau nhẹ – cần theo dõi</span>
+							<span>⚠ Đau nhẹ – cần theo dõi</span>
 						}
 						else
 						{
-							<span>&#9888;&#65039; Đau nặng – cần thăm khám</span>
+							<span>⚠️ Đau nặng – cần thăm khám</span>
 						}
 					</span>
 					<div class="safe-range-badge mt-2">

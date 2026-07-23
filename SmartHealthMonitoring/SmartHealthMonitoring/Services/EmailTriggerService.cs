@@ -28,7 +28,7 @@ namespace SmartHealthMonitoring.Services
             _qrCheckInService = qrCheckInService;
         }
 
-        public async Task SendAppointmentInvitationAsync(int alertId, int sentByDoctorId, DateTime? appointmentDate = null)
+        public async Task<bool> SendAppointmentInvitationAsync(int alertId, int sentByDoctorId, DateTime? appointmentDate = null)
         {
             try
             {
@@ -79,6 +79,7 @@ namespace SmartHealthMonitoring.Services
                     _context.EmailNotifications.Add(notification);
                     await _context.SaveChangesAsync();
 
+                    var emailSent = false;
                     if (!string.IsNullOrEmpty(htmlBody))
                     {
                         try
@@ -87,6 +88,7 @@ namespace SmartHealthMonitoring.Services
                             notification.Status = 1;
                             notification.IsSent = true;
                             notification.SentAt = DateTime.Now;
+                            emailSent = true;
                         }
                         catch (Exception ex)
                         {
@@ -104,11 +106,15 @@ namespace SmartHealthMonitoring.Services
                     }
                     
                     await _context.SaveChangesAsync();
+                    return emailSent;
                 }
+
+                return false;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[SendAppointmentInvitationAsync Error] {ex.Message}");
+                return false;
             }
         }
 
