@@ -62,8 +62,8 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
         using var scope   = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
 
-        var today    = DateOnly.FromDateTime(DateTime.UtcNow);
-        var genUntil = today.AddDays(14);
+        var today    = DateOnly.FromDateTime(DateTime.Now); // Dùng giờ Local để tránh lệch múi giờ khi khởi động
+        var genUntil = today.AddDays(3); // Tạo slot cho hôm nay + 3 ngày tới = 4 ngày
 
         var schedules = await context.DoctorWorkSchedules
             .Where(s => s.IsActive)

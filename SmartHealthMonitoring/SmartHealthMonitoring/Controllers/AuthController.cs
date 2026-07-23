@@ -8,16 +8,22 @@ using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels;
 using System.Security.Claims;
+using Microsoft.Extensions.Caching.Memory;
+using SmartHealthMonitoring.Interfaces;
 
 namespace SmartHealthMonitoring.Controllers
 {
     public class AuthController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
+        private readonly IMemoryCache _cache;
+        private readonly IEmailService _emailService;
 
-        public AuthController(SmartHealthMonitoringContext context)
+        public AuthController(SmartHealthMonitoringContext context, IMemoryCache cache, IEmailService emailService)
         {
             _context = context;
+            _cache = cache;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -377,6 +383,137 @@ namespace SmartHealthMonitoring.Controllers
             };
             Console.WriteLine($"[DEBUG RedirectByRole] Redirecting to: {(result as RedirectToActionResult)?.ControllerName}/{(result as RedirectToActionResult)?.ActionName}");
             return result;
+        }
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null || user.IsDeleted)
+            {
+                ModelState.AddModelError("Email", "Email không tồn tại hoặc tài khoản đã bị khóa.");
+                return View(model);
+            }
+
+            // Generate 6 digit OTP
+            var random = new Random();
+            string otp = random.Next(100000, 999999).ToString();
+
+            // Store in Cache for 3 minutes
+            _cache.Set($"ResetOTP_{model.Email}", otp, TimeSpan.FromMinutes(3));
+
+            // Send Email
+            var replacements = new Dictionary<string, string>
+            {
+                { "{{OTP_CODE}}", otp }
+            };
+            string htmlContent = _emailService.GetHtmlContentFromFile("forgot_password.html", replacements);
+            await _emailService.SendEmailAsync(model.Email, "Mã xác thực khôi phục mật khẩu - Smart Health Monitoring", htmlContent);
+
+            return RedirectToAction("VerifyResetOtp", new { email = model.Email });
+        }
+
+        [HttpGet]
+        public IActionResult VerifyResetOtp(string email)
+        {
+            if (string.IsNullOrEmpty(email)) return RedirectToAction("ForgotPassword");
+            return View(new VerifyResetOtpViewModel { Email = email });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult VerifyResetOtp(VerifyResetOtpViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            if (_cache.TryGetValue($"ResetOTP_{model.Email}", out string? storedOtp))
+            {
+                if (storedOtp == model.Otp)
+                {
+                    // OTP valid
+                    _cache.Remove($"ResetOTP_{model.Email}");
+                    // Cấp một token tạm thời để ResetPassword
+                    string resetToken = Guid.NewGuid().ToString();
+                    _cache.Set($"ResetToken_{model.Email}", resetToken, TimeSpan.FromMinutes(10));
+                    
+                    return RedirectToAction("ResetPassword", new { email = model.Email, token = resetToken });
+                }
+            }
+            
+            ModelState.AddModelError("Otp", "Mã OTP không chính xác hoặc đã hết hạn.");
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendResetOtp(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return Json(new { success = false, message = "Email không hợp lệ" });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && !u.IsDeleted);
+            if (user == null)
+                return Json(new { success = false, message = "Email không tồn tại" });
+
+            var random = new Random();
+            string otp = random.Next(100000, 999999).ToString();
+            _cache.Set($"ResetOTP_{email}", otp, TimeSpan.FromMinutes(3));
+
+            var replacements = new Dictionary<string, string> { { "{{OTP_CODE}}", otp } };
+            string htmlContent = _emailService.GetHtmlContentFromFile("forgot_password.html", replacements);
+            await _emailService.SendEmailAsync(email, "Mã xác thực khôi phục mật khẩu (Cấp lại)", htmlContent);
+
+            return Json(new { success = true, message = "Đã gửi lại mã OTP thành công!" });
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+                return RedirectToAction("Login");
+                
+            if (!_cache.TryGetValue($"ResetToken_{email}", out string? storedToken) || storedToken != token)
+            {
+                TempData["Error"] = "Phiên khôi phục mật khẩu đã hết hạn hoặc không hợp lệ. Vui lòng thực hiện lại.";
+                return RedirectToAction("ForgotPassword");
+            }
+
+            return View(new ResetPasswordViewModel { Email = email });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model, string token)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            if (!_cache.TryGetValue($"ResetToken_{model.Email}", out string? storedToken) || storedToken != token)
+            {
+                TempData["Error"] = "Phiên khôi phục mật khẩu đã hết hạn. Vui lòng thực hiện lại.";
+                return RedirectToAction("ForgotPassword");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (user != null)
+            {
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+                await _context.SaveChangesAsync();
+                _cache.Remove($"ResetToken_{model.Email}");
+                
+                TempData["Success"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
+                return RedirectToAction("Login");
+            }
+
+            ModelState.AddModelError("", "Đã có lỗi xảy ra.");
+            return View(model);
         }
     }
 }

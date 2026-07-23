@@ -54,6 +54,9 @@ public class AppointmentController : Controller
     [Authorize(Roles = "0")]
     public async Task<IActionResult> FindDoctor(string? specialty, string? doctorName, DateOnly? fromDate, DateOnly? toDate, byte? gender, string? session, string? roomNumber)
     {
+        var (patient, _) = await GetCurrentUserAsync();
+        var patientId = patient?.Id;
+
         var startDate = fromDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
         var endDate = toDate ?? startDate.AddDays(6);
         if (endDate < startDate) endDate = startDate;
@@ -77,7 +80,7 @@ public class AppointmentController : Controller
         var doctors = await query.ToListAsync();
         var doctorIds = doctors.Select(d => d.Id).ToList();
 
-        var allSlots = await _appointmentService.GetAvailableSlotsRangeForDoctorsAsync(doctorIds, startDate, endDate);
+        var allSlots = await _appointmentService.GetAvailableSlotsRangeForDoctorsAsync(doctorIds, startDate, endDate, patientId);
 
         if (!string.IsNullOrEmpty(session))
         {
@@ -586,7 +589,10 @@ public class AppointmentController : Controller
     [HttpGet]
     public async Task<IActionResult> GetSlots(int doctorId, DateOnly date)
     {
-        var slots = await _appointmentService.GetAvailableSlotsAsync(doctorId, date);
+        var (patient, _) = await GetCurrentUserAsync();
+        var patientId = patient?.Id;
+
+        var slots = await _appointmentService.GetAvailableSlotsAsync(doctorId, date, patientId);
         return Json(slots.Select(s => new
         {
             s.Id,
