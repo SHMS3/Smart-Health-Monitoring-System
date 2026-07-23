@@ -1,4 +1,4 @@
-@inject SmartHealthMonitoring.Interfaces.IPatientUiSettingsService PatientUiSettingsService
+@inject SmartHealthMonitoring.Services.PatientUiSettingsService PatientUiSettingsService
 @{
     ViewData["Title"] = "Trang chủ";
     var homeUi = await PatientUiSettingsService.GetSettingsAsync();

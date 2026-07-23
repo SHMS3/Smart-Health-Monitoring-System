@@ -1,20 +1,16 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.ViewModels.Admin;
 
 namespace SmartHealthMonitoring.Services;
 
-public class EmailTemplateService : IEmailTemplateService
+public class EmailTemplateService
 {
     private const string SubjectConfigFileName = "template-subjects.json";
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<EmailTemplateService> _logger;
-    private static readonly Regex BodyRegex = new(
-        @"<body(?<attrs>[^>]*)>(?<content>[\s\S]*?)</body>",
-        RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
+    private static readonly Regex TokenRegex = new(@"\{\{[^{}]+\}\}", RegexOptions.Compiled);
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true
@@ -28,16 +24,6 @@ public class EmailTemplateService : IEmailTemplateService
             DisplayName = "Mời tái khám",
             Description = "Gửi cho bệnh nhân sau khi bác sĩ xử lý cảnh báo và cần hẹn tái khám.",
             DefaultSubject = "Thư Mời Tái Khám - Smart Health Monitoring",
-            IsUsedInSystem = true,
-            Tokens = new()
-            {
-                "{{PatientName}}",
-                "{{AppointmentMessage}}",
-                "{{DoctorName}}",
-                "{{HospitalReplyContact}}",
-                "{{LastExamDate}}",
-                "{{AppointmentDate}}"
-            }
         },
         new()
         {
@@ -45,30 +31,6 @@ public class EmailTemplateService : IEmailTemplateService
             DisplayName = "Cảnh báo sức khỏe",
             Description = "Gửi tự động khi AI phát hiện nguy cơ sức khỏe cao.",
             DefaultSubject = "CẢNH BÁO SỨC KHỎE KHẨN CẤP - Cần tới khám ngay",
-            IsUsedInSystem = true,
-            Tokens = new()
-            {
-                "{{PatientName}}",
-                "{{RiskScore}}",
-                "{{RiskLevel}}",
-                "{{DetectedAt}}"
-            }
-        },
-        new()
-        {
-            TemplateName = "SosEmergencyContactTemplate.html",
-            DisplayName = "SOS người thân",
-            Description = "Gửi tự động cho người thân khi bệnh nhân đạt ngưỡng SOS.",
-            DefaultSubject = "[SOS] Cảnh báo khẩn cấp cho {{PatientName}}",
-            IsUsedInSystem = true,
-            Tokens = new()
-            {
-                "{{ContactName}}",
-                "{{PatientName}}",
-                "{{DetectedAt}}",
-                "{{RiskScore}}",
-                "{{RiskLevel}}"
-            }
         },
         new()
         {
@@ -76,13 +38,6 @@ public class EmailTemplateService : IEmailTemplateService
             DisplayName = "Nhắc ghi chỉ số",
             Description = "Nhắc bệnh nhân cập nhật chỉ số sinh hiệu hằng ngày.",
             DefaultSubject = "NHẮC NHỞ: Vui lòng ghi nhận chỉ số sức khỏe hằng ngày - Smart Health",
-            IsUsedInSystem = true,
-            Tokens = new()
-            {
-                "{{PatientName}}",
-                "{{LastLogTimeDisplay}}",
-                "{{ActionUrl}}"
-            }
         },
         new()
         {
@@ -90,16 +45,6 @@ public class EmailTemplateService : IEmailTemplateService
             DisplayName = "Báo cáo y tế",
             Description = "Mẫu báo cáo tình trạng y tế gửi cho bệnh nhân khi cần.",
             DefaultSubject = "Báo cáo Tình trạng Y tế - Smart Health",
-            IsUsedInSystem = false,
-            Tokens = new()
-            {
-                "{{PatientName}}",
-                "{{RecordDate}}",
-                "{{Diagnosis}}",
-                "{{Severity}}",
-                "{{VitalSigns}}",
-                "{{DoctorAdvice}}"
-            }
         },
         new()
         {
@@ -107,14 +52,6 @@ public class EmailTemplateService : IEmailTemplateService
             DisplayName = "Cảnh báo chỉ số",
             Description = "Mẫu cảnh báo chỉ số sức khỏe dùng cho các luồng cảnh báo cũ.",
             DefaultSubject = "CẢNH BÁO: Chỉ số sức khỏe bất thường - Smart Health",
-            IsUsedInSystem = false,
-            Tokens = new()
-            {
-                "{{PatientName}}",
-                "{{AlertMessage}}",
-                "{{RiskLevel}}",
-                "{{DetectedAt}}"
-            }
         },
         new()
         {
@@ -122,18 +59,6 @@ public class EmailTemplateService : IEmailTemplateService
             DisplayName = "QR Check-in khi bác sĩ tiếp nhận",
             Description = "Gửi cho bệnh nhân ngay khi bác sĩ tiếp nhận thành công trong hàng đợi khám.",
             DefaultSubject = "Bác sĩ đã tiếp nhận - QR Check-in của bạn - Smart Health",
-            IsUsedInSystem = true,
-            Tokens = new()
-            {
-                "{{PatientName}}",
-                "{{DoctorName}}",
-                "{{Specialty}}",
-                "{{RoomNumber}}",
-                "{{SequenceNumber}}",
-                "{{AcceptedAt}}",
-                "{{CheckInCode}}",
-                "{{QrCodeImage}}"
-            }
         },
         new()
         {
@@ -141,18 +66,6 @@ public class EmailTemplateService : IEmailTemplateService
             DisplayName = "Xác nhận đặt lịch + QR Check-in",
             Description = "NTF-01: Gửi khi lễ tân duyệt đặt lịch (BOOK-08) thành công.",
             DefaultSubject = "Xác nhận đặt lịch thành công - QR Check-in - Smart Health",
-            IsUsedInSystem = true,
-            Tokens = new()
-            {
-                "{{PatientName}}",
-                "{{DoctorName}}",
-                "{{Specialty}}",
-                "{{RoomNumber}}",
-                "{{AppointmentTime}}",
-                "{{AppointmentId}}",
-                "{{CheckInCode}}",
-                "{{QrCodeImage}}"
-            }
         },
         new()
         {
@@ -160,17 +73,6 @@ public class EmailTemplateService : IEmailTemplateService
             DisplayName = "Nhắc lịch khám 24h/2h",
             Description = "NTF-02: Email nhắc trước giờ khám 24 giờ hoặc 2 giờ.",
             DefaultSubject = "Nhắc lịch khám - còn {{ReminderLabel}} - Smart Health",
-            IsUsedInSystem = true,
-            Tokens = new()
-            {
-                "{{PatientName}}",
-                "{{DoctorName}}",
-                "{{Specialty}}",
-                "{{RoomNumber}}",
-                "{{AppointmentTime}}",
-                "{{AppointmentId}}",
-                "{{ReminderLabel}}"
-            }
         }
     };
 
@@ -180,11 +82,9 @@ public class EmailTemplateService : IEmailTemplateService
         _logger = logger;
     }
 
-    public IReadOnlyList<EmailTemplateDefinition> GetDefinitions() => Definitions;
-
-    public async Task<IReadOnlyList<EmailTemplateListItemViewModel>> GetTemplateListAsync()
+    public IReadOnlyList<EmailTemplateListItemViewModel> GetTemplateList()
     {
-        var subjects = await ReadSubjectsAsync();
+        var subjects = ReadSubjects();
 
         return Definitions
             .Select(definition =>
@@ -198,8 +98,6 @@ public class EmailTemplateService : IEmailTemplateService
                     Subject = GetSubject(definition, subjects),
                     LastModifiedAt = fileInfo.Exists ? fileInfo.LastWriteTime : null,
                     FileSize = fileInfo.Exists ? fileInfo.Length : 0,
-                    TokenCount = definition.Tokens.Count,
-                    IsUsedInSystem = definition.IsUsedInSystem
                 };
             })
             .ToList();
@@ -219,22 +117,22 @@ public class EmailTemplateService : IEmailTemplateService
             return null;
         }
 
-        var subjects = await ReadSubjectsAsync();
+        var subjects = ReadSubjects();
         var htmlContent = await File.ReadAllTextAsync(fileInfo.FullName, Encoding.UTF8);
-        var sampleReplacements = BuildSampleReplacements(definition);
-
+        var subject = GetSubject(definition, subjects);
+        var tokens = TokenRegex.Matches(subject + htmlContent)
+            .Select(match => match.Value)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
         return new EmailTemplateEditViewModel
         {
             TemplateName = definition.TemplateName,
             DisplayName = definition.DisplayName,
             Description = definition.Description,
-            Subject = GetSubject(definition, subjects),
+            Subject = subject,
             HtmlContent = htmlContent,
-            BodyContent = ExtractBodyContent(htmlContent),
-            Tokens = definition.Tokens.ToList(),
+            Tokens = tokens,
             LastModifiedAt = fileInfo.LastWriteTime,
-            PreviewHtml = ApplyReplacements(htmlContent, sampleReplacements),
-            IsUsedInSystem = definition.IsUsedInSystem
         };
     }
 
@@ -251,33 +149,19 @@ public class EmailTemplateService : IEmailTemplateService
             return ServiceResult.Fail("Vui lòng nhập tiêu đề email.");
         }
 
-        var isVisualMode = model.EditorMode.Equals("visual", StringComparison.OrdinalIgnoreCase);
-        if (isVisualMode && string.IsNullOrWhiteSpace(model.BodyContent))
-        {
-            return ServiceResult.Fail("Vui lòng nhập nội dung email.");
-        }
-
-        if (!isVisualMode && string.IsNullOrWhiteSpace(model.HtmlContent))
+        if (string.IsNullOrWhiteSpace(model.HtmlContent))
         {
             return ServiceResult.Fail("Vui lòng nhập nội dung HTML của email.");
         }
 
         try
         {
-            var templatePath = GetTemplatePath(definition.TemplateName);
-            var htmlToSave = model.HtmlContent;
-            if (isVisualMode)
-            {
-                var baseHtml = !string.IsNullOrWhiteSpace(model.HtmlContent)
-                    ? model.HtmlContent
-                    : await File.ReadAllTextAsync(templatePath, Encoding.UTF8);
+            await File.WriteAllTextAsync(
+                GetTemplatePath(definition.TemplateName),
+                model.HtmlContent,
+                Encoding.UTF8);
 
-                htmlToSave = ReplaceBodyContent(baseHtml, model.BodyContent);
-            }
-
-            await File.WriteAllTextAsync(templatePath, htmlToSave, Encoding.UTF8);
-
-            var subjects = await ReadSubjectsAsync();
+            var subjects = ReadSubjects();
             subjects[definition.TemplateName] = model.Subject.Trim();
             await WriteSubjectsAsync(subjects);
 
@@ -308,26 +192,6 @@ public class EmailTemplateService : IEmailTemplateService
         return ApplyReplacements(subject, replacements);
     }
 
-    public string RenderBody(string templateName, Dictionary<string, string> replacements)
-    {
-        var definition = FindDefinition(templateName);
-        if (definition == null)
-        {
-            _logger.LogWarning("Template email không nằm trong danh sách cho phép: {TemplateName}", templateName);
-            return string.Empty;
-        }
-
-        var templatePath = GetTemplatePath(definition.TemplateName);
-        if (!File.Exists(templatePath))
-        {
-            _logger.LogWarning("Không tìm thấy template email {TemplateName} tại {TemplatePath}", templateName, templatePath);
-            return string.Empty;
-        }
-
-        var htmlContent = File.ReadAllText(templatePath, Encoding.UTF8);
-        return ApplyReplacements(htmlContent, replacements);
-    }
-
     private static EmailTemplateDefinition? FindDefinition(string templateName)
     {
         return Definitions.FirstOrDefault(d =>
@@ -352,27 +216,6 @@ public class EmailTemplateService : IEmailTemplateService
     private string GetSubjectConfigPath()
     {
         return Path.Combine(GetTemplateRoot(), SubjectConfigFileName);
-    }
-
-    private async Task<Dictionary<string, string>> ReadSubjectsAsync()
-    {
-        var path = GetSubjectConfigPath();
-        if (!File.Exists(path))
-        {
-            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        }
-
-        try
-        {
-            var json = await File.ReadAllTextAsync(path, Encoding.UTF8);
-            return JsonSerializer.Deserialize<Dictionary<string, string>>(json)
-                ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Không thể đọc file cấu hình subject email {Path}", path);
-            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        }
     }
 
     private Dictionary<string, string> ReadSubjects()
@@ -413,35 +256,6 @@ public class EmailTemplateService : IEmailTemplateService
                 : definition.DefaultSubject;
     }
 
-    private static Dictionary<string, string> BuildSampleReplacements(EmailTemplateDefinition definition)
-    {
-        var samples = new Dictionary<string, string>
-        {
-            ["{{PatientName}}"] = "Nguyễn Văn An",
-            ["{{AppointmentMessage}}"] = "Bác sĩ khuyến nghị tái khám để đánh giá lại các chỉ số gần đây.",
-            ["{{DoctorName}}"] = "Trần Minh Khoa",
-            ["{{ContactName}}"] = "Nguyễn Văn A",
-            ["{{HospitalReplyContact}}"] = "smarthealth.support@gmail.com | 1900-9999",
-            ["{{LastExamDate}}"] = DateTime.Now.AddDays(-7).ToString("dd/MM/yyyy"),
-            ["{{AppointmentDate}}"] = DateTime.Now.AddDays(3).ToString("dd/MM/yyyy HH:mm"),
-            ["{{RiskScore}}"] = "82.50",
-            ["{{RiskLevel}}"] = "3",
-            ["{{DetectedAt}}"] = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
-            ["{{LastLogTimeDisplay}}"] = DateTime.Now.AddHours(-2).ToString("dd/MM/yyyy HH:mm"),
-            ["{{ActionUrl}}"] = "http://localhost:5033/Patient/Create",
-            ["{{RecordDate}}"] = DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
-            ["{{Diagnosis}}"] = "Kết quả khám lâm sàng",
-            ["{{Severity}}"] = "Cần theo dõi",
-            ["{{VitalSigns}}"] = "Nhịp tim: 92 bpm | Huyết áp: 145/90 mmHg",
-            ["{{DoctorAdvice}}"] = "Theo dõi chỉ số hằng ngày và tái khám đúng lịch.",
-            ["{{AlertMessage}}"] = "Hệ thống phát hiện chỉ số sức khỏe bất thường."
-        };
-
-        return definition.Tokens
-            .Where(samples.ContainsKey)
-            .ToDictionary(token => token, token => samples[token]);
-    }
-
     private static string ApplyReplacements(string content, Dictionary<string, string> replacements)
     {
         var builder = new StringBuilder(content);
@@ -453,27 +267,4 @@ public class EmailTemplateService : IEmailTemplateService
         return builder.ToString();
     }
 
-    private static string ExtractBodyContent(string htmlContent)
-    {
-        var match = BodyRegex.Match(htmlContent);
-        return match.Success
-            ? match.Groups["content"].Value.Trim()
-            : htmlContent;
-    }
-
-    private static string ReplaceBodyContent(string htmlContent, string bodyContent)
-    {
-        var match = BodyRegex.Match(htmlContent);
-        if (!match.Success)
-        {
-            return bodyContent;
-        }
-
-        var contentGroup = match.Groups["content"];
-        return htmlContent[..contentGroup.Index]
-            + Environment.NewLine
-            + bodyContent.Trim()
-            + Environment.NewLine
-            + htmlContent[(contentGroup.Index + contentGroup.Length)..];
-    }
 }

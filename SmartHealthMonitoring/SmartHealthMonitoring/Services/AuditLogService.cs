@@ -44,22 +44,18 @@ public class AuditLogService : IAuditLogService
             actorUserId = parsedActorId;
         }
 
-        var auditLog = CreateAuditLog(
-                actorUserId,
-                user?.FindFirstValue("FullName") ?? user?.Identity?.Name,
-                user?.FindFirstValue(ClaimTypes.Email),
-                action,
-                entityName,
-                entityId,
-                description,
-                targetUserId,
-                targetName,
-                httpContext?.Connection.RemoteIpAddress?.ToString(),
-                httpContext?.Request.Headers.UserAgent.ToString());
-
-        _context.AuditLogs.Add(auditLog);
-        await _context.SaveChangesAsync();
-        await BroadcastAuditLogAsync(auditLog);
+        await LogForActorAsync(
+            actorUserId,
+            user?.FindFirstValue("FullName") ?? user?.Identity?.Name,
+            user?.FindFirstValue(ClaimTypes.Email),
+            action,
+            entityName,
+            entityId,
+            description,
+            targetUserId,
+            targetName,
+            httpContext?.Connection.RemoteIpAddress?.ToString(),
+            httpContext?.Request.Headers.UserAgent.ToString());
     }
 
     public async Task LogForActorAsync(
