@@ -219,6 +219,14 @@
                                 };
                             }
                             <span class="badge rounded-pill @badgeClass px-3 py-2">@statusLabel</span>
+                            @if (!string.IsNullOrEmpty(post.RejectionReason))
+                            {
+                                <div class="mt-1">
+                                    <small class="text-danger" style="font-size:0.72rem;">
+                                        <i class="fas fa-comment-slash me-1"></i>Đã ghi lý do từ chối
+                                    </small>
+                                </div>
+                            }
                         </td>
                         <td style="white-space:nowrap;">
                             <i class="fas fa-calendar-alt text-muted me-1"></i>
@@ -253,16 +261,22 @@
                                     </button>
                                 }
 
-                                @if (post.Status == "Draft" || post.Status == "Hidden")
+                                 @if (post.Status == "Draft" || post.Status == "Hidden")
                                 {
                                     <form asp-action="Publish" asp-route-id="@post.Id" method="post" style="display:inline;">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="btn btn-sm btn-success rounded-pill px-3"
-                                                title="Đăng bài"
+                                                title="Đăng bài lên trang chủ"
                                                 onclick="return confirm('Đăng bài viết này lên trang chủ?')">
                                             <i class="fas fa-paper-plane"></i>
                                         </button>
                                     </form>
+
+                                    <button type="button" class="btn btn-sm btn-danger rounded-pill px-3"
+                                            title="Từ chối & ghi lý do"
+                                            onclick="openRejectModal(@post.Id)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 }
 
                                 @if (post.Status == "Published")
@@ -298,22 +312,25 @@
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form asp-action="Reject" method="post">
+      <form asp-action="Reject" method="post" id="rejectForm">
           @Html.AntiForgeryToken()
           <input type="hidden" name="id" id="rejectPostId" value="" />
           <div class="modal-header">
-            <h5 class="modal-title">Từ chối bài viết</h5>
+            <h5 class="modal-title"><i class="fas fa-times-circle text-danger me-2"></i>Từ chối bài viết</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <div class="mb-3">
-                <label for="rejectionReason" class="form-label">Lý do từ chối</label>
-                <textarea class="form-control" id="rejectionReason" name="reason" rows="3" required></textarea>
+                <label for="rejectionReasonInput" class="form-label fw-semibold">Lý do từ chối <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="rejectionReasonInput" name="rejectionReason" rows="4"
+                          placeholder="Ví dụ: Nội dung chưa chính xác, thiếu nguồn tham khảo, hình ảnh không phù hợp..."
+                          required></textarea>
+                <div class="form-text text-muted">Lý do này sẽ được hiển thị cho tác giả để chỉnh sửa lại bài viết.</div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button type="submit" class="btn btn-danger">Từ chối bài viết</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-arrow-left me-1"></i>Hủy</button>
+            <button type="submit" class="btn btn-danger"><i class="fas fa-times me-1"></i>Xác nhận từ chối</button>
           </div>
       </form>
     </div>

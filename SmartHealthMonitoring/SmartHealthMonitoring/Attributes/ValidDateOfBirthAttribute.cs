@@ -14,7 +14,6 @@ namespace SmartHealthMonitoring.Attributes
         {
             if (value is null)
             {
-                // Bắt buộc nhập được xử lý bởi [Required], bỏ qua ở đây
                 return ValidationResult.Success;
             }
 
