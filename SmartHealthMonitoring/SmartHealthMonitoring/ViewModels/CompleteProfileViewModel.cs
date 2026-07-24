@@ -5,6 +5,7 @@ namespace SmartHealthMonitoring.ViewModels
     public class CompleteProfileViewModel
     {
         [Required(ErrorMessage = "Vui lòng chọn ngày sinh.")]
+        [SmartHealthMonitoring.Attributes.PastDate(ErrorMessage = "Ngày sinh không được vượt quá ngày hiện tại.")]
         public DateOnly DateOfBirth { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn giới tính.")]

@@ -4,9 +4,10 @@ namespace SmartHealthMonitoring.ViewModels
 {
     public class ChangePasswordViewModel : IValidatableObject
     {
-        [Required(ErrorMessage = "Vui lòng nhập mật khẩu hiện tại.")]
         [DataType(DataType.Password)]
-        public string CurrentPassword { get; set; } = string.Empty;
+        public string? CurrentPassword { get; set; }
+
+        public bool HasPassword { get; set; } = true;
 
         [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới.")]
         [MinLength(6, ErrorMessage = "Mật khẩu mới phải có ít nhất 6 ký tự.")]

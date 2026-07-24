@@ -20,16 +20,16 @@ namespace SmartHealthMonitoring.Controllers
         private readonly IEmailService _emailService;
         private readonly ITwilioVerifyService _twilioVerify;
         private readonly IMinioService _minioService;
-        private readonly GeminiService _geminiService;
+        private readonly LocalOcrService _localOcrService;
 
-        public HomeController(ILogger<HomeController> logger, SmartHealthMonitoringContext context, IEmailService emailService, ITwilioVerifyService twilioVerify, IMinioService minioService, GeminiService geminiService)
+        public HomeController(ILogger<HomeController> logger, SmartHealthMonitoringContext context, IEmailService emailService, ITwilioVerifyService twilioVerify, IMinioService minioService, LocalOcrService localOcrService)
         {
             _logger = logger;
             _context = context;
             _emailService = emailService;
             _twilioVerify = twilioVerify;
             _minioService = minioService;
-            _geminiService = geminiService;
+            _localOcrService = localOcrService;
         }
 
         public async Task<IActionResult> Index()
@@ -486,12 +486,12 @@ namespace SmartHealthMonitoring.Controllers
                 await file.CopyToAsync(ms);
                 var imageBytes = ms.ToArray();
 
-                var jsonResult = await _geminiService.ScanCitizenIdAsync(imageBytes, file.ContentType);
+                var jsonResult = await _localOcrService.ScanCitizenIdAsync(imageBytes);
                 return Content(jsonResult, "application/json");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to scan CCCD image using Gemini");
+                _logger.LogError(ex, "Failed to scan CCCD image using Local OCR");
                 return StatusCode(500, new { success = false, message = "Không thể trích xuất được thông tin từ ảnh này. Vui lòng chọn ảnh rõ nét hơn hoặc tự điền." });
             }
         }
@@ -598,16 +598,6 @@ namespace SmartHealthMonitoring.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                // Gộp tất cả lỗi validation thành 1 chuỗi
-                var errors = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage);
-                TempData["PwdError"] = string.Join(" | ", errors);
-                return RedirectToAction(nameof(Profile), new { tab = "security" });
-            }
-
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId))
                 return RedirectToAction("Login", "Auth");
@@ -615,37 +605,50 @@ namespace SmartHealthMonitoring.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
             if (user == null) return RedirectToAction("Login", "Auth");
 
-            // Không cho tài khoản Google đổi mật khẩu
-            if (string.IsNullOrEmpty(user.PasswordHash))
+            bool hasPassword = !string.IsNullOrEmpty(user.PasswordHash);
+
+            if (hasPassword && string.IsNullOrEmpty(model.CurrentPassword))
             {
-                TempData["PwdError"] = "Tài khoản Google không thể đổi mật khẩu tại đây.";
+                TempData["PwdError"] = "Vui lòng nhập mật khẩu hiện tại.";
                 return RedirectToAction(nameof(Profile), new { tab = "security" });
             }
 
-            // Kiểm tra mật khẩu hiện tại
-            bool isCurrentValid = false;
-            if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
-                isCurrentValid = BCrypt.Net.BCrypt.Verify(model.CurrentPassword, user.PasswordHash);
-            else
-                isCurrentValid = (model.CurrentPassword == user.PasswordHash); // Fallback seed data
-
-            if (!isCurrentValid)
+            if (!ModelState.IsValid)
             {
-                TempData["PwdError"] = "Mật khẩu hiện tại không đúng.";
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage);
+                TempData["PwdError"] = string.Join(" | ", errors);
                 return RedirectToAction(nameof(Profile), new { tab = "security" });
             }
 
-            // Không được dùng lại mật khẩu cũ
-            bool isSameAsOld;
-            if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
-                isSameAsOld = BCrypt.Net.BCrypt.Verify(model.NewPassword, user.PasswordHash);
-            else
-                isSameAsOld = (model.NewPassword == user.PasswordHash); // Fallback seed data
-
-            if (isSameAsOld)
+            if (hasPassword)
             {
-                TempData["PwdError"] = "Mật khẩu mới không được trùng với mật khẩu hiện tại.";
-                return RedirectToAction(nameof(Profile), new { tab = "security" });
+                // Kiểm tra mật khẩu hiện tại
+                bool isCurrentValid = false;
+                if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
+                    isCurrentValid = BCrypt.Net.BCrypt.Verify(model.CurrentPassword, user.PasswordHash);
+                else
+                    isCurrentValid = (model.CurrentPassword == user.PasswordHash); // Fallback seed data
+
+                if (!isCurrentValid)
+                {
+                    TempData["PwdError"] = "Mật khẩu hiện tại không đúng.";
+                    return RedirectToAction(nameof(Profile), new { tab = "security" });
+                }
+                
+                // Không được dùng lại mật khẩu cũ
+                bool isSameAsOld;
+                if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
+                    isSameAsOld = BCrypt.Net.BCrypt.Verify(model.NewPassword, user.PasswordHash);
+                else
+                    isSameAsOld = (model.NewPassword == user.PasswordHash);
+
+                if (isSameAsOld)
+                {
+                    TempData["PwdError"] = "Mật khẩu mới không được trùng với mật khẩu cũ.";
+                    return RedirectToAction(nameof(Profile), new { tab = "security" });
+                }
             }
 
             // Hash và lưu mật khẩu mới
@@ -653,7 +656,7 @@ namespace SmartHealthMonitoring.Controllers
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
-            TempData["PwdSuccess"] = "Đổi mật khẩu thành công!";
+            TempData["PwdSuccess"] = hasPassword ? "Đổi mật khẩu thành công!" : "Tạo mật khẩu thành công!";
             return RedirectToAction(nameof(Profile), new { tab = "security" });
         }
 

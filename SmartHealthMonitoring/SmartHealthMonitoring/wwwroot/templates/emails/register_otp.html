@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #0ea5e9; margin-bottom: 20px; }
+        .otp-code { font-size: 32px; font-weight: bold; color: #0f172a; letter-spacing: 5px; background: #f8fafc; padding: 15px 20px; display: inline-block; border-radius: 8px; border: 1px dashed #cbd5e1; margin: 20px 0; }
+        .footer { margin-top: 30px; font-size: 12px; color: #64748b; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Xác thực Đăng ký tài khoản</h2>
+        <p>Chào bạn,</p>
+        <p>Cảm ơn bạn đã đăng ký tài khoản tại Smart Health Monitoring.</p>
+        <p>Để hoàn tất quá trình đăng ký, vui lòng nhập mã xác thực (OTP) bên dưới vào ứng dụng:</p>
+        
+        <div style="text-align: center;">
+            <div class="otp-code">{{OTP_CODE}}</div>
+        </div>
+
+        <p>Mã này sẽ hết hạn trong vòng <strong>3 phút</strong>. Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
+        
+        <p>Trân trọng,<br>Đội ngũ Smart Health Monitoring</p>
+        
+        <div class="footer">
+            <p>Email này được tạo tự động, vui lòng không trả lời.</p>
+        </div>
+    </div>
+</body>
+</html>

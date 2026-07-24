@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels.Admin;
 
 namespace SmartHealthMonitoring.Controllers.Admin;
@@ -11,12 +12,12 @@ public class AdminPatientInterfaceController : Controller
     private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
     private const long MaxImageBytes = 5 * 1024 * 1024;
 
-    private readonly IPatientUiSettingsService _patientUiSettingsService;
+    private readonly PatientUiSettingsService _patientUiSettingsService;
     private readonly IAuditLogService _auditLogService;
     private readonly IWebHostEnvironment _environment;
 
     public AdminPatientInterfaceController(
-        IPatientUiSettingsService patientUiSettingsService,
+        PatientUiSettingsService patientUiSettingsService,
         IAuditLogService auditLogService,
         IWebHostEnvironment environment)
     {
@@ -41,6 +42,11 @@ public class AdminPatientInterfaceController : Controller
         if (!PatientUiSettingsViewModel.AllowedLogoIcons.Contains(model.LogoIcon))
         {
             ModelState.AddModelError(nameof(model.LogoIcon), "Biểu tượng logo không hợp lệ.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View("Index", model);
         }
 
         await TryUploadImageAsync(model.HomeHeroImageFile, nameof(model.HomeHeroImageFile), url => model.HomeHeroImageUrl = url, cancellationToken);

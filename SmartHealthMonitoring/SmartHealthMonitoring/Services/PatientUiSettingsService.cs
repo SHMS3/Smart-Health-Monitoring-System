@@ -1,13 +1,12 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
-using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels.Admin;
 
 namespace SmartHealthMonitoring.Services;
 
-public class PatientUiSettingsService : IPatientUiSettingsService
+public class PatientUiSettingsService
 {
     private static readonly SemaphoreSlim FileLock = new(1, 1);
     private static readonly Regex HexColorRegex = new("^#[0-9a-fA-F]{6}$", RegexOptions.Compiled);
@@ -60,6 +59,7 @@ public class PatientUiSettingsService : IPatientUiSettingsService
         string? updatedByAdminName,
         CancellationToken cancellationToken = default)
     {
+        var current = await GetSettingsAsync(cancellationToken);
         var settings = Normalize(new PatientUiSettings
         {
             BrandName = model.BrandName,
@@ -94,33 +94,9 @@ public class PatientUiSettingsService : IPatientUiSettingsService
             FooterDescription = model.FooterDescription,
             FooterLicenseText = model.FooterLicenseText,
             FooterBottomText = model.FooterBottomText,
-            FooterSocialLinks = model.FooterSocialLinks.Select(link => new PatientFooterLink
-            {
-                Label = link.Label,
-                IconClass = link.IconClass,
-                Url = link.Url
-            }).ToList(),
-            FooterSections = model.FooterSections.Select(section => new PatientFooterSection
-            {
-                Title = section.Title,
-                IconClass = section.IconClass,
-                DisplayType = section.DisplayType,
-                MapEmbedUrl = section.MapEmbedUrl,
-                Items = section.Items.Select(item => new PatientFooterItem
-                {
-                    Label = item.Label,
-                    Value = item.Value,
-                    IconClass = item.IconClass,
-                    Url = item.Url,
-                    Highlight = item.Highlight
-                }).ToList()
-            }).ToList(),
-            FooterBottomLinks = model.FooterBottomLinks.Select(link => new PatientFooterLink
-            {
-                Label = link.Label,
-                IconClass = link.IconClass,
-                Url = link.Url
-            }).ToList(),
+            FooterSocialLinks = current.FooterSocialLinks,
+            FooterSections = current.FooterSections,
+            FooterBottomLinks = current.FooterBottomLinks,
             ShowTopInfoBar = model.ShowTopInfoBar,
             ShowAiChatbot = model.ShowAiChatbot,
             ShowSupportHub = model.ShowSupportHub,
@@ -212,7 +188,6 @@ public class PatientUiSettingsService : IPatientUiSettingsService
         settings.FooterSocialLinks = NormalizeFooterLinks(settings.FooterSocialLinks, defaults.FooterSocialLinks, 8);
         settings.FooterSections = NormalizeFooterSections(settings.FooterSections, defaults.FooterSections);
         settings.FooterBottomLinks = NormalizeFooterLinks(settings.FooterBottomLinks, defaults.FooterBottomLinks, 6);
-
         return settings;
     }
 
@@ -220,43 +195,38 @@ public class PatientUiSettingsService : IPatientUiSettingsService
         List<PatientFooterSection>? sections,
         List<PatientFooterSection> fallback)
     {
-        if (sections == null)
-        {
-            return fallback;
-        }
-
-        var normalized = sections
-            .Where(section =>
-                !string.IsNullOrWhiteSpace(section.Title)
+        return (sections ?? fallback)
+            .Where(section => !string.IsNullOrWhiteSpace(section.Title)
                 || !string.IsNullOrWhiteSpace(section.MapEmbedUrl)
-                || (section.Items?.Any(item => !string.IsNullOrWhiteSpace(item.Label) || !string.IsNullOrWhiteSpace(item.Value)) ?? false))
+                || (section.Items?.Count > 0))
             .Take(6)
             .Select(section =>
             {
-                var displayType = NormalizeDisplayType(section.DisplayType);
+                var displayType = section.DisplayType switch
+                {
+                    PatientFooterSectionDisplayTypes.Schedule => PatientFooterSectionDisplayTypes.Schedule,
+                    PatientFooterSectionDisplayTypes.Map => PatientFooterSectionDisplayTypes.Map,
+                    _ => PatientFooterSectionDisplayTypes.Contact
+                };
+
                 return new PatientFooterSection
                 {
                     Title = TrimOrDefault(section.Title, "Footer", 80),
-                    IconClass = NormalizeFooterIcon(section.IconClass, "fas fa-circle-info"),
+                    IconClass = TrimOrDefault(section.IconClass, "fas fa-circle-info", 80),
                     DisplayType = displayType,
                     MapEmbedUrl = displayType == PatientFooterSectionDisplayTypes.Map
                         ? NormalizeMapUrl(section.MapEmbedUrl)
                         : string.Empty,
-                    Items = NormalizeFooterItems(section.Items, displayType)
+                    Items = displayType == PatientFooterSectionDisplayTypes.Map
+                        ? new List<PatientFooterItem>()
+                        : NormalizeFooterItems(section.Items)
                 };
             })
             .ToList();
-
-        return normalized;
     }
 
-    private static List<PatientFooterItem> NormalizeFooterItems(List<PatientFooterItem>? items, string displayType)
+    private static List<PatientFooterItem> NormalizeFooterItems(List<PatientFooterItem>? items)
     {
-        if (displayType == PatientFooterSectionDisplayTypes.Map)
-        {
-            return new List<PatientFooterItem>();
-        }
-
         return (items ?? new List<PatientFooterItem>())
             .Where(item => !string.IsNullOrWhiteSpace(item.Label) || !string.IsNullOrWhiteSpace(item.Value))
             .Take(12)
@@ -264,7 +234,7 @@ public class PatientUiSettingsService : IPatientUiSettingsService
             {
                 Label = TrimOrDefault(item.Label, string.Empty, 80),
                 Value = TrimOrDefault(item.Value, string.Empty, 180),
-                IconClass = NormalizeFooterIcon(item.IconClass, "fas fa-circle"),
+                IconClass = TrimOrDefault(item.IconClass, "fas fa-circle", 80),
                 Url = NormalizeLinkUrl(item.Url),
                 Highlight = item.Highlight
             })
@@ -276,44 +246,16 @@ public class PatientUiSettingsService : IPatientUiSettingsService
         List<PatientFooterLink> fallback,
         int maxCount)
     {
-        if (links == null)
-        {
-            return fallback;
-        }
-
-        var normalized = links
+        return (links ?? fallback)
             .Where(link => !string.IsNullOrWhiteSpace(link.Label) || !string.IsNullOrWhiteSpace(link.Url))
             .Take(maxCount)
             .Select(link => new PatientFooterLink
             {
                 Label = TrimOrDefault(link.Label, "Link", 80),
-                IconClass = NormalizeFooterIcon(link.IconClass, "fas fa-link"),
+                IconClass = TrimOrDefault(link.IconClass, "fas fa-link", 80),
                 Url = NormalizeLinkUrl(link.Url)
             })
             .ToList();
-
-        return normalized;
-    }
-
-    private static string NormalizeDisplayType(string? value)
-    {
-        return value switch
-        {
-            PatientFooterSectionDisplayTypes.Schedule => PatientFooterSectionDisplayTypes.Schedule,
-            PatientFooterSectionDisplayTypes.Map => PatientFooterSectionDisplayTypes.Map,
-            _ => PatientFooterSectionDisplayTypes.Contact
-        };
-    }
-
-    private static string NormalizeFooterIcon(string? value, string fallback)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return fallback;
-        }
-
-        var normalized = value.Trim();
-        return PatientUiSettingsViewModel.AllowedFooterIcons.Contains(normalized) ? normalized : fallback;
     }
 
     private static string NormalizeLinkUrl(string? value)
@@ -323,27 +265,25 @@ public class PatientUiSettingsService : IPatientUiSettingsService
             return "#";
         }
 
-        var normalized = value.Trim();
-        if (normalized.StartsWith("#") || normalized.StartsWith("/") || normalized.StartsWith("tel:", StringComparison.OrdinalIgnoreCase) || normalized.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+        var url = value.Trim();
+        if (url.StartsWith('/') || url.StartsWith('#')
+            || url.StartsWith("tel:", StringComparison.OrdinalIgnoreCase)
+            || url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
         {
-            return normalized;
+            return url;
         }
 
-        return Uri.TryCreate(normalized, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
-            ? normalized
-            : "#";
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                ? url
+                : "#";
     }
 
     private static string NormalizeMapUrl(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return string.Empty;
-        }
-
-        var normalized = value.Trim();
-        return Uri.TryCreate(normalized, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps
-            ? normalized
+        var url = value?.Trim() ?? string.Empty;
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps
+            ? url
             : string.Empty;
     }
 

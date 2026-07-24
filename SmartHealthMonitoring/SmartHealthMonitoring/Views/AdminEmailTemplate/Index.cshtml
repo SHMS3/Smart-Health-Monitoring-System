@@ -115,9 +115,7 @@
                 <tr>
                     <th>Mẫu email</th>
                     <th>Tiêu đề gửi đi</th>
-                    <th>Biến</th>
                     <th>Cập nhật</th>
-                    <th>Trạng thái</th>
                     <th class="text-center">Thao tác</th>
                 </tr>
             </thead>
@@ -133,11 +131,6 @@
                         <td>
                             <div class="subject-text">@item.Subject</div>
                         </td>
-                        <td>
-                            <span class="badge rounded-pill bg-info-subtle text-info-emphasis px-3 py-2">
-                                @item.TokenCount biến
-                            </span>
-                        </td>
                         <td style="white-space:nowrap;">
                             @if (item.LastModifiedAt.HasValue)
                             {
@@ -146,16 +139,6 @@
                             else
                             {
                                 <span class="text-danger">Thiếu file</span>
-                            }
-                        </td>
-                        <td>
-                            @if (item.IsUsedInSystem)
-                            {
-                                <span class="status-pill active"><i class="fas fa-check-circle"></i>Đang dùng</span>
-                            }
-                            else
-                            {
-                                <span class="status-pill idle"><i class="fas fa-box-archive"></i>Dự phòng</span>
                             }
                         </td>
                         <td class="text-center">

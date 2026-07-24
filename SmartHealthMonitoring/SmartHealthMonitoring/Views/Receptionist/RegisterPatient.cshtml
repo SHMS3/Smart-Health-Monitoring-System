@@ -38,7 +38,10 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label asp-for="DateOfBirth" class="form-label fw-bold"></label>
-                        <input asp-for="DateOfBirth" class="form-control" type="date" style="border-radius: 8px; padding: 10px 15px;" />
+                        <input asp-for="DateOfBirth" class="form-control" type="date"
+                               min="1900-01-01"
+                               max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                               style="border-radius: 8px; padding: 10px 15px;" />
                         <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
                     </div>
                     <div class="col-md-6">

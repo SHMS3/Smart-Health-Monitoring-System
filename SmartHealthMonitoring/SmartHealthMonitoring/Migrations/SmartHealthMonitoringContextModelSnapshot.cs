@@ -312,8 +312,7 @@ namespace SmartHealthMonitoring.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.HasIndex("SlotId")
-                        .IsUnique();
+                    b.HasIndex("SlotId");
 
                     b.ToTable("Appointments", (string)null);
                 });
@@ -2209,6 +2208,32 @@ namespace SmartHealthMonitoring.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Services", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Loại đau ngực (Chest Pain Type)|Đau ngực gắng sức (Exercise Angina)|Huyết áp nghỉ (Resting BP - mmHg)|Nhịp tim tối đa (Max Heart Rate)",
+                            IsActive = true,
+                            Name = "Huyết áp & Triệu chứng",
+                            Price = 150000.00m
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Cholesterol toàn phần (mg/dL)|Đường huyết lúc đói (Fasting Blood Sugar)|Kết quả Thal (Thalassemia)",
+                            IsActive = true,
+                            Name = "Phân tích Huyết học",
+                            Price = 200000.00m
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Điện tâm đồ nghỉ (Resting ECG)|Độ trầm cảm đoạn ST (OldPeak)|Độ dốc đoạn ST (ST Slope)|Số mạch vành chính (Major Vessels)|Ảnh ECG (tải lên từ máy)",
+                            IsActive = true,
+                            Name = "Điện tâm đồ & Mạch vành",
+                            Price = 250000.00m
+                        });
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.StandardThreshold", b =>
@@ -3017,8 +3042,8 @@ namespace SmartHealthMonitoring.Migrations
                         .IsRequired();
 
                     b.HasOne("SmartHealthMonitoring.Models.AppointmentSlot", "Slot")
-                        .WithOne("Appointment")
-                        .HasForeignKey("SmartHealthMonitoring.Models.Appointment", "SlotId")
+                        .WithMany("Appointments")
+                        .HasForeignKey("SlotId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
@@ -3377,7 +3402,7 @@ namespace SmartHealthMonitoring.Migrations
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.AppointmentSlot", b =>
                 {
-                    b.Navigation("Appointment");
+                    b.Navigation("Appointments");
                 });
 
             modelBuilder.Entity("SmartHealthMonitoring.Models.ChatbotSession", b =>

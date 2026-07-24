@@ -144,7 +144,7 @@
             <form asp-action="CompleteProfile" asp-controller="Auth" method="post">
                 <div class="form-group">
                     <label for="DateOfBirth"><i class="fas fa-calendar-alt"></i>Ngày sinh</label>
-                    <input asp-for="DateOfBirth" type="date" class="form-input" id="DateOfBirth" />
+                    <input asp-for="DateOfBirth" type="date" class="form-input" id="DateOfBirth" max="@DateTime.Now.ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="DateOfBirth" class="field-validation-error"></span>
                 </div>
 

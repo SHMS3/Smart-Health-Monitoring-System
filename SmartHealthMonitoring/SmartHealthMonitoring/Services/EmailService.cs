@@ -74,7 +74,7 @@ namespace SmartHealthMonitoring.Services
             {
                 _logger.LogError(ex, $"Lỗi khi gửi email tới {toEmail}: {ex.Message}");
                 // Có thể ném lỗi ra ngoài dựa theo workflow hệ thống
-                // throw;
+                throw;
             }
         }
 

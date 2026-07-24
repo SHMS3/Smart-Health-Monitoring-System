@@ -1,4 +1,4 @@
-@inject SmartHealthMonitoring.Interfaces.IPatientUiSettingsService PatientUiSettingsService
+@inject SmartHealthMonitoring.Services.PatientUiSettingsService PatientUiSettingsService
 @{
     var patientUi = await PatientUiSettingsService.GetSettingsAsync();
     var patientUiHotlineDigits = new string((patientUi.HotlinePhone ?? string.Empty).Where(char.IsDigit).ToArray());
@@ -755,6 +755,24 @@
                     var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
                     <div class="header-auth">
+                        @if (User.IsInRole("2"))
+                        {
+                            <a asp-controller="AdminDashboard" asp-action="Index"
+                               class="btn-register"
+                               title="Trang quản trị Admin"
+                               style="background: linear-gradient(135deg,#f59e0b,#d97706); color:#fff; display:flex; align-items:center; gap:6px; border-radius:50px; padding:8px 16px;">
+                                <i class="fas fa-shield-alt"></i> Quản trị
+                            </a>
+                        }
+                        else if (User.IsInRole("3"))
+                        {
+                            <a asp-controller="Receptionist" asp-action="Index"
+                               class="btn-register"
+                               title="Trang quản lý Lễ tân"
+                               style="background: linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; display:flex; align-items:center; gap:6px; border-radius:50px; padding:8px 16px;">
+                                <i class="fas fa-briefcase-medical"></i> Quản lý
+                            </a>
+                        }
                         <a asp-controller="Home" asp-action="Profile" class="btn-login" style="display: flex; align-items: center; gap: 6px; padding: 4px 16px 4px 6px; border-radius: 50px;">
                             <img src="/Avatar/@userIdClaim" alt="Avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #e2e8f0;" onerror="this.outerHTML='<i class=\'fas fa-user-circle\' style=\'font-size:1.5rem;color:#64748b;\'></i>'" />
                             <span>@lastName</span>
@@ -768,8 +786,7 @@
                 else
                 {
                     <div class="header-auth">
-                        <a asp-controller="Auth" asp-action="Register" class="btn-register">Đăng ký</a>
-                        <a asp-controller="Auth" asp-action="Login"    class="btn-login">Đăng nhập</a>
+                        <a asp-controller="Auth" asp-action="Login" class="btn-register">Đăng nhập</a>
                     </div>
                 }
             </div>
@@ -910,7 +927,6 @@
                     </a>
                 </li>
 
-            
             </ul>
         </div>
     </nav>
@@ -1385,7 +1401,7 @@
                     </div>
                     <span>Trợ lý Tim mạch AI</span>
                 </div>
-                <button id="closeChatbot" class="btn text-white fs-4 p-0 shadow-none border-0" style="line-height:1;">&times;</button>
+                <button id="closeChatbot" class="btn text-white fs-4 p-0 shadow-none border-0" style="line-height:1;">×</button>
             </div>
 
             <div id="chatMessages" class="chat-messages d-flex flex-column">

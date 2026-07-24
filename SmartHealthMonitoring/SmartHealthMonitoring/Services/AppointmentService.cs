@@ -37,53 +37,63 @@ public class AppointmentService : IAppointmentService
     // QUERY
     // ═══════════════════════════════════════════════════════════════
 
-    public async Task<List<AppointmentSlot>> GetAvailableSlotsAsync(int doctorId, DateOnly date)
+    public async Task<List<AppointmentSlot>> GetAvailableSlotsAsync(int doctorId, DateOnly date, int? currentPatientId = null)
     {
         var dayStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var dayEnd   = date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
 
+        var now = DateTime.Now;
         return await _context.AppointmentSlots
             .Where(s =>
                 s.DoctorId == doctorId &&
                 s.SlotStart >= dayStart &&
                 s.SlotStart <= dayEnd &&
+                s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
                  // Slot SoftLocked đã hết hạn - vẫn hiện là trống
-                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow)))
+                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow) ||
+                 // Hoặc đang được giữ bởi chính bệnh nhân hiện tại
+                 (s.Status == AppointmentSlotStatus.SoftLocked && currentPatientId.HasValue && s.PatientId == currentPatientId.Value)))
             .OrderBy(s => s.SlotStart)
             .ToListAsync();
     }
 
-    public async Task<List<AppointmentSlot>> GetAvailableSlotsRangeAsync(int doctorId, DateOnly startDate, DateOnly endDate)
+    public async Task<List<AppointmentSlot>> GetAvailableSlotsRangeAsync(int doctorId, DateOnly startDate, DateOnly endDate, int? currentPatientId = null)
     {
         var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var end   = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
 
+        var now = DateTime.Now;
         return await _context.AppointmentSlots
             .Where(s =>
                 s.DoctorId == doctorId &&
                 s.SlotStart >= start &&
                 s.SlotStart <= end &&
+                s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
-                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow)))
+                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow) ||
+                 (s.Status == AppointmentSlotStatus.SoftLocked && currentPatientId.HasValue && s.PatientId == currentPatientId.Value)))
             .OrderBy(s => s.SlotStart)
             .ToListAsync();
     }
 
-    public async Task<List<AppointmentSlot>> GetAvailableSlotsRangeForDoctorsAsync(List<int> doctorIds, DateOnly startDate, DateOnly endDate)
+    public async Task<List<AppointmentSlot>> GetAvailableSlotsRangeForDoctorsAsync(List<int> doctorIds, DateOnly startDate, DateOnly endDate, int? currentPatientId = null)
     {
         var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var end   = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
         var now   = DateTime.Now;
 
+        var now = DateTime.Now;
         return await _context.AppointmentSlots
             .Where(s =>
                 doctorIds.Contains(s.DoctorId) &&
                 s.SlotStart >= start &&
                 s.SlotStart >= now &&
                 s.SlotStart <= end &&
+                s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
-                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < now)))
+                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow) ||
+                 (s.Status == AppointmentSlotStatus.SoftLocked && currentPatientId.HasValue && s.PatientId == currentPatientId.Value)))
             .OrderBy(s => s.SlotStart)
             .ToListAsync();
     }

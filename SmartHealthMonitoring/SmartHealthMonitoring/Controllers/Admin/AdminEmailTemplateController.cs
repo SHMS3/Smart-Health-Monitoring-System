@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.ViewModels.Admin;
 
 namespace SmartHealthMonitoring.Controllers.Admin;
@@ -8,17 +8,17 @@ namespace SmartHealthMonitoring.Controllers.Admin;
 [Authorize(Roles = "2")]
 public class AdminEmailTemplateController : Controller
 {
-    private readonly IEmailTemplateService _emailTemplateService;
+    private readonly EmailTemplateService _emailTemplateService;
 
-    public AdminEmailTemplateController(IEmailTemplateService emailTemplateService)
+    public AdminEmailTemplateController(EmailTemplateService emailTemplateService)
     {
         _emailTemplateService = emailTemplateService;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public IActionResult Index()
     {
-        var model = await _emailTemplateService.GetTemplateListAsync();
+        var model = _emailTemplateService.GetTemplateList();
         return View(model);
     }
 
@@ -69,7 +69,5 @@ public class AdminEmailTemplateController : Controller
         model.Description = original.Description;
         model.Tokens = original.Tokens;
         model.LastModifiedAt = original.LastModifiedAt;
-        model.PreviewHtml = original.PreviewHtml;
-        model.IsUsedInSystem = original.IsUsedInSystem;
     }
 }

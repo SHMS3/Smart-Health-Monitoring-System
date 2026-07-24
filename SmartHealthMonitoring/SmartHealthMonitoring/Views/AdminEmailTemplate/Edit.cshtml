@@ -69,30 +69,6 @@
         resize: vertical;
     }
 
-    .mode-tabs {
-        display: inline-flex;
-        gap: 6px;
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 5px;
-    }
-
-    .mode-tab {
-        border: 0;
-        border-radius: 9px;
-        padding: 8px 14px;
-        font-weight: 800;
-        color: #475569;
-        background: transparent;
-    }
-
-    .mode-tab.active {
-        background: #0ea5e9;
-        color: #fff;
-        box-shadow: 0 8px 18px rgba(14,165,233,.22);
-    }
-
     .editor-help {
         background: #ecfeff;
         border: 1px solid #a5f3fc;
@@ -153,18 +129,6 @@
         margin-top: .5rem;
     }
 
-    .advanced-pane {
-        display: none;
-    }
-
-    .advanced-pane.active,
-    .visual-pane.active {
-        display: block;
-    }
-
-    .visual-pane {
-        display: block;
-    }
 </style>
 
 <div class="template-edit-header">
@@ -178,21 +142,12 @@
 <form asp-action="Edit" method="post" id="emailTemplateForm">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="TemplateName" />
-    <input type="hidden" asp-for="EditorMode" />
 
     <div class="row g-4">
         <div class="col-xl-7">
             <div class="edit-panel">
-                <div class="edit-panel-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                <div class="edit-panel-header">
                     <span><i class="fas fa-envelope-open-text me-2 text-primary"></i>Nội dung mẫu</span>
-                    <div class="mode-tabs" role="tablist">
-                        <button type="button" class="mode-tab active" data-mode="visual">
-                            <i class="fas fa-pen me-1"></i>Soạn thảo dễ
-                        </button>
-                        <button type="button" class="mode-tab" data-mode="advanced">
-                            <i class="fas fa-code me-1"></i>HTML nâng cao
-                        </button>
-                    </div>
                 </div>
                 <div class="edit-panel-body">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
@@ -204,23 +159,12 @@
                         <div class="help-text mt-1">Có thể dùng biến như <strong>{{PatientName}}</strong> trong tiêu đề.</div>
                     </div>
 
-                    <div id="visualPane" class="visual-pane active">
-                        <div class="editor-help">
-                            Chế độ này chỉ sửa phần nội dung chính của email. Màu sắc, font chữ và bố cục trong mẫu gốc vẫn được giữ lại khi lưu.
-                        </div>
-                        <label asp-for="BodyContent" class="form-label">Nội dung email</label>
-                        <textarea asp-for="BodyContent" class="form-control" rows="18"></textarea>
-                        <span asp-validation-for="BodyContent" class="text-danger small"></span>
+                    <div class="editor-help">
+                        Sửa trực tiếp HTML của email. Bấm vào biến bên phải để chèn tại vị trí con trỏ.
                     </div>
-
-                    <div id="advancedPane" class="advanced-pane">
-                        <div class="editor-help">
-                            Chế độ nâng cao cho phép sửa toàn bộ HTML, bao gồm cả CSS trong phần head.
-                        </div>
-                        <label asp-for="HtmlContent" class="form-label">Toàn bộ HTML</label>
-                        <textarea asp-for="HtmlContent" class="form-control html-editor" spellcheck="false"></textarea>
-                        <span asp-validation-for="HtmlContent" class="text-danger small"></span>
-                    </div>
+                    <label asp-for="HtmlContent" class="form-label">Nội dung HTML</label>
+                    <textarea asp-for="HtmlContent" class="form-control html-editor" spellcheck="false"></textarea>
+                    <span asp-validation-for="HtmlContent" class="text-danger small"></span>
 
                     <div class="d-flex gap-2 flex-wrap mt-3">
                         <button type="submit" class="btn btn-success fw-bold px-4">
@@ -264,10 +208,9 @@
                     }
                 </div>
                 <div class="edit-panel-body">
-                    <iframe id="templatePreview" class="preview-frame"></iframe>
-                    <textarea id="initialPreviewHtml" class="d-none">@Model.PreviewHtml</textarea>
+                    <iframe id="templatePreview" class="preview-frame" sandbox></iframe>
                     <div class="help-text mt-2">
-                        Preview dùng dữ liệu mẫu. Nội dung thực tế sẽ thay các biến bằng thông tin bệnh nhân/bác sĩ khi gửi.
+                        Preview giữ nguyên các biến; hệ thống thay chúng bằng dữ liệu thật khi gửi.
                     </div>
                 </div>
             </div>
@@ -277,6 +220,16 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
-    <script src="~/js/admin-email-template-editor.js" asp-append-version="true"></script>
+    <script>
+        const editor = document.getElementById('HtmlContent');
+        const preview = document.getElementById('templatePreview');
+        const refreshPreview = () => preview.srcdoc = editor.value;
+
+        document.getElementById('refreshPreviewBtn').addEventListener('click', refreshPreview);
+        document.querySelectorAll('.token-chip').forEach(button => button.addEventListener('click', () => {
+            editor.setRangeText(button.dataset.token, editor.selectionStart, editor.selectionEnd, 'end');
+            editor.focus();
+        }));
+        refreshPreview();
+    </script>
 }

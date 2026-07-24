@@ -215,10 +215,17 @@ namespace SmartHealthMonitoring.Controllers.AI
 
             if (sendEmailInvitation)
             {
-                await _emailTriggerService.SendAppointmentInvitationAsync(
+                var emailSent = await _emailTriggerService.SendAppointmentInvitationAsync(
                     id,
                     doctor.Id,
                     appointmentDate);
+
+                if (!emailSent)
+                {
+                    TempData["Error"] =
+                        "\u0110\u00E3 x\u1EED l\u00FD c\u1EA3nh b\u00E1o nh\u01B0ng kh\u00F4ng th\u1EC3 g\u1EEDi email. Vui l\u00F2ng ki\u1EC3m tra email b\u1EC7nh nh\u00E2n v\u00E0 c\u1EA5u h\u00ECnh SMTP.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
 
                 TempData["Success"] =
                     "Đã xử lý cảnh báo và gửi email thành công.";

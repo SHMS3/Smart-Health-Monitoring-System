@@ -7,7 +7,6 @@ public class QrCheckInService : IQrCheckInService
 {
     public string BuildCheckInCode(int waitingId, int patientId, int doctorId, int sequenceNumber, DateTime acceptedAt)
     {
-        // Format: SHMS-CHECKIN|W{waitingId}|P{patientId}|D{doctorId}|Q{sequence}|{yyyyMMddHHmm}
         return string.Join('|',
             "SHMS-CHECKIN",
             $"W{waitingId}",
@@ -19,7 +18,6 @@ public class QrCheckInService : IQrCheckInService
 
     public string BuildAppointmentCheckInCode(int appointmentId, int patientId, int doctorId, DateTime slotStart)
     {
-        // Format: SHMS-CHECKIN|A{appointmentId}|P{patientId}|D{doctorId}|{yyyyMMddHHmm}
         return string.Join('|',
             "SHMS-CHECKIN",
             $"A{appointmentId}",
