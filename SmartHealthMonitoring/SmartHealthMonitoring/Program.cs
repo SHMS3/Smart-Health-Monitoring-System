@@ -44,6 +44,7 @@ namespace SmartHealthMonitoring
                 .Build());
 
             builder.Services.AddHttpClient<GeminiService>();
+            builder.Services.AddScoped<LocalOcrService>();
 
             // 3. MVC & Razor
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();

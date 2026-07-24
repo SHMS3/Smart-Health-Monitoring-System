@@ -20,16 +20,16 @@ namespace SmartHealthMonitoring.Controllers
         private readonly IEmailService _emailService;
         private readonly ITwilioVerifyService _twilioVerify;
         private readonly IMinioService _minioService;
-        private readonly GeminiService _geminiService;
+        private readonly LocalOcrService _localOcrService;
 
-        public HomeController(ILogger<HomeController> logger, SmartHealthMonitoringContext context, IEmailService emailService, ITwilioVerifyService twilioVerify, IMinioService minioService, GeminiService geminiService)
+        public HomeController(ILogger<HomeController> logger, SmartHealthMonitoringContext context, IEmailService emailService, ITwilioVerifyService twilioVerify, IMinioService minioService, LocalOcrService localOcrService)
         {
             _logger = logger;
             _context = context;
             _emailService = emailService;
             _twilioVerify = twilioVerify;
             _minioService = minioService;
-            _geminiService = geminiService;
+            _localOcrService = localOcrService;
         }
 
         public async Task<IActionResult> Index()
@@ -486,12 +486,12 @@ namespace SmartHealthMonitoring.Controllers
                 await file.CopyToAsync(ms);
                 var imageBytes = ms.ToArray();
 
-                var jsonResult = await _geminiService.ScanCitizenIdAsync(imageBytes, file.ContentType);
+                var jsonResult = await _localOcrService.ScanCitizenIdAsync(imageBytes);
                 return Content(jsonResult, "application/json");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to scan CCCD image using Gemini");
+                _logger.LogError(ex, "Failed to scan CCCD image using Local OCR");
                 return StatusCode(500, new { success = false, message = "Không thể trích xuất được thông tin từ ảnh này. Vui lòng chọn ảnh rõ nét hơn hoặc tự điền." });
             }
         }
