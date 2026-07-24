@@ -885,8 +885,8 @@ public partial class SmartHealthMonitoringContext : DbContext
                   .HasConversion<int>();
 
             entity.HasOne(a => a.Slot)
-                  .WithOne(s => s.Appointment)
-                  .HasForeignKey<Appointment>(a => a.SlotId)
+                  .WithMany(s => s.Appointments)
+                  .HasForeignKey(a => a.SlotId)
                   .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasOne(a => a.Patient)
