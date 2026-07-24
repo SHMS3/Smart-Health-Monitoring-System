@@ -1,13 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SmartHealthMonitoring.Common;
-using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Interfaces;
-using SmartHealthMonitoring.Models;
-using SmartHealthMonitoring.ViewModels;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace SmartHealthMonitoring.Controllers
@@ -15,34 +9,27 @@ namespace SmartHealthMonitoring.Controllers
     [Authorize(Roles = "0,1")] // Cho phép cả Bệnh nhân và Bác sĩ đi qua cổng Controller
     public class ClinicalRecordController : Controller
     {
-        private readonly SmartHealthMonitoringContext _context;
-        private readonly IAuditLogService _auditLogService;
+        private readonly IClinicalRecordService _clinicalRecordService;
 
-        public ClinicalRecordController(
-            SmartHealthMonitoringContext context,
-            IAuditLogService auditLogService)
+        public ClinicalRecordController(IClinicalRecordService clinicalRecordService)
         {
-            _context = context;
-            _auditLogService = auditLogService;
+            _clinicalRecordService = clinicalRecordService;
         }
 
         [Authorize(Roles = "0")]
         public async Task<IActionResult> MyRecords()
         {
             var email = User.Identity?.Name;
+            if (string.IsNullOrEmpty(email)) return Forbid();
 
-            var patient = await _context.Patients
-                .Include(p => p.User)
-                .FirstOrDefaultAsync(p =>
-                    p.User.Email == email &&
-                    !p.IsDeleted);
+            var patientId = await _clinicalRecordService.GetPatientIdByEmailAsync(email);
 
-            if (patient == null)
+            if (patientId == null)
             {
                 return Forbid();
             }
 
-            return RedirectToAction(nameof(Index), new { id = patient.Id });
+            return RedirectToAction(nameof(Index), new { id = patientId });
         }
 
         [HttpGet]
@@ -51,164 +38,25 @@ namespace SmartHealthMonitoring.Controllers
         {
             try
             {
-                // Nếu là Patient -> chỉ được xem hồ sơ của chính mình
-                if (User.IsInRole("0"))
-                {
-                    var email = User.Identity?.Name;
-                    var currentPatient = await _context.Patients
-                        .Include(p => p.User)
-                        .FirstOrDefaultAsync(p => p.User.Email == email && !p.IsDeleted);
+                var email = User.Identity?.Name ?? "";
+                var isPatientRole = User.IsInRole("0");
+                var isDoctorRole = User.IsInRole("1");
 
-                    if (currentPatient == null || currentPatient.Id != id)
-                    {
-                        return Forbid();
-                    }
+                var (success, message, viewModel, _) = await _clinicalRecordService.GetPatientRecordIndexViewModelAsync(
+                    id, email, isPatientRole, isDoctorRole, page, pageSize, diaryPage, diaryPageSize, searchDate, activeTab);
+
+                if (!success)
+                {
+                    if (message == "Forbidden") return Forbid();
+
+                    TempData["Error"] = message;
+                    return isDoctorRole ? RedirectToAction("DoctorQueue", "Appointment") : RedirectToAction("Index", "Home");
                 }
-
-                // Doctor hoặc patient hợp lệ mới tới đây
-                var patient = await _context.Patients
-                    .Include(p => p.User)
-                    .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
-
-                if (patient == null)
-                {
-                    TempData["Error"] = "Không tìm thấy bệnh nhân.";
-                    return User.IsInRole("1") ? RedirectToAction("DoctorQueue", "Appointment") : RedirectToAction("Index", "Home");
-                }
-
-                var today = DateOnly.FromDateTime(DateTime.UtcNow);
-                var age = today.Year - patient.DateOfBirth.Year - (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
-
-                // ========================================================
-                // TAB 1: Dựng Query và Phân trang danh sách Cận lâm sàng
-                // ========================================================
-                var baseQuery = _context.ClinicalRecords
-                    .Where(r => r.PatientId == id && !r.IsDeleted);
-
-                // Nếu là bệnh nhân (role 0) thì chỉ lấy hồ sơ được cho phép xem
-                if (User.IsInRole("0"))
-                {
-                    baseQuery = baseQuery.Where(r => r.IsViewForPatient);
-                }
-
-                var clinicalQuery = baseQuery.OrderByDescending(r => r.VisitDate);
-
-                int totalRecords = await clinicalQuery.CountAsync();
-
-                var clinicalItems = await clinicalQuery
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(r => new ClinicalRecordSummaryViewModel
-                    {
-                        Id = r.Id,
-                        VisitDate = r.VisitDate,
-                        RestingBP = r.RestingBp,
-                        Cholesterol = r.Cholesterol,
-                        MaxHeartRate = r.MaxHeartRate,
-                        ChestPainType = r.ChestPainType,
-                        // Chỉ tạo display khi ChestPainType có giá trị
-                        ChestPainTypeDisplay = r.ChestPainType == null ? null :
-                                               r.ChestPainType == 0 ? "Typical Angina (TA)" :
-                                               r.ChestPainType == 1 ? "Atypical Angina (ATA)" :
-                                               r.ChestPainType == 2 ? "Non-Anginal Pain (NAP)" : "Asymptomatic (ASY)",
-                        FastingBS = r.FastingBs,
-                        RestECG = r.RestEcg,
-                        ExerciseAngina = r.ExerciseAngina,
-                        OldPeak = r.OldPeak,
-                        STSlope = r.Stslope,
-                        MajorVessels = r.MajorVessels,
-                        ThalResult = r.ThalResult,
-                        EcgImageUrl = r.EcgImageUrl,
-                        AttachmentUrl = r.AttachmentUrl,
-                        IsViewForPatient = r.IsViewForPatient
-                    })
-                    .ToListAsync();
-
-                // ========================================================
-                // TAB 2: Lấy danh sách Sổ tay tại nhà của bệnh nhân
-                // ========================================================
-                var dailyLogsQuery = _context.DailyVitalLogs
-                    .Where(d => d.PatientId == id && !d.IsDeleted);
-
-                if (searchDate.HasValue)
-                {
-                    var dateStart = searchDate.Value.Date;
-                    var dateEnd = searchDate.Value.Date.AddDays(1).AddTicks(-1);
-                    dailyLogsQuery = dailyLogsQuery.Where(d => d.LoggedAt >= dateStart && d.LoggedAt <= dateEnd);
-                }
-
-                dailyLogsQuery = dailyLogsQuery.OrderByDescending(d => d.LoggedAt);
-
-                int totalDiaryRecords = await dailyLogsQuery.CountAsync();
-
-                var dailyLogsItems = await dailyLogsQuery
-                    .Skip((diaryPage - 1) * diaryPageSize)
-                    .Take(diaryPageSize)
-                    .Select(d => new DailyVitalLogViewModel
-                    {
-                        Id = d.Id,
-                        LoggedAt = d.LoggedAt,
-                        SystolicBp = d.SystolicBp,
-                        DiastolicBp = d.DiastolicBp,
-                        HeartRate = d.HeartRate,
-                        ChestPainLevel = d.ChestPainLevel,
-                        HasExerciseAngina = d.HasExerciseAngina,
-                        UpdateCount = d.UpdateCount
-                    })
-                    .ToListAsync();
-
-                // ========================================================
-                // Kiểm tra trạng thái thanh toán hôm nay (1 lần thanh toán = 1 hồ sơ)
-                // ========================================================
-                var todayDate = DateTime.UtcNow.Date;
-                int todayPaidPaymentsCount = await _context.Payments
-                    .CountAsync(p => p.PatientId == patient.Id && p.Status == "Paid" && p.CreatedAt.Date == todayDate);
-
-                int todayClinicalRecordsCount = await _context.ClinicalRecords
-                    .CountAsync(r => r.PatientId == patient.Id && r.VisitDate.Date == todayDate && !r.IsDeleted);
-
-                bool hasPaidPaymentToday = todayPaidPaymentsCount > todayClinicalRecordsCount;
-                bool hasClinicalRecordToday = todayClinicalRecordsCount > 0;
-                bool hasConfiguredThresholds = await _context.PatientThresholds.AnyAsync(t => t.PatientId == patient.Id);
-
-                // ========================================================
-                // Gói toàn bộ dữ liệu vào ViewModel chung
-                // ========================================================
-                var viewModel = new PatientRecordIndexViewModel
-                {
-                    PatientId = patient.Id,
-                    PatientName = patient.User.FullName,
-                    Age = age,
-                    SexDisplay = patient.Sex == 1 ? "Nam" : "Nữ",
-
-                    Records = new PagedResult<ClinicalRecordSummaryViewModel>
-                    {
-                        Items = clinicalItems,
-                        TotalCount = totalRecords,
-                        Page = page,
-                        PageSize = pageSize
-                    },
-
-                    DailyLogs = new PagedResult<DailyVitalLogViewModel>
-                    {
-                        Items = dailyLogsItems,
-                        TotalCount = totalDiaryRecords,
-                        Page = diaryPage,
-                        PageSize = diaryPageSize
-                    },
-
-                    HasPaidPaymentToday = hasPaidPaymentToday,
-                    HasClinicalRecordToday = hasClinicalRecordToday,
-                    HasConfiguredThresholds = hasConfiguredThresholds,
-                    SearchDate = searchDate,
-                    ActiveTab = activeTab
-                };
 
                 return View(viewModel);
             }
             catch (Exception ex)
             {
-                // Thêm ex.Message để sau này nếu có lỗi thì nó hiện rõ nguyên nhân, dễ debug hơn
                 TempData["Error"] = "Lỗi khi tải hồ sơ y tế: " + ex.Message;
 
                 if (User.IsInRole("1"))
@@ -227,37 +75,22 @@ namespace SmartHealthMonitoring.Controllers
         {
             try
             {
-                var record = await _context.ClinicalRecords
-                    .Include(r => r.Patient)
-                        .ThenInclude(p => p.User)
-                    .FirstOrDefaultAsync(r => r.Id == id);
+                var (success, message, redirectPatientId) = await _clinicalRecordService.DeleteClinicalRecordAsync(id);
 
-                if (record == null)
+                if (success)
                 {
-                    TempData["Error"] = "Không tìm thấy hồ sơ hệ thống.";
+                    TempData["Success"] = message;
+                    return RedirectToAction(nameof(Index), new { id = redirectPatientId });
+                }
+                else
+                {
+                    TempData["Error"] = message;
+                    if (redirectPatientId.HasValue)
+                    {
+                        return RedirectToAction(nameof(Index), new { id = redirectPatientId });
+                    }
                     return RedirectToAction("DoctorQueue", "Appointment");
                 }
-
-                if (record.IsDeleted)
-                {
-                    TempData["Error"] = "Hồ sơ này đã được đánh dấu hủy từ trước.";
-                    return RedirectToAction(nameof(Index), new { id = record.PatientId });
-                }
-
-                // Chuyển trạng thái sang Soft Delete (Void)
-                record.IsDeleted = true;
-
-                await _context.SaveChangesAsync();
-                await _auditLogService.LogAsync(
-                    "Void",
-                    "ClinicalRecord",
-                    record.Id.ToString(),
-                    $"Hủy hồ sơ lâm sàng #{record.Id} của bệnh nhân {record.Patient.User.FullName}.",
-                    record.Patient.UserId,
-                    record.Patient.User.FullName);
-
-                TempData["Success"] = "Đã đánh dấu hủy hồ sơ thành công.";
-                return RedirectToAction(nameof(Index), new { id = record.PatientId });
             }
             catch (Exception)
             {
@@ -273,36 +106,18 @@ namespace SmartHealthMonitoring.Controllers
         {
             try
             {
-                var record = await _context.ClinicalRecords
-                    .Include(r => r.Patient)
-                        .ThenInclude(p => p.User)
-                    .FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted);
+                var (success, message, redirectPatientId) = await _clinicalRecordService.ToggleViewForPatientAsync(id);
 
-                if (record == null)
+                if (success)
                 {
-                    TempData["Error"] = "Không tìm thấy hồ sơ.";
+                    TempData["Success"] = message;
+                    return RedirectToAction(nameof(Index), new { id = redirectPatientId });
+                }
+                else
+                {
+                    TempData["Error"] = message;
                     return RedirectToAction("DoctorQueue", "Appointment");
                 }
-
-                // Đảo trạng thái IsViewForPatient
-                record.IsViewForPatient = !record.IsViewForPatient;
-
-                await _context.SaveChangesAsync();
-                await _auditLogService.LogAsync(
-                    record.IsViewForPatient ? "GrantAccess" : "RevokeAccess",
-                    "ClinicalRecord",
-                    record.Id.ToString(),
-                    record.IsViewForPatient
-                        ? $"Cho phép bệnh nhân {record.Patient.User.FullName} xem hồ sơ lâm sàng #{record.Id}."
-                        : $"Ẩn hồ sơ lâm sàng #{record.Id} khỏi bệnh nhân {record.Patient.User.FullName}.",
-                    record.Patient.UserId,
-                    record.Patient.User.FullName);
-
-                TempData["Success"] = record.IsViewForPatient
-                    ? "Đã cho phép bệnh nhân xem hồ sơ này."
-                    : "Đã ẩn hồ sơ này với bệnh nhân.";
-
-                return RedirectToAction(nameof(Index), new { id = record.PatientId });
             }
             catch (Exception)
             {
@@ -315,175 +130,7 @@ namespace SmartHealthMonitoring.Controllers
         [Authorize(Roles = "0,1")]
         public async Task<IActionResult> Index_ListPatient(int id, int page = 1, int pageSize = 10, int diaryPage = 1, int diaryPageSize = 10, DateTime? searchDate = null, string activeTab = "clinical-content")
         {
-            try
-            {
-                // Nếu là Patient -> chỉ được xem hồ sơ của chính mình
-                if (User.IsInRole("0"))
-                {
-                    var email = User.Identity?.Name;
-                    var currentPatient = await _context.Patients
-                        .Include(p => p.User)
-                        .FirstOrDefaultAsync(p => p.User.Email == email && !p.IsDeleted);
-
-                    if (currentPatient == null || currentPatient.Id != id)
-                    {
-                        return Forbid();
-                    }
-                }
-
-                // Doctor hoặc patient hợp lệ mới tới đây
-                var patient = await _context.Patients
-                    .Include(p => p.User)
-                    .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
-
-                if (patient == null)
-                {
-                    TempData["Error"] = "Không tìm thấy bệnh nhân.";
-                    return User.IsInRole("1") ? RedirectToAction("DoctorQueue", "Appointment") : RedirectToAction("Index", "Home");
-                }
-
-                var today = DateOnly.FromDateTime(DateTime.UtcNow);
-                var age = today.Year - patient.DateOfBirth.Year - (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
-
-                // ========================================================
-                // TAB 1: Dựng Query và Phân trang danh sách Cận lâm sàng
-                // ========================================================
-                var baseQuery = _context.ClinicalRecords
-                    .Where(r => r.PatientId == id && !r.IsDeleted);
-
-                // Nếu là bệnh nhân (role 0) thì chỉ lấy hồ sơ được cho phép xem
-                if (User.IsInRole("0"))
-                {
-                    baseQuery = baseQuery.Where(r => r.IsViewForPatient);
-                }
-
-                var clinicalQuery = baseQuery.OrderByDescending(r => r.VisitDate);
-
-                int totalRecords = await clinicalQuery.CountAsync();
-
-                var clinicalItems = await clinicalQuery
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(r => new ClinicalRecordSummaryViewModel
-                    {
-                        Id = r.Id,
-                        VisitDate = r.VisitDate,
-                        RestingBP = r.RestingBp,
-                        Cholesterol = r.Cholesterol,
-                        MaxHeartRate = r.MaxHeartRate,
-                        ChestPainType = r.ChestPainType,
-                        // Chỉ tạo display khi ChestPainType có giá trị
-                        ChestPainTypeDisplay = r.ChestPainType == null ? null :
-                                               r.ChestPainType == 0 ? "Typical Angina (TA)" :
-                                               r.ChestPainType == 1 ? "Atypical Angina (ATA)" :
-                                               r.ChestPainType == 2 ? "Non-Anginal Pain (NAP)" : "Asymptomatic (ASY)",
-                        FastingBS = r.FastingBs,
-                        RestECG = r.RestEcg,
-                        ExerciseAngina = r.ExerciseAngina,
-                        OldPeak = r.OldPeak,
-                        STSlope = r.Stslope,
-                        MajorVessels = r.MajorVessels,
-                        ThalResult = r.ThalResult,
-                        EcgImageUrl = r.EcgImageUrl,
-                        AttachmentUrl = r.AttachmentUrl,
-                        IsViewForPatient = r.IsViewForPatient
-                    })
-                    .ToListAsync();
-
-                // ========================================================
-                // TAB 2: Lấy danh sách Sổ tay tại nhà của bệnh nhân
-                // ========================================================
-                var dailyLogsQuery = _context.DailyVitalLogs
-                    .Where(d => d.PatientId == id && !d.IsDeleted);
-
-                if (searchDate.HasValue)
-                {
-                    var dateStart = searchDate.Value.Date;
-                    var dateEnd = searchDate.Value.Date.AddDays(1).AddTicks(-1);
-                    dailyLogsQuery = dailyLogsQuery.Where(d => d.LoggedAt >= dateStart && d.LoggedAt <= dateEnd);
-                }
-
-                dailyLogsQuery = dailyLogsQuery.OrderByDescending(d => d.LoggedAt);
-
-                int totalDiaryRecords = await dailyLogsQuery.CountAsync();
-
-                var dailyLogsItems = await dailyLogsQuery
-                    .Skip((diaryPage - 1) * diaryPageSize)
-                    .Take(diaryPageSize)
-                    .Select(d => new DailyVitalLogViewModel
-                    {
-                        Id = d.Id,
-                        LoggedAt = d.LoggedAt,
-                        SystolicBp = d.SystolicBp,
-                        DiastolicBp = d.DiastolicBp,
-                        HeartRate = d.HeartRate,
-                        ChestPainLevel = d.ChestPainLevel,
-                        HasExerciseAngina = d.HasExerciseAngina,
-                        UpdateCount = d.UpdateCount
-                    })
-                    .ToListAsync();
-
-                // ========================================================
-                // Kiểm tra trạng thái thanh toán hôm nay (1 lần thanh toán = 1 hồ sơ)
-                // ========================================================
-                var todayDate = DateTime.UtcNow.Date;
-                int todayPaidPaymentsCount = await _context.Payments
-                    .CountAsync(p => p.PatientId == patient.Id && p.Status == "Paid" && p.CreatedAt.Date == todayDate);
-
-                int todayClinicalRecordsCount = await _context.ClinicalRecords
-                    .CountAsync(r => r.PatientId == patient.Id && r.VisitDate.Date == todayDate && !r.IsDeleted);
-
-                bool hasPaidPaymentToday = todayPaidPaymentsCount > todayClinicalRecordsCount;
-                bool hasClinicalRecordToday = todayClinicalRecordsCount > 0;
-                bool hasConfiguredThresholds = await _context.PatientThresholds.AnyAsync(t => t.PatientId == patient.Id);
-
-                // ========================================================
-                // Gói toàn bộ dữ liệu vào ViewModel chung
-                // ========================================================
-                var viewModel = new PatientRecordIndexViewModel
-                {
-                    PatientId = patient.Id,
-                    PatientName = patient.User.FullName,
-                    Age = age,
-                    SexDisplay = patient.Sex == 1 ? "Nam" : "Nữ",
-
-                    Records = new PagedResult<ClinicalRecordSummaryViewModel>
-                    {
-                        Items = clinicalItems,
-                        TotalCount = totalRecords,
-                        Page = page,
-                        PageSize = pageSize
-                    },
-
-                    DailyLogs = new PagedResult<DailyVitalLogViewModel>
-                    {
-                        Items = dailyLogsItems,
-                        TotalCount = totalDiaryRecords,
-                        Page = diaryPage,
-                        PageSize = diaryPageSize
-                    },
-
-                    HasPaidPaymentToday = hasPaidPaymentToday,
-                    HasClinicalRecordToday = hasClinicalRecordToday,
-                    HasConfiguredThresholds = hasConfiguredThresholds,
-                    SearchDate = searchDate,
-                    ActiveTab = activeTab
-                };
-
-                return View(viewModel);
-            }
-            catch (Exception ex)
-            {
-                // Thêm ex.Message để sau này nếu có lỗi thì nó hiện rõ nguyên nhân, dễ debug hơn
-                TempData["Error"] = "Lỗi khi tải hồ sơ y tế: " + ex.Message;
-
-                if (User.IsInRole("1"))
-                {
-                    return RedirectToAction("DoctorQueue", "Appointment");
-                }
-
-                return RedirectToAction("Index", "Home");
-            }
+            return await Index(id, page, pageSize, diaryPage, diaryPageSize, searchDate, activeTab);
         }
     }
 }
