@@ -267,8 +267,8 @@
             }
             else
             {
-                <a asp-controller="Auth" asp-action="Register" class="btn-hero-cta">
-                    <i class="fas fa-user-plus"></i> Đăng ký miễn phí ngay
+                <a asp-controller="Auth" asp-action="Login" class="btn-hero-cta">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập ngay
                 </a>
             }
             <p class="hero-sub-note"><i class="fas fa-shield-heart me-1"></i> @homeUi.HomeHeroNote</p>
@@ -727,10 +727,7 @@
             }
             else
             {
-                <a asp-controller="Auth" asp-action="Register" class="btn-cta-white">
-                    <i class="fas fa-user-plus me-1"></i> Đăng ký miễn phí
-                </a>
-                <a asp-controller="Auth" asp-action="Login" class="btn-cta-outline">
+                <a asp-controller="Auth" asp-action="Login" class="btn-cta-white">
                     <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập
                 </a>
             }
