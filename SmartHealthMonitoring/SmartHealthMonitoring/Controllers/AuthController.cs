@@ -376,7 +376,7 @@ namespace SmartHealthMonitoring.Controllers
             Console.WriteLine($"[DEBUG RedirectByRole] Final role = {role}");
             var result = role switch
             {
-                3 => RedirectToAction("Index", "Receptionist"),
+                3 => RedirectToAction("Patients", "Receptionist"),
                 2 => RedirectToAction("Index", "AdminDashboard"),
                 1 => RedirectToAction("Index", "DoctorDashboard"), 
                 _ => RedirectToAction("Index", "Home") 
