@@ -155,7 +155,7 @@ namespace SmartHealthMonitoring.Controllers
             }
 
             bool emailExists = await _context.Users
-                .AnyAsync(u => u.Email == model.Email && !u.IsDeleted);
+                .AnyAsync(u => u.Email == model.Email);
 
             if (emailExists)
             {
@@ -163,78 +163,129 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            if (model.DateOfBirth > DateOnly.FromDateTime(DateTime.Now))
-            {
-                ModelState.AddModelError("DateOfBirth", "Ngày sinh không được lớn hơn ngày hiện tại.");
-                return View(model);
-            }
-
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
 
-            var strategy = _context.Database.CreateExecutionStrategy();
-            try
+            // Generate 6 digit OTP
+            var random = new Random();
+            string otp = random.Next(100000, 999999).ToString();
+
+            // Store in Cache for 3 minutes (Store OTP + PasswordHash)
+            _cache.Set($"RegisterOTP_{model.Email}", $"{otp}|{passwordHash}", TimeSpan.FromMinutes(3));
+
+            // Send Email
+            var replacements = new Dictionary<string, string>
             {
-                return await strategy.ExecuteAsync(async () =>
+                { "{{OTP_CODE}}", otp }
+            };
+
+            string htmlContent = _emailService.GetHtmlContentFromFile("register_otp.html", replacements);
+            await _emailService.SendEmailAsync(model.Email, "Mã xác thực đăng ký tài khoản - Smart Health Monitoring", htmlContent);
+
+            return RedirectToAction("VerifyRegisterOtp", new { email = model.Email });
+        }
+
+        [HttpGet]
+        public IActionResult VerifyRegisterOtp(string email)
+        {
+            if (string.IsNullOrEmpty(email)) return RedirectToAction("Register");
+            return View(new VerifyRegisterOtpViewModel { Email = email });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyRegisterOtp(VerifyRegisterOtpViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            if (_cache.TryGetValue($"RegisterOTP_{model.Email}", out string? cacheData))
+            {
+                var parts = cacheData?.Split('|');
+                if (parts != null && parts.Length == 2 && parts[0] == model.OtpCode)
                 {
-                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    string passwordHash = parts[1];
+
+                    var strategy = _context.Database.CreateExecutionStrategy();
                     try
                     {
-                        var user = new User
+                        return await strategy.ExecuteAsync(async () =>
                         {
-                            FullName = model.FullName,
-                            Email = model.Email,
-                            PasswordHash = passwordHash,
-                            Role = 0, // Patient
-                            IsDeleted = false,
-                            CreatedAt = DateTime.UtcNow
-                        };
+                            using var transaction = await _context.Database.BeginTransactionAsync();
+                            try
+                            {
+                                var user = new User
+                                {
+                                    // Tạo tên tạm bằng phần đầu email
+                                    FullName = model.Email.Split('@')[0],
+                                    Email = model.Email,
+                                    PasswordHash = passwordHash,
+                                    Role = 0, // Patient
+                                    IsDeleted = false,
+                                    CreatedAt = DateTime.UtcNow
+                                };
 
-                        _context.Users.Add(user);
-                        await _context.SaveChangesAsync();
+                                _context.Users.Add(user);
+                                await _context.SaveChangesAsync();
 
-                        var patient = new Patient
-                        {
-                            UserId = user.Id,
-                            DateOfBirth = model.DateOfBirth,
-                            Sex = model.Sex,
-                            Phone = model.Phone,
-                            IsDeleted = false
-                        };
+                                var patient = new Patient
+                                {
+                                    UserId = user.Id,
+                                    DateOfBirth = DateOnly.FromDateTime(DateTime.Now.AddYears(-18)),
+                                    Sex = 0,
+                                    Phone = null,
+                                    IsDeleted = false
+                                };
 
-                        _context.Patients.Add(patient);
-                        await _context.SaveChangesAsync();
+                                _context.Patients.Add(patient);
+                                await _context.SaveChangesAsync();
+                                await transaction.CommitAsync();
 
-                        await transaction.CommitAsync();
+                                _cache.Remove($"RegisterOTP_{model.Email}");
 
-                        var claims = new List<Claim>
-                        {
-                            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                            new Claim(ClaimTypes.Name, user.Email),
-                            new Claim(ClaimTypes.Email, user.Email),
-                            new Claim("FullName", user.FullName),
-                            new Claim(ClaimTypes.Role, "0")
-                        };
-
-                        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                        await HttpContext.SignInAsync(
-                            CookieAuthenticationDefaults.AuthenticationScheme,
-                            new ClaimsPrincipal(claimsIdentity),
-                            new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24) });
-
-                        return RedirectByRole(0);
+                                TempData["SuccessMessage"] = "Đăng ký tài khoản thành công! Vui lòng đăng nhập.";
+                                return RedirectToAction("Login", "Auth");
+                            }
+                            catch (Exception)
+                            {
+                                await transaction.RollbackAsync();
+                                throw;
+                            }
+                        });
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        await transaction.RollbackAsync();
-                        throw;
+                        var errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                        ModelState.AddModelError(string.Empty, "Lỗi hệ thống: " + errorMsg);
+                        return View(model);
                     }
-                });
+                }
             }
-            catch
+
+            ModelState.AddModelError("OtpCode", "Mã OTP không chính xác hoặc đã hết hạn.");
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResendRegisterOtp(string email)
+        {
+            if (string.IsNullOrEmpty(email)) return Json(new { success = false, message = "Email không hợp lệ" });
+
+            if (_cache.TryGetValue($"RegisterOTP_{email}", out string? oldCacheData))
             {
-                ModelState.AddModelError(string.Empty, "Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại.");
-                return View(model);
+                var passwordHash = oldCacheData?.Split('|').Length > 1 ? oldCacheData.Split('|')[1] : "";
+                
+                var random = new Random();
+                string newOtp = random.Next(100000, 999999).ToString();
+
+                _cache.Set($"RegisterOTP_{email}", $"{newOtp}|{passwordHash}", TimeSpan.FromMinutes(3));
+
+                var replacements = new Dictionary<string, string> { { "{{OTP_CODE}}", newOtp } };
+                string htmlContent = _emailService.GetHtmlContentFromFile("register_otp.html", replacements);
+                await _emailService.SendEmailAsync(email, "Mã xác thực đăng ký tài khoản (Gửi lại)", htmlContent);
+
+                return Json(new { success = true, message = "Mã xác thực mới đã được gửi." });
             }
+            
+            return Json(new { success = false, message = "Phiên đăng ký đã hết hạn. Vui lòng đăng ký lại." });
         }
 
 
@@ -376,7 +427,7 @@ namespace SmartHealthMonitoring.Controllers
             Console.WriteLine($"[DEBUG RedirectByRole] Final role = {role}");
             var result = role switch
             {
-                3 => RedirectToAction("Index", "Receptionist"),
+                3 => RedirectToAction("Patients", "Receptionist"),
                 2 => RedirectToAction("Index", "AdminDashboard"),
                 1 => RedirectToAction("Index", "DoctorDashboard"), 
                 _ => RedirectToAction("Index", "Home") 

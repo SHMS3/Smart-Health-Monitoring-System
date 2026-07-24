@@ -37,42 +37,10 @@ namespace SmartHealthMonitoring.Services
                     // 1. Trích xuất CCCD (12 số)
                     var citizenId = Regex.Match(text, @"\b\d{12}\b").Value;
                     
-                    // 2. Trích xuất Ngày sinh (định dạng dd/MM/yyyy chuyển sang yyyy-MM-dd)
-                    // Ràng buộc năm sinh phải bắt đầu bằng 19 hoặc 20 để tránh nhiễu
-                    var dobMatch = Regex.Match(text, @"\b(\d{2})[/-](\d{2})[/-]((?:19|20)\d{2})\b");
-                    var dateOfBirth = dobMatch.Success ? $"{dobMatch.Groups[3].Value}-{dobMatch.Groups[2].Value}-{dobMatch.Groups[1].Value}" : "";
-
-                    // 3. Trích xuất Giới tính
+                    // Theo yêu cầu, chỉ lấy mỗi số CCCD, bỏ qua các thông tin khác vì quét hay bị sai
+                    var dateOfBirth = "";
                     var sexDisplay = "";
-                    if (text.Contains("Nam", StringComparison.OrdinalIgnoreCase))
-                        sexDisplay = "Nam";
-                    else if (text.Contains("Nữ", StringComparison.OrdinalIgnoreCase) || text.Contains("Nu", StringComparison.OrdinalIgnoreCase))
-                        sexDisplay = "Nữ";
-
-                    // 4. Trích xuất Họ Tên (Dòng toàn chữ in hoa, tối thiểu 2 từ, khoảng 5 ký tự trở lên)
                     var fullName = "";
-                    var lines = text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var line in lines)
-                    {
-                        var trimmed = line.Trim();
-                        // Nếu dòng viết HOA toàn bộ và CHỈ chứa chữ cái tiếng Việt/khoảng trắng (không chứa số, dấu câu)
-                        if (trimmed.Length > 5 && 
-                            trimmed == trimmed.ToUpper() && 
-                            Regex.IsMatch(trimmed, @"^[A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỲỴÝỶỸ\s]+$") &&
-                            trimmed.Split(' ').Length >= 2)
-                        {
-                            // Tránh các từ khóa cố định trên thẻ CCCD
-                            if (!trimmed.Contains("CỘNG HÒA") && 
-                                !trimmed.Contains("ĐỘC LẬP") && 
-                                !trimmed.Contains("CĂN CƯỚC"))
-                            {
-                                fullName = trimmed;
-                                break;
-                            }
-                        }
-                    }
-
-                    // Tesseract rất khó trích xuất chính xác địa chỉ thường trú nếu không có cấu trúc cố định
                     var address = "";
 
                     var result = new

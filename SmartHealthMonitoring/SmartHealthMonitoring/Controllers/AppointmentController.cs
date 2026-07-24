@@ -136,6 +136,14 @@ public class AppointmentController : Controller
         var (patient, _) = await GetCurrentUserAsync();
         if (patient == null) return Forbid();
 
+        if (string.IsNullOrWhiteSpace(patient.User.FullName) ||
+            string.IsNullOrWhiteSpace(patient.Phone) ||
+            string.IsNullOrWhiteSpace(patient.CitizenId))
+        {
+            TempData["Error"] = "Vui lòng cập nhật đầy đủ thông tin cá nhân (Họ tên, Ngày sinh, Giới tính, SĐT, CCCD) trong Hồ sơ cá nhân trước khi đặt lịch.";
+            return RedirectToAction("Profile", "Home");
+        }
+
         var slot = await _context.AppointmentSlots
             .Include(s => s.Doctor).ThenInclude(d => d.User)
             .FirstOrDefaultAsync(s => s.Id == slotId);
@@ -821,6 +829,13 @@ public class AppointmentController : Controller
     {
         var (patient, _) = await GetCurrentUserAsync();
         if (patient == null) return Json(new { success = false, message = "Unauthorized" });
+
+        if (string.IsNullOrWhiteSpace(patient.User.FullName) ||
+            string.IsNullOrWhiteSpace(patient.Phone) ||
+            string.IsNullOrWhiteSpace(patient.CitizenId))
+        {
+            return Json(new { success = false, message = "Vui lòng cập nhật đầy đủ thông tin cá nhân (Họ tên, Ngày sinh, Giới tính, SĐT, CCCD) trong Hồ sơ cá nhân trước khi tham gia danh sách chờ." });
+        }
 
         var (success, message) = await _appointmentService.JoinWaitlistAsync(
             patient.Id, request.DoctorId, request.WatchDate);
