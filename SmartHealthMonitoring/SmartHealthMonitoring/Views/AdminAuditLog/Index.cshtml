@@ -21,6 +21,8 @@
         "RevokeAccess" => "modern-badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25",
         "SendMessage" => "modern-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25",
         "Close" => "modern-badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25",
+        "Reset" => "modern-badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25",
+        "ChangePassword" => "modern-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25",
         _ => "modern-badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25"
     };
 
@@ -40,6 +42,8 @@
         "RevokeAccess" => "Ẩn quyền xem",
         "SendMessage" => "Gửi tin nhắn",
         "Close" => "Kết thúc",
+        "Reset" => "Khôi phục mặc định",
+        "ChangePassword" => "Đổi mật khẩu",
         _ => action
     };
 
@@ -54,7 +58,14 @@
         "TelemedicineChatSession" => "Phiên chat từ xa",
         "TelemedicineChatMessage" => "Tin nhắn chat từ xa",
         "StandardThreshold" => "Ngưỡng chuẩn y tế",
+        "PatientInterface" => "Giao diện bệnh nhân",
+        "AdminSettings" => "Cài đặt quản trị",
         _ => entityName
+    };
+    string EntityIdLabel(string entityId) => entityId switch
+    {
+        "patient-ui-settings" => "Cấu hình giao diện bệnh nhân",
+        _ => $"#{entityId}"
     };
 
     string DescriptionLabel(string description)
@@ -62,6 +73,7 @@
         var hiddenFromPatient = description.StartsWith("Hid clinical record", StringComparison.OrdinalIgnoreCase);
 
         var text = description
+            .Replace("Admin ", "Quản trị viên ")
             .Replace("Created doctor account", "Tạo tài khoản bác sĩ")
             .Replace("Updated doctor", "Cập nhật bác sĩ")
             .Replace("Locked doctor account", "Khóa tài khoản bác sĩ")
@@ -188,7 +200,9 @@
                 GrantAccess: 'Cho phép xem',
                 RevokeAccess: 'Ẩn quyền xem',
                 SendMessage: 'Gửi tin nhắn',
-                Close: 'Kết thúc'
+                Close: 'Kết thúc',
+                Reset: 'Khôi phục mặc định',
+                ChangePassword: 'Đổi mật khẩu'
             };
 
             const badgeClasses = {
@@ -205,7 +219,9 @@
                 GrantAccess: 'modern-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25',
                 RevokeAccess: 'modern-badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25',
                 SendMessage: 'modern-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25',
-                Close: 'modern-badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25'
+                Close: 'modern-badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25',
+                Reset: 'modern-badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25',
+                ChangePassword: 'modern-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25'
             };
 
             const entityLabels = {
@@ -217,7 +233,13 @@
                 WarningAlert: 'Cảnh báo AI',
                 TelemedicineChatSession: 'Phiên chat từ xa',
                 TelemedicineChatMessage: 'Tin nhắn chat từ xa',
-                StandardThreshold: 'Ngưỡng chuẩn y tế'
+                StandardThreshold: 'Ngưỡng chuẩn y tế',
+                PatientInterface: 'Giao diện bệnh nhân',
+                AdminSettings: 'Cài đặt quản trị'
+            };
+
+            const entityIdLabels = {
+                'patient-ui-settings': 'Cấu hình giao diện bệnh nhân'
             };
 
             const descriptionLabel = (value) => {
@@ -227,6 +249,7 @@
 
                 const hiddenFromPatient = value.toLowerCase().startsWith('hid clinical record');
                 let text = value
+                    .replaceAll('Admin ', 'Quản trị viên ')
                     .replaceAll('Created doctor account', 'Tạo tài khoản bác sĩ')
                     .replaceAll('Updated doctor', 'Cập nhật bác sĩ')
                     .replaceAll('Locked doctor account', 'Khóa tài khoản bác sĩ')
@@ -352,7 +375,7 @@
                     </td>
                     <td>
                         <div class="fw-semibold">${escapeHtml(entityLabels[log.entityName] || log.entityName)}</div>
-                        ${log.entityId ? `<div class="small text-muted">#${escapeHtml(log.entityId)}</div>` : ''}
+                        ${log.entityId ? `<div class="small text-muted">${escapeHtml(entityIdLabels[log.entityId] || `#${log.entityId}`)}</div>` : ''}
                     </td>
                     <td>${escapeHtml(log.targetName || '-')}</td>
                     <td style="min-width: 280px; white-space: normal;">
@@ -419,6 +442,8 @@
                     <option value="RevokeAccess" selected="@(Model.ActionType == "RevokeAccess")">Ẩn quyền xem</option>
                     <option value="SendMessage" selected="@(Model.ActionType == "SendMessage")">Gửi tin nhắn</option>
                     <option value="Close" selected="@(Model.ActionType == "Close")">Kết thúc</option>
+                    <option value="Reset" selected="@(Model.ActionType == "Reset")">Khôi phục mặc định</option>
+                    <option value="ChangePassword" selected="@(Model.ActionType == "ChangePassword")">Đổi mật khẩu</option>
                 </select>
             </div>
             <div class="col-lg-2 col-md-4">
@@ -434,6 +459,8 @@
                     <option value="TelemedicineChatSession" selected="@(Model.EntityName == "TelemedicineChatSession")">Phiên chat từ xa</option>
                     <option value="TelemedicineChatMessage" selected="@(Model.EntityName == "TelemedicineChatMessage")">Tin nhắn chat từ xa</option>
                     <option value="StandardThreshold" selected="@(Model.EntityName == "StandardThreshold")">Ngưỡng chuẩn y tế</option>
+                    <option value="PatientInterface" selected="@(Model.EntityName == "PatientInterface")">Giao diện bệnh nhân</option>
+                    <option value="AdminSettings" selected="@(Model.EntityName == "AdminSettings")">Cài đặt quản trị</option>
                 </select>
             </div>
             <div class="col-lg-2 col-md-4">
@@ -502,7 +529,7 @@
                                 <div class="fw-semibold">@EntityLabel(log.EntityName)</div>
                                 @if (!string.IsNullOrEmpty(log.EntityId))
                                 {
-                                    <div class="small text-muted">#@log.EntityId</div>
+                                    <div class="small text-muted">@EntityIdLabel(log.EntityId)</div>
                                 }
                             </td>
                             <td>@(log.TargetName ?? "-")</td>
