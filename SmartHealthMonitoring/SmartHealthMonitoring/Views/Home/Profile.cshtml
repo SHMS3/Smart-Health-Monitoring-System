@@ -812,7 +812,7 @@
 								</div>
 								<div class="form-group-p">
 									<label>Ngày sinh</label>
-									<input name="DateOfBirth" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" type="date" class="form-input-p" required />
+									<input name="DateOfBirth" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" type="date" class="form-input-p" max="@DateTime.Now.ToString("yyyy-MM-dd")" required />
 								</div>
 								<div class="form-group-p">
 									<label>Giới tính</label>

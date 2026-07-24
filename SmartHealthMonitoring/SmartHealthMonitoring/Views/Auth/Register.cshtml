@@ -1,4 +1,4 @@
-﻿@model SmartHealthMonitoring.ViewModels.RegisterViewModel
+@model SmartHealthMonitoring.ViewModels.RegisterViewModel
 @{
     ViewData["Title"] = "Đăng ký";
 }
@@ -415,12 +415,6 @@
             <form asp-action="Register" asp-controller="Auth" method="post">
 
                 <div class="form-group">
-                    <label for="FullName"><i class="fas fa-user"></i>Họ và tên</label>
-                    <input asp-for="FullName" class="form-input" id="FullName" placeholder="Nguyễn Văn A" autocomplete="name" />
-                    <span asp-validation-for="FullName" class="field-validation-error"></span>
-                </div>
-
-                <div class="form-group">
                     <label for="Email"><i class="fas fa-envelope"></i>Email</label>
                     <input asp-for="Email" class="form-input" id="Email" placeholder="example@email.com" autocomplete="email" />
                     <span asp-validation-for="Email" class="field-validation-error"></span>
@@ -437,29 +431,6 @@
                         <input asp-for="ConfirmPassword" class="form-input" id="ConfirmPassword" placeholder="Nhập lại mật khẩu" autocomplete="new-password" />
                         <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
                     </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="DateOfBirth"><i class="fas fa-calendar-alt"></i>Ngày sinh</label>
-                        <input asp-for="DateOfBirth" type="date" class="form-input" id="DateOfBirth" />
-                        <span asp-validation-for="DateOfBirth" class="field-validation-error"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="Sex"><i class="fas fa-venus-mars"></i>Giới tính</label>
-                        <select asp-for="Sex" class="form-select" id="Sex">
-                            <option value="" disabled selected>Chọn giới tính</option>
-                            <option value="0">Nữ</option>
-                            <option value="1">Nam</option>
-                        </select>
-                        <span asp-validation-for="Sex" class="field-validation-error"></span>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="Phone"><i class="fas fa-phone-alt"></i>Số điện thoại <span style="color:#94a3b8;font-weight:400">(không bắt buộc)</span></label>
-                    <input asp-for="Phone" class="form-input" id="Phone" placeholder="0912 345 678" autocomplete="tel" />
-                    <span asp-validation-for="Phone" class="field-validation-error"></span>
                 </div>
 
                 <button type="submit" class="btn-submit" id="btnRegister">

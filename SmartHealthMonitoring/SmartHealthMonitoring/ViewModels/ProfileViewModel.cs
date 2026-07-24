@@ -100,6 +100,7 @@ namespace SmartHealthMonitoring.ViewModels
         [MaxLength(100)]
         public string FullName { get; set; } = string.Empty;
 
+        [SmartHealthMonitoring.Attributes.PastDate(ErrorMessage = "Ngày sinh không được vượt quá ngày hiện tại.")]
         public DateOnly? DateOfBirth { get; set; }
 
         public byte? Sex { get; set; }
