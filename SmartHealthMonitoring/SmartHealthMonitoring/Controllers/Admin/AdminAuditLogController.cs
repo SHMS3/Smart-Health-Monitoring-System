@@ -10,7 +10,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
     [Authorize(Roles = "2")]
     public class AdminAuditLogController : Controller
     {
-        private static readonly TimeSpan VietnamUtcOffset = TimeSpan.FromHours(7);
         private readonly SmartHealthMonitoringContext _context;
 
         public AdminAuditLogController(SmartHealthMonitoringContext context)
@@ -30,9 +29,10 @@ namespace SmartHealthMonitoring.Controllers.Admin
         {
             page = Math.Max(page, 1);
             pageSize = Math.Clamp(pageSize, 5, 100);
+            var vietnamUtcOffset = TimeSpan.FromHours(7);
             var normalizedFromDate = fromDate?.Date;
             var normalizedToDate = toDate?.Date;
-            var today = DateTimeOffset.UtcNow.ToOffset(VietnamUtcOffset).Date;
+            var today = DateTime.UtcNow.Add(vietnamUtcOffset).Date;
             var actors = await _context.Users
                 .AsNoTracking()
                 .Where(x => x.Role == 1 || x.Role == 2)
@@ -101,13 +101,13 @@ namespace SmartHealthMonitoring.Controllers.Admin
 
             if (normalizedFromDate.HasValue)
             {
-                var fromUtc = ToUtcStartOfVietnamDate(normalizedFromDate.Value);
+                var fromUtc = normalizedFromDate.Value.Subtract(vietnamUtcOffset);
                 query = query.Where(x => x.CreatedAt >= fromUtc);
             }
 
             if (normalizedToDate.HasValue)
             {
-                var toUtcExclusive = ToUtcStartOfVietnamDate(normalizedToDate.Value.AddDays(1));
+                var toUtcExclusive = normalizedToDate.Value.AddDays(1).Subtract(vietnamUtcOffset);
                 query = query.Where(x => x.CreatedAt < toUtcExclusive);
             }
 
@@ -150,12 +150,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
             };
 
             return View(model);
-        }
-
-        private static DateTime ToUtcStartOfVietnamDate(DateTime date)
-        {
-            var vietnamDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Unspecified);
-            return new DateTimeOffset(vietnamDate, VietnamUtcOffset).UtcDateTime;
         }
     }
 }
