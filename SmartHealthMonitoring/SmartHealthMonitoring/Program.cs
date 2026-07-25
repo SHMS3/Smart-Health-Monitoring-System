@@ -85,7 +85,7 @@ namespace SmartHealthMonitoring
             // Nhắc ghi chỉ số chỉ tạo lịch sử nội bộ, không gửi email thật.
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.DailyVitalLogReminderWorker>();
 
-            // ponytail: tránh gửi Email/SMS thật khi chạy local; bật lại bằng
+            // ponytail: tránh gửi email thật khi chạy local; bật lại bằng
             // BackgroundWorkers__EnableNotifications=true nếu cần test chủ động.
             if (!builder.Environment.IsDevelopment() ||
                 builder.Configuration.GetValue<bool>("BackgroundWorkers:EnableNotifications"))
