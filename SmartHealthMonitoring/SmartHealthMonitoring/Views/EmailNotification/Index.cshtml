@@ -1,6 +1,8 @@
 @model SmartHealthMonitoring.ViewModels.EmailHistoryIndexViewModel
 @{
-    ViewData["Title"] = "Lịch sử Email";
+    var isAdmin = User.IsInRole("2");
+    Layout = isAdmin ? "_AdminLayout" : "_Layout";
+    ViewData["Title"] = isAdmin ? "Quản lý lịch sử Email" : "Lịch sử Email";
 }
 
 @section Styles {
@@ -120,8 +122,12 @@
     <!-- Top Navigation Bar -->
     <header class="w-full top-0 sticky z-20 bg-surface/80 backdrop-blur-md px-lg py-md flex justify-between items-center max-w-[1440px] mx-auto border-b border-outline-variant/30">
         <div class="flex flex-col">
-            <h2 class="font-headline-md text-headline-md font-bold text-on-surface" style="font-size: 35px;">Lịch sử Email</h2>
-            <p class="text-body-sm text-on-surface-variant">Theo dõi và quản lý các thông báo đã gửi tới bệnh nhân.</p>
+            <h2 class="font-headline-md text-headline-md font-bold text-on-surface" style="font-size: 35px;">@(isAdmin ? "Quản lý lịch sử Email" : "Lịch sử Email")</h2>
+            <p class="text-body-sm text-on-surface-variant">
+                @(isAdmin
+                    ? "Theo dõi và quản lý toàn bộ email đã gửi tới bệnh nhân."
+                    : "Theo dõi email do bạn và hệ thống tự động gửi tới bệnh nhân.")
+            </p>
         </div>
     </header>
 

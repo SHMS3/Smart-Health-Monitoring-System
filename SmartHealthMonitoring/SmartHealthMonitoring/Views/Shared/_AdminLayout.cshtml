@@ -84,8 +84,11 @@
         /* ─── SIDEBAR NAV SCROLL AREA ─── */
         .sidebar-nav {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
             overflow-x: hidden;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
             padding: 12px 0;
             scrollbar-width: thin;
             scrollbar-color: rgba(14,165,233,0.3) transparent;
@@ -509,10 +512,10 @@
             bool apptOpen     = (controller == "AdminCalendar");
             bool doctorOpen   = (controller == "AdminDoctor");
             bool contentOpen  = (controller == "AdminNews" || controller == "AdminPatientInterface");
-            bool sysOpen      = (controller == "StandardThreshold" || controller == "AdminAuditLog" || controller == "AdminEmailTemplate");
+            bool sysOpen      = (controller == "StandardThreshold" || controller == "AdminAuditLog" || controller == "AdminEmailTemplate" || controller == "EmailNotification");
             bool rPatientOpen = (controller == "Receptionist" && action == "Patients");
-            bool rApptOpen    = (controller == "Receptionist" && (action == "Index" || action == "PendingAppointments"));
-            bool rPayOpen     = (controller == "Receptionist" && action == "PaymentHistory");
+            bool rApptOpen    = (controller == "Receptionist" && action == "PendingAppointments");
+            bool rPayOpen     = (controller == "Receptionist" && (action == "Index" || action == "PaymentHistory"));
         }
 
             @if (User.IsInRole("2"))
@@ -554,14 +557,14 @@
                            class="nav-item-link @(controller == "AdminPatient" && action == "Index" ? "active" : "")">
                             <i class="fas fa-users"></i> Bệnh nhân
                         </a>
-                        <a asp-controller="AdminPatient" asp-action="MedicalRecords"
+                        @* Hidden until the corresponding controller actions are implemented.
                            class="nav-item-link @(controller == "AdminPatient" && action == "MedicalRecords" ? "active" : "")">
-                            <i class="fas fa-file-medical"></i> Hồ sơ y tế
+                            <i class="fas fa-file-medical"></i> H&#7891; s&#417; y t&#7871;
                         </a>
                         <a asp-controller="AdminPatient" asp-action="DailyMonitoring"
                            class="nav-item-link @(controller == "AdminPatient" && action == "DailyMonitoring" ? "active" : "")">
-                            <i class="fas fa-monitor-heart-rate"></i> Theo dõi hàng ngày
-                        </a>
+                            <i class="fas fa-monitor-heart-rate"></i> Theo d&#245;i h&#224;ng ng&#224;y
+                        </a> *@
                     </div>
                 </div>
 
@@ -637,6 +640,10 @@
                         <a asp-controller="AdminEmailTemplate" asp-action="Index"
                            class="nav-item-link @(controller == "AdminEmailTemplate" ? "active" : "")">
                             <i class="fas fa-envelope-open-text"></i> Mẫu Email
+                        </a>
+                        <a asp-controller="EmailNotification" asp-action="Index"
+                           class="nav-item-link @(controller == "EmailNotification" ? "active" : "")">
+                            <i class="fas fa-envelope"></i> Quản lý lịch sử Email
                         </a>
                     </div>
                 </div>
