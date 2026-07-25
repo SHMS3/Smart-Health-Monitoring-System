@@ -56,14 +56,16 @@ namespace SmartHealthMonitoring.ViewModels
             new SelectListItem { Value = "", Text = "Trạng thái" },
             new SelectListItem { Value = "0", Text = "Chờ gửi" },
             new SelectListItem { Value = "1", Text = "Thành công" },
-            new SelectListItem { Value = "2", Text = "Thất bại" }
+            new SelectListItem { Value = "2", Text = "Thất bại" },
+            new SelectListItem { Value = "3", Text = "Thông báo nội bộ" }
         };
 
         public List<SelectListItem> EmailTypeOptions { get; set; } = new List<SelectListItem>
         {
             new SelectListItem { Value = "", Text = "Loại email" },
             new SelectListItem { Value = "Mời tái khám", Text = "Mời tái khám" },
-            new SelectListItem { Value = "Cảnh báo sức khỏe", Text = "Cảnh báo sức khỏe" }
+            new SelectListItem { Value = "Cảnh báo sức khỏe", Text = "Cảnh báo sức khỏe" },
+            new SelectListItem { Value = "Nhắc ghi chỉ số", Text = "Nhắc ghi chỉ số" }
         };
 
         public List<SelectListItem> PatientOptions { get; set; } = new List<SelectListItem>();
