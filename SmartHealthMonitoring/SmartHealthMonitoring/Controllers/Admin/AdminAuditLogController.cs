@@ -10,6 +10,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
     [Authorize(Roles = "2")]
     public class AdminAuditLogController : Controller
     {
+        private static readonly TimeSpan VietnamUtcOffset = TimeSpan.FromHours(7);
         private readonly SmartHealthMonitoringContext _context;
 
         public AdminAuditLogController(SmartHealthMonitoringContext context)
@@ -31,7 +32,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
             pageSize = Math.Clamp(pageSize, 5, 100);
             var normalizedFromDate = fromDate?.Date;
             var normalizedToDate = toDate?.Date;
-            var today = DateTime.Today;
+            var today = DateTimeOffset.UtcNow.ToOffset(VietnamUtcOffset).Date;
             var actors = await _context.Users
                 .AsNoTracking()
                 .Where(x => x.Role == 1 || x.Role == 2)
@@ -100,13 +101,14 @@ namespace SmartHealthMonitoring.Controllers.Admin
 
             if (normalizedFromDate.HasValue)
             {
-                query = query.Where(x => x.CreatedAt >= normalizedFromDate.Value);
+                var fromUtc = ToUtcStartOfVietnamDate(normalizedFromDate.Value);
+                query = query.Where(x => x.CreatedAt >= fromUtc);
             }
 
             if (normalizedToDate.HasValue)
             {
-                var nextDate = normalizedToDate.Value.AddDays(1);
-                query = query.Where(x => x.CreatedAt < nextDate);
+                var toUtcExclusive = ToUtcStartOfVietnamDate(normalizedToDate.Value.AddDays(1));
+                query = query.Where(x => x.CreatedAt < toUtcExclusive);
             }
 
             var totalRecords = await query.CountAsync();
@@ -148,6 +150,12 @@ namespace SmartHealthMonitoring.Controllers.Admin
             };
 
             return View(model);
+        }
+
+        private static DateTime ToUtcStartOfVietnamDate(DateTime date)
+        {
+            var vietnamDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Unspecified);
+            return new DateTimeOffset(vietnamDate, VietnamUtcOffset).UtcDateTime;
         }
     }
 }

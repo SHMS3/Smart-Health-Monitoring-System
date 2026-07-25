@@ -3,7 +3,11 @@
     Layout = "_AdminLayout";
     ViewData["Title"] = "Nhật ký hoạt động";
 
-    var todayValue = DateTime.Today.ToString("yyyy-MM-dd");
+    var vietnamUtcOffset = TimeSpan.FromHours(7);
+    var todayValue = DateTime.UtcNow.Add(vietnamUtcOffset).ToString("yyyy-MM-dd");
+
+    DateTime ToVietnamTime(DateTime utcDateTime) =>
+        DateTime.SpecifyKind(utcDateTime, DateTimeKind.Utc).Add(vietnamUtcOffset);
 
     string BadgeClass(string action) => action switch
     {
@@ -296,10 +300,8 @@
                 return div.innerHTML;
             };
 
-            const localDateValue = (date) => {
-                const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-                return local.toISOString().slice(0, 10);
-            };
+            const vietnamDateValue = (date) =>
+                new Date(date.getTime() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
             const matchesCurrentFilters = (log) => {
                 const actionType = form.elements.actionType?.value;
@@ -307,7 +309,7 @@
                 const actorUserId = form.elements.actorUserId?.value;
                 const fromValue = fromDate.value;
                 const toValue = toDate.value;
-                const logDate = localDateValue(new Date(log.createdAt));
+                const logDate = vietnamDateValue(new Date(log.createdAt));
 
                 if (actionType && log.action !== actionType) {
                     return false;
@@ -353,8 +355,8 @@
                 row.dataset.logId = log.id;
                 row.innerHTML = `
                     <td class="ps-4 text-nowrap">
-                        <div class="fw-semibold text-dark">${createdAt.toLocaleDateString('vi-VN')}</div>
-                        <div class="small text-muted">${createdAt.toLocaleTimeString('vi-VN')}</div>
+                        <div class="fw-semibold text-dark">${createdAt.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</div>
+                        <div class="small text-muted">${createdAt.toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</div>
                     </td>
                     <td>
                         <div class="fw-semibold text-dark">${escapeHtml(log.actorName)}</div>
@@ -513,10 +515,11 @@
                     }
                     @foreach (var log in Model.Logs.Items)
                     {
+                        var createdAt = ToVietnamTime(log.CreatedAt);
                         <tr class="audit-log-row" data-log-id="@log.Id">
                             <td class="ps-4 text-nowrap">
-                                <div class="fw-semibold text-dark">@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</div>
-                                <div class="small text-muted">@log.CreatedAt.ToLocalTime().ToString("HH:mm:ss")</div>
+                                <div class="fw-semibold text-dark">@createdAt.ToString("dd/MM/yyyy")</div>
+                                <div class="small text-muted">@createdAt.ToString("HH:mm:ss")</div>
                             </td>
                             <td>
                                 <div class="fw-semibold text-dark">@log.ActorName</div>
