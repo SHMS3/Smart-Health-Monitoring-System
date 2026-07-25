@@ -21,7 +21,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
         public async Task<IActionResult> Index(
             string? actionType,
             string? entityName,
-            string? keyword,
+            int? actorUserId,
             DateTime? fromDate,
             DateTime? toDate,
             int page = 1,
@@ -32,6 +32,20 @@ namespace SmartHealthMonitoring.Controllers.Admin
             var normalizedFromDate = fromDate?.Date;
             var normalizedToDate = toDate?.Date;
             var today = DateTime.Today;
+            var actors = await _context.Users
+                .AsNoTracking()
+                .Where(x => x.Role == 1 || x.Role == 2)
+                .OrderByDescending(x => x.Role)
+                .ThenBy(x => x.FullName)
+                .Select(x => new AuditLogActorOptionViewModel
+                {
+                    Id = x.Id,
+                    FullName = x.FullName,
+                    Email = x.Email,
+                    Role = x.Role,
+                    IsDeleted = x.IsDeleted
+                })
+                .ToListAsync();
 
             if (normalizedFromDate.HasValue &&
                 normalizedToDate.HasValue &&
@@ -51,9 +65,10 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 {
                     ActionType = actionType,
                     EntityName = entityName,
-                    Keyword = keyword,
+                    ActorUserId = actorUserId,
                     FromDate = fromDate,
                     ToDate = toDate,
+                    Actors = actors,
                     Logs = new PagedResult<AuditLogListItemViewModel>
                     {
                         Items = new List<AuditLogListItemViewModel>(),
@@ -78,6 +93,11 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 query = query.Where(x => x.EntityName == entityName);
             }
 
+            if (actorUserId.HasValue)
+            {
+                query = query.Where(x => x.ActorUserId == actorUserId.Value);
+            }
+
             if (normalizedFromDate.HasValue)
             {
                 query = query.Where(x => x.CreatedAt >= normalizedFromDate.Value);
@@ -87,17 +107,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
             {
                 var nextDate = normalizedToDate.Value.AddDays(1);
                 query = query.Where(x => x.CreatedAt < nextDate);
-            }
-
-            if (!string.IsNullOrWhiteSpace(keyword))
-            {
-                var term = keyword.Trim();
-                query = query.Where(x =>
-                    x.ActorName.Contains(term) ||
-                    x.ActorEmail.Contains(term) ||
-                    (x.TargetName != null && x.TargetName.Contains(term)) ||
-                    (x.EntityId != null && x.EntityId.Contains(term)) ||
-                    x.Description.Contains(term));
             }
 
             var totalRecords = await query.CountAsync();
@@ -125,9 +134,10 @@ namespace SmartHealthMonitoring.Controllers.Admin
             {
                 ActionType = actionType,
                 EntityName = entityName,
-                Keyword = keyword,
+                ActorUserId = actorUserId,
                 FromDate = fromDate,
                 ToDate = toDate,
+                Actors = actors,
                 Logs = new PagedResult<AuditLogListItemViewModel>
                 {
                     Items = items,

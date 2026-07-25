@@ -8,6 +8,7 @@ using SmartHealthMonitoring.Hubs;
 using System;
 using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Filters;
 
 namespace SmartHealthMonitoring
 {
@@ -47,7 +48,11 @@ namespace SmartHealthMonitoring
             builder.Services.AddScoped<LocalOcrService>();
 
             // 3. MVC & Razor
-            builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+            builder.Services.AddScoped<AuditLogActionFilter>();
+            builder.Services
+                .AddControllersWithViews(options =>
+                    options.Filters.AddService<AuditLogActionFilter>())
+                .AddRazorRuntimeCompilation();
             builder.Services.AddHttpContextAccessor();
 
             // 3b. SignalR cho Telemedicine Chat

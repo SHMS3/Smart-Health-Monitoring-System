@@ -8,13 +8,28 @@ public class AuditLogIndexViewModel
 
     public string? EntityName { get; set; }
 
-    public string? Keyword { get; set; }
+    public int? ActorUserId { get; set; }
 
     public DateTime? FromDate { get; set; }
 
     public DateTime? ToDate { get; set; }
 
+    public List<AuditLogActorOptionViewModel> Actors { get; set; } = new();
+
     public PagedResult<AuditLogListItemViewModel> Logs { get; set; } = new();
+}
+
+public class AuditLogActorOptionViewModel
+{
+    public int Id { get; set; }
+
+    public string FullName { get; set; } = string.Empty;
+
+    public string Email { get; set; } = string.Empty;
+
+    public byte Role { get; set; }
+
+    public bool IsDeleted { get; set; }
 }
 
 public class AuditLogListItemViewModel
