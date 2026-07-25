@@ -60,7 +60,7 @@ namespace SmartHealthMonitoring.Workers
             var emailTriggerService = scope.ServiceProvider.GetRequiredService<IEmailTriggerService>();
 
             var now = DateTime.Now;
-            var oneHourAgo = now.AddMinutes(-1);
+            var oneHourAgo = now.AddHours(-1);
 
             // Lấy danh sách bệnh nhân hoạt động
             var patients = await dbContext.Patients

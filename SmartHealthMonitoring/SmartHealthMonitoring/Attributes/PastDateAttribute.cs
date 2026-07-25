@@ -1,0 +1,15 @@
+using System; 
+using System.ComponentModel.DataAnnotations; 
+namespace SmartHealthMonitoring.Attributes 
+{ 
+    public class PastDateAttribute : ValidationAttribute { 
+        public override bool IsValid(object? value) { 
+            if (value is DateOnly date) {
+                return date <= DateOnly.FromDateTime(DateTime.Now); 
+            } 
+            if (value is DateTime dateTime) { 
+                return dateTime.Date <= DateTime.Now.Date; 
+            } return true; 
+        } 
+    }
+}

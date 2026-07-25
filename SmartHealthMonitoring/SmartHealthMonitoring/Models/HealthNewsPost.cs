@@ -16,11 +16,9 @@ namespace SmartHealthMonitoring.Models
         [MaxLength(1000)]
         public string Summary { get; set; } = string.Empty;
 
-        /// <summary>"PatientStatistics" | "HabitStatistics" | "Manual"</summary>
         [MaxLength(50)]
         public string Source { get; set; } = "Manual";
 
-        /// <summary>"Draft" | "Published" | "Hidden" | "Pending"</summary>
         [MaxLength(20)]
         public string Status { get; set; } = "Draft";
 

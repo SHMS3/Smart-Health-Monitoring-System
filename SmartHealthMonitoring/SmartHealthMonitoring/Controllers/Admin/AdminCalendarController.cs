@@ -105,6 +105,16 @@ public class AdminCalendarController : Controller
             .OrderBy(a => a.Slot.SlotStart)
             .ToListAsync();
 
+        // Mỗi bác sĩ / khung 30 phút chỉ 1 ca (tránh trùng do data lẻ)
+        appointments = appointments
+            .GroupBy(a => new { a.DoctorId, Slot = SnapToSlotStart(a.Slot.SlotStart) })
+            .Select(g => g
+                .OrderBy(a => StatusPriority(a.Status))
+                .ThenByDescending(a => a.Id)
+                .First())
+            .OrderBy(a => a.Slot.SlotStart)
+            .ToList();
+
         var events = new List<AdminCalendarEventDto>();
 
         foreach (var a in appointments)
@@ -116,13 +126,15 @@ public class AdminCalendarController : Controller
             var statusMeta = GetStatusMeta(a.Status);
             var patientName = a.Patient?.User?.FullName ?? "—";
             var doctorName = a.Doctor?.User?.FullName ?? $"BS #{a.DoctorId}";
+            var displayStart = SnapToSlotStart(a.Slot.SlotStart);
+            var displayEnd = displayStart.AddMinutes(30);
 
             events.Add(new AdminCalendarEventDto
             {
                 Id = $"appt-{a.Id}",
-                Title = $"{patientName} · {doctorName}",
-                Start = FormatLocal(a.Slot.SlotStart),
-                End = FormatLocal(a.Slot.SlotEnd),
+                Title = $"{patientName} · {GetShortName(doctorName)}",
+                Start = FormatLocal(displayStart),
+                End = FormatLocal(displayEnd),
                 BackgroundColor = statusMeta.UseMuted ? Soften(color) : color,
                 BorderColor = color,
                 TextColor = "#ffffff",
@@ -157,19 +169,26 @@ public class AdminCalendarController : Controller
 
         var blockedSlots = await blockedQuery.ToListAsync();
 
+        blockedSlots = blockedSlots
+            .GroupBy(s => new { s.DoctorId, Slot = SnapToSlotStart(s.SlotStart) })
+            .Select(g => g.OrderByDescending(s => s.Id).First())
+            .ToList();
+
         foreach (var s in blockedSlots)
         {
             var color = doctorMap.TryGetValue(s.DoctorId, out var doc)
                 ? doc.Color
                 : ColorForDoctor(s.DoctorId);
             var doctorName = s.Doctor?.User?.FullName ?? $"BS #{s.DoctorId}";
+            var displayStart = SnapToSlotStart(s.SlotStart);
+            var displayEnd = displayStart.AddMinutes(30);
 
             events.Add(new AdminCalendarEventDto
             {
                 Id = $"block-{s.Id}",
-                Title = $"🚫 Blocked · {doctorName}",
-                Start = FormatLocal(s.SlotStart),
-                End = FormatLocal(s.SlotEnd),
+                Title = $"Chặn · {GetShortName(doctorName)}",
+                Start = FormatLocal(displayStart),
+                End = FormatLocal(displayEnd),
                 BackgroundColor = "#94a3b8",
                 BorderColor = color,
                 TextColor = "#ffffff",
@@ -438,6 +457,29 @@ public class AdminCalendarController : Controller
     /// <summary>Wall-clock ISO without Z — matches how slots are stored (local hours tagged Utc).</summary>
     private static string FormatLocal(DateTime dt)
         => dt.ToString("yyyy-MM-dd'T'HH:mm:ss");
+
+    private static DateTime SnapToSlotStart(DateTime dt)
+    {
+        var minutes = dt.Hour * 60 + dt.Minute;
+        var snapped = (minutes / 30) * 30;
+        return new DateTime(dt.Year, dt.Month, dt.Day, snapped / 60, snapped % 60, 0, dt.Kind);
+    }
+
+    private static int StatusPriority(AppointmentStatus status) => status switch
+    {
+        AppointmentStatus.Confirmed => 0,
+        AppointmentStatus.Pending => 1,
+        AppointmentStatus.CancellationPending => 2,
+        AppointmentStatus.Completed => 3,
+        AppointmentStatus.NoShow => 4,
+        _ => 5
+    };
+
+    private static string GetShortName(string fullName)
+    {
+        var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 0 ? fullName : parts[^1];
+    }
 
     private static DateOnly GetMondayOfWeek(DateOnly date)
     {

@@ -221,7 +221,15 @@
                             <span class="badge rounded-pill @badgeClass px-3 py-2">@statusLabel</span>
                             @if(post.Status == "Draft" && !string.IsNullOrEmpty(post.RejectionReason))
                             {
-                                <i class="fas fa-exclamation-circle text-danger ms-2" title="Bị từ chối: @post.RejectionReason"></i>
+                                <div class="mt-2">
+                                    <span class="badge bg-danger text-white" style="font-size:0.7rem; cursor:pointer;"
+                                          data-bs-toggle="popover" data-bs-trigger="click"
+                                          data-bs-title="❌ Lý do từ chối"
+                                          data-bs-content="@post.RejectionReason"
+                                          data-bs-html="true">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Xem lý do từ chối
+                                    </span>
+                                </div>
                             }
                         </td>
                         <td style="white-space:nowrap;">
@@ -258,3 +266,27 @@
         </table>
     </div>
 </div>
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Khởi tạo tất cả popovers (hiển thị lý do từ chối)
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl, {
+            container: 'body',
+            placement: 'top'
+        });
+    });
+
+    // Click ngoài popover để đóng
+    document.addEventListener('click', function (e) {
+        popoverTriggerList.forEach(function (el) {
+            var popover = bootstrap.Popover.getInstance(el);
+            if (popover && !el.contains(e.target)) {
+                popover.hide();
+            }
+        });
+    });
+});
+</script>
+}

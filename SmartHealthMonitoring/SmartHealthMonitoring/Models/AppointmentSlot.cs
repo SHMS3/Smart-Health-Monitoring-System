@@ -43,7 +43,7 @@ public class AppointmentSlot
     // Navigation
     public virtual Doctor Doctor { get; set; } = null!;
     public virtual Patient? Patient { get; set; }
-    public virtual Appointment? Appointment { get; set; }
+    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }
 
 public enum AppointmentSlotStatus

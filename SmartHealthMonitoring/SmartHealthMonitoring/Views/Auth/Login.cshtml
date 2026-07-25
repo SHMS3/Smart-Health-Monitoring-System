@@ -486,7 +486,7 @@
                         <label for="RememberMe">Ghi nhớ đăng nhập</label>
                     </div>
                     <div class="form-forgot">
-                        <a href="#">Quên mật khẩu?</a>
+                        <a asp-action="ForgotPassword" asp-controller="Auth">Quên mật khẩu?</a>
                     </div>
                 </div>
 
@@ -495,10 +495,7 @@
                 </button>
             </form>
 
-            <div class="auth-switch">
-                Chưa có tài khoản?
-                <a asp-controller="Auth" asp-action="Register">Đăng ký ngay</a>
-            </div>
+
         </div>
 
     </div>

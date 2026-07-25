@@ -44,6 +44,7 @@ namespace SmartHealthMonitoring
                 .Build());
 
             builder.Services.AddHttpClient<GeminiService>();
+            builder.Services.AddScoped<LocalOcrService>();
 
             // 3. MVC & Razor
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
@@ -72,10 +73,10 @@ namespace SmartHealthMonitoring
             
             // Đăng ký Background Worker quét hồ sơ lâm sàng mới (DA-1.3)
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AI.AiPredictionWorker>();
-            // Tắt Background Worker nhắc nhở ghi log chỉ số sinh hiệu để không tự động gửi email cho bệnh nhân.
-            // builder.Services.AddHostedService<SmartHealthMonitoring.Workers.DailyVitalLogReminderWorker>();
+            // Đăng ký Background Worker nhắc nhở ghi log chỉ số sinh hiệu sau 1 tiếng kể từ log cuối
+            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.DailyVitalLogReminderWorker>();
             // Đặt lịch: sinh slot tự động mỗi ngày lúc 00:05
-            // builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentSlotGeneratorWorker>();
+            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentSlotGeneratorWorker>();
             // Đặt lịch: dọn dẹp SoftLock hết hạn và đánh dấu No-show mỗi 2 phút
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentCleanupWorker>();
             // NTF-02: nhắc lịch hẹn Email/SMS trước 24h và 2h (quét mỗi 5 phút)
@@ -123,10 +124,43 @@ namespace SmartHealthMonitoring
                         var context = services.GetRequiredService<SmartHealthMonitoringContext>();
                         context.Database.Migrate();
                         Console.WriteLine("[Database] Auto-migration successfully executed.");
+
+                        // Tự động Seed DoctorWorkSchedule (không cần Migration)
+                        if (!context.DoctorWorkSchedules.Any())
+                        {
+                            var schedules = new List<SmartHealthMonitoring.Models.DoctorWorkSchedule>();
+                            for (int docId = 1; docId <= 10; docId++)
+                            {
+                                for (byte dayOfWeek = 1; dayOfWeek <= 5; dayOfWeek++)
+                                {
+                                    schedules.Add(new SmartHealthMonitoring.Models.DoctorWorkSchedule
+                                    {
+                                        DoctorId = docId,
+                                        DayOfWeek = dayOfWeek,
+                                        StartTime = new TimeOnly(8, 0),
+                                        EndTime = new TimeOnly(12, 0),
+                                        SlotDurationMinutes = 30,
+                                        IsActive = true
+                                    });
+                                    schedules.Add(new SmartHealthMonitoring.Models.DoctorWorkSchedule
+                                    {
+                                        DoctorId = docId,
+                                        DayOfWeek = dayOfWeek,
+                                        StartTime = new TimeOnly(13, 30),
+                                        EndTime = new TimeOnly(17, 0),
+                                        SlotDurationMinutes = 30,
+                                        IsActive = true
+                                    });
+                                }
+                            }
+                            context.DoctorWorkSchedules.AddRange(schedules);
+                            context.SaveChanges();
+                            Console.WriteLine("[Database] Auto-seeded DoctorWorkSchedules.");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[Database] Auto-migration failed: {ex.Message}");
+                        Console.WriteLine($"[Database] Error during auto-migration/seeding: {ex.Message}");
                     }
                 }
             });

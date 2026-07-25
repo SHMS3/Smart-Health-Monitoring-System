@@ -5,13 +5,13 @@ namespace SmartHealthMonitoring.Interfaces;
 public interface IAppointmentService
 {
     /// <summary>Lấy danh sách slot còn trống của bác sĩ theo ngày</summary>
-    Task<List<AppointmentSlot>> GetAvailableSlotsAsync(int doctorId, DateOnly date);
+    Task<List<AppointmentSlot>> GetAvailableSlotsAsync(int doctorId, DateOnly date, int? currentPatientId = null);
 
     /// <summary>Lấy danh sách slot còn trống của bác sĩ theo khoảng ngày</summary>
-    Task<List<AppointmentSlot>> GetAvailableSlotsRangeAsync(int doctorId, DateOnly startDate, DateOnly endDate);
+    Task<List<AppointmentSlot>> GetAvailableSlotsRangeAsync(int doctorId, DateOnly startDate, DateOnly endDate, int? currentPatientId = null);
 
     /// <summary>Lấy danh sách slot còn trống của NHIỀU bác sĩ theo khoảng ngày</summary>
-    Task<List<AppointmentSlot>> GetAvailableSlotsRangeForDoctorsAsync(List<int> doctorIds, DateOnly startDate, DateOnly endDate);
+    Task<List<AppointmentSlot>> GetAvailableSlotsRangeForDoctorsAsync(List<int> doctorIds, DateOnly startDate, DateOnly endDate, int? currentPatientId = null);
 
 
     /// <summary>Giữ chỗ tạm 5 phút trước khi bệnh nhân confirm</summary>
