@@ -167,8 +167,8 @@ public class EmergencyContactController : Controller
         await _context.SaveChangesAsync();
 
         TempData["SuccessMessage"] = contact.IsActive
-            ? "Đã bật nhận SOS cho người liên hệ."
-            : "Đã tắt nhận SOS cho người liên hệ.";
+            ? "Đã bật người liên hệ."
+            : "Đã tắt người liên hệ.";
 
         return RedirectToAction(nameof(Index));
     }

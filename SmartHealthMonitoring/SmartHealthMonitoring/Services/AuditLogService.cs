@@ -96,6 +96,7 @@ public class AuditLogService : IAuditLogService
             var payload = new
             {
                 id = auditLog.Id,
+                actorUserId = auditLog.ActorUserId,
                 actorName = auditLog.ActorName,
                 actorEmail = auditLog.ActorEmail,
                 action = auditLog.Action,

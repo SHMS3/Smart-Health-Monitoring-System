@@ -251,38 +251,13 @@ namespace SmartHealthMonitoring.Services
                         ToEmail = patientEmail,
                         Subject = subject,
                         Body = htmlBody,
-                        Status = 0,
+                        Status = string.IsNullOrEmpty(htmlBody) ? (byte)2 : (byte)3,
                         IsSent = false,
                         SentByDoctorId = null,
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        ErrorMessage = string.IsNullOrEmpty(htmlBody) ? "Template không tìm thấy." : null
                     };
                     _context.EmailNotifications.Add(notification);
-                    await _context.SaveChangesAsync();
-
-                    if (!string.IsNullOrEmpty(htmlBody))
-                    {
-                        try
-                        {
-                            await _emailService.SendEmailAsync(patientEmail, subject, htmlBody);
-                            notification.Status = 1;
-                            notification.IsSent = true;
-                            notification.SentAt = DateTime.Now;
-                        }
-                        catch (Exception ex)
-                        {
-                            notification.Status = 2;
-                            notification.IsSent = false;
-                            notification.ErrorMessage = ex.Message;
-                            Console.WriteLine($"[EmailError] {ex.Message}");
-                        }
-                    }
-                    else
-                    {
-                        notification.Status = 2;
-                        notification.IsSent = false;
-                        notification.ErrorMessage = "Template không tìm thấy.";
-                    }
-
                     await _context.SaveChangesAsync();
                 }
             }

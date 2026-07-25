@@ -8,6 +8,7 @@ using SmartHealthMonitoring.Hubs;
 using System;
 using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Filters;
 
 namespace SmartHealthMonitoring
 {
@@ -47,7 +48,11 @@ namespace SmartHealthMonitoring
             builder.Services.AddScoped<LocalOcrService>();
 
             // 3. MVC & Razor
-            builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+            builder.Services.AddScoped<AuditLogActionFilter>();
+            builder.Services
+                .AddControllersWithViews(options =>
+                    options.Filters.AddService<AuditLogActionFilter>())
+                .AddRazorRuntimeCompilation();
             builder.Services.AddHttpContextAccessor();
 
             // 3b. SignalR cho Telemedicine Chat
@@ -73,14 +78,20 @@ namespace SmartHealthMonitoring
             
             // Đăng ký Background Worker quét hồ sơ lâm sàng mới (DA-1.3)
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AI.AiPredictionWorker>();
-            // Đăng ký Background Worker nhắc nhở ghi log chỉ số sinh hiệu sau 1 tiếng kể từ log cuối
-            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.DailyVitalLogReminderWorker>();
             // Đặt lịch: sinh slot tự động mỗi ngày lúc 00:05
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentSlotGeneratorWorker>();
             // Đặt lịch: dọn dẹp SoftLock hết hạn và đánh dấu No-show mỗi 2 phút
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentCleanupWorker>();
-            // NTF-02: nhắc lịch hẹn Email/SMS trước 24h và 2h (quét mỗi 5 phút)
-            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentReminderWorker>();
+            // Nhắc ghi chỉ số chỉ tạo lịch sử nội bộ, không gửi email thật.
+            builder.Services.AddHostedService<SmartHealthMonitoring.Workers.DailyVitalLogReminderWorker>();
+
+            // ponytail: tránh gửi email thật khi chạy local; bật lại bằng
+            // BackgroundWorkers__EnableNotifications=true nếu cần test chủ động.
+            if (!builder.Environment.IsDevelopment() ||
+                builder.Configuration.GetValue<bool>("BackgroundWorkers:EnableNotifications"))
+            {
+                builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentReminderWorker>();
+            }
 
             // ====================================================================
 

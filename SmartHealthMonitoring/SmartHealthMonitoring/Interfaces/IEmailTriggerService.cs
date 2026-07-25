@@ -15,7 +15,7 @@ namespace SmartHealthMonitoring.Interfaces
         Task SendHealthWarningAsync(int patientId, int predictionId);
 
         /// <summary>
-        /// Gửi email nhắc nhở bệnh nhân ghi log chỉ số sinh hiệu hàng ngày.
+        /// Tạo thông báo nội bộ nhắc bệnh nhân ghi log chỉ số sinh hiệu hàng ngày.
         /// </summary>
         Task SendDailyVitalLogReminderAsync(int patientId, string lastLogTimeDisplay);
 
