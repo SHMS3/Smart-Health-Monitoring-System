@@ -81,6 +81,16 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="float: right; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: inherit;"></button>
         </div>
     }
+    @if (TempData["Warning"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert" style="border-radius: 12px; font-size: 0.9rem; margin-bottom: 24px; padding: 15px 20px;">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["Warning"]
+            <a asp-controller="EmailNotification" asp-action="Index" asp-route-status="2" class="alert-link ms-1">
+                Xem lịch sử email
+            </a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="float: right;"></button>
+        </div>
+    }
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px; font-size: 0.9rem; margin-bottom: 24px; padding: 15px 20px; background-color: #f8d7da; border-color: #f5c2c7; color: #842029;">
