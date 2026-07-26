@@ -541,7 +541,7 @@ public class AppointmentController : Controller
             .Where(a => a.Slot.DoctorId == doctor.Id
                      && a.Slot.SlotStart >= todayUtc
                      && a.Slot.SlotStart < endDate
-                     && (a.Status == AppointmentStatus.Confirmed || a.Status == AppointmentStatus.Completed))
+                     && a.Status == AppointmentStatus.Confirmed)
             .OrderBy(a => a.Slot.SlotStart)
             .ToListAsync();
 
@@ -550,13 +550,7 @@ public class AppointmentController : Controller
             .GroupBy(a => DateOnly.FromDateTime(a.Slot.SlotStart.Date))
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        // Single-day queue for selected date (for detail panel)
-        var queue = allAppointments
-            .Where(a => DateOnly.FromDateTime(a.Slot.SlotStart.Date) == selectedDate)
-            .Where(a => a.PatientNote != "Đăng ký trực tiếp tại quầy lễ tân")
-            .ToList();
-
-        // Walk-in queue (only for today)
+        // 1. Walk-in queue (only for today)
         var waitingQueue = new List<WaitingPatient>();
         if (selectedDate == DateOnly.FromDateTime(todayUtc))
         {
@@ -568,6 +562,14 @@ public class AppointmentController : Controller
                 .OrderBy(w => w.SequenceNumber)
                 .ToListAsync();
         }
+
+        // 2. Single-day queue for selected date (for detail panel)
+        // Loại bỏ bệnh nhân đã có trong waitingQueue để tránh hiển thị đúp nếu là hôm nay
+        var queue = allAppointments
+            .Where(a => DateOnly.FromDateTime(a.Slot.SlotStart.Date) == selectedDate)
+            .Where(a => !waitingQueue.Any(w => w.PatientId == a.PatientId))
+            .Where(a => a.Status != AppointmentStatus.Completed)
+            .ToList();
 
         var patientIds = waitingQueue.Select(w => w.PatientId).ToList();
         patientIds.AddRange(queue.Select(a => a.PatientId));

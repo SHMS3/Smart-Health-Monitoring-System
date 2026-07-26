@@ -36,7 +36,7 @@ public class DoctorScheduleController : Controller
         var doctor = await GetCurrentDoctorAsync();
         if (doctor == null) return Forbid();
 
-        var today = DateTime.Today;
+        var today = SmartHealthMonitoring.Common.AppTime.Now.Date;
         var endDay = today.AddDays(7);
 
         var existingSlots = await _context.AppointmentSlots
@@ -111,7 +111,7 @@ public class DoctorScheduleController : Controller
         var doctor = await GetCurrentDoctorAsync();
         if (doctor == null) return Forbid();
 
-        var today = DateTime.Today;
+        var today = SmartHealthMonitoring.Common.AppTime.Now.Date;
         var endDay = today.AddDays(7);
 
         // 1. Validate overlaps and logical errors within submitted blocks
@@ -184,15 +184,17 @@ public class DoctorScheduleController : Controller
         // 6. Generate new Available slots
         foreach (var block in slots)
         {
-            var date = block.Date.Date;
-            var current = TimeOnly.Parse(block.StartTime);
-            var end = TimeOnly.Parse(block.EndTime);
+            var date     = block.Date.Date;
+            // Dùng TimeSpan thay vì TimeOnly để tránh bug wrap-around qua nửa đêm.
+            // TimeOnly(23:30).Add(30min) = TimeOnly(00:00) → vòng lặp vô tận nếu end gần 00:00.
+            var current  = TimeOnly.Parse(block.StartTime).ToTimeSpan();
+            var end      = TimeOnly.Parse(block.EndTime).ToTimeSpan();
             var duration = TimeSpan.FromMinutes(block.SlotDurationMinutes);
 
-            while (current.Add(duration) <= end)
+            while (current + duration <= end)
             {
-                var slotStart = date.Add(current.ToTimeSpan());
-                var slotEnd = slotStart.Add(duration);
+                var slotStart = date.Add(current);
+                var slotEnd   = slotStart.Add(duration);
 
                 // Prevent creating an Available slot if there is already a Booked/SoftLocked slot at this exact time
                 bool exists = nonAvailableSlots.Any(s => s.SlotStart == slotStart);
@@ -206,9 +208,10 @@ public class DoctorScheduleController : Controller
                         Status = AppointmentSlotStatus.Available
                     });
                 }
-                current = current.Add(duration);
+                current += duration;
             }
         }
+
 
         await _context.SaveChangesAsync();
         TempData["Success"] = "Lịch làm việc 7 ngày tới đã được cập nhật!";

@@ -31,12 +31,15 @@
     .day-dot.inactive { background: #cbd5e1; }
     .day-body { padding: 16px 20px; }
     .slot-row { display: flex; align-items: center; gap: 5px; margin-bottom: 10px; flex-wrap: nowrap; }
-    .slot-row input[type=time] {
+    .slot-row .time-input {
         border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 6px 8px;
         font-size: .85rem; color: #334155; flex: 1; min-width: 0; outline: none;
-        transition: border-color .2s;
+        transition: border-color .2s; text-align: center; letter-spacing: 1px;
+        font-family: 'Inter', monospace; background: white; width: 100%;
     }
-    .slot-row input[type=time]:focus { border-color: #2d6a9f; }
+    .slot-row .time-input:focus { border-color: #2d6a9f; box-shadow: 0 0 0 3px rgba(45,106,159,.1); }
+    .slot-row .time-input.invalid { border-color: #dc2626; background: #fff5f5; }
+    .time-hint { font-size: .7rem; color: #94a3b8; text-align: center; margin-top: 1px; }
     .btn-add-slot {
         display: flex; align-items: center; gap: 6px;
         background: none; border: 1.5px dashed #94a3b8; border-radius: 8px;
@@ -134,10 +137,16 @@
                         foreach (var block in dayData.Blocks)
                         {
                             <div class="slot-row">
-                                <input type="time" name="startTime" value="@block.StartTime" placeholder="Từ">
+                                <div style="flex:1; min-width:0;">
+                                    <input type="text" class="time-input" name="startTime" value="@block.StartTime" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" onblur="validateTimeInput(this)">
+                                    <div class="time-hint">giờ bắt đầu</div>
+                                </div>
                                 <span class="text-muted">→</span>
-                                <input type="time" name="endTime" value="@block.EndTime" placeholder="Đến">
-                                <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
+                                <div style="flex:1; min-width:0;">
+                                    <input type="text" class="time-input" name="endTime" value="@block.EndTime" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" onblur="validateTimeInput(this)">
+                                    <div class="time-hint">giờ kết thúc</div>
+                                </div>
+                                <button type="button" class="btn-remove" onclick="removeSlot(this)" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         }
                     }
@@ -167,6 +176,36 @@
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+// Format khi gõ: tự thêm dấu ":" sau 2 số đầu
+function formatTimeInput(input) {
+    let val = input.value.replace(/[^0-9]/g, '');
+    if (val.length > 2) {
+        val = val.slice(0, 2) + ':' + val.slice(2, 4);
+    }
+    input.value = val;
+    input.classList.remove('invalid');
+}
+
+// Validate định dạng HH:MM hợp lệ (24h)
+function validateTimeInput(input) {
+    const val = input.value.trim();
+    const match = val.match(/^(\d{2}):(\d{2})$/);
+    if (!match) {
+        input.classList.add('invalid');
+        return false;
+    }
+    const h = parseInt(match[1]);
+    const m = parseInt(match[2]);
+    if (h < 0 || h > 23 || m < 0 || m > 59) {
+        input.classList.add('invalid');
+        return false;
+    }
+    input.classList.remove('invalid');
+    // Normalize: đảm bảo zero-padded
+    input.value = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+    return true;
+}
+
 function toggleDay(checkbox) {
     const card = checkbox.closest('.day-card');
     const header = card.querySelector('.day-header');
@@ -204,9 +243,15 @@ function addSlot(index, skipToggleCheck = false) {
     const row = document.createElement('div');
     row.className = 'slot-row';
     row.innerHTML = `
-        <input type="time" name="startTime" value="08:00" placeholder="Từ">
+        <div style="flex:1; min-width:0;">
+            <input type="text" class="time-input" name="startTime" value="08:00" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" onblur="validateTimeInput(this)">
+            <div class="time-hint">giờ bắt đầu</div>
+        </div>
         <span class="text-muted">→</span>
-        <input type="time" name="endTime" value="12:00" placeholder="Đến">
+        <div style="flex:1; min-width:0;">
+            <input type="text" class="time-input" name="endTime" value="12:00" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" onblur="validateTimeInput(this)">
+            <div class="time-hint">giờ kết thúc</div>
+        </div>
         <button type="button" class="btn-remove" onclick="removeSlot(this)" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
     `;
     container.appendChild(row);
@@ -249,28 +294,38 @@ async function saveSchedule() {
         const rows = Array.from(card.querySelectorAll('.slot-row'));
         
         for (const row of rows) {
-            const start = row.querySelector('[name=startTime]').value;
-            const end   = row.querySelector('[name=endTime]').value;
-            if (start && end) {
-                if (start >= end) {
-                    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Giờ bắt đầu phải nhỏ hơn giờ kết thúc.' });
-                    return;
-                }
-                
-                const isOverlap = timeRanges.some(range => 
-                    (start >= range.start && start < range.end) || 
-                    (end > range.start && end <= range.end) ||
-                    (start <= range.start && end >= range.end)
-                );
-                
-                if (isOverlap) {
-                    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Các ca làm việc trong cùng một ngày không được trùng lặp thời gian.' });
-                    return;
-                }
-                
-                timeRanges.push({ start, end });
-                payload.push({ date: dateStr, startTime: start, endTime: end, slotDurationMinutes: 30 });
+            const startInput = row.querySelector('[name=startTime]');
+            const endInput   = row.querySelector('[name=endTime]');
+
+            // Validate định dạng trước khi lưu
+            const startOk = validateTimeInput(startInput);
+            const endOk   = validateTimeInput(endInput);
+            if (!startOk || !endOk) {
+                Swal.fire({ icon: 'error', title: 'Định dạng sai', text: 'Vui lòng nhập giờ theo định dạng HH:MM (ví dụ: 08:00, 13:30).' });
+                return;
             }
+
+            const start = startInput.value;
+            const end   = endInput.value;
+
+            if (start >= end) {
+                Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Giờ bắt đầu phải nhỏ hơn giờ kết thúc.' });
+                return;
+            }
+            
+            const isOverlap = timeRanges.some(range => 
+                (start >= range.start && start < range.end) || 
+                (end > range.start && end <= range.end) ||
+                (start <= range.start && end >= range.end)
+            );
+            
+            if (isOverlap) {
+                Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Các ca làm việc trong cùng một ngày không được trùng lặp thời gian.' });
+                return;
+            }
+            
+            timeRanges.push({ start, end });
+            payload.push({ date: dateStr, startTime: start, endTime: end, slotDurationMinutes: 30 });
         }
     }
 

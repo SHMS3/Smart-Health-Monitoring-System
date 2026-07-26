@@ -197,7 +197,7 @@
                             wpIdx++;
                             <tr id="waiting-row-@wp.Id">
                                 <td><div class="order-badge" style="background:linear-gradient(135deg,#92400e,#d97706)">@wpIdx</div></td>
-                                <td><span class="walk-chip"><i class="fas fa-clock me-1"></i>@wp.CreatedAt.AddHours(7).ToString("HH:mm")</span></td>
+                                <td><span class="walk-chip"><i class="fas fa-clock me-1"></i>@wp.CreatedAt.ToString("HH:mm")</span></td>
                                 <td>
                                     <div class="patient-name">@wp.Patient.User.FullName</div>
                                     <div class="text-muted small">ID: #@wp.PatientId</div>
@@ -258,7 +258,7 @@
                             i++;
                             <tr>
                                 <td><div class="order-badge">@i</div></td>
-                                <td><span class="time-chip">@a.Slot.SlotStart.AddHours(7).ToString("HH:mm")</span></td>
+                                <td><span class="time-chip">@a.Slot.SlotStart.ToString("HH:mm")</span></td>
                                 <td>
                                     <div class="patient-name">@a.Patient.User.FullName</div>
                                     <div class="text-muted small">ID: #@a.PatientId</div>
