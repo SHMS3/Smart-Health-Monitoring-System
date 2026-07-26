@@ -311,17 +311,18 @@ namespace SmartHealthMonitoring.Services
         public async Task<List<dynamic>> GetAvailableDoctorsAsync()
         {
             var nowVn       = SmartHealthMonitoring.Common.AppTime.Now;
-            var endWindow   = nowVn.Date.AddDays(7); // Hiển thị slot trong 7 ngày tới
+            var todayVn     = nowVn.Date;
+            var tomorrowVn  = todayVn.AddDays(1);
 
-            return await _repository.GetDoctorsWithSlotsAsync(nowVn, endWindow);
+            return await _repository.GetDoctorsWithSlotsAsync(nowVn, tomorrowVn);
         }
 
         public async Task<List<dynamic>> GetDoctorSlotsAsync(int doctorId)
         {
             var nowVn      = SmartHealthMonitoring.Common.AppTime.Now;
-            var endWindow  = nowVn.Date.AddDays(7);
+            var tomorrowVn = nowVn.Date.AddDays(1);
 
-            return await _repository.GetDoctorSlotsAsync(doctorId, nowVn, endWindow);
+            return await _repository.GetDoctorSlotsAsync(doctorId, nowVn, tomorrowVn);
         }
 
         private async Task GenerateSlotsForDateAsync(DateTime localDate, TimeZoneInfo vnZone)

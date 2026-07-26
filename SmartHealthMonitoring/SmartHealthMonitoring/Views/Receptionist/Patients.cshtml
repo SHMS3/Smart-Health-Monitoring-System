@@ -237,7 +237,7 @@
                     doctorList.innerHTML = `
                         <div class="text-center py-4 text-muted">
                             <i class="fas fa-calendar-times fa-2x mb-2 d-block"></i>
-                            Không có bác sĩ nào có slot khám trong 7 ngày tới.
+                            Không có bác sĩ nào có slot khám hôm nay.
                         </div>`;
                     return;
                 }
@@ -290,7 +290,7 @@
                     slotList.innerHTML = `
                         <div class="text-center py-4 text-muted">
                             <i class="fas fa-clock fa-2x mb-2 d-block"></i>
-                            Bác sĩ này không có slot trống trong 7 ngày tới.
+                            Bác sĩ này không còn slot trống hôm nay.
                         </div>`;
                     return;
                 }
@@ -298,9 +298,6 @@
                     const startLocal = new Date(slot.slotStart);
                     const endLocal   = new Date(slot.slotEnd);
                     const fmtTime = d => d.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit', hour12: false});
-                    const fmtDate = d => d.toLocaleDateString('vi-VN', {weekday:'short', day:'2-digit', month:'2-digit'});
-                    const isToday = startLocal.toDateString() === new Date().toDateString();
-                    const dayLabel = isToday ? 'Hôm nay' : fmtDate(startLocal);
 
                     const item = document.createElement('div');
                     item.className = 'slot-item d-flex align-items-center gap-3 p-3 mb-2 rounded-3 border';
@@ -312,10 +309,7 @@
                             <div class="slot-dot rounded-circle" style="width:10px;height:10px;background:transparent;"></div>
                         </div>
                         <i class="fas fa-clock text-primary"></i>
-                        <div>
-                            <div class="fw-bold">${fmtTime(startLocal)} – ${fmtTime(endLocal)}</div>
-                            <div class="text-muted small">${dayLabel}</div>
-                        </div>`;
+                        <span class="fw-bold">${fmtTime(startLocal)} – ${fmtTime(endLocal)}</span>`;
 
                     item.addEventListener('click', () => selectSlot(item, slot.slotId));
                     item.addEventListener('mouseenter', () => { if (!item.classList.contains('slot-selected')) item.style.background = 'rgba(14,165,233,.05)'; });
