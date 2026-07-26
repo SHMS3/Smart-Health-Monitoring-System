@@ -60,7 +60,7 @@ namespace SmartHealthMonitoring.Workers
             var emailTriggerService = scope.ServiceProvider.GetRequiredService<IEmailTriggerService>();
 
             var now = DateTime.Now;
-            var oneHourAgo = now.AddMinutes(-1);
+            var oneHourAgo = now.AddHours(-1);
 
             // Lấy danh sách bệnh nhân hoạt động
             var patients = await dbContext.Patients
@@ -96,16 +96,16 @@ namespace SmartHealthMonitoring.Workers
                 // Nếu thời gian kể từ log cuối cùng (hoặc ngày tạo) đã hơn 1 giờ
                 if (baseTime < oneHourAgo)
                 {
-                    // Kiểm tra xem đã gửi email nhắc nhở nào kể từ baseTime chưa
+                    // Kiểm tra xem đã tạo thông báo nội bộ kể từ baseTime chưa
                     bool alreadySent = await dbContext.EmailNotifications
-                        .AnyAsync(n => n.PatientId == patient.Id 
-                                       && n.Subject.Contains("ghi nhận chỉ số sức khỏe hàng ngày") 
+                        .AnyAsync(n => n.PatientId == patient.Id
+                                       && n.Status == 3
                                        && n.CreatedAt > baseTime, 
                                   stoppingToken);
 
                     if (!alreadySent)
                     {
-                        _logger.LogInformation($"[DailyVitalLogReminderWorker] Gửi email nhắc nhở ghi log cho bệnh nhân {patient.User.FullName} (Id: {patient.Id}, Email: {patient.User.Email}). Thời gian mốc: {lastLogTimeDisplay}");
+                        _logger.LogInformation($"[DailyVitalLogReminderWorker] Tạo thông báo nhắc ghi log cho bệnh nhân {patient.User.FullName} (Id: {patient.Id}). Thời gian mốc: {lastLogTimeDisplay}");
                         await emailTriggerService.SendDailyVitalLogReminderAsync(patient.Id, lastLogTimeDisplay);
                     }
                 }

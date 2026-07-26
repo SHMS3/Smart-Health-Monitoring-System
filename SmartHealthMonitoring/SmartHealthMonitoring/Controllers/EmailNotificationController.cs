@@ -3,14 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
+using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "1")]
+    [Authorize(Roles = "1,2")]
     public class EmailNotificationController : Controller
     {
         private readonly SmartHealthMonitoringContext _context;
@@ -29,7 +31,29 @@ namespace SmartHealthMonitoring.Controllers
             toDate ??= today;
             page = Math.Max(page, 1);
 
-            var query = _context.EmailNotifications
+            IQueryable<EmailNotification> accessibleEmails = _context.EmailNotifications
+                .AsNoTracking();
+
+            if (User.IsInRole("1"))
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdClaim, out var userId))
+                    return Forbid();
+
+                var doctorId = await _context.Doctors
+                    .Where(d => d.UserId == userId && !d.IsDeleted)
+                    .Select(d => (int?)d.Id)
+                    .FirstOrDefaultAsync();
+
+                if (!doctorId.HasValue)
+                    return Forbid();
+
+                accessibleEmails = accessibleEmails.Where(e =>
+                    e.SentByDoctorId == null ||
+                    e.SentByDoctorId == doctorId.Value);
+            }
+
+            var query = accessibleEmails
                 .Include(e => e.Patient).ThenInclude(p => p.User)
                 .AsQueryable();
 
@@ -70,6 +94,8 @@ namespace SmartHealthMonitoring.Controllers
                     query = query.Where(e => e.Subject.Contains("Tái Khám") || e.Subject.Contains("Tái khám") || e.Subject.Contains("tái khám"));
                 else if (emailType == "Cảnh báo sức khỏe")
                     query = query.Where(e => e.Subject.Contains("CẢNH BÁO") || e.Subject.Contains("Cảnh báo") || e.Subject.Contains("cảnh báo"));
+                else if (emailType == "Nhắc ghi chỉ số")
+                    query = query.Where(e => e.Status == 3);
             }
 
             var totalItems = await query.CountAsync();
@@ -106,10 +132,10 @@ namespace SmartHealthMonitoring.Controllers
                 StatusDisplay = GetStatusDisplay(e.Status),
                 CreatedAt = e.CreatedAt,
                 SentAt = e.SentAt,
-                ErrorMessage = e.ErrorMessage,
+                ErrorMessage = GetErrorDisplay(e.ErrorMessage),
                 Body = e.Body,
                 AlertId = e.AlertId > 0 ? e.AlertId : null,
-                EmailType = GetEmailType(e.Subject),
+                EmailType = e.Status == 3 ? "Nhắc ghi chỉ số" : GetEmailType(e.Subject),
                 SenderName = e.SentByDoctorId.HasValue
                     ? (doctorNames.TryGetValue(e.SentByDoctorId.Value, out var name) ? name : "Bác sĩ")
                     : "Hệ thống tự động"
@@ -117,7 +143,7 @@ namespace SmartHealthMonitoring.Controllers
 
             // Stats: 7 ngày qua
             var since7Days = DateTime.Now.AddDays(-7);
-            var statsAll = await _context.EmailNotifications
+            var statsAll = await accessibleEmails
                 .Where(e => e.CreatedAt >= since7Days)
                 .ToListAsync();
 
@@ -130,7 +156,7 @@ namespace SmartHealthMonitoring.Controllers
                 ByDoctor = statsAll.Count(e => e.SentByDoctorId != null)
             };
 
-            var patientOptions = await _context.EmailNotifications
+            var patientOptions = await accessibleEmails
                 .Select(e => new
                 {
                     e.PatientId,
@@ -140,7 +166,7 @@ namespace SmartHealthMonitoring.Controllers
                 .OrderBy(e => e.PatientName)
                 .ToListAsync();
 
-            var senderDoctorIds = await _context.EmailNotifications
+            var senderDoctorIds = await accessibleEmails
                 .Where(e => e.SentByDoctorId.HasValue)
                 .Select(e => e.SentByDoctorId!.Value)
                 .Distinct()
@@ -157,7 +183,7 @@ namespace SmartHealthMonitoring.Controllers
                 })
                 .ToListAsync();
 
-            var hasSystemSender = await _context.EmailNotifications
+            var hasSystemSender = await accessibleEmails
                 .AnyAsync(e => e.SentByDoctorId == null);
 
             var viewModel = new EmailHistoryIndexViewModel
@@ -214,8 +240,20 @@ namespace SmartHealthMonitoring.Controllers
             0 => "Chờ gửi",
             1 => "Thành công",
             2 => "Thất bại",
+            3 => "Thông báo nội bộ",
             _ => "Không xác định"
         };
+
+        private static string? GetErrorDisplay(string? errorMessage)
+        {
+            if (string.IsNullOrWhiteSpace(errorMessage))
+                return null;
+
+            return errorMessage.Contains("Daily user sending limit exceeded", StringComparison.OrdinalIgnoreCase)
+                || errorMessage.Contains("5.4.5", StringComparison.OrdinalIgnoreCase)
+                    ? "Tài khoản Gmail đã đạt giới hạn gửi email trong ngày. Vui lòng chờ Google khôi phục hạn mức hoặc đổi tài khoản gửi email."
+                    : "Không thể gửi email. Vui lòng kiểm tra cấu hình gửi email hoặc thử lại sau.";
+        }
 
         private static string GetEmailType(string subject)
         {

@@ -144,6 +144,10 @@ public class PatientUiSettingsViewModel
     [MaxLength(180, ErrorMessage = "Dòng cuối footer không được vượt quá 180 ký tự.")]
     public string FooterBottomText { get; set; } = string.Empty;
 
+    public List<PatientFooterEditorItemViewModel> WorkScheduleItems { get; set; } = new();
+
+    public List<PatientFooterEditorItemViewModel> ContactItems { get; set; } = new();
+
     public bool ShowTopInfoBar { get; set; }
 
     public bool ShowAiChatbot { get; set; }
@@ -192,6 +196,10 @@ public class PatientUiSettingsViewModel
             FooterDescription = settings.FooterDescription,
             FooterLicenseText = settings.FooterLicenseText,
             FooterBottomText = settings.FooterBottomText,
+            WorkScheduleItems = ToEditorItems(settings.FooterSections
+                .FirstOrDefault(section => section.DisplayType == PatientFooterSectionDisplayTypes.Schedule)?.Items),
+            ContactItems = ToEditorItems(settings.FooterSections
+                .FirstOrDefault(section => section.DisplayType == PatientFooterSectionDisplayTypes.Contact)?.Items),
             ShowTopInfoBar = settings.ShowTopInfoBar,
             ShowAiChatbot = settings.ShowAiChatbot,
             ShowSupportHub = settings.ShowSupportHub,
@@ -204,6 +212,38 @@ public class PatientUiSettingsViewModel
     public void EnsureOptions()
     {
         LogoIconOptions = BuildLogoIconOptions(LogoIcon);
+        WorkScheduleItems ??= new List<PatientFooterEditorItemViewModel>();
+        ContactItems ??= new List<PatientFooterEditorItemViewModel>();
+    }
+
+    private static List<PatientFooterEditorItemViewModel> ToEditorItems(List<PatientFooterItem>? items)
+    {
+        return (items ?? new List<PatientFooterItem>())
+            .Select(item => new PatientFooterEditorItemViewModel
+            {
+                Label = item.Label,
+                Value = item.Value,
+                Kind = InferItemKind(item),
+                Highlight = item.Highlight
+            })
+            .ToList();
+    }
+
+    private static string InferItemKind(PatientFooterItem item)
+    {
+        if (item.Url.StartsWith("tel:", StringComparison.OrdinalIgnoreCase))
+            return PatientFooterItemKinds.Phone;
+        if (item.Url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+            return PatientFooterItemKinds.Email;
+        if (item.IconClass.Contains("map-marker", StringComparison.OrdinalIgnoreCase))
+            return PatientFooterItemKinds.Address;
+        if (item.IconClass.Contains("globe", StringComparison.OrdinalIgnoreCase))
+            return PatientFooterItemKinds.Website;
+        if (item.IconClass.Contains("phone", StringComparison.OrdinalIgnoreCase))
+            return PatientFooterItemKinds.Phone;
+        if (item.Highlight && item.IconClass.Contains("circle", StringComparison.OrdinalIgnoreCase))
+            return PatientFooterItemKinds.Status;
+        return PatientFooterItemKinds.Text;
     }
 
     private static List<SelectListItem> BuildLogoIconOptions(string selectedIcon)
@@ -227,4 +267,27 @@ public class PatientUiSettingsViewModel
             })
             .ToList();
     }
+}
+
+public static class PatientFooterItemKinds
+{
+    public const string Text = "text";
+    public const string Address = "address";
+    public const string Phone = "phone";
+    public const string Email = "email";
+    public const string Website = "website";
+    public const string Status = "status";
+}
+
+public class PatientFooterEditorItemViewModel
+{
+    [MaxLength(80, ErrorMessage = "Nhãn không được vượt quá 80 ký tự.")]
+    public string Label { get; set; } = string.Empty;
+
+    [MaxLength(180, ErrorMessage = "Nội dung không được vượt quá 180 ký tự.")]
+    public string Value { get; set; } = string.Empty;
+
+    public string Kind { get; set; } = PatientFooterItemKinds.Text;
+
+    public bool Highlight { get; set; }
 }

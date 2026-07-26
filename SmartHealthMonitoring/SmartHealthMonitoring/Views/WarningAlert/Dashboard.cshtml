@@ -319,6 +319,18 @@
             </div>
         }
 
+        @if (TempData["Warning"] is string warningMessage)
+        {
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                @warningMessage
+                <a asp-controller="EmailNotification" asp-action="Index" asp-route-status="2" class="alert-link ms-1">
+                    Xem lịch sử email
+                </a>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
         @if (TempData["Error"] is string errorMessage)
         {
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -607,4 +619,4 @@
 //Resolve
 
 
-</script>   
+</script>

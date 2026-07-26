@@ -95,7 +95,10 @@ public class PatientUiSettingsService
             FooterLicenseText = model.FooterLicenseText,
             FooterBottomText = model.FooterBottomText,
             FooterSocialLinks = current.FooterSocialLinks,
-            FooterSections = current.FooterSections,
+            FooterSections = ApplyEditableFooterItems(
+                current.FooterSections,
+                model.WorkScheduleItems,
+                model.ContactItems),
             FooterBottomLinks = current.FooterBottomLinks,
             ShowTopInfoBar = model.ShowTopInfoBar,
             ShowAiChatbot = model.ShowAiChatbot,
@@ -223,6 +226,112 @@ public class PatientUiSettingsService
                 };
             })
             .ToList();
+    }
+
+    private static List<PatientFooterSection> ApplyEditableFooterItems(
+        List<PatientFooterSection> currentSections,
+        List<PatientFooterEditorItemViewModel> scheduleItems,
+        List<PatientFooterEditorItemViewModel> contactItems)
+    {
+        var sections = currentSections.ToList();
+        ReplaceOrAddSection(
+            sections,
+            PatientFooterSectionDisplayTypes.Schedule,
+            "Lịch làm việc",
+            "fas fa-clock",
+            ToFooterItems(scheduleItems, isContact: false));
+        ReplaceOrAddSection(
+            sections,
+            PatientFooterSectionDisplayTypes.Contact,
+            "Liên hệ",
+            "fas fa-map-marker-alt",
+            ToFooterItems(contactItems, isContact: true));
+        return sections;
+    }
+
+    private static void ReplaceOrAddSection(
+        List<PatientFooterSection> sections,
+        string displayType,
+        string defaultTitle,
+        string defaultIcon,
+        List<PatientFooterItem> items)
+    {
+        var index = sections.FindIndex(section => section.DisplayType == displayType);
+        var current = index >= 0 ? sections[index] : null;
+        var updated = new PatientFooterSection
+        {
+            Title = current?.Title ?? defaultTitle,
+            IconClass = current?.IconClass ?? defaultIcon,
+            DisplayType = displayType,
+            Items = items
+        };
+
+        if (index >= 0)
+            sections[index] = updated;
+        else
+            sections.Add(updated);
+    }
+
+    private static List<PatientFooterItem> ToFooterItems(
+        List<PatientFooterEditorItemViewModel>? items,
+        bool isContact)
+    {
+        return (items ?? new List<PatientFooterEditorItemViewModel>())
+            .Where(item => !string.IsNullOrWhiteSpace(item.Label) || !string.IsNullOrWhiteSpace(item.Value))
+            .Take(12)
+            .Select(item => CreateFooterItem(item, isContact))
+            .ToList();
+    }
+
+    private static PatientFooterItem CreateFooterItem(
+        PatientFooterEditorItemViewModel item,
+        bool isContact)
+    {
+        var kind = item.Kind ?? PatientFooterItemKinds.Text;
+        var value = item.Value?.Trim() ?? string.Empty;
+        var icon = "fas fa-circle";
+        var url = string.Empty;
+
+        if (kind == PatientFooterItemKinds.Phone)
+        {
+            icon = "fas fa-phone-alt";
+            if (!string.IsNullOrWhiteSpace(value))
+                url = $"tel:{Regex.Replace(value, "[^0-9+]", string.Empty)}";
+        }
+        else if (isContact && kind == PatientFooterItemKinds.Email)
+        {
+            icon = "fas fa-envelope";
+            if (!string.IsNullOrWhiteSpace(value))
+                url = $"mailto:{value}";
+        }
+        else if (isContact && kind == PatientFooterItemKinds.Address)
+        {
+            icon = "fas fa-map-marker-alt";
+        }
+        else if (isContact && kind == PatientFooterItemKinds.Website)
+        {
+            icon = "fas fa-globe";
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                url = value.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                    || value.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                        ? value
+                        : $"https://{value}";
+            }
+        }
+        else if (isContact && kind == PatientFooterItemKinds.Status)
+        {
+            icon = "fas fa-circle";
+        }
+
+        return new PatientFooterItem
+        {
+            Label = item.Label?.Trim() ?? string.Empty,
+            Value = value,
+            IconClass = icon,
+            Url = url,
+            Highlight = item.Highlight || kind == PatientFooterItemKinds.Status
+        };
     }
 
     private static List<PatientFooterItem> NormalizeFooterItems(List<PatientFooterItem>? items)
