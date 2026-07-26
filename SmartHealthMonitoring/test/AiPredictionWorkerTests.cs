@@ -38,6 +38,28 @@ public class AiPredictionWorkerTests
     }
 
     [Fact]
+    public async Task DoWorkAsync_ForDashboardHighRiskLevelTwo_TriggersHealthWarning()
+    {
+        await using var context = CreateContext();
+        var patient = await AddHighRiskDailyLogAsync(context);
+        var aiService = PredictionService(0.50m);
+        var trigger = TriggerService();
+        var worker = CreateWorker(
+            context,
+            aiService.Object,
+            trigger.Object,
+            Mock.Of<IEmailService>());
+
+        await InvokeDoWorkAsync(worker);
+
+        var prediction = Assert.Single(context.AiriskPredictions);
+        Assert.Equal((byte)2, prediction.RiskLevel);
+        trigger.Verify(service => service.SendHealthWarningAsync(
+            patient.Id,
+            prediction.Id), Times.Once);
+    }
+
+    [Fact]
     public async Task DoWorkAsync_WhenHealthWarningFails_KeepsPersistedPredictionAndAlert()
     {
         await using var context = CreateContext();
@@ -114,7 +136,7 @@ public class AiPredictionWorkerTests
             .Setup(item => item.SendHealthWarningAsync(
                 It.IsAny<int>(),
                 It.IsAny<int>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(true);
         return service;
     }
 

@@ -71,15 +71,166 @@ public class EmailTriggerServiceTests
         var graph = await AddAlertGraphAsync(context, riskLevel: 1);
         var setup = CreateService(context, temp.Path);
 
-        await setup.Service.SendHealthWarningAsync(
+        var result = await setup.Service.SendHealthWarningAsync(
             graph.Patient.Id,
             graph.Prediction.Id);
 
+        Assert.False(result);
         Assert.Empty(context.EmailNotifications);
         setup.Email.Verify(service => service.SendEmailAsync(
             It.IsAny<string>(),
             It.IsAny<string>(),
             It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SendHealthWarningAsync_ForRiskLevelTwo_SendsPatientAndActiveFamilyOnly()
+    {
+        using var temp = new TempDirectory();
+        await using var context = TestContextFactory.Create();
+        var graph = await AddAlertGraphAsync(context, riskLevel: 2);
+        graph.Prediction.RiskScore = 0.40m;
+        context.EmergencyContacts.AddRange(
+            new EmergencyContact
+            {
+                Id = 21,
+                PatientId = graph.Patient.Id,
+                Patient = graph.Patient,
+                FullName = "Family Active",
+                Relationship = "Sibling",
+                Email = "family@example.com",
+                IsActive = true
+            },
+            new EmergencyContact
+            {
+                Id = 22,
+                PatientId = graph.Patient.Id,
+                Patient = graph.Patient,
+                FullName = "Family Inactive",
+                Relationship = "Sibling",
+                Email = "inactive@example.com",
+                IsActive = false
+            },
+            new EmergencyContact
+            {
+                Id = 23,
+                PatientId = graph.Patient.Id,
+                Patient = graph.Patient,
+                FullName = "Family Deleted",
+                Relationship = "Sibling",
+                Email = "deleted@example.com",
+                IsActive = true,
+                IsDeleted = true
+            },
+            new EmergencyContact
+            {
+                Id = 24,
+                PatientId = graph.Patient.Id,
+                Patient = graph.Patient,
+                FullName = "Duplicate Patient Email",
+                Relationship = "Sibling",
+                Email = " PATIENT@example.com ",
+                IsActive = true
+            });
+        await context.SaveChangesAsync();
+        var setup = CreateService(context, temp.Path);
+
+        var result = await setup.Service.SendHealthWarningAsync(
+            graph.Patient.Id,
+            graph.Prediction.Id);
+
+        Assert.True(result);
+        var notifications = await context.EmailNotifications
+            .OrderBy(item => item.ToEmail)
+            .ToListAsync();
+        Assert.Equal(2, notifications.Count);
+        Assert.All(notifications, item =>
+        {
+            Assert.True(item.IsSent);
+            Assert.Equal((byte)1, item.Status);
+            Assert.Equal(graph.Alert.Id, item.AlertId);
+        });
+        Assert.Contains(notifications, item =>
+            item.ToEmail == graph.Patient.User.Email);
+        Assert.Contains(notifications, item =>
+            item.ToEmail == "family@example.com");
+        setup.Email.Verify(service => service.SendEmailAsync(
+            graph.Patient.User.Email,
+            It.IsAny<string>(),
+            It.IsAny<string>()), Times.Once);
+        setup.Email.Verify(service => service.SendEmailAsync(
+            "family@example.com",
+            It.IsAny<string>(),
+            It.IsAny<string>()), Times.Once);
+        setup.Email.Verify(service => service.SendEmailAsync(
+            "inactive@example.com",
+            It.IsAny<string>(),
+            It.IsAny<string>()), Times.Never);
+        setup.Email.Verify(service => service.SendEmailAsync(
+            "deleted@example.com",
+            It.IsAny<string>(),
+            It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SendHealthWarningAsync_WhenSmtpRecovers_RetriesAndMarksSuccess()
+    {
+        using var temp = new TempDirectory();
+        await using var context = TestContextFactory.Create();
+        var graph = await AddAlertGraphAsync(context, riskLevel: 2);
+        var setup = CreateService(context, temp.Path);
+        setup.Email
+            .SetupSequence(service => service.SendEmailAsync(
+                graph.Patient.User.Email,
+                It.IsAny<string>(),
+                It.IsAny<string>()))
+            .ThrowsAsync(new InvalidOperationException("Temporary SMTP error"))
+            .ThrowsAsync(new InvalidOperationException("Temporary SMTP error"))
+            .Returns(Task.CompletedTask);
+
+        var result = await setup.Service.SendHealthWarningAsync(
+            graph.Patient.Id,
+            graph.Prediction.Id);
+
+        Assert.True(result);
+        var notification = await context.EmailNotifications.SingleAsync();
+        Assert.True(notification.IsSent);
+        Assert.Equal((byte)1, notification.Status);
+        Assert.Null(notification.ErrorMessage);
+        setup.Email.Verify(service => service.SendEmailAsync(
+            graph.Patient.User.Email,
+            It.IsAny<string>(),
+            It.IsAny<string>()), Times.Exactly(3));
+    }
+
+    [Fact]
+    public async Task SendHealthWarningAsync_WhenAllRetriesFail_ReturnsFalseAndTracksFailure()
+    {
+        using var temp = new TempDirectory();
+        await using var context = TestContextFactory.Create();
+        var graph = await AddAlertGraphAsync(context, riskLevel: 3);
+        var setup = CreateService(context, temp.Path);
+        setup.Email
+            .Setup(service => service.SendEmailAsync(
+                graph.Patient.User.Email,
+                It.IsAny<string>(),
+                It.IsAny<string>()))
+            .ThrowsAsync(new InvalidOperationException("SMTP unavailable"));
+
+        var result = await setup.Service.SendHealthWarningAsync(
+            graph.Patient.Id,
+            graph.Prediction.Id);
+
+        Assert.False(result);
+        var notification = await context.EmailNotifications.SingleAsync();
+        Assert.False(notification.IsSent);
+        Assert.Equal((byte)2, notification.Status);
+        Assert.Contains("SMTP unavailable", notification.ErrorMessage);
+        Assert.Contains("3 attempts", notification.ErrorMessage);
+        setup.Email.Verify(service => service.SendEmailAsync(
+            graph.Patient.User.Email,
+            It.IsAny<string>(),
+            It.IsAny<string>()), Times.Exactly(3));
     }
 
     [Fact]
@@ -429,5 +580,4 @@ public class EmailTriggerServiceTests
         AiriskPrediction Prediction,
         WarningAlert Alert);
 }
-
 
