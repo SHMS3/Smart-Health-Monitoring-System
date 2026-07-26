@@ -50,7 +50,7 @@ namespace SmartHealthMonitoring.Controllers
                 }
 
                 // ─── Danh sách bệnh nhân (phân trang) ────────────────────────
-                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                var today = DateOnly.FromDateTime(SmartHealthMonitoring.Common.AppTime.Now);
                 var query = _context.Patients
                     .Include(p => p.User)
                     .Where(p => !p.IsDeleted && !p.User.IsDeleted && p.User.Role == 0);
@@ -185,7 +185,7 @@ namespace SmartHealthMonitoring.Controllers
             }
 
             int pageSize = 10;
-            var today = DateTime.UtcNow.Date;
+            var today = SmartHealthMonitoring.Common.AppTime.Now.Date;
 
             // Chỉ lấy bệnh nhân được gán cho bác sĩ này (DoctorId == doctor.Id)
             var query = _context.WaitingPatients
@@ -294,7 +294,7 @@ namespace SmartHealthMonitoring.Controllers
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(w => w.Status, 1)
                         .SetProperty(w => w.DoctorId, doctor.Id)
-                        .SetProperty(w => w.AcceptedAt, DateTime.UtcNow));
+                        .SetProperty(w => w.AcceptedAt, SmartHealthMonitoring.Common.AppTime.Now));
 
                 if (rowsAffected == 0)
                 {
@@ -360,7 +360,7 @@ namespace SmartHealthMonitoring.Controllers
                     DoctorId = doctor.Id,
                     TotalAmount = services.Sum(s => s.Price),
                     Status = "Pending",
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
                 };
 
                 _context.Payments.Add(payment);

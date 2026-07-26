@@ -77,6 +77,7 @@ namespace SmartHealthMonitoring.Workers
                     .Where(l => l.PatientId == patient.Id && !l.IsDeleted)
                     .OrderByDescending(l => l.LoggedAt)
                     .FirstOrDefaultAsync(stoppingToken);
+                
 
                 DateTime baseTime;
                 string lastLogTimeDisplay;

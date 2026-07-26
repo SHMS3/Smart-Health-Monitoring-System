@@ -98,7 +98,7 @@ internal static class EntityFactory
             Email = email ?? $"user{id}@example.com",
             PasswordHash = passwordHash,
             Role = role,
-            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Local)
         };
     }
 

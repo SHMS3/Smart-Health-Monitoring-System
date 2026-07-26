@@ -33,6 +33,7 @@ namespace SmartHealthMonitoring.Services
             // Đẩy file lên đĩa
             var putObjectArgs = new PutObjectArgs()
                 .WithBucket(bucketName)
+
                 .WithObject(objectName)
                 .WithStreamData(data)
                 .WithObjectSize(data.Length)

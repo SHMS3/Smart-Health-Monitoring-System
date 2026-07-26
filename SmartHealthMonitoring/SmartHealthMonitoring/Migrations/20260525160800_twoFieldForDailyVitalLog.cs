@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -144,28 +144,28 @@ namespace SmartHealthMonitoring.Migrations
                 keyColumn: "Id",
                 keyValue: 1,
                 columns: new[] { "ErrorMessage", "IsSent", "SentAt", "SentByDoctorId", "Status", "ToEmail" },
-                values: new object[] { null, true, new DateTime(2026, 5, 20, 1, 7, 0, 0, DateTimeKind.Utc), null, (byte)1, "patient.hoa@gmail.com" });
+                values: new object[] { null, true, new DateTime(2026, 5, 20, 1, 7, 0, 0, DateTimeKind.Local), null, (byte)1, "patient.hoa@gmail.com" });
 
             migrationBuilder.UpdateData(
                 table: "EmailNotifications",
                 keyColumn: "Id",
                 keyValue: 2,
                 columns: new[] { "ErrorMessage", "IsSent", "SentAt", "SentByDoctorId", "Status", "ToEmail" },
-                values: new object[] { null, true, new DateTime(2026, 5, 20, 2, 7, 0, 0, DateTimeKind.Utc), null, (byte)1, "patient.minh@gmail.com" });
+                values: new object[] { null, true, new DateTime(2026, 5, 20, 2, 7, 0, 0, DateTimeKind.Local), null, (byte)1, "patient.minh@gmail.com" });
 
             migrationBuilder.UpdateData(
                 table: "EmailNotifications",
                 keyColumn: "Id",
                 keyValue: 3,
                 columns: new[] { "ErrorMessage", "IsSent", "SentAt", "SentByDoctorId", "Status", "ToEmail" },
-                values: new object[] { null, true, new DateTime(2026, 5, 20, 3, 7, 0, 0, DateTimeKind.Utc), null, (byte)1, "patient.nhung@gmail.com" });
+                values: new object[] { null, true, new DateTime(2026, 5, 20, 3, 7, 0, 0, DateTimeKind.Local), null, (byte)1, "patient.nhung@gmail.com" });
 
             migrationBuilder.UpdateData(
                 table: "EmailNotifications",
                 keyColumn: "Id",
                 keyValue: 4,
                 columns: new[] { "ErrorMessage", "IsSent", "SentAt", "SentByDoctorId", "Status", "ToEmail" },
-                values: new object[] { null, true, new DateTime(2026, 5, 20, 4, 7, 0, 0, DateTimeKind.Utc), null, (byte)1, "patient.tam@gmail.com" });
+                values: new object[] { null, true, new DateTime(2026, 5, 20, 4, 7, 0, 0, DateTimeKind.Local), null, (byte)1, "patient.tam@gmail.com" });
 
             migrationBuilder.UpdateData(
                 table: "EmailNotifications",
@@ -179,14 +179,14 @@ namespace SmartHealthMonitoring.Migrations
                 keyColumn: "Id",
                 keyValue: 6,
                 columns: new[] { "ErrorMessage", "IsSent", "SentAt", "SentByDoctorId", "Status", "ToEmail" },
-                values: new object[] { null, true, new DateTime(2026, 5, 20, 6, 7, 0, 0, DateTimeKind.Utc), null, (byte)1, "patient.thuy@gmail.com" });
+                values: new object[] { null, true, new DateTime(2026, 5, 20, 6, 7, 0, 0, DateTimeKind.Local), null, (byte)1, "patient.thuy@gmail.com" });
 
             migrationBuilder.UpdateData(
                 table: "EmailNotifications",
                 keyColumn: "Id",
                 keyValue: 7,
                 columns: new[] { "ErrorMessage", "IsSent", "SentAt", "SentByDoctorId", "Status", "ToEmail" },
-                values: new object[] { null, true, new DateTime(2026, 5, 20, 7, 7, 0, 0, DateTimeKind.Utc), null, (byte)1, "patient.hai@gmail.com" });
+                values: new object[] { null, true, new DateTime(2026, 5, 20, 7, 7, 0, 0, DateTimeKind.Local), null, (byte)1, "patient.hai@gmail.com" });
 
             migrationBuilder.UpdateData(
                 table: "EmailNotifications",
@@ -200,14 +200,14 @@ namespace SmartHealthMonitoring.Migrations
                 keyColumn: "Id",
                 keyValue: 9,
                 columns: new[] { "ErrorMessage", "IsSent", "SentAt", "SentByDoctorId", "Status", "ToEmail" },
-                values: new object[] { null, true, new DateTime(2026, 5, 20, 9, 7, 0, 0, DateTimeKind.Utc), null, (byte)1, "patient.phong@gmail.com" });
+                values: new object[] { null, true, new DateTime(2026, 5, 20, 9, 7, 0, 0, DateTimeKind.Local), null, (byte)1, "patient.phong@gmail.com" });
 
             migrationBuilder.UpdateData(
                 table: "EmailNotifications",
                 keyColumn: "Id",
                 keyValue: 10,
                 columns: new[] { "ErrorMessage", "IsSent", "SentAt", "SentByDoctorId", "Status", "ToEmail" },
-                values: new object[] { null, true, new DateTime(2026, 5, 20, 10, 7, 0, 0, DateTimeKind.Utc), null, (byte)1, "patient.mai@gmail.com" });
+                values: new object[] { null, true, new DateTime(2026, 5, 20, 10, 7, 0, 0, DateTimeKind.Local), null, (byte)1, "patient.mai@gmail.com" });
         }
 
         /// <inheritdoc />

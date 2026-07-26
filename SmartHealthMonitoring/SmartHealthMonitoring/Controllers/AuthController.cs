@@ -177,7 +177,7 @@ namespace SmartHealthMonitoring.Controllers
                                 PasswordHash = string.Empty,
                                 Role = 0,
                                 IsDeleted = false,
-                                CreatedAt = DateTime.UtcNow
+                                CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
                             };
                             _context.Users.Add(newUser);
                             await _context.SaveChangesAsync();

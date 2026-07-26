@@ -26,7 +26,7 @@ public partial class Payment
     [StringLength(50)]
     public string? PaymentMethod { get; set; } // Cash, QR
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SmartHealthMonitoring.Common.AppTime.Now;
 
     public DateTime? PaidAt { get; set; }
 

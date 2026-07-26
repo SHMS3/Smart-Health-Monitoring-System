@@ -544,7 +544,7 @@ namespace SmartHealthMonitoring.Controllers
                     DietBalanced       = model.DietBalanced,
                     RegularHealthCheck = model.RegularHealthCheck,
                     NoSubstanceAbuse   = model.NoSubstanceAbuse,
-                    UpdatedAt          = DateTime.UtcNow,
+                    UpdatedAt          = SmartHealthMonitoring.Common.AppTime.Now,
                 };
                 _context.PatientHabits.Add(habit);
             }
@@ -572,7 +572,7 @@ namespace SmartHealthMonitoring.Controllers
                 h.DietBalanced       = model.DietBalanced;
                 h.RegularHealthCheck = model.RegularHealthCheck;
                 h.NoSubstanceAbuse   = model.NoSubstanceAbuse;
-                h.UpdatedAt          = DateTime.UtcNow;
+                h.UpdatedAt          = SmartHealthMonitoring.Common.AppTime.Now;
                 _context.PatientHabits.Update(h);
             }
 
@@ -772,6 +772,11 @@ namespace SmartHealthMonitoring.Controllers
 
             if (avatarFile != null && avatarFile.Length > 0)
             {
+                if (avatarFile.Length > 5 * 1024 * 1024)
+                {
+                    TempData["ErrorMessage"] = "Kích thước ảnh không được vượt quá 5MB!";
+                    return RedirectToAction(nameof(Profile));
+                }
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (user != null)
                 {

@@ -40,7 +40,8 @@ public class AppointmentService : IAppointmentService
 
     public async Task<List<AppointmentSlot>> GetAvailableSlotsAsync(int doctorId, DateOnly date, int? currentPatientId = null)
     {
-        var (dayStart, dayEnd) = AppointmentTime.GetUtcDayRange(date);
+        var dayStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+        var dayEnd   = date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Local);
 
         var now = DateTime.UtcNow;
         return await _context.AppointmentSlots
@@ -51,7 +52,7 @@ public class AppointmentService : IAppointmentService
                 s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
                  // Slot SoftLocked đã hết hạn - vẫn hiện là trống
-                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow) ||
+                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < SmartHealthMonitoring.Common.AppTime.Now) ||
                  // Hoặc đang được giữ bởi chính bệnh nhân hiện tại
                  (s.Status == AppointmentSlotStatus.SoftLocked && currentPatientId.HasValue && s.PatientId == currentPatientId.Value)))
             .OrderBy(s => s.SlotStart)
@@ -60,7 +61,8 @@ public class AppointmentService : IAppointmentService
 
     public async Task<List<AppointmentSlot>> GetAvailableSlotsRangeAsync(int doctorId, DateOnly startDate, DateOnly endDate, int? currentPatientId = null)
     {
-        var (start, end) = AppointmentTime.GetUtcDateRange(startDate, endDate);
+        var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+        var end   = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Local);
 
         var now = DateTime.UtcNow;
         return await _context.AppointmentSlots
@@ -70,7 +72,7 @@ public class AppointmentService : IAppointmentService
                 s.SlotStart < end &&
                 s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
-                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow) ||
+                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < SmartHealthMonitoring.Common.AppTime.Now) ||
                  (s.Status == AppointmentSlotStatus.SoftLocked && currentPatientId.HasValue && s.PatientId == currentPatientId.Value)))
             .OrderBy(s => s.SlotStart)
             .ToListAsync();
@@ -78,17 +80,19 @@ public class AppointmentService : IAppointmentService
 
     public async Task<List<AppointmentSlot>> GetAvailableSlotsRangeForDoctorsAsync(List<int> doctorIds, DateOnly startDate, DateOnly endDate, int? currentPatientId = null)
     {
-        var (start, end) = AppointmentTime.GetUtcDateRange(startDate, endDate);
+        var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+        var end   = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Local);
+        var now   = DateTime.Now;
 
-        var now = DateTime.UtcNow;
         return await _context.AppointmentSlots
             .Where(s =>
                 doctorIds.Contains(s.DoctorId) &&
                 s.SlotStart >= start &&
-                s.SlotStart < end &&
+                s.SlotStart >= now &&
+                s.SlotStart <= end &&
                 s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
-                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow) ||
+                 (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < SmartHealthMonitoring.Common.AppTime.Now) ||
                  (s.Status == AppointmentSlotStatus.SoftLocked && currentPatientId.HasValue && s.PatientId == currentPatientId.Value)))
             .OrderBy(s => s.SlotStart)
             .ToListAsync();
@@ -110,7 +114,8 @@ public class AppointmentService : IAppointmentService
 
     public async Task<List<Appointment>> GetDoctorQueueAsync(int doctorId, DateOnly date)
     {
-        var (dayStart, dayEnd) = AppointmentTime.GetUtcDayRange(date);
+        var dayStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+        var dayEnd   = date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Local);
 
         return await _context.Appointments
             .Include(a => a.Slot)
@@ -136,7 +141,7 @@ public class AppointmentService : IAppointmentService
 
         // Nếu slot đang SoftLocked bởi người khác và chưa hết hạn
         if (slot.Status == AppointmentSlotStatus.SoftLocked
-            && slot.SoftLockedUntil > DateTime.UtcNow
+            && slot.SoftLockedUntil > SmartHealthMonitoring.Common.AppTime.Now
             && slot.PatientId != patientId)
             return (false, "Khung giờ này đang được người khác giữ chỗ. Vui lòng thử lại sau ít phút.");
 
@@ -149,7 +154,7 @@ public class AppointmentService : IAppointmentService
         // Giữ chỗ 10 phút
         slot.Status = AppointmentSlotStatus.SoftLocked;
         slot.PatientId = patientId;
-        slot.SoftLockedUntil = DateTime.UtcNow.AddMinutes(10);
+        slot.SoftLockedUntil = SmartHealthMonitoring.Common.AppTime.Now.AddMinutes(10);
 
         try
         {
@@ -188,7 +193,7 @@ public class AppointmentService : IAppointmentService
         // Kiểm tra trạng thái trước khi đặt
         bool isOwnSoftLock = slot.Status == AppointmentSlotStatus.SoftLocked
                           && slot.PatientId == patientId
-                          && slot.SoftLockedUntil >= DateTime.UtcNow;
+                          && slot.SoftLockedUntil >= SmartHealthMonitoring.Common.AppTime.Now;
 
         if (slot.Status == AppointmentSlotStatus.Booked)
             return (false, "Khung giờ này đã có người đặt. Vui lòng chọn giờ khác!", null);
@@ -212,7 +217,7 @@ public class AppointmentService : IAppointmentService
             DoctorId    = slot.DoctorId,
             Status      = AppointmentStatus.Confirmed,
             PatientNote = note,
-            CreatedAt   = DateTime.UtcNow
+            CreatedAt   = SmartHealthMonitoring.Common.AppTime.Now
         };
         _context.Appointments.Add(appointment);
 
@@ -250,7 +255,7 @@ public class AppointmentService : IAppointmentService
 
         // Đổi trạng thái lịch hẹn
         appointment.Status    = isDoctor ? AppointmentStatus.CancelledByDoctor : AppointmentStatus.CancelledByPatient;
-        appointment.UpdatedAt = DateTime.UtcNow;
+        appointment.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
         // Nhả slot về Available
         var slotId = appointment.Slot.Id;
@@ -287,7 +292,7 @@ public class AppointmentService : IAppointmentService
 
         appointment.Status          = AppointmentStatus.Completed;
         appointment.ClinicalRecordId = clinicalRecordId;
-        appointment.UpdatedAt       = DateTime.UtcNow;
+        appointment.UpdatedAt       = SmartHealthMonitoring.Common.AppTime.Now;
         appointment.Slot.Status     = AppointmentSlotStatus.Completed;
 
         await _context.SaveChangesAsync();
@@ -348,7 +353,7 @@ public class AppointmentService : IAppointmentService
         if (slot.Status == AppointmentSlotStatus.Blocked)
             return (false, "Bác sĩ đã chặn khung giờ này.", null);
 
-        if (slot.Status == AppointmentSlotStatus.SoftLocked && slot.PatientId != patientId && slot.SoftLockedUntil > DateTime.UtcNow)
+        if (slot.Status == AppointmentSlotStatus.SoftLocked && slot.PatientId != patientId && slot.SoftLockedUntil > SmartHealthMonitoring.Common.AppTime.Now)
             return (false, "Khung giờ này đang được người khác giữ chỗ. Vui lòng thử lại sau ít phút.", null);
 
         slot.Status = AppointmentSlotStatus.SoftLocked;
@@ -362,7 +367,7 @@ public class AppointmentService : IAppointmentService
             DoctorId = slot.DoctorId,
             Status = AppointmentStatus.Pending,
             PatientNote = note,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
         };
         _context.Appointments.Add(appointment);
 
@@ -416,7 +421,7 @@ public class AppointmentService : IAppointmentService
 
         appointment.Status = AppointmentStatus.CancellationPending;
         appointment.PatientNote = (appointment.PatientNote ?? "") + "\n[Yêu cầu huỷ]: " + reason;
-        appointment.UpdatedAt = DateTime.UtcNow;
+        appointment.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
         await _context.SaveChangesAsync();
 
@@ -470,7 +475,7 @@ public class AppointmentService : IAppointmentService
             return false;
 
         appointment.Status = AppointmentStatus.Confirmed;
-        appointment.UpdatedAt = DateTime.UtcNow;
+        appointment.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
         appointment.Slot.Status = AppointmentSlotStatus.Booked;
         appointment.Slot.SoftLockedUntil = null;
@@ -492,7 +497,7 @@ public class AppointmentService : IAppointmentService
             return false;
 
         appointment.Status = AppointmentStatus.CancelledByDoctor;
-        appointment.UpdatedAt = DateTime.UtcNow;
+        appointment.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
         appointment.Slot.Status = AppointmentSlotStatus.Available;
         appointment.Slot.PatientId = null;
@@ -514,7 +519,7 @@ public class AppointmentService : IAppointmentService
             return false;
 
         appointment.Status = AppointmentStatus.CancelledByPatient;
-        appointment.UpdatedAt = DateTime.UtcNow;
+        appointment.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
         appointment.Slot.Status = AppointmentSlotStatus.Available;
         appointment.Slot.PatientId = null;
@@ -533,7 +538,7 @@ public class AppointmentService : IAppointmentService
             return false;
 
         appointment.Status = AppointmentStatus.Confirmed;
-        appointment.UpdatedAt = DateTime.UtcNow;
+        appointment.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
         await _context.SaveChangesAsync();
         await _hubContext.Clients.All.SendAsync("AppointmentStatusChanged", appointmentId, "Confirmed");
@@ -556,13 +561,13 @@ public class AppointmentService : IAppointmentService
         if (appointment.Status != AppointmentStatus.Confirmed)
             return (false, "Chỉ có thể huỷ lịch hẹn đã xác nhận.");
 
-        var hoursUntilAppt = (appointment.Slot.SlotStart - DateTime.UtcNow).TotalHours;
+        var hoursUntilAppt = (appointment.Slot.SlotStart - SmartHealthMonitoring.Common.AppTime.Now).TotalHours;
         if (hoursUntilAppt < MinCancelHours)
             return (false, $"Không thể huỷ trực tiếp khi còn dưới {MinCancelHours} giờ. Vui lòng gửi yêu cầu huỷ qua bộ phận hỗ trợ.");
 
         // Huỷ appointment + nhả slot
         appointment.Status = AppointmentStatus.CancelledByPatient;
-        appointment.UpdatedAt = DateTime.UtcNow;
+        appointment.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
         var slotId = appointment.Slot.Id;
         var doctorId = appointment.Slot.DoctorId;
@@ -614,7 +619,7 @@ public class AppointmentService : IAppointmentService
                 if (oldAppt.Status != AppointmentStatus.Confirmed)
                     return (false, "Chỉ có thể dời lịch hẹn đã xác nhận.", null);
 
-                var hoursUntilAppt = (oldAppt.Slot.SlotStart - DateTime.UtcNow).TotalHours;
+                var hoursUntilAppt = (oldAppt.Slot.SlotStart - SmartHealthMonitoring.Common.AppTime.Now).TotalHours;
                 if (hoursUntilAppt < MinCancelHours)
                     return (false, $"Không thể dời lịch khi còn dưới {MinCancelHours} giờ trước giờ hẹn.", null);
 
@@ -630,7 +635,7 @@ public class AppointmentService : IAppointmentService
 
                 bool isOwnSoftLock = newSlot.Status == AppointmentSlotStatus.SoftLocked
                                   && newSlot.PatientId == patientId
-                                  && newSlot.SoftLockedUntil >= DateTime.UtcNow;
+                                  && newSlot.SoftLockedUntil >= SmartHealthMonitoring.Common.AppTime.Now;
 
                 if (newSlot.Status == AppointmentSlotStatus.Booked)
                     return (false, "Khung giờ mới đã có người đặt.", null);
@@ -647,7 +652,7 @@ public class AppointmentService : IAppointmentService
 
                 oldAppt.Status = AppointmentStatus.CancelledByPatient;
                 oldAppt.DoctorNote = "[Hệ thống] Bệnh nhân dời lịch sang slot mới.";
-                oldAppt.UpdatedAt = DateTime.UtcNow;
+                oldAppt.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
                 oldAppt.Slot.Status = AppointmentSlotStatus.Available;
                 oldAppt.Slot.PatientId = null;
@@ -665,7 +670,7 @@ public class AppointmentService : IAppointmentService
                     DoctorId = newSlot.DoctorId,
                     Status = AppointmentStatus.Pending,
                     PatientNote = oldAppt.PatientNote,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
                 };
                 _context.Appointments.Add(newAppt);
 
@@ -747,7 +752,7 @@ public class AppointmentService : IAppointmentService
             DoctorId = doctorId,
             WatchDate = watchDate,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
         });
 
         await _context.SaveChangesAsync();
@@ -759,7 +764,7 @@ public class AppointmentService : IAppointmentService
         return await _context.AppointmentWaitlists
             .AsNoTracking()
             .Include(w => w.Doctor).ThenInclude(d => d.User)
-            .Where(w => w.PatientId == patientId && w.IsActive && w.WatchDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+            .Where(w => w.PatientId == patientId && w.IsActive && w.WatchDate >= DateOnly.FromDateTime(SmartHealthMonitoring.Common.AppTime.Now))
             .OrderBy(w => w.WatchDate)
             .ToListAsync();
     }
@@ -810,7 +815,7 @@ public class AppointmentService : IAppointmentService
                 await _emailService.SendEmailAsync(sub.Patient.User.Email, subject, body);
 
                 sub.IsNotified = true;
-                sub.NotifiedAt = DateTime.UtcNow;
+                sub.NotifiedAt = SmartHealthMonitoring.Common.AppTime.Now;
                 sub.IsActive = false; // Tự tắt sau khi thông báo
             }
             catch (Exception ex)

@@ -176,6 +176,7 @@ namespace SmartHealthMonitoring
                 }
             });
 
+            
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");

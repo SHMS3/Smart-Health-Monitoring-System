@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -53,16 +53,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "DiastolicBpDanger", "DiastolicBpWarning", "HeartRateDangerMax", "HeartRateDangerMin", "HeartRateWarningMax", "HeartRateWarningMin", "PatientId", "SystolicBpDanger", "SystolicBpWarning", "UpdatedAt", "UpdatedByDoctorId" },
                 values: new object[,]
                 {
-                    { 1, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 1, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), 1 },
-                    { 2, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 2, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), 1 },
-                    { 3, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 3, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), 1 },
-                    { 4, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 4, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), 1 },
-                    { 5, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 5, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), 1 },
-                    { 6, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 6, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), 1 },
-                    { 7, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 7, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), 1 },
-                    { 8, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 8, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), 1 },
-                    { 9, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 9, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), 1 },
-                    { 10, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 10, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), 1 }
+                    { 1, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 1, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), 1 },
+                    { 2, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 2, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), 1 },
+                    { 3, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 3, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), 1 },
+                    { 4, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 4, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), 1 },
+                    { 5, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 5, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), 1 },
+                    { 6, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 6, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), 1 },
+                    { 7, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 7, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), 1 },
+                    { 8, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 8, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), 1 },
+                    { 9, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 9, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), 1 },
+                    { 10, (short)90, (short)80, (short)120, (short)50, (short)100, (short)60, 10, (short)140, (short)130, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), 1 }
                 });
 
             migrationBuilder.CreateIndex(

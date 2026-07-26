@@ -101,10 +101,10 @@ namespace SmartHealthMonitoring.Controllers.Admin
 
             var adminName = User.FindFirstValue(ClaimTypes.Name) ?? "Admin";
             model.AuthorName = adminName;
-            model.CreatedAt  = DateTime.UtcNow;
+            model.CreatedAt  = SmartHealthMonitoring.Common.AppTime.Now;
             model.Status     = (action == "publish") ? "Published" : "Draft";
             if (model.Status == "Published")
-                model.PublishedAt = DateTime.UtcNow;
+                model.PublishedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
             _context.HealthNewsPosts.Add(model);
             await _context.SaveChangesAsync();
@@ -168,12 +168,12 @@ namespace SmartHealthMonitoring.Controllers.Admin
             existing.Title        = model.Title;
             existing.Summary      = model.Summary;
             existing.Content      = model.Content;
-            existing.UpdatedAt    = DateTime.UtcNow;
+            existing.UpdatedAt    = SmartHealthMonitoring.Common.AppTime.Now;
 
             if (action == "publish" && existing.Status != "Published")
             {
                 existing.Status      = "Published";
-                existing.PublishedAt = DateTime.UtcNow;
+                existing.PublishedAt = SmartHealthMonitoring.Common.AppTime.Now;
             }
             else if (action == "draft")
             {
@@ -194,7 +194,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
             var post = await _context.HealthNewsPosts.FindAsync(id);
             if (post == null) return NotFound();
             post.Status = "Published";
-            post.PublishedAt = DateTime.UtcNow;
+            post.PublishedAt = SmartHealthMonitoring.Common.AppTime.Now;
             post.RejectionReason = null;
             await _context.SaveChangesAsync();
             TempData["Success"] = "✅ Bài viết đã được duyệt và đăng tải!";
@@ -220,7 +220,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
             var post = await _context.HealthNewsPosts.FindAsync(id);
             if (post == null) return NotFound();
             post.Status      = "Published";
-            post.PublishedAt = DateTime.UtcNow;
+            post.PublishedAt = SmartHealthMonitoring.Common.AppTime.Now;
             await _context.SaveChangesAsync();
             TempData["Success"] = "✅ Bài viết đã được đăng!";
             return RedirectToAction(nameof(Index));

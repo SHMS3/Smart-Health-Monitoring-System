@@ -317,8 +317,8 @@ public class EmailTriggerServiceTests
             Doctor = doctor,
             SequenceNumber = 7,
             Status = 1,
-            CreatedAt = DateTime.UtcNow,
-            AcceptedAt = new DateTime(2026, 7, 26, 1, 0, 0, DateTimeKind.Utc)
+            CreatedAt = SmartHealthMonitoring.Common.AppTime.Now,
+            AcceptedAt = new DateTime(2026, 7, 26, 1, 0, 0, DateTimeKind.Local)
         });
         await context.SaveChangesAsync();
         var setup = CreateService(context, temp.Path);
@@ -496,7 +496,7 @@ public class EmailTriggerServiceTests
             RiskScore = 0.85m,
             RiskLevel = riskLevel,
             ModelVersion = "v1",
-            PredictedAt = new DateTime(2026, 7, 26, 1, 0, 0, DateTimeKind.Utc)
+            PredictedAt = new DateTime(2026, 7, 26, 1, 0, 0, DateTimeKind.Local)
         };
         var alert = new WarningAlert
         {

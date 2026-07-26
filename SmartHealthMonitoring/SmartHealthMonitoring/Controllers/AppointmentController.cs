@@ -57,7 +57,7 @@ public class AppointmentController : Controller
         var (patient, _) = await GetCurrentUserAsync();
         var patientId = patient?.Id;
 
-        var startDate = fromDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var startDate = fromDate ?? DateOnly.FromDateTime(SmartHealthMonitoring.Common.AppTime.Now);
         var endDate = toDate ?? startDate.AddDays(6);
         if (endDate < startDate) endDate = startDate;
 
@@ -106,6 +106,19 @@ public class AppointmentController : Controller
                 WeeklySlots  = weeklySlots,
                 SelectedDate = startDate
             });
+        }
+
+        bool hasFilter = !string.IsNullOrWhiteSpace(specialty) || 
+                         !string.IsNullOrWhiteSpace(doctorName) || 
+                         gender.HasValue || 
+                         !string.IsNullOrWhiteSpace(session) || 
+                         !string.IsNullOrWhiteSpace(roomNumber) || 
+                         fromDate.HasValue || 
+                         toDate.HasValue;
+
+        if (hasFilter)
+        {
+            doctorSlotsData = doctorSlotsData.Where(d => d.TotalAvailableSlots > 0).ToList();
         }
 
         doctorSlotsData = doctorSlotsData
@@ -171,7 +184,7 @@ public class AppointmentController : Controller
         // Sinh OTP ngẫu nhiên 6 chữ số
         var otp = new Random().Next(100000, 999999).ToString();
         HttpContext.Session.SetString($"BookingOtp_{slotId}", otp);
-        HttpContext.Session.SetString($"BookingOtpTime_{slotId}", DateTime.UtcNow.ToString("o"));
+        HttpContext.Session.SetString($"BookingOtpTime_{slotId}", SmartHealthMonitoring.Common.AppTime.Now.ToString("o"));
 
         // Gửi email cho bệnh nhân
         var subject = "Mã OTP xác thực đặt lịch khám bệnh - SmartHealth";
@@ -252,7 +265,7 @@ public class AppointmentController : Controller
 
         if (DateTime.TryParse(storedOtpTimeStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out var otpTime))
         {
-            if (DateTime.UtcNow - otpTime > TimeSpan.FromMinutes(10))
+            if (SmartHealthMonitoring.Common.AppTime.Now - otpTime > TimeSpan.FromMinutes(10))
             {
                 ModelState.AddModelError("", "Mã OTP đã quá hạn 10 phút. Vui lòng quay lại trang chọn bác sĩ để nhận mã mới.");
                 return View();
@@ -517,8 +530,8 @@ public class AppointmentController : Controller
         var (_, doctor) = await GetCurrentUserAsync();
         if (doctor == null) return Forbid();
 
-        var selectedDate = date ?? DateOnly.FromDateTime(DateTime.UtcNow);
-        var todayUtc = DateTime.UtcNow.Date;
+        var selectedDate = date ?? DateOnly.FromDateTime(SmartHealthMonitoring.Common.AppTime.Now);
+        var todayUtc = SmartHealthMonitoring.Common.AppTime.Now.Date;
         var endDate = todayUtc.AddDays(30);
 
         // Load ALL appointments in next 30 days for the calendar view
@@ -694,7 +707,7 @@ public class AppointmentController : Controller
         // Sinh OTP
         var otp = new Random().Next(100000, 999999).ToString();
         HttpContext.Session.SetString($"RescheduleOtp_{appointmentId}_{newSlotId}", otp);
-        HttpContext.Session.SetString($"RescheduleOtpTime_{appointmentId}_{newSlotId}", DateTime.UtcNow.ToString("o"));
+        HttpContext.Session.SetString($"RescheduleOtpTime_{appointmentId}_{newSlotId}", SmartHealthMonitoring.Common.AppTime.Now.ToString("o"));
 
         // Gửi email OTP
         var subject = "Mã OTP xác thực dời lịch khám - SmartHealth";
@@ -766,7 +779,7 @@ public class AppointmentController : Controller
 
         if (DateTime.TryParse(storedOtpTimeStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out var otpTime))
         {
-            if (DateTime.UtcNow - otpTime > TimeSpan.FromMinutes(10))
+            if (SmartHealthMonitoring.Common.AppTime.Now - otpTime > TimeSpan.FromMinutes(10))
             {
                 ModelState.AddModelError("", "Mã OTP đã hết hạn. Vui lòng thử lại.");
                 return View();

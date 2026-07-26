@@ -62,7 +62,7 @@ public class AuditLogServiceTests
             new HttpContextAccessor(),
             hub.Context.Object,
             NullLogger<AuditLogService>.Instance);
-        var before = DateTime.UtcNow;
+        var before = SmartHealthMonitoring.Common.AppTime.Now;
 
         await service.LogForActorAsync(
             null,
@@ -86,7 +86,7 @@ public class AuditLogServiceTests
         Assert.Equal(100, log.TargetName!.Length);
         Assert.Equal(45, log.IpAddress!.Length);
         Assert.Equal(512, log.UserAgent!.Length);
-        Assert.InRange(log.CreatedAt, before, DateTime.UtcNow);
+        Assert.InRange(log.CreatedAt, before, SmartHealthMonitoring.Common.AppTime.Now);
 
         hub.Client.Verify(
             client => client.SendCoreAsync(

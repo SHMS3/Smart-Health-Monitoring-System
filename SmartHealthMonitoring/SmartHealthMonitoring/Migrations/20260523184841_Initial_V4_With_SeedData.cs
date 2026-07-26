@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -38,7 +38,7 @@ namespace SmartHealthMonitoring.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    Specialty = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false, defaultValue: "Tim mạch"),
+                    Specialty = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false, defaultValue: "Tim m?ch"),
                     IsOnShift = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -282,26 +282,26 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "CreatedAt", "Email", "FullName", "IsDeleted", "PasswordHash", "Role" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "dr.an@smarthealth.vn", "Nguyễn Văn An", false, "hash123", (byte)1 },
-                    { 2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "dr.binh@smarthealth.vn", "Trần Thị Bình", false, "hash123", (byte)1 },
-                    { 3, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "dr.cuong@smarthealth.vn", "Phạm Minh Cường", false, "hash123", (byte)1 },
-                    { 4, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "dr.dung@smarthealth.vn", "Lê Tuấn Dũng", false, "hash123", (byte)1 },
-                    { 5, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "dr.anh@smarthealth.vn", "Hoàng Mai Anh", false, "hash123", (byte)1 },
-                    { 6, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "dr.phuc@smarthealth.vn", "Đinh Văn Phúc", false, "hash123", (byte)1 },
-                    { 7, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "dr.chau@smarthealth.vn", "Nguyễn Bảo Châu", false, "hash123", (byte)1 },
-                    { 8, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "dr.khanh@smarthealth.vn", "Vũ Quốc Khánh", false, "hash123", (byte)1 },
-                    { 9, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "dr.tuan@smarthealth.vn", "Bùi Anh Tuấn", false, "hash123", (byte)1 },
-                    { 10, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "dr.lan@smarthealth.vn", "Lý Phương Lan", false, "hash123", (byte)1 },
-                    { 11, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "patient.hoa@gmail.com", "Nguyễn Thị Hoa", false, "hash123", (byte)0 },
-                    { 12, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "patient.minh@gmail.com", "Trần Đức Minh", false, "hash123", (byte)0 },
-                    { 13, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "patient.nhung@gmail.com", "Đỗ Hồng Nhung", false, "hash123", (byte)0 },
-                    { 14, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "patient.tam@gmail.com", "Bùi Văn Tâm", false, "hash123", (byte)0 },
-                    { 15, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "patient.long@gmail.com", "Phạm Thành Long", false, "hash123", (byte)0 },
-                    { 16, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "patient.thuy@gmail.com", "Lê Thanh Thủy", false, "hash123", (byte)0 },
-                    { 17, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "patient.hai@gmail.com", "Đặng Quang Hải", false, "hash123", (byte)0 },
-                    { 18, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "patient.yen@gmail.com", "Võ Hoàng Yến", false, "hash123", (byte)0 },
-                    { 19, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "patient.phong@gmail.com", "Ngô Đình Phong", false, "hash123", (byte)0 },
-                    { 20, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc), "patient.mai@gmail.com", "Đoàn Ngọc Mai", false, "hash123", (byte)0 }
+                    { 1, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.an@smarthealth.vn", "Nguy?n Van An", false, "hash123", (byte)1 },
+                    { 2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.binh@smarthealth.vn", "Tr?n Th? B�nh", false, "hash123", (byte)1 },
+                    { 3, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.cuong@smarthealth.vn", "Ph?m Minh Cu?ng", false, "hash123", (byte)1 },
+                    { 4, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.dung@smarthealth.vn", "L� Tu?n Dung", false, "hash123", (byte)1 },
+                    { 5, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.anh@smarthealth.vn", "Ho�ng Mai Anh", false, "hash123", (byte)1 },
+                    { 6, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.phuc@smarthealth.vn", "�inh Van Ph�c", false, "hash123", (byte)1 },
+                    { 7, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.chau@smarthealth.vn", "Nguy?n B?o Ch�u", false, "hash123", (byte)1 },
+                    { 8, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.khanh@smarthealth.vn", "Vu Qu?c Kh�nh", false, "hash123", (byte)1 },
+                    { 9, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.tuan@smarthealth.vn", "B�i Anh Tu?n", false, "hash123", (byte)1 },
+                    { 10, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.lan@smarthealth.vn", "L� Phuong Lan", false, "hash123", (byte)1 },
+                    { 11, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.hoa@gmail.com", "Nguy?n Th? Hoa", false, "hash123", (byte)0 },
+                    { 12, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.minh@gmail.com", "Tr?n �?c Minh", false, "hash123", (byte)0 },
+                    { 13, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.nhung@gmail.com", "�? H?ng Nhung", false, "hash123", (byte)0 },
+                    { 14, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.tam@gmail.com", "B�i Van T�m", false, "hash123", (byte)0 },
+                    { 15, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.long@gmail.com", "Ph?m Th�nh Long", false, "hash123", (byte)0 },
+                    { 16, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.thuy@gmail.com", "L� Thanh Th?y", false, "hash123", (byte)0 },
+                    { 17, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.hai@gmail.com", "�?ng Quang H?i", false, "hash123", (byte)0 },
+                    { 18, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.yen@gmail.com", "V� Ho�ng Y?n", false, "hash123", (byte)0 },
+                    { 19, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.phong@gmail.com", "Ng� ��nh Phong", false, "hash123", (byte)0 },
+                    { 20, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.mai@gmail.com", "�o�n Ng?c Mai", false, "hash123", (byte)0 }
                 });
 
             migrationBuilder.InsertData(
@@ -309,16 +309,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "IsDeleted", "IsOnShift", "Specialty", "UserId" },
                 values: new object[,]
                 {
-                    { 1, false, true, "Tim mạch can thiệp", 1 },
-                    { 2, false, false, "Nhịp học tim mạch", 2 },
-                    { 3, false, true, "Nội tim mạch", 3 },
-                    { 4, false, false, "Phẫu thuật tim", 4 },
-                    { 5, false, true, "Nội tim mạch", 5 },
-                    { 6, false, false, "Tim mạch nhi", 6 },
-                    { 7, false, true, "Chẩn đoán hình ảnh", 7 },
-                    { 8, false, false, "Nội tim mạch", 8 },
-                    { 9, false, true, "Tim mạch can thiệp", 9 },
-                    { 10, false, false, "Nội tim mạch", 10 }
+                    { 1, false, true, "Tim m?ch can thi?p", 1 },
+                    { 2, false, false, "Nh?p h?c tim m?ch", 2 },
+                    { 3, false, true, "N?i tim m?ch", 3 },
+                    { 4, false, false, "Ph?u thu?t tim", 4 },
+                    { 5, false, true, "N?i tim m?ch", 5 },
+                    { 6, false, false, "Tim m?ch nhi", 6 },
+                    { 7, false, true, "Ch?n do�n h�nh ?nh", 7 },
+                    { 8, false, false, "N?i tim m?ch", 8 },
+                    { 9, false, true, "Tim m?ch can thi?p", 9 },
+                    { 10, false, false, "N?i tim m?ch", 10 }
                 });
 
             migrationBuilder.InsertData(
@@ -343,16 +343,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "ContextVitals", "PatientId", "StartedAt" },
                 values: new object[,]
                 {
-                    { 1, null, 1, new DateTime(2026, 5, 20, 12, 0, 0, 0, DateTimeKind.Utc) },
-                    { 2, null, 2, new DateTime(2026, 5, 20, 12, 10, 0, 0, DateTimeKind.Utc) },
-                    { 3, null, 3, new DateTime(2026, 5, 20, 12, 20, 0, 0, DateTimeKind.Utc) },
-                    { 4, null, 4, new DateTime(2026, 5, 20, 12, 30, 0, 0, DateTimeKind.Utc) },
-                    { 5, null, 5, new DateTime(2026, 5, 20, 12, 40, 0, 0, DateTimeKind.Utc) },
-                    { 6, null, 6, new DateTime(2026, 5, 20, 12, 50, 0, 0, DateTimeKind.Utc) },
-                    { 7, null, 7, new DateTime(2026, 5, 20, 13, 0, 0, 0, DateTimeKind.Utc) },
-                    { 8, null, 8, new DateTime(2026, 5, 20, 13, 10, 0, 0, DateTimeKind.Utc) },
-                    { 9, null, 9, new DateTime(2026, 5, 20, 13, 20, 0, 0, DateTimeKind.Utc) },
-                    { 10, null, 10, new DateTime(2026, 5, 20, 13, 30, 0, 0, DateTimeKind.Utc) }
+                    { 1, null, 1, new DateTime(2026, 5, 20, 12, 0, 0, 0, DateTimeKind.Local) },
+                    { 2, null, 2, new DateTime(2026, 5, 20, 12, 10, 0, 0, DateTimeKind.Local) },
+                    { 3, null, 3, new DateTime(2026, 5, 20, 12, 20, 0, 0, DateTimeKind.Local) },
+                    { 4, null, 4, new DateTime(2026, 5, 20, 12, 30, 0, 0, DateTimeKind.Local) },
+                    { 5, null, 5, new DateTime(2026, 5, 20, 12, 40, 0, 0, DateTimeKind.Local) },
+                    { 6, null, 6, new DateTime(2026, 5, 20, 12, 50, 0, 0, DateTimeKind.Local) },
+                    { 7, null, 7, new DateTime(2026, 5, 20, 13, 0, 0, 0, DateTimeKind.Local) },
+                    { 8, null, 8, new DateTime(2026, 5, 20, 13, 10, 0, 0, DateTimeKind.Local) },
+                    { 9, null, 9, new DateTime(2026, 5, 20, 13, 20, 0, 0, DateTimeKind.Local) },
+                    { 10, null, 10, new DateTime(2026, 5, 20, 13, 30, 0, 0, DateTimeKind.Local) }
                 });
 
             migrationBuilder.InsertData(
@@ -360,16 +360,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "ChestPainType", "Cholesterol", "DoctorId", "ExerciseAngina", "FastingBS", "IsDeleted", "MajorVessels", "MaxHeartRate", "OldPeak", "PatientId", "RestECG", "RestingBP", "STSlope", "ThalResult", "VisitDate" },
                 values: new object[,]
                 {
-                    { 1, (byte)3, (short)233, 1, (byte)0, (byte)1, false, (byte)0, (short)150, 2.3m, 1, (byte)0, (short)145, (byte)0, (byte)1, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 2, (byte)2, (short)250, 2, (byte)0, (byte)0, false, (byte)0, (short)187, 3.5m, 2, (byte)1, (short)130, (byte)0, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 3, (byte)1, (short)204, 3, (byte)0, (byte)0, false, (byte)0, (short)172, 1.4m, 3, (byte)0, (short)130, (byte)2, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 4, (byte)0, (short)354, 1, (byte)1, (byte)0, false, (byte)0, (short)163, 0.6m, 4, (byte)1, (short)120, (byte)2, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 5, (byte)0, (short)203, 2, (byte)1, (byte)1, false, (byte)0, (short)155, 3.1m, 5, (byte)0, (short)140, (byte)0, (byte)3, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 6, (byte)2, (short)294, 3, (byte)0, (byte)1, false, (byte)3, (short)106, 1.9m, 6, (byte)1, (short)138, (byte)1, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 7, (byte)0, (short)288, 4, (byte)1, (byte)1, false, (byte)2, (short)133, 4.0m, 7, (byte)0, (short)160, (byte)0, (byte)3, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 8, (byte)1, (short)190, 5, (byte)0, (byte)0, false, (byte)0, (short)180, 0.0m, 8, (byte)0, (short)110, (byte)2, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 9, (byte)2, (short)210, 1, (byte)0, (byte)0, false, (byte)1, (short)160, 1.2m, 9, (byte)1, (short)125, (byte)1, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { 10, (byte)3, (short)240, 2, (byte)1, (byte)1, false, (byte)2, (short)140, 2.5m, 10, (byte)0, (short)150, (byte)1, (byte)3, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Utc) }
+                    { 1, (byte)3, (short)233, 1, (byte)0, (byte)1, false, (byte)0, (short)150, 2.3m, 1, (byte)0, (short)145, (byte)0, (byte)1, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local) },
+                    { 2, (byte)2, (short)250, 2, (byte)0, (byte)0, false, (byte)0, (short)187, 3.5m, 2, (byte)1, (short)130, (byte)0, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local) },
+                    { 3, (byte)1, (short)204, 3, (byte)0, (byte)0, false, (byte)0, (short)172, 1.4m, 3, (byte)0, (short)130, (byte)2, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local) },
+                    { 4, (byte)0, (short)354, 1, (byte)1, (byte)0, false, (byte)0, (short)163, 0.6m, 4, (byte)1, (short)120, (byte)2, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local) },
+                    { 5, (byte)0, (short)203, 2, (byte)1, (byte)1, false, (byte)0, (short)155, 3.1m, 5, (byte)0, (short)140, (byte)0, (byte)3, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local) },
+                    { 6, (byte)2, (short)294, 3, (byte)0, (byte)1, false, (byte)3, (short)106, 1.9m, 6, (byte)1, (short)138, (byte)1, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local) },
+                    { 7, (byte)0, (short)288, 4, (byte)1, (byte)1, false, (byte)2, (short)133, 4.0m, 7, (byte)0, (short)160, (byte)0, (byte)3, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local) },
+                    { 8, (byte)1, (short)190, 5, (byte)0, (byte)0, false, (byte)0, (short)180, 0.0m, 8, (byte)0, (short)110, (byte)2, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local) },
+                    { 9, (byte)2, (short)210, 1, (byte)0, (byte)0, false, (byte)1, (short)160, 1.2m, 9, (byte)1, (short)125, (byte)1, (byte)2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local) },
+                    { 10, (byte)3, (short)240, 2, (byte)1, (byte)1, false, (byte)2, (short)140, 2.5m, 10, (byte)0, (short)150, (byte)1, (byte)3, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local) }
                 });
 
             migrationBuilder.InsertData(
@@ -377,16 +377,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "ChestPainLevel", "DiastolicBP", "HasExerciseAngina", "HeartRate", "IsDeleted", "LoggedAt", "PatientId", "SystolicBP" },
                 values: new object[,]
                 {
-                    { 1, (byte)2, (short)95, true, (short)95, false, new DateTime(2026, 5, 20, 1, 0, 0, 0, DateTimeKind.Utc), 1, (short)158 },
-                    { 2, (byte)0, (short)80, false, (short)70, false, new DateTime(2026, 5, 20, 2, 0, 0, 0, DateTimeKind.Utc), 2, (short)122 },
-                    { 3, (byte)1, (short)85, false, (short)80, false, new DateTime(2026, 5, 20, 3, 0, 0, 0, DateTimeKind.Utc), 3, (short)135 },
-                    { 4, (byte)0, (short)75, false, (short)65, false, new DateTime(2026, 5, 20, 4, 0, 0, 0, DateTimeKind.Utc), 4, (short)118 },
-                    { 5, (byte)1, (short)90, false, (short)88, false, new DateTime(2026, 5, 20, 5, 0, 0, 0, DateTimeKind.Utc), 5, (short)140 },
-                    { 6, (byte)0, (short)82, false, (short)72, false, new DateTime(2026, 5, 20, 6, 0, 0, 0, DateTimeKind.Utc), 6, (short)125 },
-                    { 7, (byte)3, (short)105, true, (short)110, false, new DateTime(2026, 5, 20, 7, 0, 0, 0, DateTimeKind.Utc), 7, (short)180 },
-                    { 8, (byte)0, (short)70, false, (short)60, false, new DateTime(2026, 5, 20, 8, 0, 0, 0, DateTimeKind.Utc), 8, (short)110 },
-                    { 9, (byte)1, (short)85, false, (short)78, false, new DateTime(2026, 5, 20, 9, 0, 0, 0, DateTimeKind.Utc), 9, (short)130 },
-                    { 10, (byte)2, (short)98, true, (short)100, false, new DateTime(2026, 5, 20, 10, 0, 0, 0, DateTimeKind.Utc), 10, (short)165 }
+                    { 1, (byte)2, (short)95, true, (short)95, false, new DateTime(2026, 5, 20, 1, 0, 0, 0, DateTimeKind.Local), 1, (short)158 },
+                    { 2, (byte)0, (short)80, false, (short)70, false, new DateTime(2026, 5, 20, 2, 0, 0, 0, DateTimeKind.Local), 2, (short)122 },
+                    { 3, (byte)1, (short)85, false, (short)80, false, new DateTime(2026, 5, 20, 3, 0, 0, 0, DateTimeKind.Local), 3, (short)135 },
+                    { 4, (byte)0, (short)75, false, (short)65, false, new DateTime(2026, 5, 20, 4, 0, 0, 0, DateTimeKind.Local), 4, (short)118 },
+                    { 5, (byte)1, (short)90, false, (short)88, false, new DateTime(2026, 5, 20, 5, 0, 0, 0, DateTimeKind.Local), 5, (short)140 },
+                    { 6, (byte)0, (short)82, false, (short)72, false, new DateTime(2026, 5, 20, 6, 0, 0, 0, DateTimeKind.Local), 6, (short)125 },
+                    { 7, (byte)3, (short)105, true, (short)110, false, new DateTime(2026, 5, 20, 7, 0, 0, 0, DateTimeKind.Local), 7, (short)180 },
+                    { 8, (byte)0, (short)70, false, (short)60, false, new DateTime(2026, 5, 20, 8, 0, 0, 0, DateTimeKind.Local), 8, (short)110 },
+                    { 9, (byte)1, (short)85, false, (short)78, false, new DateTime(2026, 5, 20, 9, 0, 0, 0, DateTimeKind.Local), 9, (short)130 },
+                    { 10, (byte)2, (short)98, true, (short)100, false, new DateTime(2026, 5, 20, 10, 0, 0, 0, DateTimeKind.Local), 10, (short)165 }
                 });
 
             migrationBuilder.InsertData(
@@ -394,16 +394,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "ClinicalRecordId", "DailyLogId", "IsDeleted", "ModelVersion", "PatientId", "PredictedAt", "PredictedTarget", "RiskLevel", "RiskScore" },
                 values: new object[,]
                 {
-                    { 1, null, 1, false, "v1.0", 1, new DateTime(2026, 5, 20, 1, 5, 0, 0, DateTimeKind.Utc), (byte)1, (byte)2, 0.78m },
-                    { 2, null, 2, false, "v1.0", 2, new DateTime(2026, 5, 20, 2, 5, 0, 0, DateTimeKind.Utc), (byte)0, (byte)0, 0.12m },
-                    { 3, null, 3, false, "v1.0", 3, new DateTime(2026, 5, 20, 3, 5, 0, 0, DateTimeKind.Utc), (byte)0, (byte)1, 0.35m },
-                    { 4, null, 4, false, "v1.0", 4, new DateTime(2026, 5, 20, 4, 5, 0, 0, DateTimeKind.Utc), (byte)0, (byte)0, 0.05m },
-                    { 5, null, 5, false, "v1.0", 5, new DateTime(2026, 5, 20, 5, 5, 0, 0, DateTimeKind.Utc), (byte)0, (byte)1, 0.45m },
-                    { 6, null, 6, false, "v1.0", 6, new DateTime(2026, 5, 20, 6, 5, 0, 0, DateTimeKind.Utc), (byte)0, (byte)0, 0.20m },
-                    { 7, null, 7, false, "v1.0", 7, new DateTime(2026, 5, 20, 7, 5, 0, 0, DateTimeKind.Utc), (byte)1, (byte)2, 0.95m },
-                    { 8, null, 8, false, "v1.0", 8, new DateTime(2026, 5, 20, 8, 5, 0, 0, DateTimeKind.Utc), (byte)0, (byte)0, 0.08m },
-                    { 9, null, 9, false, "v1.0", 9, new DateTime(2026, 5, 20, 9, 5, 0, 0, DateTimeKind.Utc), (byte)0, (byte)0, 0.25m },
-                    { 10, null, 10, false, "v1.0", 10, new DateTime(2026, 5, 20, 10, 5, 0, 0, DateTimeKind.Utc), (byte)1, (byte)2, 0.82m }
+                    { 1, null, 1, false, "v1.0", 1, new DateTime(2026, 5, 20, 1, 5, 0, 0, DateTimeKind.Local), (byte)1, (byte)2, 0.78m },
+                    { 2, null, 2, false, "v1.0", 2, new DateTime(2026, 5, 20, 2, 5, 0, 0, DateTimeKind.Local), (byte)0, (byte)0, 0.12m },
+                    { 3, null, 3, false, "v1.0", 3, new DateTime(2026, 5, 20, 3, 5, 0, 0, DateTimeKind.Local), (byte)0, (byte)1, 0.35m },
+                    { 4, null, 4, false, "v1.0", 4, new DateTime(2026, 5, 20, 4, 5, 0, 0, DateTimeKind.Local), (byte)0, (byte)0, 0.05m },
+                    { 5, null, 5, false, "v1.0", 5, new DateTime(2026, 5, 20, 5, 5, 0, 0, DateTimeKind.Local), (byte)0, (byte)1, 0.45m },
+                    { 6, null, 6, false, "v1.0", 6, new DateTime(2026, 5, 20, 6, 5, 0, 0, DateTimeKind.Local), (byte)0, (byte)0, 0.20m },
+                    { 7, null, 7, false, "v1.0", 7, new DateTime(2026, 5, 20, 7, 5, 0, 0, DateTimeKind.Local), (byte)1, (byte)2, 0.95m },
+                    { 8, null, 8, false, "v1.0", 8, new DateTime(2026, 5, 20, 8, 5, 0, 0, DateTimeKind.Local), (byte)0, (byte)0, 0.08m },
+                    { 9, null, 9, false, "v1.0", 9, new DateTime(2026, 5, 20, 9, 5, 0, 0, DateTimeKind.Local), (byte)0, (byte)0, 0.25m },
+                    { 10, null, 10, false, "v1.0", 10, new DateTime(2026, 5, 20, 10, 5, 0, 0, DateTimeKind.Local), (byte)1, (byte)2, 0.82m }
                 });
 
             migrationBuilder.InsertData(
@@ -411,16 +411,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "Content", "SenderRole", "SentAt", "SessionId" },
                 values: new object[,]
                 {
-                    { 1, "Chào bác sĩ AI, tôi thấy hơi mệt", (byte)0, new DateTime(2026, 5, 20, 12, 1, 0, 0, DateTimeKind.Utc), 1 },
-                    { 2, "Hôm nay tôi đo huyết áp bình thường", (byte)0, new DateTime(2026, 5, 20, 12, 11, 0, 0, DateTimeKind.Utc), 2 },
-                    { 3, "Tôi cần tư vấn chế độ ăn", (byte)0, new DateTime(2026, 5, 20, 12, 21, 0, 0, DateTimeKind.Utc), 3 },
-                    { 4, "Thuốc hôm nay uống lúc mấy giờ?", (byte)0, new DateTime(2026, 5, 20, 12, 31, 0, 0, DateTimeKind.Utc), 4 },
-                    { 5, "Tôi ngủ dậy hơi chóng mặt", (byte)0, new DateTime(2026, 5, 20, 12, 41, 0, 0, DateTimeKind.Utc), 5 },
-                    { 6, "Hôm nay tôi đã chạy bộ 30 phút", (byte)0, new DateTime(2026, 5, 20, 12, 51, 0, 0, DateTimeKind.Utc), 6 },
-                    { 7, "Cứu với, tôi bị nhói ngực quá!", (byte)0, new DateTime(2026, 5, 20, 13, 1, 0, 0, DateTimeKind.Utc), 7 },
-                    { 8, "Cảm ơn AI đã tư vấn", (byte)0, new DateTime(2026, 5, 20, 13, 11, 0, 0, DateTimeKind.Utc), 8 },
-                    { 9, "Nhịp tim 78 là ổn chưa?", (byte)0, new DateTime(2026, 5, 20, 13, 21, 0, 0, DateTimeKind.Utc), 9 },
-                    { 10, "Ngực tôi hơi nặng nề", (byte)0, new DateTime(2026, 5, 20, 13, 31, 0, 0, DateTimeKind.Utc), 10 }
+                    { 1, "Ch�o b�c si AI, t�i th?y hoi m?t", (byte)0, new DateTime(2026, 5, 20, 12, 1, 0, 0, DateTimeKind.Local), 1 },
+                    { 2, "H�m nay t�i do huy?t �p b�nh thu?ng", (byte)0, new DateTime(2026, 5, 20, 12, 11, 0, 0, DateTimeKind.Local), 2 },
+                    { 3, "T�i c?n tu v?n ch? d? an", (byte)0, new DateTime(2026, 5, 20, 12, 21, 0, 0, DateTimeKind.Local), 3 },
+                    { 4, "Thu?c h�m nay u?ng l�c m?y gi??", (byte)0, new DateTime(2026, 5, 20, 12, 31, 0, 0, DateTimeKind.Local), 4 },
+                    { 5, "T�i ng? d?y hoi ch�ng m?t", (byte)0, new DateTime(2026, 5, 20, 12, 41, 0, 0, DateTimeKind.Local), 5 },
+                    { 6, "H�m nay t�i d� ch?y b? 30 ph�t", (byte)0, new DateTime(2026, 5, 20, 12, 51, 0, 0, DateTimeKind.Local), 6 },
+                    { 7, "C?u v?i, t�i b? nh�i ng?c qu�!", (byte)0, new DateTime(2026, 5, 20, 13, 1, 0, 0, DateTimeKind.Local), 7 },
+                    { 8, "C?m on AI d� tu v?n", (byte)0, new DateTime(2026, 5, 20, 13, 11, 0, 0, DateTimeKind.Local), 8 },
+                    { 9, "Nh?p tim 78 l� ?n chua?", (byte)0, new DateTime(2026, 5, 20, 13, 21, 0, 0, DateTimeKind.Local), 9 },
+                    { 10, "Ng?c t�i hoi n?ng n?", (byte)0, new DateTime(2026, 5, 20, 13, 31, 0, 0, DateTimeKind.Local), 10 }
                 });
 
             migrationBuilder.InsertData(
@@ -428,16 +428,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "ClaimedAt", "ClaimedByDoctorId", "FlaggedAt", "IsDeleted", "PatientId", "PredictionId", "ResolutionNote", "Status" },
                 values: new object[,]
                 {
-                    { 1, null, null, new DateTime(2026, 5, 20, 1, 6, 0, 0, DateTimeKind.Utc), false, 1, 1, null, (byte)0 },
-                    { 2, null, 1, new DateTime(2026, 5, 20, 2, 6, 0, 0, DateTimeKind.Utc), false, 2, 2, null, (byte)1 },
-                    { 3, null, null, new DateTime(2026, 5, 20, 3, 6, 0, 0, DateTimeKind.Utc), false, 3, 3, null, (byte)0 },
-                    { 4, null, 2, new DateTime(2026, 5, 20, 4, 6, 0, 0, DateTimeKind.Utc), false, 4, 4, "Bệnh nhân ổn định, đã uống thuốc.", (byte)2 },
-                    { 5, null, null, new DateTime(2026, 5, 20, 5, 6, 0, 0, DateTimeKind.Utc), false, 5, 5, null, (byte)0 },
-                    { 6, null, 3, new DateTime(2026, 5, 20, 6, 6, 0, 0, DateTimeKind.Utc), false, 6, 6, null, (byte)1 },
-                    { 7, null, null, new DateTime(2026, 5, 20, 7, 6, 0, 0, DateTimeKind.Utc), false, 7, 7, null, (byte)0 },
-                    { 8, null, 4, new DateTime(2026, 5, 20, 8, 6, 0, 0, DateTimeKind.Utc), false, 8, 8, "Cảnh báo nhầm.", (byte)2 },
-                    { 9, null, null, new DateTime(2026, 5, 20, 9, 6, 0, 0, DateTimeKind.Utc), false, 9, 9, null, (byte)0 },
-                    { 10, null, 1, new DateTime(2026, 5, 20, 10, 6, 0, 0, DateTimeKind.Utc), false, 10, 10, null, (byte)1 }
+                    { 1, null, null, new DateTime(2026, 5, 20, 1, 6, 0, 0, DateTimeKind.Local), false, 1, 1, null, (byte)0 },
+                    { 2, null, 1, new DateTime(2026, 5, 20, 2, 6, 0, 0, DateTimeKind.Local), false, 2, 2, null, (byte)1 },
+                    { 3, null, null, new DateTime(2026, 5, 20, 3, 6, 0, 0, DateTimeKind.Local), false, 3, 3, null, (byte)0 },
+                    { 4, null, 2, new DateTime(2026, 5, 20, 4, 6, 0, 0, DateTimeKind.Local), false, 4, 4, "B?nh nh�n ?n d?nh, d� u?ng thu?c.", (byte)2 },
+                    { 5, null, null, new DateTime(2026, 5, 20, 5, 6, 0, 0, DateTimeKind.Local), false, 5, 5, null, (byte)0 },
+                    { 6, null, 3, new DateTime(2026, 5, 20, 6, 6, 0, 0, DateTimeKind.Local), false, 6, 6, null, (byte)1 },
+                    { 7, null, null, new DateTime(2026, 5, 20, 7, 6, 0, 0, DateTimeKind.Local), false, 7, 7, null, (byte)0 },
+                    { 8, null, 4, new DateTime(2026, 5, 20, 8, 6, 0, 0, DateTimeKind.Local), false, 8, 8, "C?nh b�o nh?m.", (byte)2 },
+                    { 9, null, null, new DateTime(2026, 5, 20, 9, 6, 0, 0, DateTimeKind.Local), false, 9, 9, null, (byte)0 },
+                    { 10, null, 1, new DateTime(2026, 5, 20, 10, 6, 0, 0, DateTimeKind.Local), false, 10, 10, null, (byte)1 }
                 });
 
             migrationBuilder.InsertData(
@@ -445,16 +445,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "AlertId", "Body", "CreatedAt", "PatientId", "Status", "Subject" },
                 values: new object[,]
                 {
-                    { 1, 1, "Vui lòng liên hệ bác sĩ ngay", new DateTime(2026, 5, 20, 1, 7, 0, 0, DateTimeKind.Utc), 1, (byte)0, "CẢNH BÁO: Huyết áp bất thường" },
-                    { 2, 2, "Chỉ số của bạn ổn định", new DateTime(2026, 5, 20, 2, 7, 0, 0, DateTimeKind.Utc), 2, (byte)0, "Cập nhật sinh hiệu" },
-                    { 3, 3, "Nhịp tim bình thường", new DateTime(2026, 5, 20, 3, 7, 0, 0, DateTimeKind.Utc), 3, (byte)0, "Theo dõi nhịp tim" },
-                    { 4, 4, "Cảnh báo đã được giải quyết", new DateTime(2026, 5, 20, 4, 7, 0, 0, DateTimeKind.Utc), 4, (byte)0, "Báo cáo ổn định" },
-                    { 5, 5, "Theo dõi thêm tại nhà", new DateTime(2026, 5, 20, 5, 7, 0, 0, DateTimeKind.Utc), 5, (byte)0, "CẢNH BÁO NHẸ: Huyết áp tăng" },
-                    { 6, 6, "Bác sĩ đang xem xét", new DateTime(2026, 5, 20, 6, 7, 0, 0, DateTimeKind.Utc), 6, (byte)0, "Đã tiếp nhận hồ sơ" },
-                    { 7, 7, "Gọi cấp cứu 115 lập tức!", new DateTime(2026, 5, 20, 7, 7, 0, 0, DateTimeKind.Utc), 7, (byte)0, "CẢNH BÁO KHẨN CẤP: Tiền tai biến" },
-                    { 8, 8, "Cảnh báo nhầm", new DateTime(2026, 5, 20, 8, 7, 0, 0, DateTimeKind.Utc), 8, (byte)0, "Hệ thống tự động hủy cảnh báo" },
-                    { 9, 9, "Vui lòng nhập sinh hiệu", new DateTime(2026, 5, 20, 9, 7, 0, 0, DateTimeKind.Utc), 9, (byte)0, "Kiểm tra định kỳ" },
-                    { 10, 10, "Bác sĩ An đã tiếp nhận", new DateTime(2026, 5, 20, 10, 7, 0, 0, DateTimeKind.Utc), 10, (byte)0, "CẢNH BÁO: Huyết áp tâm thu cao" }
+                    { 1, 1, "Vui l�ng li�n h? b�c si ngay", new DateTime(2026, 5, 20, 1, 7, 0, 0, DateTimeKind.Local), 1, (byte)0, "C?NH B�O: Huy?t �p b?t thu?ng" },
+                    { 2, 2, "Ch? s? c?a b?n ?n d?nh", new DateTime(2026, 5, 20, 2, 7, 0, 0, DateTimeKind.Local), 2, (byte)0, "C?p nh?t sinh hi?u" },
+                    { 3, 3, "Nh?p tim b�nh thu?ng", new DateTime(2026, 5, 20, 3, 7, 0, 0, DateTimeKind.Local), 3, (byte)0, "Theo d�i nh?p tim" },
+                    { 4, 4, "C?nh b�o d� du?c gi?i quy?t", new DateTime(2026, 5, 20, 4, 7, 0, 0, DateTimeKind.Local), 4, (byte)0, "B�o c�o ?n d?nh" },
+                    { 5, 5, "Theo d�i th�m t?i nh�", new DateTime(2026, 5, 20, 5, 7, 0, 0, DateTimeKind.Local), 5, (byte)0, "C?NH B�O NH?: Huy?t �p tang" },
+                    { 6, 6, "B�c si dang xem x�t", new DateTime(2026, 5, 20, 6, 7, 0, 0, DateTimeKind.Local), 6, (byte)0, "�� ti?p nh?n h? so" },
+                    { 7, 7, "G?i c?p c?u 115 l?p t?c!", new DateTime(2026, 5, 20, 7, 7, 0, 0, DateTimeKind.Local), 7, (byte)0, "C?NH B�O KH?N C?P: Ti?n tai bi?n" },
+                    { 8, 8, "C?nh b�o nh?m", new DateTime(2026, 5, 20, 8, 7, 0, 0, DateTimeKind.Local), 8, (byte)0, "H? th?ng t? d?ng h?y c?nh b�o" },
+                    { 9, 9, "Vui l�ng nh?p sinh hi?u", new DateTime(2026, 5, 20, 9, 7, 0, 0, DateTimeKind.Local), 9, (byte)0, "Ki?m tra d?nh k?" },
+                    { 10, 10, "B�c si An d� ti?p nh?n", new DateTime(2026, 5, 20, 10, 7, 0, 0, DateTimeKind.Local), 10, (byte)0, "C?NH B�O: Huy?t �p t�m thu cao" }
                 });
 
             migrationBuilder.CreateIndex(

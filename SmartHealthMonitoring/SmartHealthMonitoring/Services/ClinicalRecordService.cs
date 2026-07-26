@@ -53,7 +53,7 @@ namespace SmartHealthMonitoring.Services
                 return (false, "Không tìm thấy bệnh nhân.", null, null);
             }
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateOnly.FromDateTime(SmartHealthMonitoring.Common.AppTime.Now);
             var age = today.Year - patient.DateOfBirth.Year - (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
 
             var clinicalQuery = _repository.GetClinicalRecordsQuery(id, isPatientRole);
@@ -106,7 +106,7 @@ namespace SmartHealthMonitoring.Services
                 })
                 .ToListAsync();
 
-            var todayDate = DateTime.UtcNow.Date;
+            var todayDate = SmartHealthMonitoring.Common.AppTime.Now.Date;
             int todayPaidPaymentsCount = await _repository.GetTodayPaidPaymentsCountAsync(patient.Id, todayDate);
             int todayClinicalRecordsCount = await _repository.GetTodayClinicalRecordsCountAsync(patient.Id, todayDate);
 

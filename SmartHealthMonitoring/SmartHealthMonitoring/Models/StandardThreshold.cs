@@ -45,8 +45,8 @@ namespace SmartHealthMonitoring.Models
         /// <summary>Template đang được dùng hay đã bị vô hiệu hóa</summary>
         public bool IsActive { get; set; } = true;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = SmartHealthMonitoring.Common.AppTime.Now;
 
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = SmartHealthMonitoring.Common.AppTime.Now;
     }
 }

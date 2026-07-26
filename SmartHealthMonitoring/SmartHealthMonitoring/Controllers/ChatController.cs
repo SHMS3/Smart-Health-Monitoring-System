@@ -48,7 +48,7 @@ public class ChatController : Controller
         var session = await _chatService.GetOrCreateSessionAsync(userId);
 
         // Broadcast to doctors if this is a newly created waiting session
-        if (session.Status == 0 && (DateTime.UtcNow - session.CreatedAt).TotalSeconds < 5)
+        if (session.Status == 0 && (SmartHealthMonitoring.Common.AppTime.Now - session.CreatedAt).TotalSeconds < 5)
         {
             await _hubContext.Clients.Group("Doctors").SendAsync("QueueUpdated");
         }
