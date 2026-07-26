@@ -568,6 +568,7 @@ public class AppointmentController : Controller
         var queue = allAppointments
             .Where(a => DateOnly.FromDateTime(a.Slot.SlotStart.Date) == selectedDate)
             .Where(a => !waitingQueue.Any(w => w.PatientId == a.PatientId))
+            .Where(a => a.Status != AppointmentStatus.Completed)
             .ToList();
 
         var patientIds = waitingQueue.Select(w => w.PatientId).ToList();
