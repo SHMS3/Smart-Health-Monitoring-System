@@ -231,7 +231,7 @@ namespace SmartHealthMonitoring.Services
 
             return vm;
         }
-
+            
         private string EvaluateAlertLevel(DailyVitalLogViewModel model, PatientThreshold? threshold)
         {
             // Nếu bác sĩ chưa cấu hình, dùng một instance mới (nó sẽ tự lấy giá trị mặc định đã set trong Model)
