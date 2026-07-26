@@ -118,105 +118,178 @@ namespace SmartHealthMonitoring.Services
             }
         }
 
-        public async Task SendHealthWarningAsync(int patientId, int predictionId)
+        public async Task<bool> SendHealthWarningAsync(int patientId, int predictionId)
         {
             try
             {
                 var patient = await _context.Patients
                     .Include(p => p.User)
-                    .FirstOrDefaultAsync(p => p.Id == patientId);
+                    .Include(p => p.EmergencyContacts)
+                    .FirstOrDefaultAsync(p => p.Id == patientId && !p.IsDeleted);
 
                 var prediction = await _context.AiriskPredictions
-                    .FirstOrDefaultAsync(p => p.Id == predictionId);
+                    .FirstOrDefaultAsync(p => p.Id == predictionId && !p.IsDeleted);
 
-                if (patient?.User?.Email != null && prediction != null)
+                var alert = await _context.WarningAlerts
+                    .FirstOrDefaultAsync(a => a.PredictionId == predictionId && !a.IsDeleted);
+
+                if (patient == null || prediction == null || alert == null || prediction.RiskLevel < 2)
                 {
-                    // Lấy WarningAlert để gán AlertId (Foreign Key bắt buộc trong EmailNotification)
-                    var alert = await _context.WarningAlerts
-                        .FirstOrDefaultAsync(a => a.PredictionId == predictionId && !a.IsDeleted);
-                    // ponytail: one rule until configurable alert settings have a real caller.
-                    if (alert == null || prediction.RiskLevel < 2)
+                    return false;
+                }
+
+                var recipientEmails = new List<string>();
+                if (!string.IsNullOrWhiteSpace(patient.User?.Email))
+                {
+                    recipientEmails.Add(patient.User.Email.Trim());
+                }
+
+                recipientEmails.AddRange(patient.EmergencyContacts
+                    .Where(contact =>
+                        contact.IsActive &&
+                        !contact.IsDeleted &&
+                        !string.IsNullOrWhiteSpace(contact.Email))
+                    .Select(contact => contact.Email!.Trim()));
+
+                recipientEmails = recipientEmails
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                if (recipientEmails.Count == 0)
+                {
+                    return false;
+                }
+
+                var patientName = patient.User?.FullName ?? "Bệnh nhân";
+                var riskScorePercent = (prediction.RiskScore * 100m)
+                    .ToString("F2", CultureInfo.InvariantCulture);
+
+                var replacements = new Dictionary<string, string>
+                {
+                    { "{{PatientName}}", patientName },
+                    { "{{RiskScore}}", riskScorePercent },
+                    { "{{RiskLevel}}", prediction.RiskLevel.ToString() },
+                    { "{{DetectedAt}}", prediction.PredictedAt.ToString("dd/MM/yyyy HH:mm:ss") }
+                };
+
+                const string templateName = "HealthWarningTemplate.html";
+                var subject = _emailTemplateService.GetSubject(templateName, replacements);
+                var htmlBody = _emailService.GetHtmlContentFromFile(templateName, replacements);
+
+                var existingNotifications = await _context.EmailNotifications
+                    .Where(notification =>
+                        notification.AlertId == alert.Id &&
+                        notification.PatientId == patientId &&
+                        notification.SentByDoctorId == null)
+                    .ToListAsync();
+
+                var allSucceeded = true;
+
+                foreach (var recipientEmail in recipientEmails)
+                {
+                    var notification = existingNotifications.FirstOrDefault(item =>
+                        string.Equals(
+                            item.ToEmail,
+                            recipientEmail,
+                            StringComparison.OrdinalIgnoreCase));
+
+                    if (notification?.IsSent == true)
                     {
-                        return;
+                        continue;
                     }
 
-                    var patientEmail = patient.User.Email;
-                    var patientName = patient.User.FullName ?? "Bệnh nhân";
-                    var riskScorePercent = (prediction.RiskScore * 100m)
-                        .ToString("F2", CultureInfo.InvariantCulture);
-
-                    var replacements = new Dictionary<string, string>
+                    if (notification == null)
                     {
-                        { "{{PatientName}}", patientName },
-                        { "{{RiskScore}}", riskScorePercent },
-                        { "{{RiskLevel}}", prediction.RiskLevel.ToString() },
-                        { "{{DetectedAt}}", prediction.PredictedAt.ToString("dd/MM/yyyy HH:mm:ss") }
-                    };
-
-                    string subject = "CẢNH BÁO SỨC KHỎE KHẨN CẤP - Cần tới khám ngay";
-                    const string templateName = "HealthWarningTemplate.html";
-                    subject = _emailTemplateService.GetSubject(templateName, replacements);
-                    string htmlBody = _emailService.GetHtmlContentFromFile(templateName, replacements);
-
-                    var alreadySent = await _context.EmailNotifications.AnyAsync(n =>
-                        n.AlertId == alert.Id &&
-                        n.PatientId == patientId &&
-                        n.ToEmail == patientEmail &&
-                        n.Subject == subject &&
-                        n.SentByDoctorId == null &&
-                        n.IsSent);
-
-                    if (alreadySent)
-                    {
-                        return;
+                        notification = new EmailNotification
+                        {
+                            AlertId = alert.Id,
+                            PatientId = patientId,
+                            ToEmail = recipientEmail,
+                            SentByDoctorId = null,
+                            CreatedAt = DateTime.Now
+                        };
+                        _context.EmailNotifications.Add(notification);
+                        existingNotifications.Add(notification);
                     }
 
-                    var notification = new EmailNotification
-                    {
-                        AlertId = alert.Id,
-                        PatientId = patientId,
-                        ToEmail = patientEmail,
-                        Subject = subject,
-                        Body = htmlBody,
-                        Status = 0,
-                        IsSent = false,
-                        SentByDoctorId = null, // Hệ thống tự động gửi
-                        CreatedAt = DateTime.Now
-                    };
-                    _context.EmailNotifications.Add(notification);
+                    notification.ToEmail = recipientEmail;
+                    notification.Subject = subject;
+                    notification.Body = htmlBody;
+                    notification.Status = 0;
+                    notification.IsSent = false;
+                    notification.SentAt = null;
+                    notification.ErrorMessage = null;
                     await _context.SaveChangesAsync();
 
-                    if (!string.IsNullOrEmpty(htmlBody))
+                    if (string.IsNullOrEmpty(htmlBody))
                     {
-                        try
-                        {
-                            await _emailService.SendEmailAsync(patientEmail, subject, htmlBody);
-                            notification.Status = 1;
-                            notification.IsSent = true;
-                            notification.SentAt = DateTime.Now;
-                        }
-                        catch (Exception ex)
-                        {
-                            notification.Status = 2;
-                            notification.IsSent = false;
-                            notification.ErrorMessage = ex.Message;
-                            Console.WriteLine($"[EmailError] {ex.Message}");
-                        }
+                        notification.Status = 2;
+                        notification.ErrorMessage = "Template không tìm thấy.";
+                        allSucceeded = false;
+                        await _context.SaveChangesAsync();
+                        continue;
+                    }
+
+                    var sendResult = await TrySendHealthWarningWithRetryAsync(
+                        recipientEmail,
+                        subject,
+                        htmlBody);
+
+                    if (sendResult.Success)
+                    {
+                        notification.Status = 1;
+                        notification.IsSent = true;
+                        notification.SentAt = DateTime.Now;
                     }
                     else
                     {
                         notification.Status = 2;
                         notification.IsSent = false;
-                        notification.ErrorMessage = "Template không tìm thấy.";
+                        notification.ErrorMessage = sendResult.ErrorMessage;
+                        allSucceeded = false;
                     }
 
                     await _context.SaveChangesAsync();
                 }
+
+                return allSucceeded;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[SendHealthWarningAsync Error] {ex.Message}");
+                Console.WriteLine("[SendHealthWarningAsync Error] " + ex.Message);
+                return false;
             }
+        }
+
+        private async Task<(bool Success, string? ErrorMessage)> TrySendHealthWarningWithRetryAsync(
+            string recipientEmail,
+            string subject,
+            string htmlBody)
+        {
+            const int maxAttempts = 3;
+            Exception? lastException = null;
+
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                try
+                {
+                    await _emailService.SendEmailAsync(recipientEmail, subject, htmlBody);
+                    return (true, null);
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    if (attempt < maxAttempts)
+                    {
+                        await Task.Delay(TimeSpan.FromMilliseconds(100 * attempt));
+                    }
+                }
+            }
+
+            var errorMessage =
+                (lastException?.Message ?? "Unknown SMTP error") +
+                " (failed after 3 attempts).";
+            return (false, errorMessage);
         }
 
         public async Task SendDailyVitalLogReminderAsync(int patientId, string lastLogTimeDisplay)

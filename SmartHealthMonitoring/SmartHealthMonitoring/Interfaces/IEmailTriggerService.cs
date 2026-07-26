@@ -12,7 +12,7 @@ namespace SmartHealthMonitoring.Interfaces
         /// <summary>
         /// Gửi cảnh báo sức khỏe tự động. Gọi khi AI phát hiện RiskLevel >= 2.
         /// </summary>
-        Task SendHealthWarningAsync(int patientId, int predictionId);
+        Task<bool> SendHealthWarningAsync(int patientId, int predictionId);
 
         /// <summary>
         /// Tạo thông báo nội bộ nhắc bệnh nhân ghi log chỉ số sinh hiệu hàng ngày.
