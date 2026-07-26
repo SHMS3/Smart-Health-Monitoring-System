@@ -42,7 +42,7 @@
                     {
                         <tr id="waiting-row-@wp.Id">
                             <td class="ps-4"><span class="badge bg-primary fs-6">@wp.SequenceNumber</span></td>
-                            <td class="text-muted"><i class="fas fa-clock me-1 small"></i> @wp.CreatedAt.AddHours(7).ToString("HH:mm")</td>
+                            <td class="text-muted"><i class="fas fa-clock me-1 small"></i> @wp.CreatedAt.ToString("HH:mm")</td>
                             <td class="fw-bold text-dark">@wp.Patient.User.FullName</td>
                             <td class="text-muted"><i class="fas fa-phone-alt me-1 small"></i> @(wp.Patient.Phone ?? "N/A")</td>
                             <td>
