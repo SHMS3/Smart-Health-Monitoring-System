@@ -541,7 +541,7 @@ public class AppointmentController : Controller
             .Where(a => a.Slot.DoctorId == doctor.Id
                      && a.Slot.SlotStart >= todayUtc
                      && a.Slot.SlotStart < endDate
-                     && (a.Status == AppointmentStatus.Confirmed || a.Status == AppointmentStatus.Completed))
+                     && a.Status == AppointmentStatus.Confirmed)
             .OrderBy(a => a.Slot.SlotStart)
             .ToListAsync();
 
