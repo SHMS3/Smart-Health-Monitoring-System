@@ -316,14 +316,12 @@ namespace SmartHealthMonitoring.Services
             var todayUtc    = TimeZoneInfo.ConvertTimeToUtc(todayVn, vnZone);
             var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(todayVn.AddDays(1), vnZone);
 
-            bool hasSlots = await _repository.HasSlotsForDateAsync(todayUtc, tomorrowUtc);
+            // Vẫn generate slot cho các bác sĩ dùng DoctorWorkSchedules (luồng cũ).
+            var vnZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var nowVn  = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnZone);
+            await GenerateSlotsForDateAsync(nowVn.Date, vnZone);
 
-            if (!hasSlots)
-            {
-                await GenerateSlotsForDateAsync(todayVn, vnZone);
-            }
-
-            return await _repository.GetDoctorsWithSlotsAsync(todayUtc, tomorrowUtc);
+            return await _repository.GetDoctorsWithSlotsAsync(nowLocal, tomorrowLocal);
         }
 
         public async Task<List<dynamic>> GetDoctorSlotsAsync(int doctorId)
@@ -334,7 +332,7 @@ namespace SmartHealthMonitoring.Services
             var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(todayVn.AddDays(1), vnZone);
             var nowUtc = SmartHealthMonitoring.Common.AppTime.Now;
 
-            return await _repository.GetDoctorSlotsAsync(doctorId, nowUtc, tomorrowUtc);
+            return await _repository.GetDoctorSlotsAsync(doctorId, nowLocal, tomorrowLocal);
         }
 
         private async Task GenerateSlotsForDateAsync(DateTime localDate, TimeZoneInfo vnZone)

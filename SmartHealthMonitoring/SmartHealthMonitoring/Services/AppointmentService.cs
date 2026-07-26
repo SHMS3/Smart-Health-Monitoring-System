@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
+using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
@@ -42,12 +43,12 @@ public class AppointmentService : IAppointmentService
         var dayStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
         var dayEnd   = date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Local);
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         return await _context.AppointmentSlots
             .Where(s =>
                 s.DoctorId == doctorId &&
                 s.SlotStart >= dayStart &&
-                s.SlotStart <= dayEnd &&
+                s.SlotStart < dayEnd &&
                 s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
                  // Slot SoftLocked đã hết hạn - vẫn hiện là trống
@@ -63,12 +64,12 @@ public class AppointmentService : IAppointmentService
         var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
         var end   = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Local);
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         return await _context.AppointmentSlots
             .Where(s =>
                 s.DoctorId == doctorId &&
                 s.SlotStart >= start &&
-                s.SlotStart <= end &&
+                s.SlotStart < end &&
                 s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
                  (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < SmartHealthMonitoring.Common.AppTime.Now) ||
@@ -122,7 +123,7 @@ public class AppointmentService : IAppointmentService
             .Where(a =>
                 a.DoctorId == doctorId &&
                 a.Slot.SlotStart >= dayStart &&
-                a.Slot.SlotStart <= dayEnd &&
+                a.Slot.SlotStart < dayEnd &&
                 (a.Status == AppointmentStatus.Confirmed))
             .OrderBy(a => a.Slot.SlotStart)
             .ToListAsync();

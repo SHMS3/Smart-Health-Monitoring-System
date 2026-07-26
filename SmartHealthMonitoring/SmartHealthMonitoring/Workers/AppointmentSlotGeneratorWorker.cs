@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 
@@ -62,7 +63,7 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
         using var scope   = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
 
-        var today    = DateOnly.FromDateTime(DateTime.Now); // Dùng giờ Local để tránh lệch múi giờ khi khởi động
+        var today    = DateOnly.FromDateTime(AppointmentTime.NowVietnam);
         var genUntil = today.AddDays(3); // Tạo slot cho hôm nay + 3 ngày tới = 4 ngày
 
         var schedules = await context.DoctorWorkSchedules
