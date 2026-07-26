@@ -310,29 +310,19 @@ namespace SmartHealthMonitoring.Services
 
         public async Task<List<dynamic>> GetAvailableDoctorsAsync()
         {
-            var vnZone   = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var nowVn    = TimeZoneInfo.ConvertTimeFromUtc(SmartHealthMonitoring.Common.AppTime.Now, vnZone);
-            var todayVn  = nowVn.Date;
-            var todayUtc    = TimeZoneInfo.ConvertTimeToUtc(todayVn, vnZone);
-            var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(todayVn.AddDays(1), vnZone);
+            var nowVn       = SmartHealthMonitoring.Common.AppTime.Now;
+            var todayVn     = nowVn.Date;
+            var tomorrowVn  = todayVn.AddDays(1);
 
-            // Vẫn generate slot cho các bác sĩ dùng DoctorWorkSchedules (luồng cũ).
-            var vnZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var nowVn  = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnZone);
-            await GenerateSlotsForDateAsync(nowVn.Date, vnZone);
-
-            return await _repository.GetDoctorsWithSlotsAsync(nowLocal, tomorrowLocal);
+            return await _repository.GetDoctorsWithSlotsAsync(nowVn, tomorrowVn);
         }
 
         public async Task<List<dynamic>> GetDoctorSlotsAsync(int doctorId)
         {
-            var vnZone   = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var nowVn    = TimeZoneInfo.ConvertTimeFromUtc(SmartHealthMonitoring.Common.AppTime.Now, vnZone);
-            var todayVn  = nowVn.Date;
-            var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(todayVn.AddDays(1), vnZone);
-            var nowUtc = SmartHealthMonitoring.Common.AppTime.Now;
+            var nowVn      = SmartHealthMonitoring.Common.AppTime.Now;
+            var tomorrowVn = nowVn.Date.AddDays(1);
 
-            return await _repository.GetDoctorSlotsAsync(doctorId, nowLocal, tomorrowLocal);
+            return await _repository.GetDoctorSlotsAsync(doctorId, nowVn, tomorrowVn);
         }
 
         private async Task GenerateSlotsForDateAsync(DateTime localDate, TimeZoneInfo vnZone)
