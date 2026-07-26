@@ -50,7 +50,7 @@ public class ChatHubAuditTests
             ReceiverId = session.PatientUserId,
             Receiver = session.PatientUser,
             MessageContent = "Hello",
-            SentAt = DateTime.UtcNow
+            SentAt = SmartHealthMonitoring.Common.AppTime.Now
         };
         setup.Chat.Setup(service => service.GetSessionAsync(session.Id)).ReturnsAsync(session);
         setup.Chat
@@ -196,7 +196,7 @@ public class ChatHubAuditTests
             DoctorUserId = doctor.Id,
             DoctorUser = doctor,
             Status = 1,
-            ClaimedAt = DateTime.UtcNow
+            ClaimedAt = SmartHealthMonitoring.Common.AppTime.Now
         };
     }
 

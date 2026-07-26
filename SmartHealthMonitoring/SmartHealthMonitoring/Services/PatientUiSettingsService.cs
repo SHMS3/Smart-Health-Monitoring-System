@@ -103,7 +103,7 @@ public class PatientUiSettingsService
             ShowTopInfoBar = model.ShowTopInfoBar,
             ShowAiChatbot = model.ShowAiChatbot,
             ShowSupportHub = model.ShowSupportHub,
-            UpdatedAt = DateTime.UtcNow,
+            UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now,
             UpdatedByAdminName = updatedByAdminName
         });
 
@@ -116,7 +116,7 @@ public class PatientUiSettingsService
         CancellationToken cancellationToken = default)
     {
         var settings = CreateDefaultSettings();
-        settings.UpdatedAt = DateTime.UtcNow;
+        settings.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
         settings.UpdatedByAdminName = updatedByAdminName;
 
         await SaveSettingsAsync(settings, cancellationToken);

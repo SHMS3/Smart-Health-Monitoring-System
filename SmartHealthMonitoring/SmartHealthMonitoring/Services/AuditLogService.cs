@@ -144,7 +144,7 @@ public class AuditLogService : IAuditLogService
             Description = Truncate(description, 1000),
             IpAddress = TruncateNullable(ipAddress, 45),
             UserAgent = TruncateNullable(userAgent, 512),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
         };
     }
 

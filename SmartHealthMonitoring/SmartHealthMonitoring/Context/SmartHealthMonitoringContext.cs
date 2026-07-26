@@ -167,8 +167,8 @@ public partial class SmartHealthMonitoringContext : DbContext
                 EmergencyRiskLevelThreshold = 3,
                 EmergencyRiskScoreThreshold = 0.70m,
                 EmergencySex = 2,
-                CreatedAt = new DateTime(2026, 6, 29, 0, 0, 0, DateTimeKind.Utc),
-                UpdatedAt = new DateTime(2026, 6, 29, 0, 0, 0, DateTimeKind.Utc)
+                CreatedAt = new DateTime(2026, 6, 29, 0, 0, 0, DateTimeKind.Local),
+                UpdatedAt = new DateTime(2026, 6, 29, 0, 0, 0, DateTimeKind.Local)
             });
         });
 
@@ -445,7 +445,7 @@ public partial class SmartHealthMonitoringContext : DbContext
         // ==========================================
         // SEED: Ngưỡng chuẩn mặc định (WHO / JNC8)
         // ==========================================
-        DateTime stdDate = new DateTime(2026, 5, 31, 0, 0, 0, DateTimeKind.Utc);
+        DateTime stdDate = new DateTime(2026, 5, 31, 0, 0, 0, DateTimeKind.Local);
         modelBuilder.Entity<StandardThreshold>().HasData(
             // Trẻ em & thanh thiếu niên (chung)
             new StandardThreshold
@@ -536,7 +536,7 @@ public partial class SmartHealthMonitoringContext : DbContext
         // ==========================================
         // DATA SEEDING (CHUẨN KHỚP 100% VỚI DATABASE V4)
         // ==========================================
-        DateTime baseDate = new DateTime(2026, 5, 20, 0, 0, 0, DateTimeKind.Utc);
+        DateTime baseDate = new DateTime(2026, 5, 20, 0, 0, 0, DateTimeKind.Local);
 
         // 1. Users (10 Bác sĩ ID 1-10, 10 Bệnh nhân ID 11-20)
         modelBuilder.Entity<User>().HasData(

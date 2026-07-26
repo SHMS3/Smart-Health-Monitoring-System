@@ -40,8 +40,8 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             // Tính thời gian đến 00:05 ngày hôm sau
-            var now     = DateTime.UtcNow;
-            var nextRun = DateTime.UtcNow.Date.AddDays(1).AddMinutes(5);
+            var now     = SmartHealthMonitoring.Common.AppTime.Now;
+            var nextRun = SmartHealthMonitoring.Common.AppTime.Now.Date.AddDays(1).AddMinutes(5);
             var delay   = nextRun - now;
 
             _logger.LogInformation("[SlotGenerator] Next run in {Hours}h {Minutes}m.", (int)delay.TotalHours, delay.Minutes);
@@ -83,7 +83,7 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
                 var current = schedule.StartTime;
                 while (current.Add(TimeSpan.FromMinutes(schedule.SlotDurationMinutes)) <= schedule.EndTime)
                 {
-                    var slotStart = d.ToDateTime(current, DateTimeKind.Utc);
+                    var slotStart = d.ToDateTime(current, DateTimeKind.Local);
                     var slotEnd   = slotStart.AddMinutes(schedule.SlotDurationMinutes);
 
                     // Kiểm tra slot đã tồn tại chưa (Unique Index sẽ bắt, nhưng check trước để tránh exception)

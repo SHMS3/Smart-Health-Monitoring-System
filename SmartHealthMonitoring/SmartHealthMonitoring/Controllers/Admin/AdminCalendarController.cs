@@ -36,8 +36,8 @@ public class AdminCalendarController : Controller
         var sunday = monday.AddDays(6);
 
         var doctors = await LoadDoctorsAsync();
-        var rangeStart = monday.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var rangeEnd = sunday.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var rangeStart = monday.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+        var rangeEnd = sunday.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Local);
 
         var appointments = await _context.Appointments
             .AsNoTracking()
@@ -81,8 +81,8 @@ public class AdminCalendarController : Controller
     [HttpGet]
     public async Task<IActionResult> Events(DateTime start, DateTime end, int? doctorId)
     {
-        var rangeStart = DateTime.SpecifyKind(start, DateTimeKind.Utc);
-        var rangeEnd = DateTime.SpecifyKind(end, DateTimeKind.Utc);
+        var rangeStart = DateTime.SpecifyKind(start, DateTimeKind.Local);
+        var rangeEnd = DateTime.SpecifyKind(end, DateTimeKind.Local);
 
         var doctors = await LoadDoctorsAsync();
         var doctorMap = doctors.ToDictionary(d => d.DoctorId);
@@ -221,8 +221,8 @@ public class AdminCalendarController : Controller
         if (toDate < fromDate)
             (fromDate, toDate) = (toDate, fromDate);
 
-        var rangeStart = fromDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var rangeEnd = toDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var rangeStart = fromDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+        var rangeEnd = toDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Local);
 
         // Chỉ tính lịch đã vào quy trình (bỏ Pending chưa duyệt)
         var rows = await (
@@ -345,8 +345,8 @@ public class AdminCalendarController : Controller
         for (int r = 0; r < slotsPerDay; r++)
             counts[r] = new int[7];
 
-        var rangeStart = fromDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var rangeEnd = toDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var rangeStart = fromDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local);
+        var rangeEnd = toDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Local);
 
         // Đếm mọi lần đặt lịch (kể cả huỷ/no-show) — phản ánh nhu cầu đặt
         var slotStarts = await (

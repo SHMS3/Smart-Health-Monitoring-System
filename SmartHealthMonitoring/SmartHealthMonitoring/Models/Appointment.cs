@@ -36,7 +36,7 @@ public class Appointment
     /// <summary>Liên kết hồ sơ bệnh án khi khám xong (BOOK-10)</summary>
     public int? ClinicalRecordId { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SmartHealthMonitoring.Common.AppTime.Now;
 
     public DateTime? UpdatedAt { get; set; }
 

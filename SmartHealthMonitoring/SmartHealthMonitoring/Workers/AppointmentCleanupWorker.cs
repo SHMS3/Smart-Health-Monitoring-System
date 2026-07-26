@@ -49,7 +49,7 @@ public class AppointmentCleanupWorker : BackgroundService
     {
         using var scope   = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
-        var now     = DateTime.UtcNow;
+        var now     = SmartHealthMonitoring.Common.AppTime.Now;
 
         // ────────────────────────────────────────────────────────────
         // 1. Nhả SoftLocked slot đã hết hạn giữ chỗ → Available

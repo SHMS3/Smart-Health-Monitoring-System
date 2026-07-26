@@ -53,8 +53,8 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 return View("~/Views/AdminDashboard/StandardThreshold/Create.cshtml", model);
 
             var entity = MapToEntity(model, new StandardThreshold());
-            entity.CreatedAt = DateTime.UtcNow;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.CreatedAt = SmartHealthMonitoring.Common.AppTime.Now;
+            entity.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
             _context.StandardThresholds.Add(entity);
             await _context.SaveChangesAsync();
@@ -106,7 +106,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
             var oldActive = entity.IsActive;
 
             MapToEntity(model, entity);
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
             await _context.SaveChangesAsync();
             await _auditLogService.LogAsync(
@@ -134,7 +134,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
             }
 
             entity.IsActive = !entity.IsActive;
-            entity.UpdatedAt = DateTime.UtcNow;
+            entity.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
             await _context.SaveChangesAsync();
             await _auditLogService.LogAsync(
                 entity.IsActive ? "Activate" : "Deactivate",

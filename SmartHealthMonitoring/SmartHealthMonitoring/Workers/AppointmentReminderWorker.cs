@@ -61,7 +61,7 @@ public class AppointmentReminderWorker : BackgroundService
         var context = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
         var emailTrigger = scope.ServiceProvider.GetRequiredService<IEmailTriggerService>();
 
-        var now = DateTime.UtcNow;
+        var now = SmartHealthMonitoring.Common.AppTime.Now;
 
         await SendWindowRemindersAsync(
             context,
@@ -129,7 +129,7 @@ public class AppointmentReminderWorker : BackgroundService
                 else
                     appointment.IsReminded2h = true;
 
-                appointment.UpdatedAt = DateTime.UtcNow;
+                appointment.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
                 await context.SaveChangesAsync(ct);
 
                 _logger.LogInformation(

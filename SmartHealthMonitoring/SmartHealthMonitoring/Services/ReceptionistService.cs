@@ -73,7 +73,7 @@ namespace SmartHealthMonitoring.Services
                 return (false, "Phiếu này đã được xử lý");
 
             payment.Status = "Paid";
-            payment.PaidAt = DateTime.UtcNow;
+            payment.PaidAt = SmartHealthMonitoring.Common.AppTime.Now;
             payment.PaymentMethod = "Cash";
 
             await _repository.UpdatePaymentAsync(payment);
@@ -100,7 +100,7 @@ namespace SmartHealthMonitoring.Services
                 if (upperContent.Contains(expectedContent.ToUpper()))
                 {
                     pmt.Status = "Paid";
-                    pmt.PaidAt = DateTime.UtcNow;
+                    pmt.PaidAt = SmartHealthMonitoring.Common.AppTime.Now;
                     pmt.PaymentMethod = "QR";
                     await _repository.UpdatePaymentAsync(pmt);
                     return (true, "Success", pmt.Id);
@@ -175,7 +175,7 @@ namespace SmartHealthMonitoring.Services
                         PasswordHash = passwordHash,
                         Role = 0,
                         IsDeleted = false,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
                     };
 
                     await _repository.AddUserAsync(user);
@@ -273,11 +273,11 @@ namespace SmartHealthMonitoring.Services
                         DoctorId = doctorId,
                         Status = AppointmentStatus.Confirmed,
                         PatientNote = "Đăng ký trực tiếp tại quầy lễ tân",
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
                     };
                     await _repository.AddAppointmentAsync(appointment);
 
-                    var today = DateTime.UtcNow.Date;
+                    var today = SmartHealthMonitoring.Common.AppTime.Now.Date;
                     var currentMaxSeq = await _repository.GetMaxSequenceNumberTodayAsync(doctorId, today);
                     var newSeq = currentMaxSeq + 1;
 
@@ -288,7 +288,7 @@ namespace SmartHealthMonitoring.Services
                         DoctorId = doctorId,
                         SequenceNumber = newSeq,
                         Status = 0,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
                     };
 
                     await _repository.AddWaitingPatientAsync(waitingPatient);
@@ -311,7 +311,7 @@ namespace SmartHealthMonitoring.Services
         public async Task<List<dynamic>> GetAvailableDoctorsAsync()
         {
             var vnZone   = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var nowVn    = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnZone);
+            var nowVn    = TimeZoneInfo.ConvertTimeFromUtc(SmartHealthMonitoring.Common.AppTime.Now, vnZone);
             var todayVn  = nowVn.Date;
             var todayUtc    = TimeZoneInfo.ConvertTimeToUtc(todayVn, vnZone);
             var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(todayVn.AddDays(1), vnZone);
@@ -329,10 +329,10 @@ namespace SmartHealthMonitoring.Services
         public async Task<List<dynamic>> GetDoctorSlotsAsync(int doctorId)
         {
             var vnZone   = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var nowVn    = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnZone);
+            var nowVn    = TimeZoneInfo.ConvertTimeFromUtc(SmartHealthMonitoring.Common.AppTime.Now, vnZone);
             var todayVn  = nowVn.Date;
             var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(todayVn.AddDays(1), vnZone);
-            var nowUtc = DateTime.UtcNow;
+            var nowUtc = SmartHealthMonitoring.Common.AppTime.Now;
 
             return await _repository.GetDoctorSlotsAsync(doctorId, nowUtc, tomorrowUtc);
         }

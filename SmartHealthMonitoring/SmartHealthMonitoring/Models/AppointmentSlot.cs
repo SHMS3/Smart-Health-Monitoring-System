@@ -38,7 +38,7 @@ public class AppointmentSlot
     /// <summary>Thời điểm hết hạn giữ chỗ tạm (SoftLock), sau đó slot về Available</summary>
     public DateTime? SoftLockedUntil { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SmartHealthMonitoring.Common.AppTime.Now;
 
     // Navigation
     public virtual Doctor Doctor { get; set; } = null!;

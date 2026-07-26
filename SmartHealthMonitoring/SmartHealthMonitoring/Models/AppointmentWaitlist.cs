@@ -29,7 +29,7 @@ public class AppointmentWaitlist
     /// <summary>Còn active không (false nếu bệnh nhân huỷ hoặc đã đặt được)</summary>
     public bool IsActive { get; set; } = true;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SmartHealthMonitoring.Common.AppTime.Now;
 
     public DateTime? NotifiedAt { get; set; }
 

@@ -32,7 +32,7 @@ namespace SmartHealthMonitoring.Controllers.Admin
             var vietnamUtcOffset = TimeSpan.FromHours(7);
             var normalizedFromDate = fromDate?.Date;
             var normalizedToDate = toDate?.Date;
-            var today = DateTime.UtcNow.Add(vietnamUtcOffset).Date;
+            var today = SmartHealthMonitoring.Common.AppTime.Now.Add(vietnamUtcOffset).Date;
             var actors = await _context.Users
                 .AsNoTracking()
                 .Where(x => x.Role == 1 || x.Role == 2)

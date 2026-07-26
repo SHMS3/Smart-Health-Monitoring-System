@@ -360,7 +360,7 @@ namespace SmartHealthMonitoring.Services
                 if (doctor == null)
                     return;
 
-                var acceptedAt = waiting.AcceptedAt ?? DateTime.UtcNow;
+                var acceptedAt = waiting.AcceptedAt ?? SmartHealthMonitoring.Common.AppTime.Now;
                 var checkInCode = _qrCheckInService.BuildCheckInCode(
                     waiting.Id,
                     waiting.PatientId,

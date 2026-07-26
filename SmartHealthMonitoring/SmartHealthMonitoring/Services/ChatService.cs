@@ -41,7 +41,7 @@ public class ChatService : IChatService
         {
             PatientUserId = patientUserId,
             Status = 0, // Waiting
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
         };
 
         _context.TelemedicineChatSessions.Add(session);
@@ -124,7 +124,7 @@ public class ChatService : IChatService
 
         session.DoctorUserId = doctorUserId;
         session.Status = 1; // Active
-        session.ClaimedAt = DateTime.UtcNow;
+        session.ClaimedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
         await _context.SaveChangesAsync();
 
@@ -149,7 +149,7 @@ public class ChatService : IChatService
             return false;
 
         session.Status = 2; // Closed
-        session.ClosedAt = DateTime.UtcNow;
+        session.ClosedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
         await _context.SaveChangesAsync();
         return true;
@@ -206,7 +206,7 @@ public class ChatService : IChatService
             SenderId = senderId,
             ReceiverId = receiverId,
             MessageContent = content,
-            SentAt = DateTime.UtcNow,
+            SentAt = SmartHealthMonitoring.Common.AppTime.Now,
             IsRead = false
         };
 

@@ -31,7 +31,7 @@ namespace SmartHealthMonitoring.Models
         [MaxLength(500)]
         public string? RejectionReason { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = SmartHealthMonitoring.Common.AppTime.Now;
         public DateTime? PublishedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

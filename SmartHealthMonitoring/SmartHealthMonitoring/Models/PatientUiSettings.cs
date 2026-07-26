@@ -78,7 +78,7 @@ public class PatientUiSettings
 
     public bool ShowSupportHub { get; set; } = true;
 
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = SmartHealthMonitoring.Common.AppTime.Now;
 
     public string? UpdatedByAdminName { get; set; }
 

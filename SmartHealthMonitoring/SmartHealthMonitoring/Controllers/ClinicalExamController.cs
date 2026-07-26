@@ -46,7 +46,7 @@ namespace SmartHealthMonitoring.Controllers
                 var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
                 if (doctor != null)
                 {
-                    var today = DateTime.UtcNow.Date;
+                    var today = SmartHealthMonitoring.Common.AppTime.Now.Date;
 
                     // Lấy tất cả thanh toán Paid trong ngày hôm nay của bác sĩ này cho bệnh nhân này
                     var paidPayments = await _context.Payments
@@ -107,7 +107,7 @@ namespace SmartHealthMonitoring.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            var today = DateTime.UtcNow.Date;
+            var today = SmartHealthMonitoring.Common.AppTime.Now.Date;
             
             // Lấy tất cả thanh toán Paid trong ngày hôm nay của bác sĩ này cho bệnh nhân này
             var paidPayments = await _context.Payments
@@ -215,7 +215,7 @@ namespace SmartHealthMonitoring.Controllers
                     var existingThreshold = await _context.PatientThresholds.FirstOrDefaultAsync(t => t.PatientId == model.PatientId);
                     if (existingThreshold == null)
                     {
-                        var todayDate = DateOnly.FromDateTime(DateTime.UtcNow);
+                        var todayDate = DateOnly.FromDateTime(SmartHealthMonitoring.Common.AppTime.Now);
                         int age = todayDate.Year - patient.DateOfBirth.Year - (todayDate.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
 
                         var templates = await _context.StandardThresholds
@@ -372,7 +372,7 @@ namespace SmartHealthMonitoring.Controllers
                 return RedirectToAction("Index", "DoctorDashboard");
             }
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateOnly.FromDateTime(SmartHealthMonitoring.Common.AppTime.Now);
             int age = today.Year - patient.DateOfBirth.Year - (today.DayOfYear < patient.DateOfBirth.DayOfYear ? 1 : 0);
 
             var existing = patient.PatientThreshold;

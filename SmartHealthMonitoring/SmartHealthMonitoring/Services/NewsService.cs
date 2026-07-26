@@ -47,7 +47,7 @@ namespace SmartHealthMonitoring.Services
             }
 
             model.AuthorName = authorName;
-            model.CreatedAt  = DateTime.UtcNow;
+            model.CreatedAt  = SmartHealthMonitoring.Common.AppTime.Now;
             
             model.Status = (action == "submit") ? "Pending" : "Draft";
 
@@ -120,7 +120,7 @@ namespace SmartHealthMonitoring.Services
             existing.Summary = model.Summary;
             existing.Content = model.Content;
             existing.Source = model.Source;
-            existing.UpdatedAt = DateTime.UtcNow;
+            existing.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
 
             existing.Status = (action == "submit") ? "Pending" : "Draft";
             

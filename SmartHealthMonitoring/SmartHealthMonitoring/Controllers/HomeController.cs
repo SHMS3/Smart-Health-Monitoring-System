@@ -544,7 +544,7 @@ namespace SmartHealthMonitoring.Controllers
                     DietBalanced       = model.DietBalanced,
                     RegularHealthCheck = model.RegularHealthCheck,
                     NoSubstanceAbuse   = model.NoSubstanceAbuse,
-                    UpdatedAt          = DateTime.UtcNow,
+                    UpdatedAt          = SmartHealthMonitoring.Common.AppTime.Now,
                 };
                 _context.PatientHabits.Add(habit);
             }
@@ -572,7 +572,7 @@ namespace SmartHealthMonitoring.Controllers
                 h.DietBalanced       = model.DietBalanced;
                 h.RegularHealthCheck = model.RegularHealthCheck;
                 h.NoSubstanceAbuse   = model.NoSubstanceAbuse;
-                h.UpdatedAt          = DateTime.UtcNow;
+                h.UpdatedAt          = SmartHealthMonitoring.Common.AppTime.Now;
                 _context.PatientHabits.Update(h);
             }
 

@@ -34,7 +34,7 @@ public class DoctorWorkSchedule
 
     public bool IsActive { get; set; } = true;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = SmartHealthMonitoring.Common.AppTime.Now;
 
     // Navigation
     public virtual Doctor Doctor { get; set; } = null!;
