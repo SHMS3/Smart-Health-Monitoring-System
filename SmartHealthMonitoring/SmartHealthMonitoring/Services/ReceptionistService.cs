@@ -310,31 +310,28 @@ namespace SmartHealthMonitoring.Services
 
         public async Task<List<dynamic>> GetAvailableDoctorsAsync()
         {
-            var vnZone   = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var nowVn    = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnZone);
-            var todayVn  = nowVn.Date;
-            var todayUtc    = TimeZoneInfo.ConvertTimeToUtc(todayVn, vnZone);
-            var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(todayVn.AddDays(1), vnZone);
+            // Slots được DoctorScheduleController lưu bằng LOCAL time (DateTime.Today),
+            // KHÔNG convert sang UTC. Vì vậy query cũng phải dùng local time range.
+            // Dùng DateTime.Now (không phải Today/midnight) để chỉ đếm slot còn tương lai,
+            // tránh trường hợp hiển thị N slot nhưng click vào lại rỗng vì slot đã qua.
+            var nowLocal      = DateTime.Now;
+            var tomorrowLocal = DateTime.Today.AddDays(1);
 
-            bool hasSlots = await _repository.HasSlotsForDateAsync(todayUtc, tomorrowUtc);
+            // Vẫn generate slot cho các bác sĩ dùng DoctorWorkSchedules (luồng cũ).
+            var vnZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            var nowVn  = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnZone);
+            await GenerateSlotsForDateAsync(nowVn.Date, vnZone);
 
-            if (!hasSlots)
-            {
-                await GenerateSlotsForDateAsync(todayVn, vnZone);
-            }
-
-            return await _repository.GetDoctorsWithSlotsAsync(todayUtc, tomorrowUtc);
+            return await _repository.GetDoctorsWithSlotsAsync(nowLocal, tomorrowLocal);
         }
 
         public async Task<List<dynamic>> GetDoctorSlotsAsync(int doctorId)
         {
-            var vnZone   = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-            var nowVn    = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnZone);
-            var todayVn  = nowVn.Date;
-            var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(todayVn.AddDays(1), vnZone);
-            var nowUtc = DateTime.UtcNow;
+            // Cũng dùng local time để khớp với cách DoctorScheduleController lưu slot.
+            var nowLocal      = DateTime.Now;
+            var tomorrowLocal = DateTime.Today.AddDays(1);
 
-            return await _repository.GetDoctorSlotsAsync(doctorId, nowUtc, tomorrowUtc);
+            return await _repository.GetDoctorSlotsAsync(doctorId, nowLocal, tomorrowLocal);
         }
 
         private async Task GenerateSlotsForDateAsync(DateTime localDate, TimeZoneInfo vnZone)

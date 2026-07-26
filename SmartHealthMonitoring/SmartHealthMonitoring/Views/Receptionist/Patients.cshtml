@@ -295,8 +295,8 @@
                     return;
                 }
                 res.data.forEach(slot => {
-                    const startLocal = new Date(slot.slotStart + 'Z');
-                    const endLocal   = new Date(slot.slotEnd   + 'Z');
+                    const startLocal = new Date(slot.slotStart);
+                    const endLocal   = new Date(slot.slotEnd);
                     const fmt = d => d.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
 
                     const item = document.createElement('div');

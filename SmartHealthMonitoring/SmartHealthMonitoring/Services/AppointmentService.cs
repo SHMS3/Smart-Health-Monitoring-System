@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
+using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Models;
@@ -39,15 +40,14 @@ public class AppointmentService : IAppointmentService
 
     public async Task<List<AppointmentSlot>> GetAvailableSlotsAsync(int doctorId, DateOnly date, int? currentPatientId = null)
     {
-        var dayStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var dayEnd   = date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var (dayStart, dayEnd) = AppointmentTime.GetUtcDayRange(date);
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         return await _context.AppointmentSlots
             .Where(s =>
                 s.DoctorId == doctorId &&
                 s.SlotStart >= dayStart &&
-                s.SlotStart <= dayEnd &&
+                s.SlotStart < dayEnd &&
                 s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
                  // Slot SoftLocked đã hết hạn - vẫn hiện là trống
@@ -60,15 +60,14 @@ public class AppointmentService : IAppointmentService
 
     public async Task<List<AppointmentSlot>> GetAvailableSlotsRangeAsync(int doctorId, DateOnly startDate, DateOnly endDate, int? currentPatientId = null)
     {
-        var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var end   = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var (start, end) = AppointmentTime.GetUtcDateRange(startDate, endDate);
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         return await _context.AppointmentSlots
             .Where(s =>
                 s.DoctorId == doctorId &&
                 s.SlotStart >= start &&
-                s.SlotStart <= end &&
+                s.SlotStart < end &&
                 s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
                  (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow) ||
@@ -79,15 +78,14 @@ public class AppointmentService : IAppointmentService
 
     public async Task<List<AppointmentSlot>> GetAvailableSlotsRangeForDoctorsAsync(List<int> doctorIds, DateOnly startDate, DateOnly endDate, int? currentPatientId = null)
     {
-        var start = startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var end   = endDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var (start, end) = AppointmentTime.GetUtcDateRange(startDate, endDate);
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         return await _context.AppointmentSlots
             .Where(s =>
                 doctorIds.Contains(s.DoctorId) &&
                 s.SlotStart >= start &&
-                s.SlotStart <= end &&
+                s.SlotStart < end &&
                 s.SlotStart > now &&
                 (s.Status == AppointmentSlotStatus.Available ||
                  (s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < DateTime.UtcNow) ||
@@ -112,8 +110,7 @@ public class AppointmentService : IAppointmentService
 
     public async Task<List<Appointment>> GetDoctorQueueAsync(int doctorId, DateOnly date)
     {
-        var dayStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        var dayEnd   = date.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var (dayStart, dayEnd) = AppointmentTime.GetUtcDayRange(date);
 
         return await _context.Appointments
             .Include(a => a.Slot)
@@ -121,7 +118,7 @@ public class AppointmentService : IAppointmentService
             .Where(a =>
                 a.DoctorId == doctorId &&
                 a.Slot.SlotStart >= dayStart &&
-                a.Slot.SlotStart <= dayEnd &&
+                a.Slot.SlotStart < dayEnd &&
                 (a.Status == AppointmentStatus.Confirmed))
             .OrderBy(a => a.Slot.SlotStart)
             .ToListAsync();
