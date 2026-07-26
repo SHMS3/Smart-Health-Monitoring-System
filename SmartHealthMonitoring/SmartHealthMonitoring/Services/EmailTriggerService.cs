@@ -139,10 +139,12 @@ namespace SmartHealthMonitoring.Services
                 }
 
                 var recipientEmails = new List<string>();
-                if (!string.IsNullOrWhiteSpace(patient.User?.Email))
-                {
-                    recipientEmails.Add(patient.User.Email.Trim());
-                }
+                
+                // Tắt gửi mail cho bệnh nhân để tránh làm họ hoảng sợ theo yêu cầu
+                // if (!string.IsNullOrWhiteSpace(patient.User?.Email))
+                // {
+                //     recipientEmails.Add(patient.User.Email.Trim());
+                // }
 
                 recipientEmails.AddRange(patient.EmergencyContacts
                     .Where(contact =>
