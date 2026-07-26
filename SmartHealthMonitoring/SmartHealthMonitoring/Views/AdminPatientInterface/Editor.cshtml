@@ -1,0 +1,467 @@
+@model SmartHealthMonitoring.ViewModels.Admin.PatientUiSettingsViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Giao diện bệnh nhân";
+    var heroImage = string.IsNullOrWhiteSpace(Model.HomeHeroImageUrl) ? "/images/logo.png" : Model.HomeHeroImageUrl;
+    var aboutImage = string.IsNullOrWhiteSpace(Model.HomeAboutImageUrl) ? "/images/logo.png" : Model.HomeAboutImageUrl;
+    var updatedText = Model.UpdatedAt.HasValue
+        ? $"Cập nhật gần nhất {Model.UpdatedAt.Value.ToLocalTime():dd/MM/yyyy HH:mm} bởi {Model.UpdatedByAdminName ?? "Admin"}"
+        : "Chưa có lần cập nhật nào";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-patient-interface.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin-patient-interface-repeaters.css" asp-append-version="true" />
+}
+
+<main class="pi-page">
+    <header class="pi-page-header">
+        <div class="pi-header-copy">
+            <span class="pi-kicker">Trình chỉnh sửa nội dung</span>
+            <h1>Giao diện bệnh nhân</h1>
+            <p>Chọn từng nhóm bên dưới, sửa bằng ngôn ngữ thông thường và xem kết quả ngay ở khung bên cạnh.</p>
+            <div class="pi-header-meta"><i class="fas fa-clock-rotate-left"></i><span>@updatedText</span></div>
+        </div>
+        <div class="pi-header-actions">
+            <a asp-controller="Home" asp-action="Index" target="_blank" rel="noopener" class="btn">
+                <i class="fas fa-arrow-up-right-from-square me-2"></i>Mở trang bệnh nhân
+            </a>
+        </div>
+    </header>
+
+    @if (TempData["Success"] is string message)
+    {
+        <div class="pi-alert" role="status"><i class="fas fa-circle-check mt-1"></i><span>@message</span></div>
+    }
+
+    <div asp-validation-summary="All" class="pi-validation" role="alert"></div>
+
+    <div class="pi-workspace">
+        <form id="patientUiEditor" asp-action="Save" method="post" enctype="multipart/form-data" class="pi-editor">
+            @Html.AntiForgeryToken()
+            <input asp-for="HomeHeroImageUrl" type="hidden" />
+            <input asp-for="HomeAboutImageUrl" type="hidden" />
+
+            <nav class="pi-step-tabs" role="tablist" aria-label="Nhóm nội dung cần chỉnh sửa">
+                <button type="button" class="pi-step-tab" data-panel-target="brand" role="tab" aria-selected="true"><span class="pi-step-number">1</span>Thương hiệu</button>
+                <button type="button" class="pi-step-tab" data-panel-target="hero" role="tab" aria-selected="false" tabindex="-1"><span class="pi-step-number">2</span>Đầu trang</button>
+                <button type="button" class="pi-step-tab" data-panel-target="about" role="tab" aria-selected="false" tabindex="-1"><span class="pi-step-number">3</span>Giới thiệu</button>
+                <button type="button" class="pi-step-tab" data-panel-target="appearance" role="tab" aria-selected="false" tabindex="-1"><span class="pi-step-number">4</span>Màu & tiện ích</button>
+                <button type="button" class="pi-step-tab" data-panel-target="contact" role="tab" aria-selected="false" tabindex="-1"><span class="pi-step-number">5</span>Liên hệ</button>
+            </nav>
+
+            <section class="pi-panel" data-editor-panel="brand" role="tabpanel">
+                <div class="pi-panel-heading">
+                    <span class="pi-panel-icon"><i class="fas fa-signature"></i></span>
+                    <div><h2>Thương hiệu và thanh điều hướng</h2><p>Những nội dung bệnh nhân nhìn thấy ở logo, thanh menu và kết quả tìm kiếm.</p></div>
+                </div>
+                <div class="pi-fields">
+                    <div class="pi-field">
+                        <label asp-for="BrandName">Tên thương hiệu</label>
+                        <span class="pi-field-help">Hiển thị cạnh biểu tượng logo.</span>
+                        <input asp-for="BrandName" class="form-control" data-preview-field="BrandName" autocomplete="organization" />
+                        <span asp-validation-for="BrandName" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="BrandSubtitle">Dòng giới thiệu ngắn</label>
+                        <span class="pi-field-help">Dòng chữ nhỏ ngay dưới tên thương hiệu.</span>
+                        <input asp-for="BrandSubtitle" class="form-control" data-preview-field="BrandSubtitle" />
+                        <span asp-validation-for="BrandSubtitle" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field pi-field--wide">
+                        <label asp-for="MetaDescription">Mô tả khi tìm kiếm hoặc chia sẻ</label>
+                        <span class="pi-field-help">Dùng cho công cụ tìm kiếm; không hiển thị trực tiếp trong trang chủ.</span>
+                        <textarea asp-for="MetaDescription" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="MetaDescription" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="SearchPlaceholder">Gợi ý trong ô tìm kiếm</label>
+                        <span class="pi-field-help">Ví dụ: “Tìm bác sĩ, chuyên khoa...”</span>
+                        <input asp-for="SearchPlaceholder" class="form-control" data-preview-field="SearchPlaceholder" />
+                        <span asp-validation-for="SearchPlaceholder" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="LogoIcon">Biểu tượng logo</label>
+                        <span class="pi-field-help">Chọn biểu tượng phù hợp với nhận diện.</span>
+                        <div class="pi-icon-control">
+                            <span class="pi-icon-swatch"><i data-preview-logo class="@Model.LogoIcon"></i></span>
+                            <select asp-for="LogoIcon" asp-items="Model.LogoIconOptions" class="form-select"></select>
+                        </div>
+                        <span asp-validation-for="LogoIcon" class="text-danger"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pi-panel" data-editor-panel="hero" role="tabpanel" hidden>
+                <div class="pi-panel-heading">
+                    <span class="pi-panel-icon"><i class="fas fa-panorama"></i></span>
+                    <div><h2>Khối đầu trang chủ</h2><p>Đây là phần lớn đầu tiên bệnh nhân nhìn thấy. Ưu tiên câu ngắn, dễ đọc và một ảnh rõ nét.</p></div>
+                </div>
+                <div class="pi-fields">
+                    <div class="pi-field">
+                        <label asp-for="HomeHeroEyebrow">Dòng nhãn phía trên</label>
+                        <span class="pi-field-help">Một câu ngắn tạo ngữ cảnh cho tiêu đề.</span>
+                        <input asp-for="HomeHeroEyebrow" class="form-control" data-preview-field="HomeHeroEyebrow" />
+                        <span asp-validation-for="HomeHeroEyebrow" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="HomeHeroPriceTag">Nhãn ưu đãi hoặc gói dịch vụ</label>
+                        <span class="pi-field-help">Ví dụ: “Theo dõi sức khỏe hằng ngày”.</span>
+                        <input asp-for="HomeHeroPriceTag" class="form-control" data-preview-field="HomeHeroPriceTag" />
+                        <span asp-validation-for="HomeHeroPriceTag" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="HomeHeroTitle">Tiêu đề chính</label>
+                        <span class="pi-field-help">Phần đầu của tiêu đề lớn.</span>
+                        <input asp-for="HomeHeroTitle" class="form-control" data-preview-field="HomeHeroTitle" />
+                        <span asp-validation-for="HomeHeroTitle" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="HomeHeroHighlight">Dòng được nhấn mạnh</label>
+                        <span class="pi-field-help">Hiển thị màu chủ đạo ngay dưới tiêu đề.</span>
+                        <input asp-for="HomeHeroHighlight" class="form-control" data-preview-field="HomeHeroHighlight" />
+                        <span asp-validation-for="HomeHeroHighlight" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="HomeHeroPrice">Giá hoặc thông điệp nổi bật</label>
+                        <span class="pi-field-help">Có thể nhập “Miễn phí” nếu không hiển thị giá.</span>
+                        <input asp-for="HomeHeroPrice" class="form-control" data-preview-field="HomeHeroPrice" />
+                        <span asp-validation-for="HomeHeroPrice" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="HomeHeroPriceSuffix">Dòng bổ sung cạnh giá</label>
+                        <span class="pi-field-help">Ví dụ: “cho mọi bệnh nhân”. Có thể để trống.</span>
+                        <input asp-for="HomeHeroPriceSuffix" class="form-control" data-preview-field="HomeHeroPriceSuffix" />
+                        <span asp-validation-for="HomeHeroPriceSuffix" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field pi-field--wide">
+                        <label asp-for="HomeHeroNote">Ghi chú tin cậy</label>
+                        <span class="pi-field-help">Dòng nhỏ dưới nút hành động, nên nêu lợi ích hoặc cam kết.</span>
+                        <input asp-for="HomeHeroNote" class="form-control" data-preview-field="HomeHeroNote" />
+                        <span asp-validation-for="HomeHeroNote" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field pi-field--wide">
+                        <span class="pi-field-label">Ảnh nền đầu trang</span>
+                        <span class="pi-field-help">Ảnh ngang, chủ thể nằm bên phải sẽ dễ đọc nhất.</span>
+                        <div class="pi-upload-grid">
+                            <div>
+                                <input asp-for="HomeHeroImageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif" />
+                                <span asp-validation-for="HomeHeroImageFile" class="text-danger"></span>
+                                <span class="pi-file-note"><i class="fas fa-circle-info"></i>JPG, PNG, WEBP hoặc GIF; tối đa 5MB. Chọn ảnh để xem trước ngay.</span>
+                            </div>
+                            <figure class="pi-image-preview"><img id="heroImagePreview" src="@heroImage" alt="Ảnh đầu trang hiện tại" /><figcaption>Ảnh đang dùng</figcaption></figure>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pi-panel" data-editor-panel="about" role="tabpanel" hidden>
+                <div class="pi-panel-heading">
+                    <span class="pi-panel-icon"><i class="fas fa-comment-medical"></i></span>
+                    <div><h2>Giới thiệu và lời kêu gọi</h2><p>Giải thích ngắn gọn giá trị của hệ thống và hướng bệnh nhân đến hành động tiếp theo.</p></div>
+                </div>
+                <div class="pi-fields">
+                    <div class="pi-field">
+                        <label asp-for="HomeAboutTag">Nhãn giới thiệu</label>
+                        <span class="pi-field-help">Dòng nhỏ nằm phía trên tiêu đề giới thiệu.</span>
+                        <input asp-for="HomeAboutTag" class="form-control" data-preview-field="HomeAboutTag" />
+                        <span asp-validation-for="HomeAboutTag" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="HomeAboutTitle">Tiêu đề giới thiệu</label>
+                        <span class="pi-field-help">Nêu điểm khác biệt chính của hệ thống.</span>
+                        <input asp-for="HomeAboutTitle" class="form-control" data-preview-field="HomeAboutTitle" />
+                        <span asp-validation-for="HomeAboutTitle" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field pi-field--wide">
+                        <label asp-for="HomeAboutDescription">Nội dung giới thiệu</label>
+                        <span class="pi-field-help">Nên dùng 2–3 câu ngắn, tránh thuật ngữ kỹ thuật.</span>
+                        <textarea asp-for="HomeAboutDescription" class="form-control" rows="4" data-preview-field="HomeAboutDescription"></textarea>
+                        <span asp-validation-for="HomeAboutDescription" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field pi-field--wide">
+                        <span class="pi-field-label">Ảnh giới thiệu</span>
+                        <span class="pi-field-help">Ảnh đội ngũ, bác sĩ hoặc hoạt động chăm sóc thực tế.</span>
+                        <div class="pi-upload-grid">
+                            <div>
+                                <input asp-for="HomeAboutImageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif" />
+                                <span asp-validation-for="HomeAboutImageFile" class="text-danger"></span>
+                                <span class="pi-file-note"><i class="fas fa-circle-info"></i>JPG, PNG, WEBP hoặc GIF; tối đa 5MB.</span>
+                            </div>
+                            <figure class="pi-image-preview"><img id="aboutImagePreview" src="@aboutImage" data-image-preview-for="HomeAboutImageFile" alt="Ảnh giới thiệu hiện tại" /><figcaption>Ảnh đang dùng</figcaption></figure>
+                        </div>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="HomeCtaTitle">Tiêu đề khối hành động cuối trang</label>
+                        <span class="pi-field-help">Khuyến khích bệnh nhân bắt đầu sử dụng.</span>
+                        <input asp-for="HomeCtaTitle" class="form-control" data-preview-field="HomeCtaTitle" />
+                        <span asp-validation-for="HomeCtaTitle" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="HomeCtaDescription">Mô tả khối hành động</label>
+                        <span class="pi-field-help">Một câu giải thích lợi ích trước khi bấm nút.</span>
+                        <textarea asp-for="HomeCtaDescription" class="form-control" rows="3" data-preview-field="HomeCtaDescription"></textarea>
+                        <span asp-validation-for="HomeCtaDescription" class="text-danger"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pi-panel" data-editor-panel="appearance" role="tabpanel" hidden>
+                <div class="pi-panel-heading">
+                    <span class="pi-panel-icon"><i class="fas fa-swatchbook"></i></span>
+                    <div><h2>Màu sắc và tiện ích</h2><p>Chọn màu nhận diện và bật những công cụ bệnh nhân cần. Khung xem trước cập nhật ngay khi chọn.</p></div>
+                </div>
+                <div class="pi-field pi-field--wide mb-4">
+                    <span class="pi-field-label">Bảng màu trang bệnh nhân</span>
+                    <span class="pi-field-help">Nên giữ độ tương phản rõ giữa chữ và nền để người lớn tuổi dễ đọc.</span>
+                    <div class="pi-color-grid">
+                        <div class="pi-color-field">
+                            <input asp-for="PrimaryColor" type="color" data-preview-color="--preview-primary" aria-label="Chọn màu chủ đạo" />
+                            <div><label asp-for="PrimaryColor">Màu chủ đạo</label><output class="pi-color-code" data-color-output="PrimaryColor">@Model.PrimaryColor</output><span asp-validation-for="PrimaryColor" class="text-danger"></span></div>
+                        </div>
+                        <div class="pi-color-field">
+                            <input asp-for="PrimaryDarkColor" type="color" data-preview-color="--preview-primary-dark" aria-label="Chọn màu chủ đạo đậm" />
+                            <div><label asp-for="PrimaryDarkColor">Màu chủ đạo đậm</label><output class="pi-color-code" data-color-output="PrimaryDarkColor">@Model.PrimaryDarkColor</output><span asp-validation-for="PrimaryDarkColor" class="text-danger"></span></div>
+                        </div>
+                        <div class="pi-color-field">
+                            <input asp-for="NavigationColor" type="color" data-preview-color="--preview-navigation" aria-label="Chọn màu thanh điều hướng" />
+                            <div><label asp-for="NavigationColor">Thanh điều hướng</label><output class="pi-color-code" data-color-output="NavigationColor">@Model.NavigationColor</output><span asp-validation-for="NavigationColor" class="text-danger"></span></div>
+                        </div>
+                        <div class="pi-color-field">
+                            <input asp-for="AccentColor" type="color" data-preview-color="--preview-accent" aria-label="Chọn màu cảnh báo" />
+                            <div><label asp-for="AccentColor">Màu cảnh báo</label><output class="pi-color-code" data-color-output="AccentColor">@Model.AccentColor</output><span asp-validation-for="AccentColor" class="text-danger"></span></div>
+                        </div>
+                        <div class="pi-color-field">
+                            <input asp-for="BackgroundColor" type="color" data-preview-color="--preview-background" aria-label="Chọn màu nền" />
+                            <div><label asp-for="BackgroundColor">Màu nền trang</label><output class="pi-color-code" data-color-output="BackgroundColor">@Model.BackgroundColor</output><span asp-validation-for="BackgroundColor" class="text-danger"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pi-field pi-field--wide">
+                    <span class="pi-field-label">Tiện ích hiển thị</span>
+                    <span class="pi-field-help">Tắt tiện ích sẽ ẩn nó khỏi giao diện bệnh nhân nhưng không xóa dữ liệu.</span>
+                    <div class="pi-toggle-grid">
+                        <label class="pi-toggle-card">
+                            <span class="pi-toggle-copy"><i class="fas fa-window-maximize"></i><span><strong>Thanh thông tin trên cùng</strong><small>Hotline và email liên hệ</small></span></span>
+                            <span class="form-check form-switch"><input asp-for="ShowTopInfoBar" class="form-check-input" data-preview-toggle="ShowTopInfoBar" /></span>
+                        </label>
+                        <label class="pi-toggle-card">
+                            <span class="pi-toggle-copy"><i class="fas fa-robot"></i><span><strong>Trợ lý AI</strong><small>Nút chatbot hỗ trợ nhanh</small></span></span>
+                            <span class="form-check form-switch"><input asp-for="ShowAiChatbot" class="form-check-input" data-preview-toggle="ShowAiChatbot" /></span>
+                        </label>
+                        <label class="pi-toggle-card">
+                            <span class="pi-toggle-copy"><i class="fas fa-headset"></i><span><strong>Trung tâm hỗ trợ</strong><small>Kênh liên hệ khi cần trợ giúp</small></span></span>
+                            <span class="form-check form-switch"><input asp-for="ShowSupportHub" class="form-check-input" data-preview-toggle="ShowSupportHub" /></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pi-panel" data-editor-panel="contact" role="tabpanel" hidden>
+                <div class="pi-panel-heading">
+                    <span class="pi-panel-icon"><i class="fas fa-address-card"></i></span>
+                    <div><h2>Liên hệ và chân trang</h2><p>Thông tin chính thức để bệnh nhân liên hệ và các nội dung hiển thị ở cuối mọi trang.</p></div>
+                </div>
+
+                <div class="pi-repeat-block" data-repeater="WorkScheduleItems" data-template="workScheduleItemTemplate" data-max-items="12">
+                    <div class="pi-repeat-heading">
+                        <div><h3>Lịch làm việc</h3><p>Mỗi dòng gồm ngày hoặc ca làm việc và khung giờ tương ứng.</p></div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-add-row><i class="fas fa-plus me-1"></i>Thêm dòng lịch</button>
+                    </div>
+                    <div class="pi-repeat-list" data-repeat-list>
+                        @for (var i = 0; i < Model.WorkScheduleItems.Count; i++)
+                        {
+                            <div class="pi-repeat-row pi-repeat-row--schedule" data-repeat-row>
+                                <div class="pi-field"><label asp-for="WorkScheduleItems[i].Label">Ngày hoặc ca</label><input asp-for="WorkScheduleItems[i].Label" class="form-control" placeholder="Ví dụ: Thứ 2 - Thứ 7" /><span asp-validation-for="WorkScheduleItems[i].Label" class="text-danger"></span></div>
+                                <div class="pi-field"><label asp-for="WorkScheduleItems[i].Value">Thời gian</label><input asp-for="WorkScheduleItems[i].Value" class="form-control" placeholder="Ví dụ: 08:00 - 17:00" /><span asp-validation-for="WorkScheduleItems[i].Value" class="text-danger"></span></div>
+                                <input asp-for="WorkScheduleItems[i].Kind" type="hidden" />
+                                <label class="pi-highlight-check"><input asp-for="WorkScheduleItems[i].Highlight" /> <span>Nhấn mạnh</span></label>
+                                <button type="button" class="pi-remove-row" data-remove-row aria-label="Xóa dòng lịch"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        }
+                    </div>
+                    <p class="pi-repeat-empty @(Model.WorkScheduleItems.Count > 0 ? "d-none" : null)" data-repeat-empty>Chưa có dòng lịch làm việc. Bấm “Thêm dòng lịch” để bắt đầu.</p>
+                </div>
+
+                <div class="pi-repeat-block" data-repeater="ContactItems" data-template="contactItemTemplate" data-max-items="12">
+                    <div class="pi-repeat-heading">
+                        <div><h3>Các dòng liên hệ ở chân trang</h3><p>Chọn loại để hệ thống tự thêm biểu tượng và liên kết gọi điện/email phù hợp.</p></div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-add-row><i class="fas fa-plus me-1"></i>Thêm dòng liên hệ</button>
+                    </div>
+                    <div class="pi-repeat-list" data-repeat-list>
+                        @for (var i = 0; i < Model.ContactItems.Count; i++)
+                        {
+                            <div class="pi-repeat-row pi-repeat-row--contact" data-repeat-row>
+                                <div class="pi-field"><label asp-for="ContactItems[i].Kind">Loại</label><select asp-for="ContactItems[i].Kind" class="form-select"><option value="address">Địa chỉ</option><option value="phone">Điện thoại</option><option value="email">Email</option><option value="website">Website</option><option value="status">Trạng thái</option><option value="text">Thông tin khác</option></select></div>
+                                <div class="pi-field"><label asp-for="ContactItems[i].Label">Nhãn</label><input asp-for="ContactItems[i].Label" class="form-control" placeholder="Ví dụ: Hotline" /><span asp-validation-for="ContactItems[i].Label" class="text-danger"></span></div>
+                                <div class="pi-field"><label asp-for="ContactItems[i].Value">Nội dung</label><input asp-for="ContactItems[i].Value" class="form-control" placeholder="Ví dụ: 0999 999 999" /><span asp-validation-for="ContactItems[i].Value" class="text-danger"></span></div>
+                                <label class="pi-highlight-check"><input asp-for="ContactItems[i].Highlight" /> <span>Nhấn mạnh</span></label>
+                                <button type="button" class="pi-remove-row" data-remove-row aria-label="Xóa dòng liên hệ"><i class="fas fa-trash-can"></i></button>
+                            </div>
+                        }
+                    </div>
+                    <p class="pi-repeat-empty @(Model.ContactItems.Count > 0 ? "d-none" : null)" data-repeat-empty>Chưa có dòng liên hệ. Bấm “Thêm dòng liên hệ” để bắt đầu.</p>
+                </div>
+
+                <div class="pi-subsection-heading"><h3>Thông tin liên hệ chính</h3><p>Dùng cho thanh thông tin trên cùng và các vị trí liên hệ chung.</p></div>
+                <div class="pi-fields">
+                    <div class="pi-field">
+                        <label asp-for="FooterSubtitle">Dòng ngắn dưới logo chân trang</label>
+                        <span class="pi-field-help">Tóm tắt lĩnh vực hoặc sứ mệnh.</span>
+                        <input asp-for="FooterSubtitle" class="form-control" data-preview-field="FooterSubtitle" />
+                        <span asp-validation-for="FooterSubtitle" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="HotlineLabel">Tên gọi của hotline</label>
+                        <span class="pi-field-help">Ví dụ: “Hotline hỗ trợ 24/7”.</span>
+                        <input asp-for="HotlineLabel" class="form-control" data-preview-field="HotlineLabel" />
+                        <span asp-validation-for="HotlineLabel" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="HotlinePhone">Số hotline</label>
+                        <span class="pi-field-help">Nhập số bệnh nhân có thể gọi trực tiếp.</span>
+                        <input asp-for="HotlinePhone" class="form-control" data-preview-field="HotlinePhone" autocomplete="tel" />
+                        <span asp-validation-for="HotlinePhone" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="ContactEmail">Email liên hệ</label>
+                        <span class="pi-field-help">Email tiếp nhận hỗ trợ từ bệnh nhân.</span>
+                        <input asp-for="ContactEmail" class="form-control" data-preview-field="ContactEmail" autocomplete="email" />
+                        <span asp-validation-for="ContactEmail" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field pi-field--wide">
+                        <label asp-for="Address">Địa chỉ</label>
+                        <span class="pi-field-help">Địa chỉ cơ sở hoặc văn phòng liên hệ chính.</span>
+                        <input asp-for="Address" class="form-control" data-preview-field="Address" autocomplete="street-address" />
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field pi-field--wide">
+                        <label asp-for="FooterDescription">Mô tả ở chân trang</label>
+                        <span class="pi-field-help">Một đoạn ngắn giới thiệu hệ thống và phạm vi hỗ trợ.</span>
+                        <textarea asp-for="FooterDescription" class="form-control" rows="3" data-preview-field="FooterDescription"></textarea>
+                        <span asp-validation-for="FooterDescription" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="FooterLicenseText">Thông tin pháp lý</label>
+                        <span class="pi-field-help">Giấy phép, đơn vị vận hành hoặc lưu ý pháp lý.</span>
+                        <textarea asp-for="FooterLicenseText" class="form-control" rows="3" data-preview-field="FooterLicenseText"></textarea>
+                        <span asp-validation-for="FooterLicenseText" class="text-danger"></span>
+                    </div>
+                    <div class="pi-field">
+                        <label asp-for="FooterBottomText">Dòng cuối chân trang</label>
+                        <span class="pi-field-help">Thường dùng cho bản quyền hoặc lời nhắn cuối.</span>
+                        <textarea asp-for="FooterBottomText" class="form-control" rows="3" data-preview-field="FooterBottomText"></textarea>
+                        <span asp-validation-for="FooterBottomText" class="text-danger"></span>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="pi-editor-actions">
+                <div id="patientUiSaveState" class="pi-save-state"><i class="fas fa-circle-check"></i><span id="patientUiSaveStateText">Thay đổi chỉ hiển thị sau khi lưu</span></div>
+                <div class="pi-action-buttons d-flex gap-2">
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#resetPatientUiModal"><i class="fas fa-rotate-left me-2"></i>Khôi phục mặc định</button>
+                    <button type="submit" class="btn btn-primary pi-save-button px-4"><i class="fas fa-floppy-disk me-2"></i>Lưu thay đổi</button>
+                </div>
+            </footer>
+        </form>
+
+        <aside class="pi-preview-column" aria-label="Bản xem trước trang bệnh nhân">
+            <div class="pi-preview-card">
+                <div class="pi-preview-heading">
+                    <div><strong>Bản xem trước</strong><small>Mô phỏng thu nhỏ trang chủ bệnh nhân</small></div>
+                    <span class="pi-live-badge">Đang cập nhật</span>
+                </div>
+                <div class="pi-browser-bar" aria-hidden="true"><span class="pi-browser-dot"></span><span class="pi-browser-dot"></span><span class="pi-browser-dot"></span><span class="pi-browser-address">smarthealth.vn</span></div>
+                <div id="patientUiPreview" class="pi-site-preview"
+                     style="--preview-primary:@Model.PrimaryColor;--preview-primary-dark:@Model.PrimaryDarkColor;--preview-navigation:@Model.NavigationColor;--preview-accent:@Model.AccentColor;--preview-background:@Model.BackgroundColor;--preview-hero-image:url('@heroImage')">
+                    <div class="pi-preview-topbar" data-toggle-visibility="ShowTopInfoBar">
+                        <span><span data-preview-value="HotlineLabel">@Model.HotlineLabel</span>: <span data-preview-value="HotlinePhone">@Model.HotlinePhone</span></span>
+                        <span data-preview-value="ContactEmail">@Model.ContactEmail</span>
+                    </div>
+                    <div class="pi-preview-nav">
+                        <div class="pi-preview-brand"><i data-preview-logo class="@Model.LogoIcon"></i><span><strong data-preview-value="BrandName">@Model.BrandName</strong><small data-preview-value="BrandSubtitle">@Model.BrandSubtitle</small></span></div>
+                        <span class="pi-preview-search"><i class="fas fa-magnifying-glass"></i> <span data-preview-value="SearchPlaceholder">@Model.SearchPlaceholder</span></span>
+                    </div>
+                    <section class="pi-preview-hero">
+                        <div class="pi-preview-hero-copy">
+                            <p class="pi-preview-eyebrow" data-preview-value="HomeHeroEyebrow">@Model.HomeHeroEyebrow</p>
+                            <h3><span data-preview-value="HomeHeroTitle">@Model.HomeHeroTitle</span><span data-preview-value="HomeHeroHighlight">@Model.HomeHeroHighlight</span></h3>
+                            <p class="pi-preview-price-label" data-preview-value="HomeHeroPriceTag">@Model.HomeHeroPriceTag</p>
+                            <div class="pi-preview-price"><span data-preview-value="HomeHeroPrice">@Model.HomeHeroPrice</span> <small data-preview-value="HomeHeroPriceSuffix">@Model.HomeHeroPriceSuffix</small></div>
+                            <span class="pi-preview-button">Nhập chỉ số ngay</span>
+                            <p class="pi-preview-note"><i class="fas fa-shield-heart"></i> <span data-preview-value="HomeHeroNote">@Model.HomeHeroNote</span></p>
+                        </div>
+                    </section>
+                    <section class="pi-preview-about">
+                        <img src="@aboutImage" data-image-preview-for="HomeAboutImageFile" alt="Xem trước ảnh giới thiệu" />
+                        <div><p class="pi-preview-tag" data-preview-value="HomeAboutTag">@Model.HomeAboutTag</p><h4 data-preview-value="HomeAboutTitle">@Model.HomeAboutTitle</h4><p data-preview-value="HomeAboutDescription">@Model.HomeAboutDescription</p></div>
+                    </section>
+                    <section class="pi-preview-cta">
+                        <h4 data-preview-value="HomeCtaTitle">@Model.HomeCtaTitle</h4>
+                        <p data-preview-value="HomeCtaDescription">@Model.HomeCtaDescription</p>
+                        <span>Bắt đầu theo dõi</span>
+                    </section>
+                    <div class="pi-preview-widgets">
+                        <span class="pi-preview-widget" data-toggle-visibility="ShowAiChatbot"><i class="fas fa-robot"></i> Trợ lý AI</span>
+                        <span class="pi-preview-widget" data-toggle-visibility="ShowSupportHub"><i class="fas fa-headset"></i> Trung tâm hỗ trợ</span>
+                    </div>
+                    <footer class="pi-preview-footer">
+                        <strong data-preview-value="FooterSubtitle">@Model.FooterSubtitle</strong>
+                        <p data-preview-value="FooterDescription">@Model.FooterDescription</p>
+                        <div class="pi-preview-footer-columns">
+                            <div><b>Lịch làm việc</b><div data-repeater-preview="WorkScheduleItems"></div></div>
+                            <div><b>Liên hệ</b><div data-repeater-preview="ContactItems"></div></div>
+                        </div>
+                        <p class="pi-preview-footer-contact"><span data-preview-value="HotlinePhone">@Model.HotlinePhone</span> · <span data-preview-value="ContactEmail">@Model.ContactEmail</span></p>
+                        <p data-preview-value="Address">@Model.Address</p>
+                        <p data-preview-value="FooterLicenseText">@Model.FooterLicenseText</p>
+                        <p data-preview-value="FooterBottomText">@Model.FooterBottomText</p>
+                    </footer>
+                </div>
+            </div>
+        </aside>
+    </div>
+</main>
+
+<template id="workScheduleItemTemplate">
+    <div class="pi-repeat-row pi-repeat-row--schedule" data-repeat-row>
+        <div class="pi-field"><label for="WorkScheduleItems___index___Label">Ngày hoặc ca</label><input id="WorkScheduleItems___index___Label" name="WorkScheduleItems[__index__].Label" maxlength="80" class="form-control" placeholder="Ví dụ: Thứ 2 - Thứ 7" /><span class="text-danger" data-valmsg-for="WorkScheduleItems[__index__].Label"></span></div>
+        <div class="pi-field"><label for="WorkScheduleItems___index___Value">Thời gian</label><input id="WorkScheduleItems___index___Value" name="WorkScheduleItems[__index__].Value" maxlength="180" class="form-control" placeholder="Ví dụ: 08:00 - 17:00" /><span class="text-danger" data-valmsg-for="WorkScheduleItems[__index__].Value"></span></div>
+        <input name="WorkScheduleItems[__index__].Kind" value="text" type="hidden" />
+        <label class="pi-highlight-check"><input name="WorkScheduleItems[__index__].Highlight" value="true" type="checkbox" /><input name="WorkScheduleItems[__index__].Highlight" value="false" type="hidden" /> <span>Nhấn mạnh</span></label>
+        <button type="button" class="pi-remove-row" data-remove-row aria-label="Xóa dòng lịch"><i class="fas fa-trash-can"></i></button>
+    </div>
+</template>
+
+<template id="contactItemTemplate">
+    <div class="pi-repeat-row pi-repeat-row--contact" data-repeat-row>
+        <div class="pi-field"><label for="ContactItems___index___Kind">Loại</label><select id="ContactItems___index___Kind" name="ContactItems[__index__].Kind" class="form-select"><option value="address">Địa chỉ</option><option value="phone">Điện thoại</option><option value="email">Email</option><option value="website">Website</option><option value="status">Trạng thái</option><option value="text">Thông tin khác</option></select></div>
+        <div class="pi-field"><label for="ContactItems___index___Label">Nhãn</label><input id="ContactItems___index___Label" name="ContactItems[__index__].Label" maxlength="80" class="form-control" placeholder="Ví dụ: Hotline" /><span class="text-danger" data-valmsg-for="ContactItems[__index__].Label"></span></div>
+        <div class="pi-field"><label for="ContactItems___index___Value">Nội dung</label><input id="ContactItems___index___Value" name="ContactItems[__index__].Value" maxlength="180" class="form-control" placeholder="Ví dụ: 0999 999 999" /><span class="text-danger" data-valmsg-for="ContactItems[__index__].Value"></span></div>
+        <label class="pi-highlight-check"><input name="ContactItems[__index__].Highlight" value="true" type="checkbox" /><input name="ContactItems[__index__].Highlight" value="false" type="hidden" /> <span>Nhấn mạnh</span></label>
+        <button type="button" class="pi-remove-row" data-remove-row aria-label="Xóa dòng liên hệ"><i class="fas fa-trash-can"></i></button>
+    </div>
+</template>
+
+<form id="patientUiResetForm" asp-action="Reset" method="post">@Html.AntiForgeryToken()</form>
+<div class="modal fade pi-modal" id="resetPatientUiModal" tabindex="-1" aria-labelledby="resetPatientUiTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-4">
+                <span class="pi-modal-icon"><i class="fas fa-rotate-left"></i></span>
+                <h2 id="resetPatientUiTitle" class="h4">Khôi phục giao diện mặc định?</h2>
+                <p class="text-muted mb-0">Toàn bộ nội dung, màu sắc và ảnh tùy chỉnh hiện tại sẽ được thay bằng cấu hình ban đầu.</p>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Giữ thay đổi hiện tại</button>
+                <button type="submit" form="patientUiResetForm" class="btn btn-danger">Khôi phục mặc định</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/admin-patient-interface.js" asp-append-version="true"></script>
+}

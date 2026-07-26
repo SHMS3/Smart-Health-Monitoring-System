@@ -9,7 +9,7 @@ using SmartHealthMonitoring.Models;
 namespace SmartHealthMonitoring.Workers;
 
 /// <summary>
-/// NTF-02: Quét lịch hẹn mỗi 5 phút, gửi Email/SMS nhắc trước 24h và 2h.
+/// NTF-02: Quét lịch hẹn mỗi 5 phút, gửi email nhắc trước 24h và 2h.
 /// Cập nhật IsReminded24h / IsReminded2h để không gửi trùng.
 /// </summary>
 public class AppointmentReminderWorker : BackgroundService
@@ -60,14 +60,12 @@ public class AppointmentReminderWorker : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
         var emailTrigger = scope.ServiceProvider.GetRequiredService<IEmailTriggerService>();
-        var smsService = scope.ServiceProvider.GetRequiredService<IOutboundSmsService>();
 
         var now = DateTime.UtcNow;
 
         await SendWindowRemindersAsync(
             context,
             emailTrigger,
-            smsService,
             now,
             hoursBefore: 24,
             reminderLabel: "24 giờ",
@@ -77,7 +75,6 @@ public class AppointmentReminderWorker : BackgroundService
         await SendWindowRemindersAsync(
             context,
             emailTrigger,
-            smsService,
             now,
             hoursBefore: 2,
             reminderLabel: "2 giờ",
@@ -88,7 +85,6 @@ public class AppointmentReminderWorker : BackgroundService
     private async Task SendWindowRemindersAsync(
         SmartHealthMonitoringContext context,
         IEmailTriggerService emailTrigger,
-        IOutboundSmsService smsService,
         DateTime now,
         int hoursBefore,
         string reminderLabel,
@@ -127,16 +123,6 @@ public class AppointmentReminderWorker : BackgroundService
             try
             {
                 await emailTrigger.SendAppointmentReminderAsync(appointment.Id, reminderLabel);
-
-                var phone = appointment.Patient?.Phone;
-                if (!string.IsNullOrWhiteSpace(phone))
-                {
-                    var doctorName = appointment.Doctor?.User?.FullName ?? "bác sĩ";
-                    var slotText = appointment.Slot.SlotStart.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-                    var sms =
-                        $"[SmartHealth] Nhắc lịch khám còn {reminderLabel}: {slotText} với BS. {doctorName}. Ma lich #{appointment.Id}.";
-                    await smsService.SendSmsAsync(phone, sms);
-                }
 
                 if (is24h)
                     appointment.IsReminded24h = true;

@@ -30,7 +30,7 @@ public class AdminPatientInterfaceController : Controller
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         var settings = await _patientUiSettingsService.GetSettingsAsync(cancellationToken);
-        return View(PatientUiSettingsViewModel.FromSettings(settings));
+        return View("Editor", PatientUiSettingsViewModel.FromSettings(settings));
     }
 
     [HttpPost]
@@ -46,7 +46,7 @@ public class AdminPatientInterfaceController : Controller
 
         if (!ModelState.IsValid)
         {
-            return View("Index", model);
+            return View("Editor", model);
         }
 
         await TryUploadImageAsync(model.HomeHeroImageFile, nameof(model.HomeHeroImageFile), url => model.HomeHeroImageUrl = url, cancellationToken);
@@ -54,7 +54,7 @@ public class AdminPatientInterfaceController : Controller
 
         if (!ModelState.IsValid)
         {
-            return View("Index", model);
+            return View("Editor", model);
         }
 
         var adminName = User.FindFirst("FullName")?.Value ?? User.Identity?.Name ?? "Admin";

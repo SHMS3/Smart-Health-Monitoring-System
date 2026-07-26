@@ -300,16 +300,16 @@
                                                     </div>
                                                     <div class="modal-body p-0 bg-surface-container-lowest">
                                                         <div class="border-b border-outline-variant/30 p-4 bg-surface-container-lowest flex flex-col gap-2">
-                                                            <div class="text-sm"><span class="font-bold">Gửi đến:</span> @item.ToEmail (@item.PatientName)</div>
-                                                            <div class="text-sm"><span class="font-bold">Gửi vào lúc:</span> @(item.SentAt?.ToString("dd/MM/yyyy HH:mm:ss") ?? "Đang chờ")</div>
+                                                            <div class="text-sm"><span class="font-bold">Người nhận:</span> @item.ToEmail (@item.PatientName)</div>
+                                                            <div class="text-sm"><span class="font-bold">Thời gian:</span> @((item.SentAt ?? item.CreatedAt).ToString("dd/MM/yyyy HH:mm:ss"))</div>
                                                         </div>
                                                         <div class="p-0" style="overflow-x: auto;">
-                                                            <iframe srcdoc="@item.Body" style="width: 100%; height: 450px; border: none; display: block; background: white;"></iframe>
+                                                            <iframe srcdoc="@item.Body" sandbox style="width: 100%; height: 450px; border: none; display: block; background: white;"></iframe>
                                                         </div>
                                                         @if (item.Status == 2 && !string.IsNullOrEmpty(item.ErrorMessage))
                                                         {
                                                             <div class="p-4 bg-red-50 border-t border-red-100">
-                                                                <div class="text-red-700 font-bold mb-1"><span class="material-symbols-outlined align-middle" style="font-size: 18px;">error</span> Lỗi hệ thống:</div>
+                                                                <div class="text-red-700 font-bold mb-1"><span class="material-symbols-outlined align-middle" style="font-size: 18px;">error</span> Không gửi được email</div>
                                                                 <div class="text-red-600 text-sm">@item.ErrorMessage</div>
                                                             </div>
                                                         }

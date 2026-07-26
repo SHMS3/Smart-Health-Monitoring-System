@@ -15,9 +15,7 @@ public class EmergencyContactFormViewModel : IValidatableObject
     [StringLength(50, MinimumLength = 2, ErrorMessage = "Mối quan hệ phải từ 2 đến 50 ký tự.")]
     public string Relationship { get; set; } = string.Empty;
 
-    [EmailAddress(ErrorMessage = "Email không hợp lệ.")]
-    [RegularExpression(@"^[A-Za-z0-9._%+\-]+@[Gg][Mm][Aa][Ii][Ll]\.[Cc][Oo][Mm]$",
-        ErrorMessage = "Email nhận SOS phải là địa chỉ Gmail, ví dụ nguoinhan@gmail.com.")]
+    [EmailAddress(ErrorMessage = "Email liên hệ không hợp lệ.")]
     [StringLength(150, ErrorMessage = "Email không được vượt quá 150 ký tự.")]
     public string? Email { get; set; }
 
@@ -79,7 +77,7 @@ public class EmergencyContactFormViewModel : IValidatableObject
         if (IsPrimary && !IsActive)
         {
             yield return new ValidationResult(
-                "Liên hệ chính phải đang bật nhận SOS.",
+                "Liên hệ chính phải đang ở trạng thái sử dụng.",
                 new[] { nameof(IsActive) });
         }
     }

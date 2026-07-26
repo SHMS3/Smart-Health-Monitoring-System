@@ -24,9 +24,9 @@
 
     <div class="sos-header">
         <div>
-            <p class="sos-kicker">SOS</p>
+            <p class="sos-kicker">AN TOÀN</p>
             <h2>Liên hệ khẩn cấp</h2>
-            <p>Khai báo người thân để hệ thống gửi email/SMS khi AI phát hiện nguy cơ cao và không có bác sĩ trực.</p>
+            <p>Lưu thông tin người thân để bạn hoặc nhân viên y tế liên hệ nhanh khi cần.</p>
         </div>
         <div class="sos-badge">
             <i class="fas fa-user-shield"></i>
@@ -63,7 +63,7 @@
                 </label>
 
                 <label>
-                    <span>Email nhận SOS</span>
+                    <span>Email liên hệ</span>
                     <input asp-for="Form.Email" type="email" class="form-control" placeholder="nguoinhan@gmail.com" autocomplete="email" />
                     <span asp-validation-for="Form.Email" class="text-danger small"></span>
                 </label>
@@ -81,7 +81,7 @@
                     </label>
                     <label class="sos-check">
                         <input asp-for="Form.IsActive" />
-                        <span>Bật nhận SOS</span>
+                        <span>Đang sử dụng</span>
                     </label>
                 </div>
 
@@ -103,7 +103,7 @@
                 <div class="sos-empty">
                     <i class="fas fa-user-shield"></i>
                     <h4>Chưa có người liên hệ</h4>
-                    <p>Thêm ít nhất một người thân có email hoặc số điện thoại để hệ thống có thể gửi SOS.</p>
+                    <p>Thêm ít nhất một người thân có email hoặc số điện thoại để liên hệ khi cần.</p>
                 </div>
             }
             else
@@ -160,7 +160,7 @@
                                 <form asp-action="ToggleActive" method="post">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@contact.Id" />
-                                    <button type="submit" class="sos-icon-btn" title="Bật/tắt nhận SOS">
+                                    <button type="submit" class="sos-icon-btn" title="Bật/tắt người liên hệ">
                                         <i class="fas @(contact.IsActive ? "fa-bell-slash" : "fa-bell")"></i>
                                     </button>
                                 </form>

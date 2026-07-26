@@ -240,7 +240,9 @@
             margin-bottom: 10px; font-size: 0.82rem;
         }
         .footer-contact-item i { color: rgba(255,255,255,.5); margin-top: 2px; width: 14px; text-align: center; }
-        .footer-contact-item span { color: rgba(255,255,255,.8); line-height: 1.5; }
+        .footer-contact-copy { display: flex; flex-direction: column; min-width: 0; }
+        .footer-contact-copy small { color: rgba(255,255,255,.5); font-size: 0.7rem; line-height: 1.2; }
+        .footer-contact-copy span { color: rgba(255,255,255,.8); line-height: 1.5; }
         .footer-contact-item a { color: rgba(255,255,255,.82); text-decoration: none; line-height: 1.5; }
         .footer-contact-item a:hover { color: #fff; }
         .footer-map-frame {
@@ -1001,14 +1003,20 @@
                             {
                                 <div class="footer-contact-item">
                                     <i class="@item.IconClass" style="@(item.Highlight ? "color:#22c55e;" : null)"></i>
-                                    @if (!string.IsNullOrWhiteSpace(item.Url) && item.Url != "#")
-                                    {
-                                        <a href="@item.Url">@(string.IsNullOrWhiteSpace(item.Value) ? item.Label : item.Value)</a>
-                                    }
-                                    else
-                                    {
-                                        <span style="@(item.Highlight ? "color:rgba(255,255,255,.9);" : null)">@(string.IsNullOrWhiteSpace(item.Value) ? item.Label : item.Value)</span>
-                                    }
+                                    <div class="footer-contact-copy">
+                                        @if (!string.IsNullOrWhiteSpace(item.Label) && !string.IsNullOrWhiteSpace(item.Value))
+                                        {
+                                            <small>@item.Label</small>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(item.Url) && item.Url != "#")
+                                        {
+                                            <a href="@item.Url">@(string.IsNullOrWhiteSpace(item.Value) ? item.Label : item.Value)</a>
+                                        }
+                                        else
+                                        {
+                                            <span style="@(item.Highlight ? "color:rgba(255,255,255,.9);" : null)">@(string.IsNullOrWhiteSpace(item.Value) ? item.Label : item.Value)</span>
+                                        }
+                                    </div>
                                 </div>
                             }
                         }

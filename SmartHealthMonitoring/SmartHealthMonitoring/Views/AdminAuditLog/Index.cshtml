@@ -304,7 +304,7 @@
             const matchesCurrentFilters = (log) => {
                 const actionType = form.elements.actionType?.value;
                 const entityName = form.elements.entityName?.value;
-                const keyword = form.elements.keyword?.value.trim().toLowerCase();
+                const actorUserId = form.elements.actorUserId?.value;
                 const fromValue = fromDate.value;
                 const toValue = toDate.value;
                 const logDate = localDateValue(new Date(log.createdAt));
@@ -317,26 +317,16 @@
                     return false;
                 }
 
+                if (actorUserId && String(log.actorUserId) !== actorUserId) {
+                    return false;
+                }
+
                 if (fromValue && logDate < fromValue) {
                     return false;
                 }
 
                 if (toValue && logDate > toValue) {
                     return false;
-                }
-
-                if (keyword) {
-                    const haystack = [
-                        log.actorName,
-                        log.actorEmail,
-                        log.targetName,
-                        log.entityId,
-                        log.description
-                    ].join(' ').toLowerCase();
-
-                    if (!haystack.includes(keyword)) {
-                        return false;
-                    }
                 }
 
                 return true;
@@ -472,8 +462,18 @@
                 <input type="date" id="auditToDate" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" max="@todayValue" data-today="@todayValue" class="form-control rounded-3" />
             </div>
             <div class="col-lg-3 col-md-8">
-                <label class="form-label small text-muted fw-semibold">Tìm kiếm</label>
-                <input type="text" name="keyword" value="@Model.Keyword" class="form-control rounded-3" placeholder="Người thực hiện, email, mục tiêu, mô tả..." />
+                <label class="form-label small text-muted fw-semibold">Người thực hiện</label>
+                <select name="actorUserId" class="form-select rounded-3">
+                    <option value="">Tất cả Admin và bác sĩ</option>
+                    @foreach (var actor in Model.Actors)
+                    {
+                        var roleLabel = actor.Role == 2 ? "Admin" : "Bác sĩ";
+                        var lockedLabel = actor.IsDeleted ? " - Đã khóa" : string.Empty;
+                        <option value="@actor.Id" selected="@(Model.ActorUserId == actor.Id)">
+                            @roleLabel - @actor.FullName (@actor.Email)@lockedLabel
+                        </option>
+                    }
+                </select>
             </div>
             <div class="col-lg-1 col-md-12 d-flex gap-2">
                 <button type="submit" class="btn btn-primary rounded-3 w-100">
@@ -556,7 +556,7 @@
                            asp-route-page="@(Model.Logs.Page - 1)"
                            asp-route-actionType="@Model.ActionType"
                            asp-route-entityName="@Model.EntityName"
-                           asp-route-keyword="@Model.Keyword"
+                           asp-route-actorUserId="@Model.ActorUserId"
                            asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
                            asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">Trước</a>
                     </li>
@@ -568,7 +568,7 @@
                                asp-route-page="@i"
                                asp-route-actionType="@Model.ActionType"
                                asp-route-entityName="@Model.EntityName"
-                               asp-route-keyword="@Model.Keyword"
+                               asp-route-actorUserId="@Model.ActorUserId"
                                asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
                                asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">@i</a>
                         </li>
@@ -579,7 +579,7 @@
                            asp-route-page="@(Model.Logs.Page + 1)"
                            asp-route-actionType="@Model.ActionType"
                            asp-route-entityName="@Model.EntityName"
-                           asp-route-keyword="@Model.Keyword"
+                           asp-route-actorUserId="@Model.ActorUserId"
                            asp-route-fromDate="@Model.FromDate?.ToString("yyyy-MM-dd")"
                            asp-route-toDate="@Model.ToDate?.ToString("yyyy-MM-dd")">Sau</a>
                     </li>
