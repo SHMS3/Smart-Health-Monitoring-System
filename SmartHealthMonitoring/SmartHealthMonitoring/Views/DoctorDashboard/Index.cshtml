@@ -179,35 +179,35 @@
                         </tr>
                     }
                     else
-                    {
-                        @foreach (var patient in Model.Items)
                         {
-                            <tr>
-                                <td class="ps-4 fw-bold text-secondary">#@patient.PatientId.ToString("D5")</td>
-                                <td class="fw-bold text-dark">@patient.FullName</td>
-                                <td><span class="badge bg-light text-dark border px-2 py-1 rounded-3">@patient.Age tuổi</span></td>
-                                <td>
-                                    @if (patient.SexDisplay == "Nam")
-                                    {
-                                        <span class="text-info fw-medium"><i class="fas fa-mars me-1"></i> Nam</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-danger fw-medium"><i class="fas fa-venus me-1"></i> Nữ</span>
-                                    }
-                                </td>
-                                <td class="text-muted"><i class="fas fa-phone-alt me-2 small"></i>@patient.Phone</td>
-                                <td class="text-end pe-4">
-                                    <a asp-controller="DoctorDashboard" asp-action="PatientProfile" asp-route-patientId="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
-                                        <i class="fas fa-folder-open me-1"></i> Xem hồ sơ
-                                    </a>
-                                    <a asp-controller="ClinicalRecord" asp-action="Index_ListPatient" asp-route-id="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
-                                        <i class="fas fa-history me-1"></i> Xem bệnh án
-                                    </a>
-                                </td>
-                            </tr>
+                            @foreach (var patient in Model.Items)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-bold text-secondary">#@patient.PatientId.ToString("D5")</td>
+                                    <td class="fw-bold text-dark">@patient.FullName</td>
+                                    <td><span class="badge bg-light text-dark border px-2 py-1 rounded-3">@patient.Age tuổi</span></td>
+                                    <td>
+                                        @if (patient.SexDisplay == "Nam")
+                                        {
+                                            <span class="text-info fw-medium"><i class="fas fa-mars me-1"></i> Nam</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger fw-medium"><i class="fas fa-venus me-1"></i> Nữ</span>
+                                        }
+                                    </td>
+                                    <td class="text-muted"><i class="fas fa-phone-alt me-2 small"></i>@patient.Phone</td>
+                                    <td class="text-end pe-4">
+                                        <a asp-controller="DoctorDashboard" asp-action="PatientProfile" asp-route-patientId="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
+                                            <i class="fas fa-folder-open me-1"></i> Xem hồ sơ
+                                        </a>
+                                        <a asp-controller="ClinicalRecord" asp-action="Index_ListPatient" asp-route-id="@patient.PatientId" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm">
+                                            <i class="fas fa-history me-1"></i> Xem bệnh án
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
                         }
-                    }
                 </tbody>
             </table>
         </div>
