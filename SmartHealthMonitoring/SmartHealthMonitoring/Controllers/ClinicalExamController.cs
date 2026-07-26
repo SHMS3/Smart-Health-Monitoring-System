@@ -284,6 +284,24 @@ namespace SmartHealthMonitoring.Controllers
                     await _context.SaveChangesAsync();
                 }
 
+                // Cập nhật trạng thái Appointment (đặt lịch online hoặc qua lễ tân) thành Đã hoàn thành
+                var examToday = SmartHealthMonitoring.Common.AppTime.Now.Date;
+                var activeAppointment = await _context.Appointments
+                    .Include(a => a.Slot)
+                    .FirstOrDefaultAsync(a => a.PatientId == model.PatientId 
+                                           && a.Slot.DoctorId == doctor.Id 
+                                           && a.Status == AppointmentStatus.Confirmed
+                                           && a.Slot.SlotStart.Date == examToday);
+                                           
+                if (activeAppointment != null)
+                {
+                    activeAppointment.Status = AppointmentStatus.Completed;
+                    activeAppointment.ClinicalRecordId = record.Id;
+                    activeAppointment.UpdatedAt = SmartHealthMonitoring.Common.AppTime.Now;
+                    activeAppointment.Slot.Status = AppointmentSlotStatus.Completed;
+                    await _context.SaveChangesAsync();
+                }
+
                 _cache.Remove($"LabResult_{model.PatientId}");
 
                 // patient đã được fetch ở trên để tính fallback, dùng lại ở đây
