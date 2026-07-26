@@ -134,9 +134,9 @@
                         foreach (var block in dayData.Blocks)
                         {
                             <div class="slot-row">
-                                <input type="time" name="startTime" value="@block.StartTime" placeholder="Từ">
+                                <input type="time" lang="en-GB" name="startTime" value="@block.StartTime" placeholder="Từ">
                                 <span class="text-muted">→</span>
-                                <input type="time" name="endTime" value="@block.EndTime" placeholder="Đến">
+                                <input type="time" lang="en-GB" name="endTime" value="@block.EndTime" placeholder="Đến">
                                 <button type="button" class="btn-remove" onclick="this.closest('.slot-row').remove()" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         }
@@ -204,9 +204,9 @@ function addSlot(index, skipToggleCheck = false) {
     const row = document.createElement('div');
     row.className = 'slot-row';
     row.innerHTML = `
-        <input type="time" name="startTime" value="08:00" placeholder="Từ">
+        <input type="time" lang="en-GB" name="startTime" value="08:00" placeholder="Từ">
         <span class="text-muted">→</span>
-        <input type="time" name="endTime" value="12:00" placeholder="Đến">
+        <input type="time" lang="en-GB" name="endTime" value="12:00" placeholder="Đến">
         <button type="button" class="btn-remove" onclick="removeSlot(this)" title="Xóa ca này"><i class="fas fa-trash-alt"></i></button>
     `;
     container.appendChild(row);

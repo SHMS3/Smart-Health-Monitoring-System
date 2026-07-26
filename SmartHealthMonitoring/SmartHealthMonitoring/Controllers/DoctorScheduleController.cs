@@ -36,7 +36,7 @@ public class DoctorScheduleController : Controller
         var doctor = await GetCurrentDoctorAsync();
         if (doctor == null) return Forbid();
 
-        var today = DateTime.Today;
+        var today = SmartHealthMonitoring.Common.AppTime.Now.Date;
         var endDay = today.AddDays(7);
 
         var existingSlots = await _context.AppointmentSlots
@@ -111,7 +111,7 @@ public class DoctorScheduleController : Controller
         var doctor = await GetCurrentDoctorAsync();
         if (doctor == null) return Forbid();
 
-        var today = DateTime.Today;
+        var today = SmartHealthMonitoring.Common.AppTime.Now.Date;
         var endDay = today.AddDays(7);
 
         // 1. Validate overlaps and logical errors within submitted blocks
