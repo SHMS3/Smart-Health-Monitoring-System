@@ -27,4 +27,8 @@
     <ProjectReference Include="..\SmartHealthMonitoring\SmartHealthMonitoring.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="sonpt\" />
+  </ItemGroup>
+
 </Project>
