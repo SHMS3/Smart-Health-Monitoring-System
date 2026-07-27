@@ -46,6 +46,7 @@ namespace SmartHealthMonitoring.ViewModels
 
         [StringLength(12, MinimumLength = 9, ErrorMessage = "CCCD/CMND phải từ 9 đến 12 ký tự.")]
         [Display(Name = "CCCD/CMND")]
+        [Required(ErrorMessage = "CCCD là bắt buộc.")]
         public string? CitizenId { get; set; }
     }
 }

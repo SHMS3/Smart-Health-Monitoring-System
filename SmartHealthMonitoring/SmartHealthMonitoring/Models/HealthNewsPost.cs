@@ -7,10 +7,10 @@ namespace SmartHealthMonitoring.Models
     {
         public int Id { get; set; }
 
-        [Required, MaxLength(500)]
+        [Required, MaxLength(100)]
         public string Title { get; set; } = string.Empty;
 
-        [Required]
+        [Required, MaxLength(100)]
         public string Content { get; set; } = string.Empty;
 
         [MaxLength(1000)]
