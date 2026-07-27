@@ -54,6 +54,12 @@ namespace SmartHealthMonitoring.Controllers
             
             var (success, message) = await _newsService.CreateNewsAsync(model, action, uploadImage, authorName);
 
+            if (!success)
+            {
+                ModelState.AddModelError("", message);
+                return View(model);
+            }
+
             if (success)
             {
                 TempData["Success"] = message;
@@ -104,8 +110,8 @@ namespace SmartHealthMonitoring.Controllers
             {
                 if (message == "Không tìm thấy bài viết.") return NotFound();
                 
-                TempData["Error"] = message;
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError("", message);
+                return View(model);
             }
 
             TempData["Success"] = message;

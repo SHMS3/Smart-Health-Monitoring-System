@@ -82,6 +82,13 @@ namespace SmartHealthMonitoring.Controllers.Admin
             if (!ModelState.IsValid)
                 return View(model);
 
+            var validation = ValidateImage(uploadImage);
+            if (!validation.success)
+            {
+                ModelState.AddModelError("", validation.message);
+                return View(model);
+            }
+
             // Xử lý upload ảnh
             if (uploadImage != null && uploadImage.Length > 0)
             {
@@ -116,6 +123,26 @@ namespace SmartHealthMonitoring.Controllers.Admin
             return RedirectToAction(nameof(Index));
         }
 
+        private (bool success, string message) ValidateImage(IFormFile? image)
+        {
+            if (image == null || image.Length == 0)
+                return (true, string.Empty);
+            var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
+            var extension = Path.GetExtension(image.FileName)?.ToLowerInvariant();
+
+            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+            {
+                return (false, "Chỉ cho phép tải lên ảnh PNG, JPG hoặc JPEG.");
+            }
+            // 3. Validate dung lượng 2MB
+            const long maxSize = 2 * 1024 * 1024;
+            if (image.Length > maxSize)
+            {
+                return (false, "Kích thước ảnh phải nhỏ hơn 2MB.");
+            }
+            return (true, string.Empty);
+        }
+
         // ══════════════════════════════════════════════
         // EDIT GET
         // ══════════════════════════════════════════════
@@ -140,6 +167,13 @@ namespace SmartHealthMonitoring.Controllers.Admin
 
             if (!ModelState.IsValid)
                 return View(model);
+
+            var validation = ValidateImage(uploadImage);
+            if (!validation.success)
+            {
+                ModelState.AddModelError("", validation.message);
+                return View(model);
+            }
 
             var existing = await _context.HealthNewsPosts.FindAsync(id);
             if (existing == null) return NotFound();

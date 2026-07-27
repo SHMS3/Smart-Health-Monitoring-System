@@ -30,6 +30,11 @@ namespace SmartHealthMonitoring.Services
 
         public async Task<(bool success, string message)> CreateNewsAsync(HealthNewsPost model, string action, IFormFile? uploadImage, string authorName)
         {
+
+            var imageValidation = ValidateImage(uploadImage);
+            if (!imageValidation.success)
+                return imageValidation;
+
             if (uploadImage != null && uploadImage.Length > 0)
             {
                 var uploadsFolder = Path.Combine(_env.WebRootPath, "images", "news");
@@ -99,6 +104,10 @@ namespace SmartHealthMonitoring.Services
             {
                 return (false, "Bạn không có quyền chỉnh sửa bài viết này.");
             }
+
+            var imageValidation = ValidateImage(uploadImage);
+            if (!imageValidation.success)
+                return imageValidation;
 
             if (uploadImage != null && uploadImage.Length > 0)
             {
@@ -171,5 +180,24 @@ namespace SmartHealthMonitoring.Services
             await _repository.DeleteNewsAsync(post);
             return (true, "Xóa bài viết thành công.");
         }
+
+        private (bool success, string message) ValidateImage(IFormFile? image)
+        {
+            if (image == null || image.Length == 0 || string.IsNullOrEmpty(image.FileName))
+                return (true, string.Empty);
+            var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
+            var extension = Path.GetExtension(image.FileName)?.ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+            {
+                return (false, "Chỉ cho phép ảnh PNG, JPG hoặc JPEG.");
+            }
+            const long maxSize = 2 * 1024 * 1024;
+            if (image.Length > maxSize)
+            {
+                return (false, "Kích thước ảnh phải nhỏ hơn 2MB.");
+            }
+            return (true, string.Empty);
+        }
+
     }
 }
