@@ -86,6 +86,97 @@ public class AiPredictionWorkerTests
             It.IsAny<int>()), Times.Once);
     }
 
+    [Fact]
+    public async Task DoWorkAsync_ForExistingHighRiskAlertWithOnlyDoctorEmail_TriggersAutomaticHealthWarning()
+    {
+        await using var context = CreateContext();
+        var graph = await AddExistingHighRiskAlertAsync(context, sentByDoctorId: 2);
+        var trigger = TriggerService();
+        var worker = CreateWorker(
+            context,
+            Mock.Of<IAiPredictionService>(),
+            trigger.Object,
+            Mock.Of<IEmailService>());
+
+        await InvokeDoWorkAsync(worker);
+
+        trigger.Verify(service => service.SendHealthWarningAsync(
+            graph.Patient.Id,
+            graph.Prediction.Id), Times.Once);
+    }
+
+    [Fact]
+    public async Task DoWorkAsync_ForExistingHighRiskAlertWithAutomaticEmail_DoesNotSendDuplicate()
+    {
+        await using var context = CreateContext();
+        var graph = await AddExistingHighRiskAlertAsync(context, sentByDoctorId: null);
+        var trigger = TriggerService();
+        var worker = CreateWorker(
+            context,
+            Mock.Of<IAiPredictionService>(),
+            trigger.Object,
+            Mock.Of<IEmailService>());
+
+        await InvokeDoWorkAsync(worker);
+
+        trigger.Verify(service => service.SendHealthWarningAsync(
+            It.IsAny<int>(),
+            It.IsAny<int>()), Times.Never);
+    }
+
+    private static async Task<(Patient Patient, AiriskPrediction Prediction)>
+        AddExistingHighRiskAlertAsync(
+            SmartHealthMonitoringContext context,
+            int? sentByDoctorId)
+    {
+        var patientUser = EntityFactory.User(30, 0, "Existing Patient");
+        var patient = EntityFactory.Patient(3, patientUser);
+        var prediction = new AiriskPrediction
+        {
+            Id = 31,
+            PatientId = patient.Id,
+            Patient = patient,
+            RiskScore = 0.90m,
+            PredictedTarget = 1,
+            RiskLevel = 2,
+            ModelVersion = "manual-sql",
+            PredictedAt = new DateTime(2026, 8, 3, 15, 0, 0)
+        };
+        var alert = new WarningAlert
+        {
+            Id = 32,
+            PatientId = patient.Id,
+            Patient = patient,
+            PredictionId = prediction.Id,
+            Prediction = prediction,
+            Status = 0,
+            FlaggedAt = prediction.PredictedAt
+        };
+        var notification = new EmailNotification
+        {
+            Id = 33,
+            AlertId = alert.Id,
+            Alert = alert,
+            PatientId = patient.Id,
+            Patient = patient,
+            ToEmail = patientUser.Email,
+            Subject = "Existing email",
+            Body = "Existing email body",
+            Status = 1,
+            IsSent = true,
+            SentByDoctorId = sentByDoctorId,
+            CreatedAt = prediction.PredictedAt
+        };
+
+        context.Users.Add(patientUser);
+        context.Patients.Add(patient);
+        context.AiriskPredictions.Add(prediction);
+        context.WarningAlerts.Add(alert);
+        context.EmailNotifications.Add(notification);
+        await context.SaveChangesAsync();
+
+        return (patient, prediction);
+    }
     private static async Task<Patient> AddHighRiskDailyLogAsync(
         SmartHealthMonitoringContext context)
     {
