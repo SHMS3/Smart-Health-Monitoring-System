@@ -53,6 +53,14 @@ public class AiPredictionWorker : BackgroundService
         int alertCount   = 0;
         var alertEmailCandidates = new List<(int PatientId, AiriskPrediction Prediction)>();
 
+        // Catch up alerts created or promoted directly in the database. Those changes
+        // bypass the in-memory candidate list below, so their email side effect must
+        // be dispatched separately.
+        await DispatchPendingHealthWarningEmailsAsync(
+            dbContext,
+            emailTriggerService,
+            stoppingToken);
+
         // ═══════════════════════════════════════════════════════════════════════
         // LUONG 1: Quet DailyVitalLogs chua co du bao
         // → Ket hop voi ClinicalRecord gan nhat cua cung benh nhan de dua ra du doan
@@ -459,4 +467,96 @@ public class AiPredictionWorker : BackgroundService
             successCount, total, pendingDailyLogs.Count, pendingClinicalRecords.Count, alertCount);
     }
 
+    private async Task DispatchPendingHealthWarningEmailsAsync(
+        SmartHealthMonitoringContext dbContext,
+        IEmailTriggerService emailTriggerService,
+        CancellationToken stoppingToken)
+    {
+        var pendingAlerts = await dbContext.WarningAlerts
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(alert => alert.Prediction)
+            .Include(alert => alert.Patient)
+                .ThenInclude(patient => patient.User)
+            .Include(alert => alert.Patient)
+                .ThenInclude(patient => patient.EmergencyContacts)
+            .Include(alert => alert.EmailNotifications)
+            .Where(alert =>
+                !alert.IsDeleted &&
+                !alert.Prediction.IsDeleted &&
+                alert.Prediction.RiskLevel >= 2 &&
+                !alert.Patient.IsDeleted &&
+                !alert.Patient.User.IsDeleted &&
+                (!alert.EmailNotifications.Any(notification =>
+                     notification.SentByDoctorId == null) ||
+                 alert.EmailNotifications.Any(notification =>
+                     notification.SentByDoctorId == null &&
+                     !notification.IsSent &&
+                     notification.Status == 0)))
+            .OrderBy(alert => alert.FlaggedAt)
+            .Take(50)
+            .ToListAsync(stoppingToken);
+
+        foreach (var alert in pendingAlerts)
+        {
+            if (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            var recipientEmails = new List<string>();
+            if (!string.IsNullOrWhiteSpace(alert.Patient.User.Email))
+            {
+                recipientEmails.Add(alert.Patient.User.Email.Trim());
+            }
+
+            recipientEmails.AddRange(alert.Patient.EmergencyContacts
+                .Where(contact =>
+                    contact.IsActive &&
+                    !contact.IsDeleted &&
+                    !string.IsNullOrWhiteSpace(contact.Email))
+                .Select(contact => contact.Email!.Trim()));
+
+            var automaticNotifications = alert.EmailNotifications
+                .Where(notification => notification.SentByDoctorId == null)
+                .ToList();
+
+            var needsDelivery = recipientEmails
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Any(recipientEmail =>
+                {
+                    var notifications = automaticNotifications
+                        .Where(notification => string.Equals(
+                            notification.ToEmail,
+                            recipientEmail,
+                            StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+
+                    return notifications.Count == 0 ||
+                           notifications.Any(notification =>
+                               !notification.IsSent && notification.Status == 0);
+                });
+
+            if (!needsDelivery)
+            {
+                continue;
+            }
+
+            try
+            {
+                await emailTriggerService.SendHealthWarningAsync(
+                    alert.PatientId,
+                    alert.PredictionId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "[EMAIL] Loi khi gui bu mail canh bao cho Alert={AlertId}, Patient={PatientId}, Prediction={PredictionId}",
+                    alert.Id,
+                    alert.PatientId,
+                    alert.PredictionId);
+            }
+        }
+    }
 }
