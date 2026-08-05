@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -141,9 +141,10 @@ namespace SmartHealthMonitoring.Services.Email
 
                 var recipientEmails = new List<string>();
                 
-                // if (!string.IsNullOrWhiteSpace(patient.User?.Email))
-                // {
-                // }
+                if (!string.IsNullOrWhiteSpace(patient.User?.Email))
+                {
+                    recipientEmails.Add(patient.User.Email.Trim());
+                }
 
                 recipientEmails.AddRange(patient.EmergencyContacts
                     .Where(contact =>
