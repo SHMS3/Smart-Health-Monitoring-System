@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -9,12 +9,6 @@ using SmartHealthMonitoring.Hubs;
 
 namespace SmartHealthMonitoring.Workers;
 
-/// <summary>
-/// Background Worker dọn dẹp tự động:
-/// 1. Nhả các SoftLocked slot đã hết 5 phút → về Available
-/// 2. Đánh dấu No-show nếu bệnh nhân không đến 15 phút sau giờ hẹn
-/// Chạy mỗi 2 phút.
-/// </summary>
 public class AppointmentCleanupWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -51,9 +45,6 @@ public class AppointmentCleanupWorker : BackgroundService
         var context = scope.ServiceProvider.GetRequiredService<SmartHealthMonitoringContext>();
         var now     = SmartHealthMonitoring.Common.AppTime.Now;
 
-        // ────────────────────────────────────────────────────────────
-        // 1. Nhả SoftLocked slot đã hết hạn giữ chỗ → Available
-        // ────────────────────────────────────────────────────────────
         var expiredSoftLocks = await context.AppointmentSlots
             .Where(s => s.Status == AppointmentSlotStatus.SoftLocked && s.SoftLockedUntil < now)
             .ToListAsync(ct);
@@ -68,9 +59,6 @@ public class AppointmentCleanupWorker : BackgroundService
         if (expiredSoftLocks.Any())
             _logger.LogInformation("[Cleanup] Released {Count} expired SoftLocked slots.", expiredSoftLocks.Count);
 
-        // ────────────────────────────────────────────────────────────
-        // 2. Đánh dấu No-show (bệnh nhân đặt lịch nhưng không đến 15 phút)
-        // ────────────────────────────────────────────────────────────
         var noShowThreshold = now.AddMinutes(-15);
 
         var noShowAppointments = await context.Appointments

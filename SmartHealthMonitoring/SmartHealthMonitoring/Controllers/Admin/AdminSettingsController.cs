@@ -1,11 +1,10 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SmartHealthMonitoring.Context;
-using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Interfaces.Audit;
+using SmartHealthMonitoring.Interfaces.Admin;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels;
 using SmartHealthMonitoring.ViewModels.Admin;
@@ -15,14 +14,14 @@ namespace SmartHealthMonitoring.Controllers.Admin;
 [Authorize(Roles = "2")]
 public class AdminSettingsController : Controller
 {
-    private readonly SmartHealthMonitoringContext _context;
+    private readonly IAdminSettingsService _settingsService;
     private readonly IAuditLogService _auditLogService;
 
     public AdminSettingsController(
-        SmartHealthMonitoringContext context,
+        IAdminSettingsService settingsService,
         IAuditLogService auditLogService)
     {
-        _context = context;
+        _settingsService = settingsService;
         _auditLogService = auditLogService;
     }
 
@@ -51,9 +50,9 @@ public class AdminSettingsController : Controller
         profile.FullName = (profile.FullName ?? string.Empty).Trim();
         profile.Email = (profile.Email ?? string.Empty).Trim();
 
-        if (await _context.Users.AnyAsync(u => u.Id != admin.Id && u.Email == profile.Email))
+        if (await _settingsService.IsEmailTakenAsync(admin.Id, profile.Email))
         {
-            ModelState.AddModelError("Profile.Email", "Email này đã được sử dụng bởi tài khoản khác.");
+            ModelState.AddModelError("Profile.Email", "Email n�y d� du?c s? d?ng b?i t�i kho?n kh�c.");
         }
 
         if (!ModelState.IsValid)
@@ -67,27 +66,24 @@ public class AdminSettingsController : Controller
         var oldEmail = admin.Email;
         var hasChanges = oldFullName != profile.FullName || oldEmail != profile.Email;
 
-        admin.FullName = profile.FullName;
-        admin.Email = profile.Email;
-
         if (hasChanges)
         {
-            await _context.SaveChangesAsync();
+            await _settingsService.UpdateProfileAsync(admin, profile.FullName, profile.Email);
             await RefreshSignInAsync(admin);
 
             await _auditLogService.LogAsync(
                 "Update",
                 "AdminSettings",
                 admin.Id.ToString(),
-                $"Cập nhật thông tin admin {oldFullName} ({oldEmail}) -> {admin.FullName} ({admin.Email}).",
+                $"C?p nh?t th�ng tin admin {oldFullName} ({oldEmail}) -> {admin.FullName} ({admin.Email}).",
                 admin.Id,
                 admin.FullName);
 
-            TempData["Success"] = "Đã cập nhật thông tin quản trị viên.";
+            TempData["Success"] = "�� c?p nh?t th�ng tin qu?n tr? vi�n.";
         }
         else
         {
-            TempData["Success"] = "Thông tin quản trị viên không có thay đổi mới.";
+            TempData["Success"] = "Th�ng tin qu?n tr? vi�n kh�ng c� thay d?i m?i.";
         }
 
         return RedirectToAction(nameof(Index));
@@ -110,34 +106,33 @@ public class AdminSettingsController : Controller
 
         if (string.IsNullOrWhiteSpace(admin.PasswordHash))
         {
-            ModelState.AddModelError("Password.CurrentPassword", "Tài khoản Google không thể đổi mật khẩu tại đây.");
+            ModelState.AddModelError("Password.CurrentPassword", "T�i kho?n Google kh�ng th? d?i m?t kh?u t?i d�y.");
             return View("Index", CreateSettingsViewModel(admin, "security", password: password));
         }
 
         if (!VerifyPassword(password.CurrentPassword, admin.PasswordHash))
         {
-            ModelState.AddModelError("Password.CurrentPassword", "Mật khẩu hiện tại không đúng.");
+            ModelState.AddModelError("Password.CurrentPassword", "M?t kh?u hi?n t?i kh�ng d�ng.");
             return View("Index", CreateSettingsViewModel(admin, "security", password: password));
         }
 
         if (VerifyPassword(password.NewPassword, admin.PasswordHash))
         {
-            ModelState.AddModelError("Password.NewPassword", "Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+            ModelState.AddModelError("Password.NewPassword", "M?t kh?u m?i kh�ng du?c tr�ng v?i m?t kh?u hi?n t?i.");
             return View("Index", CreateSettingsViewModel(admin, "security", password: password));
         }
 
-        admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password.NewPassword);
-        await _context.SaveChangesAsync();
+        await _settingsService.ChangePasswordAsync(admin, password.NewPassword);
 
         await _auditLogService.LogAsync(
             "ChangePassword",
             "AdminSettings",
             admin.Id.ToString(),
-            $"Admin {admin.FullName} đã đổi mật khẩu tài khoản.",
+            $"Admin {admin.FullName} d� d?i m?t kh?u t�i kho?n.",
             admin.Id,
             admin.FullName);
 
-        TempData["Success"] = "Đã đổi mật khẩu quản trị viên.";
+        TempData["Success"] = "�� d?i m?t kh?u qu?n tr? vi�n.";
         return RedirectToAction(nameof(Index), new { section = "security" });
     }
 
@@ -149,8 +144,7 @@ public class AdminSettingsController : Controller
             return null;
         }
 
-        return await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == userId && u.Role == 2 && !u.IsDeleted);
+        return await _settingsService.GetCurrentAdminAsync(userId);
     }
 
     private static AdminSettingsViewModel CreateSettingsViewModel(

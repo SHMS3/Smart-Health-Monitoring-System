@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -7,10 +7,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace SmartHealthMonitoring.Migrations
 {
-    /// <inheritdoc />
     public partial class Initial_V4_With_SeedData : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -283,25 +281,25 @@ namespace SmartHealthMonitoring.Migrations
                 values: new object[,]
                 {
                     { 1, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.an@smarthealth.vn", "Nguy?n Van An", false, "hash123", (byte)1 },
-                    { 2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.binh@smarthealth.vn", "Tr?n Th? Bình", false, "hash123", (byte)1 },
+                    { 2, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.binh@smarthealth.vn", "Tr?n Th? Bï¿½nh", false, "hash123", (byte)1 },
                     { 3, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.cuong@smarthealth.vn", "Ph?m Minh Cu?ng", false, "hash123", (byte)1 },
-                    { 4, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.dung@smarthealth.vn", "Lê Tu?n Dung", false, "hash123", (byte)1 },
-                    { 5, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.anh@smarthealth.vn", "Hoàng Mai Anh", false, "hash123", (byte)1 },
-                    { 6, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.phuc@smarthealth.vn", "Ðinh Van Phúc", false, "hash123", (byte)1 },
-                    { 7, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.chau@smarthealth.vn", "Nguy?n B?o Châu", false, "hash123", (byte)1 },
-                    { 8, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.khanh@smarthealth.vn", "Vu Qu?c Khánh", false, "hash123", (byte)1 },
-                    { 9, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.tuan@smarthealth.vn", "Bùi Anh Tu?n", false, "hash123", (byte)1 },
-                    { 10, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.lan@smarthealth.vn", "Lý Phuong Lan", false, "hash123", (byte)1 },
+                    { 4, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.dung@smarthealth.vn", "Lï¿½ Tu?n Dung", false, "hash123", (byte)1 },
+                    { 5, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.anh@smarthealth.vn", "Hoï¿½ng Mai Anh", false, "hash123", (byte)1 },
+                    { 6, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.phuc@smarthealth.vn", "ï¿½inh Van Phï¿½c", false, "hash123", (byte)1 },
+                    { 7, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.chau@smarthealth.vn", "Nguy?n B?o Chï¿½u", false, "hash123", (byte)1 },
+                    { 8, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.khanh@smarthealth.vn", "Vu Qu?c Khï¿½nh", false, "hash123", (byte)1 },
+                    { 9, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.tuan@smarthealth.vn", "Bï¿½i Anh Tu?n", false, "hash123", (byte)1 },
+                    { 10, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "dr.lan@smarthealth.vn", "Lï¿½ Phuong Lan", false, "hash123", (byte)1 },
                     { 11, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.hoa@gmail.com", "Nguy?n Th? Hoa", false, "hash123", (byte)0 },
-                    { 12, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.minh@gmail.com", "Tr?n Ð?c Minh", false, "hash123", (byte)0 },
-                    { 13, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.nhung@gmail.com", "Ð? H?ng Nhung", false, "hash123", (byte)0 },
-                    { 14, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.tam@gmail.com", "Bùi Van Tâm", false, "hash123", (byte)0 },
-                    { 15, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.long@gmail.com", "Ph?m Thành Long", false, "hash123", (byte)0 },
-                    { 16, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.thuy@gmail.com", "Lê Thanh Th?y", false, "hash123", (byte)0 },
-                    { 17, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.hai@gmail.com", "Ð?ng Quang H?i", false, "hash123", (byte)0 },
-                    { 18, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.yen@gmail.com", "Võ Hoàng Y?n", false, "hash123", (byte)0 },
-                    { 19, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.phong@gmail.com", "Ngô Ðình Phong", false, "hash123", (byte)0 },
-                    { 20, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.mai@gmail.com", "Ðoàn Ng?c Mai", false, "hash123", (byte)0 }
+                    { 12, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.minh@gmail.com", "Tr?n ï¿½?c Minh", false, "hash123", (byte)0 },
+                    { 13, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.nhung@gmail.com", "ï¿½? H?ng Nhung", false, "hash123", (byte)0 },
+                    { 14, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.tam@gmail.com", "Bï¿½i Van Tï¿½m", false, "hash123", (byte)0 },
+                    { 15, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.long@gmail.com", "Ph?m Thï¿½nh Long", false, "hash123", (byte)0 },
+                    { 16, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.thuy@gmail.com", "Lï¿½ Thanh Th?y", false, "hash123", (byte)0 },
+                    { 17, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.hai@gmail.com", "ï¿½?ng Quang H?i", false, "hash123", (byte)0 },
+                    { 18, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.yen@gmail.com", "Vï¿½ Hoï¿½ng Y?n", false, "hash123", (byte)0 },
+                    { 19, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.phong@gmail.com", "Ngï¿½ ï¿½ï¿½nh Phong", false, "hash123", (byte)0 },
+                    { 20, new DateTime(2026, 5, 20, 0, 0, 0, 0, DateTimeKind.Local), "patient.mai@gmail.com", "ï¿½oï¿½n Ng?c Mai", false, "hash123", (byte)0 }
                 });
 
             migrationBuilder.InsertData(
@@ -315,7 +313,7 @@ namespace SmartHealthMonitoring.Migrations
                     { 4, false, false, "Ph?u thu?t tim", 4 },
                     { 5, false, true, "N?i tim m?ch", 5 },
                     { 6, false, false, "Tim m?ch nhi", 6 },
-                    { 7, false, true, "Ch?n doán hình ?nh", 7 },
+                    { 7, false, true, "Ch?n doï¿½n hï¿½nh ?nh", 7 },
                     { 8, false, false, "N?i tim m?ch", 8 },
                     { 9, false, true, "Tim m?ch can thi?p", 9 },
                     { 10, false, false, "N?i tim m?ch", 10 }
@@ -411,16 +409,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "Content", "SenderRole", "SentAt", "SessionId" },
                 values: new object[,]
                 {
-                    { 1, "Chào bác si AI, tôi th?y hoi m?t", (byte)0, new DateTime(2026, 5, 20, 12, 1, 0, 0, DateTimeKind.Local), 1 },
-                    { 2, "Hôm nay tôi do huy?t áp bình thu?ng", (byte)0, new DateTime(2026, 5, 20, 12, 11, 0, 0, DateTimeKind.Local), 2 },
-                    { 3, "Tôi c?n tu v?n ch? d? an", (byte)0, new DateTime(2026, 5, 20, 12, 21, 0, 0, DateTimeKind.Local), 3 },
-                    { 4, "Thu?c hôm nay u?ng lúc m?y gi??", (byte)0, new DateTime(2026, 5, 20, 12, 31, 0, 0, DateTimeKind.Local), 4 },
-                    { 5, "Tôi ng? d?y hoi chóng m?t", (byte)0, new DateTime(2026, 5, 20, 12, 41, 0, 0, DateTimeKind.Local), 5 },
-                    { 6, "Hôm nay tôi dã ch?y b? 30 phút", (byte)0, new DateTime(2026, 5, 20, 12, 51, 0, 0, DateTimeKind.Local), 6 },
-                    { 7, "C?u v?i, tôi b? nhói ng?c quá!", (byte)0, new DateTime(2026, 5, 20, 13, 1, 0, 0, DateTimeKind.Local), 7 },
-                    { 8, "C?m on AI dã tu v?n", (byte)0, new DateTime(2026, 5, 20, 13, 11, 0, 0, DateTimeKind.Local), 8 },
-                    { 9, "Nh?p tim 78 là ?n chua?", (byte)0, new DateTime(2026, 5, 20, 13, 21, 0, 0, DateTimeKind.Local), 9 },
-                    { 10, "Ng?c tôi hoi n?ng n?", (byte)0, new DateTime(2026, 5, 20, 13, 31, 0, 0, DateTimeKind.Local), 10 }
+                    { 1, "Chï¿½o bï¿½c si AI, tï¿½i th?y hoi m?t", (byte)0, new DateTime(2026, 5, 20, 12, 1, 0, 0, DateTimeKind.Local), 1 },
+                    { 2, "Hï¿½m nay tï¿½i do huy?t ï¿½p bï¿½nh thu?ng", (byte)0, new DateTime(2026, 5, 20, 12, 11, 0, 0, DateTimeKind.Local), 2 },
+                    { 3, "Tï¿½i c?n tu v?n ch? d? an", (byte)0, new DateTime(2026, 5, 20, 12, 21, 0, 0, DateTimeKind.Local), 3 },
+                    { 4, "Thu?c hï¿½m nay u?ng lï¿½c m?y gi??", (byte)0, new DateTime(2026, 5, 20, 12, 31, 0, 0, DateTimeKind.Local), 4 },
+                    { 5, "Tï¿½i ng? d?y hoi chï¿½ng m?t", (byte)0, new DateTime(2026, 5, 20, 12, 41, 0, 0, DateTimeKind.Local), 5 },
+                    { 6, "Hï¿½m nay tï¿½i dï¿½ ch?y b? 30 phï¿½t", (byte)0, new DateTime(2026, 5, 20, 12, 51, 0, 0, DateTimeKind.Local), 6 },
+                    { 7, "C?u v?i, tï¿½i b? nhï¿½i ng?c quï¿½!", (byte)0, new DateTime(2026, 5, 20, 13, 1, 0, 0, DateTimeKind.Local), 7 },
+                    { 8, "C?m on AI dï¿½ tu v?n", (byte)0, new DateTime(2026, 5, 20, 13, 11, 0, 0, DateTimeKind.Local), 8 },
+                    { 9, "Nh?p tim 78 lï¿½ ?n chua?", (byte)0, new DateTime(2026, 5, 20, 13, 21, 0, 0, DateTimeKind.Local), 9 },
+                    { 10, "Ng?c tï¿½i hoi n?ng n?", (byte)0, new DateTime(2026, 5, 20, 13, 31, 0, 0, DateTimeKind.Local), 10 }
                 });
 
             migrationBuilder.InsertData(
@@ -431,11 +429,11 @@ namespace SmartHealthMonitoring.Migrations
                     { 1, null, null, new DateTime(2026, 5, 20, 1, 6, 0, 0, DateTimeKind.Local), false, 1, 1, null, (byte)0 },
                     { 2, null, 1, new DateTime(2026, 5, 20, 2, 6, 0, 0, DateTimeKind.Local), false, 2, 2, null, (byte)1 },
                     { 3, null, null, new DateTime(2026, 5, 20, 3, 6, 0, 0, DateTimeKind.Local), false, 3, 3, null, (byte)0 },
-                    { 4, null, 2, new DateTime(2026, 5, 20, 4, 6, 0, 0, DateTimeKind.Local), false, 4, 4, "B?nh nhân ?n d?nh, dã u?ng thu?c.", (byte)2 },
+                    { 4, null, 2, new DateTime(2026, 5, 20, 4, 6, 0, 0, DateTimeKind.Local), false, 4, 4, "B?nh nhï¿½n ?n d?nh, dï¿½ u?ng thu?c.", (byte)2 },
                     { 5, null, null, new DateTime(2026, 5, 20, 5, 6, 0, 0, DateTimeKind.Local), false, 5, 5, null, (byte)0 },
                     { 6, null, 3, new DateTime(2026, 5, 20, 6, 6, 0, 0, DateTimeKind.Local), false, 6, 6, null, (byte)1 },
                     { 7, null, null, new DateTime(2026, 5, 20, 7, 6, 0, 0, DateTimeKind.Local), false, 7, 7, null, (byte)0 },
-                    { 8, null, 4, new DateTime(2026, 5, 20, 8, 6, 0, 0, DateTimeKind.Local), false, 8, 8, "C?nh báo nh?m.", (byte)2 },
+                    { 8, null, 4, new DateTime(2026, 5, 20, 8, 6, 0, 0, DateTimeKind.Local), false, 8, 8, "C?nh bï¿½o nh?m.", (byte)2 },
                     { 9, null, null, new DateTime(2026, 5, 20, 9, 6, 0, 0, DateTimeKind.Local), false, 9, 9, null, (byte)0 },
                     { 10, null, 1, new DateTime(2026, 5, 20, 10, 6, 0, 0, DateTimeKind.Local), false, 10, 10, null, (byte)1 }
                 });
@@ -445,16 +443,16 @@ namespace SmartHealthMonitoring.Migrations
                 columns: new[] { "Id", "AlertId", "Body", "CreatedAt", "PatientId", "Status", "Subject" },
                 values: new object[,]
                 {
-                    { 1, 1, "Vui lòng liên h? bác si ngay", new DateTime(2026, 5, 20, 1, 7, 0, 0, DateTimeKind.Local), 1, (byte)0, "C?NH BÁO: Huy?t áp b?t thu?ng" },
+                    { 1, 1, "Vui lï¿½ng liï¿½n h? bï¿½c si ngay", new DateTime(2026, 5, 20, 1, 7, 0, 0, DateTimeKind.Local), 1, (byte)0, "C?NH Bï¿½O: Huy?t ï¿½p b?t thu?ng" },
                     { 2, 2, "Ch? s? c?a b?n ?n d?nh", new DateTime(2026, 5, 20, 2, 7, 0, 0, DateTimeKind.Local), 2, (byte)0, "C?p nh?t sinh hi?u" },
-                    { 3, 3, "Nh?p tim bình thu?ng", new DateTime(2026, 5, 20, 3, 7, 0, 0, DateTimeKind.Local), 3, (byte)0, "Theo dõi nh?p tim" },
-                    { 4, 4, "C?nh báo dã du?c gi?i quy?t", new DateTime(2026, 5, 20, 4, 7, 0, 0, DateTimeKind.Local), 4, (byte)0, "Báo cáo ?n d?nh" },
-                    { 5, 5, "Theo dõi thêm t?i nhà", new DateTime(2026, 5, 20, 5, 7, 0, 0, DateTimeKind.Local), 5, (byte)0, "C?NH BÁO NH?: Huy?t áp tang" },
-                    { 6, 6, "Bác si dang xem xét", new DateTime(2026, 5, 20, 6, 7, 0, 0, DateTimeKind.Local), 6, (byte)0, "Ðã ti?p nh?n h? so" },
-                    { 7, 7, "G?i c?p c?u 115 l?p t?c!", new DateTime(2026, 5, 20, 7, 7, 0, 0, DateTimeKind.Local), 7, (byte)0, "C?NH BÁO KH?N C?P: Ti?n tai bi?n" },
-                    { 8, 8, "C?nh báo nh?m", new DateTime(2026, 5, 20, 8, 7, 0, 0, DateTimeKind.Local), 8, (byte)0, "H? th?ng t? d?ng h?y c?nh báo" },
-                    { 9, 9, "Vui lòng nh?p sinh hi?u", new DateTime(2026, 5, 20, 9, 7, 0, 0, DateTimeKind.Local), 9, (byte)0, "Ki?m tra d?nh k?" },
-                    { 10, 10, "Bác si An dã ti?p nh?n", new DateTime(2026, 5, 20, 10, 7, 0, 0, DateTimeKind.Local), 10, (byte)0, "C?NH BÁO: Huy?t áp tâm thu cao" }
+                    { 3, 3, "Nh?p tim bï¿½nh thu?ng", new DateTime(2026, 5, 20, 3, 7, 0, 0, DateTimeKind.Local), 3, (byte)0, "Theo dï¿½i nh?p tim" },
+                    { 4, 4, "C?nh bï¿½o dï¿½ du?c gi?i quy?t", new DateTime(2026, 5, 20, 4, 7, 0, 0, DateTimeKind.Local), 4, (byte)0, "Bï¿½o cï¿½o ?n d?nh" },
+                    { 5, 5, "Theo dï¿½i thï¿½m t?i nhï¿½", new DateTime(2026, 5, 20, 5, 7, 0, 0, DateTimeKind.Local), 5, (byte)0, "C?NH Bï¿½O NH?: Huy?t ï¿½p tang" },
+                    { 6, 6, "Bï¿½c si dang xem xï¿½t", new DateTime(2026, 5, 20, 6, 7, 0, 0, DateTimeKind.Local), 6, (byte)0, "ï¿½ï¿½ ti?p nh?n h? so" },
+                    { 7, 7, "G?i c?p c?u 115 l?p t?c!", new DateTime(2026, 5, 20, 7, 7, 0, 0, DateTimeKind.Local), 7, (byte)0, "C?NH Bï¿½O KH?N C?P: Ti?n tai bi?n" },
+                    { 8, 8, "C?nh bï¿½o nh?m", new DateTime(2026, 5, 20, 8, 7, 0, 0, DateTimeKind.Local), 8, (byte)0, "H? th?ng t? d?ng h?y c?nh bï¿½o" },
+                    { 9, 9, "Vui lï¿½ng nh?p sinh hi?u", new DateTime(2026, 5, 20, 9, 7, 0, 0, DateTimeKind.Local), 9, (byte)0, "Ki?m tra d?nh k?" },
+                    { 10, 10, "Bï¿½c si An dï¿½ ti?p nh?n", new DateTime(2026, 5, 20, 10, 7, 0, 0, DateTimeKind.Local), 10, (byte)0, "C?NH Bï¿½O: Huy?t ï¿½p tï¿½m thu cao" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -553,7 +551,6 @@ namespace SmartHealthMonitoring.Migrations
                 unique: true);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

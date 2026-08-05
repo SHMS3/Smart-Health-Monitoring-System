@@ -1,3 +1,5 @@
+using SmartHealthMonitoring.Interfaces.AI;
+using SmartHealthMonitoring.Interfaces.Email;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Interfaces;
@@ -6,15 +8,10 @@ using SmartHealthMonitoring.Services.AI;
 
 namespace SmartHealthMonitoring.Workers.AI;
 
-/// <summary>
-/// Background Worker chạy định kỳ, quét DailyVitalLogs và ClinicalRecords chưa được dự đoán,
-/// gọi AI prediction service và tạo WarningAlert khi RiskLevel >= 2.
-/// </summary>
 public class AiPredictionWorker : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<AiPredictionWorker> _logger;
-    //private readonly TimeSpan _period = TimeSpan.FromMinutes(1); // Chu kỳ quét production
     private readonly TimeSpan _period = TimeSpan.FromSeconds(20); // Dev: 20s
 
     public AiPredictionWorker(IServiceProvider serviceProvider, ILogger<AiPredictionWorker> logger)
@@ -60,11 +57,6 @@ public class AiPredictionWorker : BackgroundService
             dbContext,
             emailTriggerService,
             stoppingToken);
-
-        // ═══════════════════════════════════════════════════════════════════════
-        // LUONG 1: Quet DailyVitalLogs chua co du bao
-        // → Ket hop voi ClinicalRecord gan nhat cua cung benh nhan de dua ra du doan
-        // ═══════════════════════════════════════════════════════════════════════
         _logger.LogInformation("========== [LUONG 1] Bat dau quet DailyVitalLogs ==========");
 
         var pendingDailyLogs = await dbContext.DailyVitalLogs
@@ -85,7 +77,6 @@ public class AiPredictionWorker : BackgroundService
                         .OrderByDescending(c => c.VisitDate)
                         .FirstOrDefaultAsync(stoppingToken);
 
-                    // Bỏ qua ClinicalRecord nếu đã cũ hơn 3 tháng (90 ngày)
                     if (latestClinicalRecord != null)
                     {
                         var daysDiff = (log.LoggedAt - latestClinicalRecord.VisitDate).TotalDays;
@@ -107,7 +98,6 @@ public class AiPredictionWorker : BackgroundService
                     }
                     catch (InvalidOperationException)
                     {
-                        // File ANFIS chưa được thêm vào thư mục
                     }
 
                     var prediction = new AiriskPrediction
@@ -116,7 +106,6 @@ public class AiPredictionWorker : BackgroundService
                         IsDeleted = false
                     };
 
-                    // ── ENSEMBLE: Tính trung bình RiskScore từ nhiều mô hình ──
                     decimal avgScore;
                     if (predANFIS != null)
                     {
@@ -135,11 +124,6 @@ public class AiPredictionWorker : BackgroundService
                             (double)predKNN.RiskScore, (double)predSVM.RiskScore, (double)avgScore);
                     }
 
-                    // DIEU CHINH LAM SANG - BU DAP CHO DU LIEU THIEU/DO TRE THOI GIAN (chi ap dung cho DailyVitalLog)
-                    // Mo hinh UCI can 18 features (do cung 1 thoi diem). DailyLog chi co 5/18 features cap tinh.
-                    // 13 features con lai (tu ho so kham cu hoac fallback 'khoe manh') se lam pha loang
-                    // cac trieu chung cap tinh hien tai -> model de bi thien lech ve khong benh.
-                    // Giai phap: Cong them bonus nguy co dua tren huong dan lam sang ACC/AHA 2017.
                     decimal clinicalAdj = 0m;
 
                     short sbp = log.SystolicBp;
@@ -147,32 +131,24 @@ public class AiPredictionWorker : BackgroundService
                     byte  cp  = log.ChestPainLevel;
                     bool  ex  = log.HasExerciseAngina;
 
-                    // (1) Huyet ap tam thu - ACC/AHA 2017 Hypertension Guidelines
                     if      (sbp >= 180) clinicalAdj += 0.32m; // Hypertensive Crisis
                     else if (sbp >= 160) clinicalAdj += 0.22m; // Stage 2 nang
                     else if (sbp >= 140) clinicalAdj += 0.15m; // Stage 2
                     else if (sbp >= 130) clinicalAdj += 0.08m; // Stage 1
                     else if (sbp >= 120) clinicalAdj += 0.03m; // Elevated (tren binh thuong)
 
-                    // (2) Nhip tim nghi ngoi - AHA Resting Tachycardia
-                    // Ngu?ng ha xuong 85 bpm de bat ca nhip tim hoi cao cua benh nhan tim
                     if      (rhr >= 130) clinicalAdj += 0.28m; // Tachycardia nghiem trong
                     else if (rhr >= 110) clinicalAdj += 0.18m; // Tachycardia vua
                     else if (rhr >= 100) clinicalAdj += 0.12m; // Tachycardia nhe
                     else if (rhr >=  90) clinicalAdj += 0.06m; // Nhip hoi cao
                     else if (rhr >=  85) clinicalAdj += 0.02m; // Nhip gioi han tren binh thuong
 
-                    // (3) Muc do dau nguc - ghi nhan tu benh nhan
-                    // Model da xu ly cp nhu feature nhung bi 13 fallback 'khoe' lam giam tai trong.
-                    // Cong them bonus doc lap de dam bao dau nguc duoc the hien trong ket qua.
                     if      (cp >= 3) clinicalAdj += 0.20m; // Dau nang (Typical Angina tuong duong)
                     else if (cp >= 2) clinicalAdj += 0.12m; // Dau vua (Atypical Angina tuong duong)
                     else if (cp >= 1) clinicalAdj += 0.05m; // Dau nhe
 
-                    // (4) Dau that nguc khi van dong - dau hieu lam sang quan trong
                     if (ex) clinicalAdj += 0.15m;
 
-                    // (5) Bonus ket hop: nhieu yeu to nguy co cung luc -> nguy co nhan len
                     int riskFactorCount = 0;
                     if (sbp >= 130) riskFactorCount++;
                     if (rhr >= 90)  riskFactorCount++;
@@ -205,7 +181,6 @@ public class AiPredictionWorker : BackgroundService
 
                     dbContext.AiriskPredictions.Add(prediction);
 
-                    // ── LOG KẾT QUẢ DỰ ĐOÁN ────────────────────────────────────
                     string diseaseStatus1 = prediction.PredictedTarget == 1 ? "CO BENH" : "KHONG BENH";
                     string riskLevelName1 = prediction.RiskLevel switch
                     {
@@ -272,10 +247,6 @@ public class AiPredictionWorker : BackgroundService
             _logger.LogInformation("[LUONG 1] Khong co DailyVitalLog moi nao can du bao.");
         }
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // LUONG 2: Quet ClinicalRecords chua co du bao
-        // → Chi chay khi benh nhan KHONG co DailyLog nao
-        // ═══════════════════════════════════════════════════════════════════════
         _logger.LogInformation("========== [LUONG 2] Bat dau quet ClinicalRecords ==========");
 
         var pendingClinicalRecords = await dbContext.ClinicalRecords
@@ -300,7 +271,6 @@ public class AiPredictionWorker : BackgroundService
                     }
                     catch (InvalidOperationException)
                     {
-                        // File ANFIS chưa được thêm vào thư mục
                     }
 
                     var prediction = new AiriskPrediction
@@ -309,7 +279,6 @@ public class AiPredictionWorker : BackgroundService
                         IsDeleted = false
                     };
 
-                    // ── ENSEMBLE: Tính trung bình RiskScore từ nhiều mô hình ──
                     decimal avgScore;
                     if (predANFIS != null)
                     {
@@ -343,7 +312,6 @@ public class AiPredictionWorker : BackgroundService
 
                     dbContext.AiriskPredictions.Add(prediction);
 
-                    // ── LOG KẾT QUẢ DỰ ĐOÁN ────────────────────────────────────
                     string diseaseStatus2 = prediction.PredictedTarget == 1 ? "CO BENH" : "KHONG BENH";
                     string riskLevelName2 = prediction.RiskLevel switch
                     {
@@ -560,3 +528,4 @@ public class AiPredictionWorker : BackgroundService
         }
     }
 }
+

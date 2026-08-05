@@ -1,9 +1,8 @@
-using SmartHealthMonitoring.Common;
+﻿using SmartHealthMonitoring.Common;
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels
 {
-    // Screen 1: Dashboard Bác sĩ
     public class PatientListViewModel
     {
         public int PatientId { get; set; }
@@ -13,17 +12,7 @@ namespace SmartHealthMonitoring.ViewModels
         public string? Phone { get; set; }
     }
 
-    // Screen 2: Danh sách hồ sơ của 1 bệnh nhân
-    //public class DailyVitalLogViewModel
     //{
-    //    public int Id { get; set; }
-    //    public DateTime LoggedAt { get; set; }
-    //    public short SystolicBp { get; set; }
-    //    public short DiastolicBp { get; set; }
-    //    public short HeartRate { get; set; }
-    //    public byte ChestPainLevel { get; set; }
-    //    public bool HasExerciseAngina { get; set; }
-    //    public byte UpdateCount { get; set; }
     //}
 
     public class PatientRecordIndexViewModel
@@ -33,10 +22,8 @@ namespace SmartHealthMonitoring.ViewModels
         public int Age { get; set; }
         public string SexDisplay { get; set; } = null!;
 
-        // Tab 1: Cận lâm sàng (Từ máy/Bác sĩ)
         public PagedResult<ClinicalRecordSummaryViewModel> Records { get; set; } = new();
 
-        // Tab 2: Sổ tay hằng ngày (Bệnh nhân tự nhập)
         public PagedResult<DailyVitalLogViewModel> DailyLogs { get; set; } = new();
 
         public DateTime? SearchDate { get; set; }
@@ -50,15 +37,12 @@ namespace SmartHealthMonitoring.ViewModels
     {
         public int Id { get; set; }
         public DateTime VisitDate { get; set; }
-        // Nullable: chỉ hiện nếu đã đo (gói BP)
         public int? RestingBP { get; set; }
         public int? Cholesterol { get; set; }
         public int? MaxHeartRate { get; set; }
         public byte? ChestPainType { get; set; }
         public string? ChestPainTypeDisplay { get; set; }
-        // Nullable: chỉ hiện nếu đã đo (gói Blood)
         public byte? FastingBS { get; set; }
-        // Nullable: chỉ hiện nếu đã đo (gói ECG)
         public byte? RestECG { get; set; }
         public byte? ExerciseAngina { get; set; }
         public decimal? OldPeak { get; set; }
@@ -70,7 +54,6 @@ namespace SmartHealthMonitoring.ViewModels
         public bool IsViewForPatient { get; set; }
     }
 
-    // Feature: Form Thêm/Sửa Hồ sơ
     public class ClinicalRecordFormViewModel
     {
         public int Id { get; set; }

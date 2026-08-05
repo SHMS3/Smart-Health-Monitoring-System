@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Interfaces.Repositories;
 
 namespace SmartHealthMonitoring.Repositories
 {
     public class PatientRepository
-    {
+    : IPatientRepository {
         private readonly SmartHealthMonitoringContext _context;
 
         public PatientRepository(SmartHealthMonitoringContext context)
@@ -20,3 +21,5 @@ namespace SmartHealthMonitoring.Repositories
         }
     }
 }
+
+

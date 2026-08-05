@@ -1,18 +1,14 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using SmartHealthMonitoring.Hubs;
-using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Interfaces.Chat;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SmartHealthMonitoring.Controllers;
 
-/// <summary>
-/// Controller cho tính năng Chat Telemedicine theo mô hình hàng đợi.
-/// Bệnh nhân tạo session → Bác sĩ claim → Chat 1-1 → Kết thúc.
-/// </summary>
 [Authorize]
 public class ChatController : Controller
 {
@@ -25,9 +21,6 @@ public class ChatController : Controller
         _hubContext = hubContext;
     }
 
-    /// <summary>
-    /// Trang chính hiển thị giao diện chat (khác nhau theo role).
-    /// </summary>
     [HttpGet]
     public IActionResult Index()
     {
@@ -38,16 +31,12 @@ public class ChatController : Controller
         return View();
     }
 
-    /// <summary>
-    /// API: Bệnh nhân lấy/tạo session hiện tại.
-    /// </summary>
     [HttpGet]
     public async Task<IActionResult> MySession()
     {
         var userId = GetCurrentUserId();
         var session = await _chatService.GetOrCreateSessionAsync(userId);
 
-        // Broadcast to doctors if this is a newly created waiting session
         if (session.Status == 0 && (SmartHealthMonitoring.Common.AppTime.Now - session.CreatedAt).TotalSeconds < 5)
         {
             await _hubContext.Clients.Group("Doctors").SendAsync("QueueUpdated");
@@ -66,9 +55,6 @@ public class ChatController : Controller
         });
     }
 
-    /// <summary>
-    /// API: Lấy tổng số lượng tin nhắn chưa đọc của người dùng hiện tại (tính theo số cuộc hội thoại/session).
-    /// </summary>
     [HttpGet]
     public async Task<IActionResult> UnreadCount()
     {
@@ -97,9 +83,6 @@ public class ChatController : Controller
         return Json(new { count });
     }
 
-    /// <summary>
-    /// API: Danh sách session đang chờ (cho bác sĩ).
-    /// </summary>
     [HttpGet]
     public async Task<IActionResult> WaitingQueue()
     {
@@ -107,9 +90,6 @@ public class ChatController : Controller
         return Json(sessions);
     }
 
-    /// <summary>
-    /// API: Danh sách session của bác sĩ (Active + Closed).
-    /// </summary>
     [HttpGet]
     public async Task<IActionResult> DoctorSessions()
     {
@@ -118,13 +98,9 @@ public class ChatController : Controller
         return Json(sessions);
     }
 
-    /// <summary>
-    /// API: Lịch sử tin nhắn trong session.
-    /// </summary>
     [HttpGet]
     public async Task<IActionResult> History(int sessionId)
     {
-        // Kiểm tra quyền truy cập session
         var session = await _chatService.GetSessionAsync(sessionId);
         if (session == null)
             return NotFound();
@@ -135,13 +111,10 @@ public class ChatController : Controller
 
         var messages = await _chatService.GetSessionHistoryAsync(sessionId);
 
-        // Đếm số tin nhắn chưa đọc từ đối phương trước khi đánh dấu đã đọc
         var unreadCount = messages.Count(m => m.SenderId != userId && !m.IsRead);
 
-        // Đánh dấu đã đọc
         await _chatService.MarkMessagesAsReadAsync(sessionId, userId);
 
-        // Trả về số lượng tin nhắn chưa đọc qua header
         Response.Headers["X-Unread-Count"] = unreadCount.ToString();
 
         var result = messages.Select(m => new
@@ -159,7 +132,6 @@ public class ChatController : Controller
         return Json(result);
     }
 
-    // ── Helper Methods ──
 
     private int GetCurrentUserId()
     {

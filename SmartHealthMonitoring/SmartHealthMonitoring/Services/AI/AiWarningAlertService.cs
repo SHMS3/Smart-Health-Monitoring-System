@@ -1,3 +1,6 @@
+﻿using SmartHealthMonitoring.Interfaces.AI;
+using SmartHealthMonitoring.Common;
+using SmartHealthMonitoring.Common;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
@@ -5,10 +8,6 @@ using SmartHealthMonitoring.ViewModels;
 
 namespace SmartHealthMonitoring.Services.AI
 {
-    /// <summary>
-    /// Scoped Service triển khai logic quản lý WarningAlert:
-    /// phân trang + tìm kiếm theo keyword, claim, resolve.
-    /// </summary>
     public class AiWarningAlertService : IAiWarningAlertService
     {
         private readonly SmartHealthMonitoringContext _context;
@@ -68,7 +67,6 @@ namespace SmartHealthMonitoring.Services.AI
         }
 
 
-
         public async Task<List<WarningAlert>> GetAlertsAsync(byte? status, string? keyword, int page, int pageSize, int? claimedByDoctorId = null)
         {
             var query = _context.WarningAlerts
@@ -82,14 +80,12 @@ namespace SmartHealthMonitoring.Services.AI
                 .Include(x => x.Prediction)
                 .AsQueryable();
 
-            // Filter Status
             if (status.HasValue)
             {
                 query = query.Where(x =>
                     x.Status == status.Value);
             }
 
-            // Search Patient Name
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 query = query.Where(x =>
@@ -97,7 +93,6 @@ namespace SmartHealthMonitoring.Services.AI
                         .Contains(keyword));
             }
 
-            // Filter Doctor Claimed
             if (claimedByDoctorId.HasValue)
             {
                 query = query.Where(x =>
@@ -244,5 +239,38 @@ namespace SmartHealthMonitoring.Services.AI
                 .Include(x => x.Prediction)
                 .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
         }
+
+        public async Task<WarningAlert?> GetAlertDetailsAsync(int id)
+        {
+            return await _context.WarningAlerts
+                .Include(x => x.Patient)
+                    .ThenInclude(p => p.User)
+                .Include(x => x.ClaimedByDoctor)
+                    .ThenInclude(d => d.User)
+                .Include(x => x.Prediction)
+                    .ThenInclude(p => p.ClinicalRecord)
+                .Include(x => x.Prediction)
+                    .ThenInclude(p => p.DailyLog)
+                .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
+        }
+        public async Task<List<ClinicalRecord>> GetClinicalHistoryAsync(int patientId)
+        {
+            return await _context.ClinicalRecords
+                .Where(c => c.PatientId == patientId && !c.IsDeleted)
+                .OrderByDescending(c => c.VisitDate)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<List<DailyVitalLog>> GetDailyHistoryAsync(int patientId)
+        {
+            return await _context.DailyVitalLogs
+                .Where(d => d.PatientId == patientId && !d.IsDeleted)
+                .OrderByDescending(d => d.LoggedAt)
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }
+
+

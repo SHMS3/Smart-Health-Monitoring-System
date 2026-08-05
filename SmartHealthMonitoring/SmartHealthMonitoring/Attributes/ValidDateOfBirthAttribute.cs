@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.Attributes
@@ -29,7 +29,7 @@ namespace SmartHealthMonitoring.Attributes
             }
             else
             {
-                return new ValidationResult("Ngày sinh không hợp lệ.");
+                return new ValidationResult("Ng�y sinh kh�ng h?p l?.");
             }
 
             var today = DateOnly.FromDateTime(DateTime.Today);
@@ -37,14 +37,14 @@ namespace SmartHealthMonitoring.Attributes
             if (dob < MinDate)
             {
                 return new ValidationResult(
-                    $"Ngày sinh không hợp lệ. Năm sinh phải từ {MinDate.Year} trở đi."
+                    $"Ng�y sinh kh�ng h?p l?. Nam sinh ph?i t? {MinDate.Year} tr? di."
                 );
             }
 
             if (dob > today)
             {
                 return new ValidationResult(
-                    "Ngày sinh không hợp lệ. Ngày sinh không được lớn hơn ngày hiện tại."
+                    "Ng�y sinh kh�ng h?p l?. Ng�y sinh kh�ng du?c l?n hon ng�y hi?n t?i."
                 );
             }
 
@@ -54,7 +54,7 @@ namespace SmartHealthMonitoring.Attributes
             if (age > MaxAge)
             {
                 return new ValidationResult(
-                    $"Ngày sinh không hợp lệ. Tuổi không được vượt quá {MaxAge}."
+                    $"Ng�y sinh kh�ng h?p l?. Tu?i kh�ng du?c vu?t qu� {MaxAge}."
                 );
             }
 

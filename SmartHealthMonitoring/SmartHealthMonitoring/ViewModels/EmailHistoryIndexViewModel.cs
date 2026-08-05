@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace SmartHealthMonitoring.ViewModels
 {
@@ -15,12 +15,8 @@ namespace SmartHealthMonitoring.ViewModels
         public string? ErrorMessage { get; set; }
         public string Body { get; set; } = string.Empty;
 
-        // --- Fields mới ---
-        /// <summary>"Mời tái khám" hoặc "Cảnh báo sức khỏe"</summary>
         public string EmailType { get; set; } = string.Empty;
-        /// <summary>Tên bác sĩ gửi, hoặc "Hệ thống tự động" nếu SentByDoctorId = null</summary>
         public string SenderName { get; set; } = "Hệ thống tự động";
-        /// <summary>Id của Alert gốc, dùng để hiển thị nút "Xem Alert"</summary>
         public int? AlertId { get; set; }
     }
 

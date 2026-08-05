@@ -1,4 +1,4 @@
-using DotNetEnv;
+﻿using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Minio;
@@ -26,12 +26,10 @@ namespace SmartHealthMonitoring
 
             var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION");
 
-            // 1. Đăng ký DB Context
             builder.Services.AddDbContext<SmartHealthMonitoringContext>(options =>
                 options.UseSqlServer(connectionString ?? builder.Configuration.GetConnectionString("DefaultConnection"),
                     sqlServerOptions => sqlServerOptions.EnableRetryOnFailure()));
 
-            // 2. Cấu hình kết nối MinIO
             var minioEndpoint = builder.Configuration["MinioSettings:Endpoint"] ?? Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ?? "localhost:9000";
             var minioAccessKey = builder.Configuration["MinioSettings:AccessKey"] ?? Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY") ?? "admin";
             var minioSecretKey = builder.Configuration["MinioSettings:SecretKey"] ?? Environment.GetEnvironmentVariable("MINIO_SECRET_KEY") ?? "admin123";
@@ -44,10 +42,9 @@ namespace SmartHealthMonitoring
                 .WithSSL(minioSecure)
                 .Build());
 
-            builder.Services.AddHttpClient<GeminiService>();
-            builder.Services.AddScoped<LocalOcrService>();
+            builder.Services.AddHttpClient<SmartHealthMonitoring.Services.AI.GeminiService>();
+            builder.Services.AddScoped<SmartHealthMonitoring.Services.QR.LocalOcrService>();
 
-            // 3. MVC & Razor
             builder.Services.AddScoped<AuditLogActionFilter>();
             builder.Services
                 .AddControllersWithViews(options =>
@@ -55,47 +52,31 @@ namespace SmartHealthMonitoring
                 .AddRazorRuntimeCompilation();
             builder.Services.AddHttpContextAccessor();
 
-            // 3b. SignalR cho Telemedicine Chat
             builder.Services.AddSignalR();
 
-            // 4. Configure Email Settings
             builder.Services.Configure<SmartHealthMonitoring.Models.Configurations.EmailSettings>(
                 builder.Configuration.GetSection("EmailSettings"));
 
-            // 4b. HttpClient cho EsmsSmsService
             builder.Services.AddHttpClient();
 
-            // 4c. Memory Cache & News Scraper Service
             builder.Services.AddMemoryCache();
-            builder.Services.AddScoped<INewsScraperService, SmartHealthMonitoring.Services.NewsScraperService>();
+            builder.Services.AddScoped<SmartHealthMonitoring.Interfaces.News.INewsScraperService, SmartHealthMonitoring.Services.News.NewsScraperService>();
 
 
-            // ====================================================================
-            // 5. GỌI HÀM QUÉT TỰ ĐỘNG TỪ THƯ MỤC DI
-            // ====================================================================
-            // ====================================================================
             builder.Services.AddApplicationServices();
             
-            // Đăng ký Background Worker quét hồ sơ lâm sàng mới (DA-1.3)
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AI.AiPredictionWorker>();
-            // Đặt lịch: sinh slot tự động mỗi ngày lúc 00:05
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentSlotGeneratorWorker>();
-            // Đặt lịch: dọn dẹp SoftLock hết hạn và đánh dấu No-show mỗi 2 phút
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentCleanupWorker>();
-            // Nhắc ghi chỉ số chỉ tạo lịch sử nội bộ, không gửi email thật.
             builder.Services.AddHostedService<SmartHealthMonitoring.Workers.DailyVitalLogReminderWorker>();
 
-            // ponytail: tránh gửi email thật khi chạy local; bật lại bằng
-            // BackgroundWorkers__EnableNotifications=true nếu cần test chủ động.
             if (!builder.Environment.IsDevelopment() ||
                 builder.Configuration.GetValue<bool>("BackgroundWorkers:EnableNotifications"))
             {
                 builder.Services.AddHostedService<SmartHealthMonitoring.Workers.AppointmentReminderWorker>();
             }
 
-            // ====================================================================
 
-            // 6.5. Session (dùng để lưu OTP xác thực số điện thoại)
             builder.Services.AddDistributedMemoryCache();
             builder.Services.AddSession(options =>
             {
@@ -105,7 +86,6 @@ namespace SmartHealthMonitoring
             });
 
 
-            // 6. Cookie Authentication
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
@@ -124,7 +104,6 @@ namespace SmartHealthMonitoring
             var app = builder.Build();
 
 
-            // Chạy migration trong background để tránh block luồng Kestrel khởi chạy port binding (gây 502 Bad Gateway)
             _ = Task.Run(() =>
             {
                 using (var scope = app.Services.CreateScope())
@@ -136,7 +115,6 @@ namespace SmartHealthMonitoring
                         context.Database.Migrate();
                         Console.WriteLine("[Database] Auto-migration successfully executed.");
 
-                        // Tự động Seed DoctorWorkSchedule (không cần Migration)
                         if (!context.DoctorWorkSchedules.Any())
                         {
                             var schedules = new List<SmartHealthMonitoring.Models.DoctorWorkSchedule>();
@@ -201,7 +179,6 @@ namespace SmartHealthMonitoring
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
-            // SignalR Hub endpoint cho Telemedicine Chat
             app.MapHub<ChatHub>("/chatHub");
             app.MapHub<AuditLogHub>("/auditLogHub");
             app.MapHub<AppointmentHub>("/appointmentHub");

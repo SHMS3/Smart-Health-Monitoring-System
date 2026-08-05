@@ -1,4 +1,4 @@
-@inject SmartHealthMonitoring.Services.PatientUiSettingsService PatientUiSettingsService
+@inject SmartHealthMonitoring.Services.Patient.PatientUiSettingsService PatientUiSettingsService
 @{
     ViewData["Title"] = "Trang chủ";
     var homeUi = await PatientUiSettingsService.GetSettingsAsync();
@@ -734,3 +734,4 @@
         </div>
     </div>
 </section>
+

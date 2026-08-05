@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels.Admin;
 
@@ -39,11 +39,11 @@ public class EmailTemplateEditViewModel
 
     public string Description { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập tiêu đề email.")]
-    [StringLength(200, ErrorMessage = "Tiêu đề email không được vượt quá 200 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p ti�u d? email.")]
+    [StringLength(200, ErrorMessage = "Ti�u d? email kh�ng du?c vu?t qu� 200 k� t?.")]
     public string Subject { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập nội dung HTML của email.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p n?i dung HTML c?a email.")]
     public string HtmlContent { get; set; } = string.Empty;
 
     public List<string> Tokens { get; set; } = new();

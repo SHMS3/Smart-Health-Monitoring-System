@@ -1,9 +1,5 @@
-namespace SmartHealthMonitoring.Common;
+﻿namespace SmartHealthMonitoring.Common;
 
-/// <summary>
-/// Appointment slots are persisted in UTC and converted at the UI boundary to Vietnam time.
-/// SQL Server datetime does not preserve DateTime.Kind, so values read from slots are treated as UTC.
-/// </summary>
 public static class AppointmentTime
 {
     public static readonly TimeZoneInfo VietnamTimeZone =

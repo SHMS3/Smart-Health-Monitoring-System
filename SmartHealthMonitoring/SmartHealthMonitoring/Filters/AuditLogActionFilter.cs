@@ -1,3 +1,4 @@
+﻿using SmartHealthMonitoring.Interfaces.Audit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using SmartHealthMonitoring.Context;
@@ -36,8 +37,6 @@ public sealed class AuditLogActionFilter : IAsyncActionFilter
             return;
         }
 
-        // Các action đã gọi AuditLogService sẽ còn AuditLog trong ChangeTracker.
-        // Bỏ qua để mỗi thao tác chỉ có một bản ghi.
         if (_context.ChangeTracker.Entries<AuditLog>().Any())
         {
             return;
@@ -58,7 +57,6 @@ public sealed class AuditLogActionFilter : IAsyncActionFilter
         }
         catch (Exception exception)
         {
-            // Audit không được làm hỏng thao tác nghiệp vụ đã hoàn tất.
             _logger.LogError(
                 exception,
                 "Không thể tự động ghi audit log cho {Controller}/{Action}.",
@@ -127,3 +125,4 @@ public sealed class AuditLogActionFilter : IAsyncActionFilter
                ?? context.RouteData.Values["id"]?.ToString();
     }
 }
+

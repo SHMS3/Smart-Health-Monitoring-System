@@ -1,42 +1,42 @@
-namespace SmartHealthMonitoring.Models;
+﻿namespace SmartHealthMonitoring.Models;
 
 public class PatientUiSettings
 {
     public string BrandName { get; set; } = "SmartHealth";
 
-    public string BrandSubtitle { get; set; } = "Tim Mạch";
+    public string BrandSubtitle { get; set; } = "Tim M?ch";
 
-    public string MetaDescription { get; set; } = "SmartHealth Tim mạch - Hệ thống theo dõi sức khỏe tim mạch thông minh, cảnh báo sớm bằng AI.";
+    public string MetaDescription { get; set; } = "SmartHealth Tim m?ch - H? th?ng theo d�i s?c kh?e tim m?ch th�ng minh, c?nh b�o s?m b?ng AI.";
 
-    public string SearchPlaceholder { get; set; } = "Tìm kiếm dịch vụ, thông tin...";
+    public string SearchPlaceholder { get; set; } = "T�m ki?m d?ch v?, th�ng tin...";
 
-    public string HomeHeroEyebrow { get; set; } = "Ưu đãi dành riêng cho bệnh nhân";
+    public string HomeHeroEyebrow { get; set; } = "Uu d�i d�nh ri�ng cho b?nh nh�n";
 
-    public string HomeHeroTitle { get; set; } = "Theo dõi Sức khỏe Tim Mạch";
+    public string HomeHeroTitle { get; set; } = "Theo d�i S?c kh?e Tim M?ch";
 
-    public string HomeHeroHighlight { get; set; } = "Thông minh cùng AI";
+    public string HomeHeroHighlight { get; set; } = "Th�ng minh c�ng AI";
 
-    public string HomeHeroPriceTag { get; set; } = "Gói theo dõi hằng ngày";
+    public string HomeHeroPriceTag { get; set; } = "G�i theo d�i h?ng ng�y";
 
-    public string HomeHeroPrice { get; set; } = "Miễn phí";
+    public string HomeHeroPrice { get; set; } = "Mi?n ph�";
 
-    public string HomeHeroPriceSuffix { get; set; } = " khi đăng ký";
+    public string HomeHeroPriceSuffix { get; set; } = " khi dang k�";
 
-    public string HomeHeroNote { get; set; } = "Được theo dõi bởi bác sĩ chuyên khoa tim mạch";
+    public string HomeHeroNote { get; set; } = "�u?c theo d�i b?i b�c si chuy�n khoa tim m?ch";
 
     public string HomeHeroImageUrl { get; set; } = "/images/banner.jpg";
 
-    public string HomeAboutTag { get; set; } = "Giới thiệu về chúng tôi";
+    public string HomeAboutTag { get; set; } = "Gi?i thi?u v? ch�ng t�i";
 
-    public string HomeAboutTitle { get; set; } = "Hệ thống SmartHealth Tim Mạch";
+    public string HomeAboutTitle { get; set; } = "H? th?ng SmartHealth Tim M?ch";
 
-    public string HomeAboutDescription { get; set; } = "SmartHealth được thành lập với sứ mệnh ứng dụng công nghệ AI trong theo dõi và cảnh báo sức khỏe tim mạch. Đội ngũ bác sĩ chuyên khoa tim mạch kết hợp hệ thống phân tích dữ liệu thông minh giúp phát hiện sớm các nguy cơ và đưa ra can thiệp kịp thời.";
+    public string HomeAboutDescription { get; set; } = "SmartHealth du?c th�nh l?p v?i s? m?nh ?ng d?ng c�ng ngh? AI trong theo d�i v� c?nh b�o s?c kh?e tim m?ch. �?i ngu b�c si chuy�n khoa tim m?ch k?t h?p h? th?ng ph�n t�ch d? li?u th�ng minh gi�p ph�t hi?n s?m c�c nguy co v� dua ra can thi?p k?p th?i.";
 
     public string HomeAboutImageUrl { get; set; } = "/images/about-banner.png";
 
-    public string HomeCtaTitle { get; set; } = "Bắt đầu theo dõi tim mạch ngay hôm nay";
+    public string HomeCtaTitle { get; set; } = "B?t d?u theo d�i tim m?ch ngay h�m nay";
 
-    public string HomeCtaDescription { get; set; } = "Đăng ký miễn phí và nhận cảnh báo nguy cơ tim mạch từ hệ thống AI 24/7.";
+    public string HomeCtaDescription { get; set; } = "�ang k� mi?n ph� v� nh?n c?nh b�o nguy co tim m?ch t? h? th?ng AI 24/7.";
 
     public string PrimaryColor { get; set; } = "#1a73c8";
 
@@ -56,15 +56,15 @@ public class PatientUiSettings
 
     public string ContactEmail { get; set; } = "contact@smarthealth.vn";
 
-    public string Address { get; set; } = "Đại học FPT, TP. Hồ Chí Minh";
+    public string Address { get; set; } = "�?i h?c FPT, TP. H? Ch� Minh";
 
-    public string FooterSubtitle { get; set; } = "Theo dõi Tim mạch AI";
+    public string FooterSubtitle { get; set; } = "Theo d�i Tim m?ch AI";
 
-    public string FooterDescription { get; set; } = "Hệ thống theo dõi sức khỏe tim mạch thông minh. Phát hiện sớm nguy cơ và nhận cảnh báo kịp thời từ AI.";
+    public string FooterDescription { get; set; } = "H? th?ng theo d�i s?c kh?e tim m?ch th�ng minh. Ph�t hi?n s?m nguy co v� nh?n c?nh b�o k?p th?i t? AI.";
 
-    public string FooterLicenseText { get; set; } = "Giấy phép số 47/GP-TTĐT, ngày 20 tháng 01 năm 2017";
+    public string FooterLicenseText { get; set; } = "Gi?y ph�p s? 47/GP-TT�T, ng�y 20 th�ng 01 nam 2017";
 
-    public string FooterBottomText { get; set; } = "© 2026 SmartHealth. Bảo lưu mọi quyền.";
+    public string FooterBottomText { get; set; } = "� 2026 SmartHealth. B?o luu m?i quy?n.";
 
     public List<PatientFooterLink> FooterSocialLinks { get; set; } = CreateDefaultFooterSocialLinks();
 
@@ -97,8 +97,8 @@ public class PatientUiSettings
     {
         return new List<PatientFooterLink>
         {
-            new() { Label = "Điều khoản", Url = "#" },
-            new() { Label = "Bảo mật", Url = "#" }
+            new() { Label = "�i?u kho?n", Url = "#" },
+            new() { Label = "B?o m?t", Url = "#" }
         };
     }
 
@@ -108,35 +108,35 @@ public class PatientUiSettings
         {
             new()
             {
-                Title = "Lịch làm việc",
+                Title = "L?ch l�m vi?c",
                 IconClass = "fas fa-clock",
                 DisplayType = PatientFooterSectionDisplayTypes.Schedule,
                 Items = new List<PatientFooterItem>
                 {
-                    new() { Label = "Thứ 2 - Thứ 7", Value = "08:00 - 17:00" },
-                    new() { Label = "Chuyên khoa Tim mạch", Value = "08:00 - 12:00" },
-                    new() { Label = "Thứ 2 - Thứ 6", Value = "17:00 - 20:00" },
-                    new() { Label = "Chủ nhật", Value = "Nghỉ", Highlight = true },
+                    new() { Label = "Th? 2 - Th? 7", Value = "08:00 - 17:00" },
+                    new() { Label = "Chuy�n khoa Tim m?ch", Value = "08:00 - 12:00" },
+                    new() { Label = "Th? 2 - Th? 6", Value = "17:00 - 20:00" },
+                    new() { Label = "Ch? nh?t", Value = "Ngh?", Highlight = true },
                     new() { Label = "Hotline 24/7", Value = "0999 999 999", IconClass = "fas fa-phone-alt", Highlight = true }
                 }
             },
             new()
             {
-                Title = "Liên hệ",
+                Title = "Li�n h?",
                 IconClass = "fas fa-map-marker-alt",
                 DisplayType = PatientFooterSectionDisplayTypes.Contact,
                 Items = new List<PatientFooterItem>
                 {
-                    new() { Label = "Địa chỉ", Value = "Đại học FPT, TP. Hồ Chí Minh", IconClass = "fas fa-map-marker-alt" },
+                    new() { Label = "�?a ch?", Value = "�?i h?c FPT, TP. H? Ch� Minh", IconClass = "fas fa-map-marker-alt" },
                     new() { Label = "Hotline", Value = "0999 999 999 - Hotline 24/7", IconClass = "fas fa-phone-alt", Url = "tel:0999999999" },
                     new() { Label = "Email", Value = "contact@smarthealth.vn", IconClass = "fas fa-envelope", Url = "mailto:contact@smarthealth.vn" },
                     new() { Label = "Website", Value = "www.smarthealth.vn", IconClass = "fas fa-globe", Url = "#" },
-                    new() { Label = "Trạng thái", Value = "Hệ thống đang hoạt động ổn định", IconClass = "fas fa-circle", Highlight = true }
+                    new() { Label = "Tr?ng th�i", Value = "H? th?ng dang ho?t d?ng ?n d?nh", IconClass = "fas fa-circle", Highlight = true }
                 }
             },
             new()
             {
-                Title = "Bản đồ",
+                Title = "B?n d?",
                 IconClass = "fas fa-map",
                 DisplayType = PatientFooterSectionDisplayTypes.Map,
                 MapEmbedUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4482!2d106.8!3d10.85!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDUxJzAwLjAiTiAxMDbCsDQ4JzAwLjAiRQ!5e0!3m2!1svi!2svn!4v1234567890"

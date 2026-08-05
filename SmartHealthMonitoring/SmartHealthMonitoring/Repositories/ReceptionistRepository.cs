@@ -3,6 +3,7 @@ using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using System;
+using SmartHealthMonitoring.Interfaces.Repositories;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,8 +11,10 @@ using System.Threading.Tasks;
 namespace SmartHealthMonitoring.Repositories
 {
     public class ReceptionistRepository
-    {
+    : IReceptionistRepository {
         private readonly SmartHealthMonitoringContext _context;
+
+        public Microsoft.EntityFrameworkCore.DbContext GetContext() => _context;
 
         public ReceptionistRepository(SmartHealthMonitoringContext context)
         {
@@ -145,10 +148,7 @@ namespace SmartHealthMonitoring.Repositories
                                u.Doctors.Any(d => d.CitizenId == citizenId));
         }
 
-        public SmartHealthMonitoringContext GetContext()
-        {
-             return _context;
-        }
+
         
         public async Task AddUserAsync(User user)
         {
@@ -174,7 +174,7 @@ namespace SmartHealthMonitoring.Repositories
                 .FirstOrDefaultAsync(s => s.Id == slotId && s.DoctorId == doctorId && s.Status == AppointmentSlotStatus.Available);
         }
         
-        public async Task AddAppointmentAsync(Appointment appointment)
+        public async Task AddAppointmentAsync(SmartHealthMonitoring.Models.Appointment appointment)
         {
              _context.Appointments.Add(appointment);
              await _context.SaveChangesAsync();
@@ -261,3 +261,7 @@ namespace SmartHealthMonitoring.Repositories
         }
     }
 }
+
+
+
+

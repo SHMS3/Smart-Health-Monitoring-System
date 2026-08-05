@@ -1,3 +1,4 @@
+﻿using SmartHealthMonitoring.Interfaces.Email;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,10 +9,6 @@ using SmartHealthMonitoring.Models;
 
 namespace SmartHealthMonitoring.Workers;
 
-/// <summary>
-/// NTF-02: Quét lịch hẹn mỗi 5 phút, gửi email nhắc trước 24h và 2h.
-/// Cập nhật IsReminded24h / IsReminded2h để không gửi trùng.
-/// </summary>
 public class AppointmentReminderWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -147,3 +144,4 @@ public class AppointmentReminderWorker : BackgroundService
         }
     }
 }
+

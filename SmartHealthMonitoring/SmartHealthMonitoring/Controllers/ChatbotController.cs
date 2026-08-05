@@ -1,8 +1,8 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Models;
-using SmartHealthMonitoring.Services;
+using SmartHealthMonitoring.Services.Chat;
 
 namespace SmartHealthMonitoring.Controllers
 {
@@ -15,7 +15,6 @@ namespace SmartHealthMonitoring.Controllers
             _chatbotService = chatbotService;
         }
 
-        // THÊM ACTION NÀY ĐỂ NHẬN API TỪ JAVASCRIPT
         [HttpPost]
         public async Task<IActionResult> SendMessage([FromBody] ChatRequest request)
         {
@@ -24,13 +23,10 @@ namespace SmartHealthMonitoring.Controllers
 
             try
             {
-                // Lấy ID người dùng đang đăng nhập
                 int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-                // Gọi tới Service chứa Gemini
                 var aiResponse = await _chatbotService.SendMessageAsync(userId, request.Message);
 
-                // Trả về JSON cho Javascript hiển thị
                 return Json(new { success = true, reply = aiResponse });
             }
             catch (Exception ex)
@@ -50,7 +46,6 @@ namespace SmartHealthMonitoring.Controllers
 
                 var result = await _chatbotService.GetHistoryAsync(userId, fromDate, toDate, page, pageSize);
 
-                // Giữ lại giá trị bộ lọc trên View
                 ViewBag.FromDate = fromDate?.ToString("yyyy-MM-dd");
                 ViewBag.ToDate = toDate?.ToString("yyyy-MM-dd");
 
@@ -103,7 +98,6 @@ namespace SmartHealthMonitoring.Controllers
         }
     }
 
-    // Class phụ để hứng dữ liệu JSON
     public class ChatRequest
     {
         public string Message { get; set; } = string.Empty;

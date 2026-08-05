@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Models;
@@ -58,7 +58,6 @@ public partial class SmartHealthMonitoringContext : DbContext
     public virtual DbSet<PaymentDetail> PaymentDetails { get; set; }
     public virtual DbSet<WaitingPatient> WaitingPatients { get; set; }
 
-    // ── Appointment Booking System ─────────────────────────────────────────────
     public virtual DbSet<DoctorWorkSchedule> DoctorWorkSchedules { get; set; }
     public virtual DbSet<AppointmentSlot> AppointmentSlots { get; set; }
     public virtual DbSet<Appointment> Appointments { get; set; }
@@ -66,7 +65,6 @@ public partial class SmartHealthMonitoringContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // Để trống hàm này, không hardcode chuỗi kết nối ở đây nữa
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -398,14 +396,12 @@ public partial class SmartHealthMonitoringContext : DbContext
 
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
 
-            // Quan hệ 1-1 với Patient
             entity.HasOne(d => d.Patient)
                 .WithOne(p => p.PatientThreshold)
                 .HasForeignKey<PatientThreshold>(d => d.PatientId)
                 .OnDelete(DeleteBehavior.Cascade) // Nếu xóa bệnh nhân thì xóa luôn ngưỡng
                 .HasConstraintName("FK__PatientTh__Patie");
 
-            // Quan hệ N-1 với Doctor (Lưu vết bác sĩ cấu hình)
             entity.HasOne(d => d.UpdatedByDoctor)
                 .WithMany() // Không cần khai báo Collection ở Doctor cho gọn
                 .HasForeignKey(d => d.UpdatedByDoctorId)
@@ -421,7 +417,6 @@ public partial class SmartHealthMonitoringContext : DbContext
 
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
 
-            // Quan hệ 1-1 với Patient
             entity.HasOne(d => d.Patient)
                 .WithOne(p => p.PatientHabit)
                 .HasForeignKey<PatientHabit>(d => d.PatientId)
@@ -442,12 +437,8 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.Property(e => e.IsActive).HasDefaultValue(true);
         });
 
-        // ==========================================
-        // SEED: Ngưỡng chuẩn mặc định (WHO / JNC8)
-        // ==========================================
         DateTime stdDate = new DateTime(2026, 5, 31, 0, 0, 0, DateTimeKind.Local);
         modelBuilder.Entity<StandardThreshold>().HasData(
-            // Trẻ em & thanh thiếu niên (chung)
             new StandardThreshold
             {
                 Id = 1, Name = "Trẻ em & Thanh thiếu niên (≤ 17 tuổi)",
@@ -459,7 +450,6 @@ public partial class SmartHealthMonitoringContext : DbContext
                 HeartRateWarningMax = 100, HeartRateDangerMax = 120,
                 IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
             },
-            // Nam 18–40
             new StandardThreshold
             {
                 Id = 2, Name = "Nam 18–40 tuổi",
@@ -471,7 +461,6 @@ public partial class SmartHealthMonitoringContext : DbContext
                 HeartRateWarningMax = 100, HeartRateDangerMax = 120,
                 IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
             },
-            // Nữ 18–40
             new StandardThreshold
             {
                 Id = 3, Name = "Nữ 18–40 tuổi",
@@ -483,7 +472,6 @@ public partial class SmartHealthMonitoringContext : DbContext
                 HeartRateWarningMax = 100, HeartRateDangerMax = 120,
                 IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
             },
-            // Nam 41–60
             new StandardThreshold
             {
                 Id = 4, Name = "Nam 41–60 tuổi",
@@ -495,7 +483,6 @@ public partial class SmartHealthMonitoringContext : DbContext
                 HeartRateWarningMax = 100, HeartRateDangerMax = 120,
                 IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
             },
-            // Nữ 41–60
             new StandardThreshold
             {
                 Id = 5, Name = "Nữ 41–60 tuổi",
@@ -507,7 +494,6 @@ public partial class SmartHealthMonitoringContext : DbContext
                 HeartRateWarningMax = 100, HeartRateDangerMax = 120,
                 IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
             },
-            // Nam > 60
             new StandardThreshold
             {
                 Id = 6, Name = "Nam trên 60 tuổi",
@@ -519,7 +505,6 @@ public partial class SmartHealthMonitoringContext : DbContext
                 HeartRateWarningMax = 95, HeartRateDangerMax = 110,
                 IsActive = true, CreatedAt = stdDate, UpdatedAt = stdDate
             },
-            // Nữ > 60
             new StandardThreshold
             {
                 Id = 7, Name = "Nữ trên 60 tuổi",
@@ -533,12 +518,8 @@ public partial class SmartHealthMonitoringContext : DbContext
             }
         );
 
-        // ==========================================
-        // DATA SEEDING (CHUẨN KHỚP 100% VỚI DATABASE V4)
-        // ==========================================
         DateTime baseDate = new DateTime(2026, 5, 20, 0, 0, 0, DateTimeKind.Local);
 
-        // 1. Users (10 Bác sĩ ID 1-10, 10 Bệnh nhân ID 11-20)
         modelBuilder.Entity<User>().HasData(
             new User { Id = 1, Email = "dr.an@smarthealth.vn", PasswordHash = "hash123", FullName = "Nguyễn Văn An", Role = 1, CreatedAt = baseDate },
             new User { Id = 2, Email = "dr.binh@smarthealth.vn", PasswordHash = "hash123", FullName = "Trần Thị Bình", Role = 1, CreatedAt = baseDate },
@@ -565,7 +546,6 @@ public partial class SmartHealthMonitoringContext : DbContext
             new User { Id = 20, Email = "patient.mai@gmail.com", PasswordHash = "hash123", FullName = "Đoàn Ngọc Mai", Role = 3, CreatedAt = baseDate }
         );
 
-        // 2. Doctors 
         modelBuilder.Entity<Doctor>().HasData(
             new Doctor { Id = 1, UserId = 1, Specialty = "Tim mạch can thiệp", IsOnShift = true, RoomNumber = "P.101" },
             new Doctor { Id = 2, UserId = 2, Specialty = "Nhịp học tim mạch", IsOnShift = false, RoomNumber = "P.102" },
@@ -579,7 +559,6 @@ public partial class SmartHealthMonitoringContext : DbContext
             new Doctor { Id = 10, UserId = 10, Specialty = "Nội tim mạch", IsOnShift = false, RoomNumber = "P.304" }
         );
 
-        // 3. Patients (Đã thêm DateOfBirth và Sex)
         modelBuilder.Entity<Patient>().HasData(
              new Patient { Id = 1, UserId = 11, DateOfBirth = new DateOnly(1965, 4, 12), Sex = 0, Phone = "0912345671" },
              new Patient { Id = 2, UserId = 12, DateOfBirth = new DateOnly(1978, 8, 22), Sex = 1, Phone = "0912345672" },
@@ -593,7 +572,6 @@ public partial class SmartHealthMonitoringContext : DbContext
              new Patient { Id = 10, UserId = 20, DateOfBirth = new DateOnly(1962, 12, 12), Sex = 0, Phone = "0912345680" }
          );
 
-        // 4. ClinicalRecords (Đã đổi tên thuộc tính chuẩn xác)
         modelBuilder.Entity<ClinicalRecord>().HasData(
             new ClinicalRecord { Id = 1, PatientId = 1, DoctorId = 1, ChestPainType = 3, RestingBp = 145, Cholesterol = 233, FastingBs = 1, RestEcg = 0, MaxHeartRate = 150, ExerciseAngina = 0, OldPeak = 2.3m, Stslope = 0, MajorVessels = 0, ThalResult = 1, VisitDate = baseDate },
             new ClinicalRecord { Id = 2, PatientId = 2, DoctorId = 2, ChestPainType = 2, RestingBp = 130, Cholesterol = 250, FastingBs = 0, RestEcg = 1, MaxHeartRate = 187, ExerciseAngina = 0, OldPeak = 3.5m, Stslope = 0, MajorVessels = 0, ThalResult = 2, VisitDate = baseDate },
@@ -607,7 +585,6 @@ public partial class SmartHealthMonitoringContext : DbContext
             new ClinicalRecord { Id = 10, PatientId = 10, DoctorId = 2, ChestPainType = 3, RestingBp = 150, Cholesterol = 240, FastingBs = 1, RestEcg = 0, MaxHeartRate = 140, ExerciseAngina = 1, OldPeak = 2.5m, Stslope = 1, MajorVessels = 2, ThalResult = 3, VisitDate = baseDate }
         );
 
-        // 5. DailyVitalLogs (Bổ sung HeartRate, ChestPainLevel, HasExerciseAngina)
         modelBuilder.Entity<DailyVitalLog>().HasData(
             new DailyVitalLog { Id = 1, PatientId = 1, SystolicBp = 158, DiastolicBp = 95, HeartRate = 95, ChestPainLevel = 2, HasExerciseAngina = true, LoggedAt = baseDate.AddHours(1) },
             new DailyVitalLog { Id = 2, PatientId = 2, SystolicBp = 122, DiastolicBp = 80, HeartRate = 70, ChestPainLevel = 0, HasExerciseAngina = false, LoggedAt = baseDate.AddHours(2) },
@@ -621,7 +598,6 @@ public partial class SmartHealthMonitoringContext : DbContext
             new DailyVitalLog { Id = 10, PatientId = 10, SystolicBp = 165, DiastolicBp = 98, HeartRate = 100, ChestPainLevel = 2, HasExerciseAngina = true, LoggedAt = baseDate.AddHours(10) }
         );
 
-        // 6. AIRiskPredictions (Thêm PredictedTarget và RiskLevel theo DB)
         modelBuilder.Entity<AiriskPrediction>().HasData(
             new AiriskPrediction { Id = 1, PatientId = 1, DailyLogId = 1, RiskScore = 0.78m, PredictedTarget = 1, RiskLevel = 2, ModelVersion = "v1.0", PredictedAt = baseDate.AddHours(1).AddMinutes(5) },
             new AiriskPrediction { Id = 2, PatientId = 2, DailyLogId = 2, RiskScore = 0.12m, PredictedTarget = 0, RiskLevel = 0, ModelVersion = "v1.0", PredictedAt = baseDate.AddHours(2).AddMinutes(5) },
@@ -635,7 +611,6 @@ public partial class SmartHealthMonitoringContext : DbContext
             new AiriskPrediction { Id = 10, PatientId = 10, DailyLogId = 10, RiskScore = 0.82m, PredictedTarget = 1, RiskLevel = 2, ModelVersion = "v1.0", PredictedAt = baseDate.AddHours(10).AddMinutes(5) }
         );
 
-        // 7. WarningAlerts
         modelBuilder.Entity<WarningAlert>().HasData(
             new WarningAlert { Id = 1, PredictionId = 1, PatientId = 1, Status = 0, FlaggedAt = baseDate.AddHours(1).AddMinutes(6) },
             new WarningAlert { Id = 2, PredictionId = 2, PatientId = 2, Status = 1, ClaimedByDoctorId = 1, FlaggedAt = baseDate.AddHours(2).AddMinutes(6) },
@@ -650,7 +625,6 @@ public partial class SmartHealthMonitoringContext : DbContext
             
         );
 
-        // 8. ChatbotSessions
         modelBuilder.Entity<ChatbotSession>().HasData(
             new ChatbotSession { Id = 1, PatientId = 1, StartedAt = baseDate.AddHours(12) },
             new ChatbotSession { Id = 2, PatientId = 2, StartedAt = baseDate.AddHours(12).AddMinutes(10) },
@@ -664,7 +638,6 @@ public partial class SmartHealthMonitoringContext : DbContext
             new ChatbotSession { Id = 10, PatientId = 10, StartedAt = baseDate.AddHours(13).AddMinutes(30) }
         );
 
-        // 9. ChatMessages
         modelBuilder.Entity<ChatMessage>().HasData(
             new ChatMessage { Id = 1, SessionId = 1, SenderRole = 0, Content = "Chào bác sĩ AI, tôi thấy hơi mệt", SentAt = baseDate.AddHours(12).AddMinutes(1) },
             new ChatMessage { Id = 2, SessionId = 2, SenderRole = 0, Content = "Hôm nay tôi đo huyết áp bình thường", SentAt = baseDate.AddHours(12).AddMinutes(11) },
@@ -678,7 +651,6 @@ public partial class SmartHealthMonitoringContext : DbContext
             new ChatMessage { Id = 10, SessionId = 10, SenderRole = 0, Content = "Ngực tôi hơi nặng nề", SentAt = baseDate.AddHours(13).AddMinutes(31) }
         );
 
-        // 10. EmailNotifications
         modelBuilder.Entity<EmailNotification>().HasData(
             new EmailNotification { Id = 1, AlertId = 1, PatientId = 1, ToEmail = "patient.hoa@gmail.com", Subject = "CẢNH BÁO: Huyết áp bất thường", Body = "Vui lòng liên hệ bác sĩ ngay", IsSent = true, Status = 1, SentAt = baseDate.AddHours(1).AddMinutes(7), CreatedAt = baseDate.AddHours(1).AddMinutes(7) },
             new EmailNotification { Id = 2, AlertId = 2, PatientId = 2, ToEmail = "patient.minh@gmail.com", Subject = "Cập nhật sinh hiệu", Body = "Chỉ số của bạn ổn định", IsSent = true, Status = 1, SentAt = baseDate.AddHours(2).AddMinutes(7), CreatedAt = baseDate.AddHours(2).AddMinutes(7) },
@@ -692,7 +664,6 @@ public partial class SmartHealthMonitoringContext : DbContext
             new EmailNotification { Id = 10, AlertId = 10, PatientId = 10, ToEmail = "patient.mai@gmail.com", Subject = "CẢNH BÁO: Huyết áp tâm thu cao", Body = "Bác sĩ An đã tiếp nhận", IsSent = true, Status = 1, SentAt = baseDate.AddHours(10).AddMinutes(7), CreatedAt = baseDate.AddHours(10).AddMinutes(7) }
         );
 
-        // 11. PatientThresholds (Ngưỡng mặc định cho các bệnh nhân)
         var defaultThresholds = new List<PatientThreshold>();
         for (int i = 1; i <= 10; i++)
         {
@@ -714,12 +685,10 @@ public partial class SmartHealthMonitoringContext : DbContext
         }
         modelBuilder.Entity<PatientThreshold>().HasData(defaultThresholds);
 
-        // bật RowVersion để tránh 2 người sửa cùng lúc
         modelBuilder.Entity<WarningAlert>()
             .Property(x => x.RowVersion)
             .IsRowVersion();
 
-        // ── TelemedicineChatSession (Phiên chat hàng đợi) ──
         modelBuilder.Entity<TelemedicineChatSession>(entity =>
         {
             entity.ToTable("TelemedicineChatSessions");
@@ -732,34 +701,28 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(sysutcdatetime())");
 
-            // FK → PatientUser (User)
             entity.HasOne(e => e.PatientUser)
                 .WithMany()
                 .HasForeignKey(e => e.PatientUserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_TelemedicineSession_Patient");
 
-            // FK → DoctorUser (User) — nullable
             entity.HasOne(e => e.DoctorUser)
                 .WithMany()
                 .HasForeignKey(e => e.DoctorUserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_TelemedicineSession_Doctor");
 
-            // Index: lọc nhanh theo Status (Waiting/Active)
             entity.HasIndex(e => e.Status)
                 .HasDatabaseName("IX_TelemedicineSession_Status");
 
-            // Index: tìm session của bệnh nhân
             entity.HasIndex(e => new { e.PatientUserId, e.Status })
                 .HasDatabaseName("IX_TelemedicineSession_Patient");
 
-            // Index: tìm session của bác sĩ
             entity.HasIndex(e => new { e.DoctorUserId, e.Status })
                 .HasDatabaseName("IX_TelemedicineSession_Doctor");
         });
 
-        // ── TelemedicineChatMessage (Chat 1-1 Bác sĩ ↔ Bệnh nhân) ──
         modelBuilder.Entity<TelemedicineChatMessage>(entity =>
         {
             entity.ToTable("TelemedicineChatMessages");
@@ -775,28 +738,24 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.Property(e => e.IsRead)
                 .HasDefaultValue(false);
 
-            // FK → Session
             entity.HasOne(e => e.Session)
                 .WithMany(s => s.Messages)
                 .HasForeignKey(e => e.SessionId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_TelemedicineChat_Session");
 
-            // FK → Sender (User)
             entity.HasOne(e => e.Sender)
                 .WithMany()
                 .HasForeignKey(e => e.SenderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_TelemedicineChat_Sender");
 
-            // FK → Receiver (User)
             entity.HasOne(e => e.Receiver)
                 .WithMany()
                 .HasForeignKey(e => e.ReceiverId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_TelemedicineChat_Receiver");
 
-            // Index tối ưu truy vấn lịch sử chat theo session
             entity.HasIndex(e => new { e.SessionId, e.SentAt })
                 .HasDatabaseName("IX_TelemedicineChat_Session_Time");
         });
@@ -836,7 +795,6 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.HasOne(d => d.Service).WithMany(p => p.PaymentDetails).HasForeignKey(d => d.ServiceId).OnDelete(DeleteBehavior.NoAction);
         });
 
-        // ── Appointment Booking System ──────────────────────────────────────────
         modelBuilder.Entity<DoctorWorkSchedule>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -852,12 +810,10 @@ public partial class SmartHealthMonitoringContext : DbContext
             entity.HasKey(e => e.Id);
             entity.ToTable("AppointmentSlots");
 
-            // Optimistic Concurrency - SQL Server ROWVERSION
             entity.Property(e => e.RowVersion)
                   .IsRowVersion()
                   .IsConcurrencyToken();
 
-            // Unique: một bác sĩ không thể có 2 slot trùng giờ
             entity.HasIndex(e => new { e.DoctorId, e.SlotStart })
                   .IsUnique()
                   .HasDatabaseName("UX_AppointmentSlot_Doctor_Start");
@@ -926,7 +882,6 @@ public partial class SmartHealthMonitoringContext : DbContext
                 .OnDelete(DeleteBehavior.NoAction);
         });
 
-        // ── SCH-07: AppointmentWaitlist ───────────────────────────────────────
         modelBuilder.Entity<AppointmentWaitlist>(entity =>
         {
             entity.HasKey(e => e.Id);

@@ -2,13 +2,14 @@ using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using System;
+using SmartHealthMonitoring.Interfaces.Repositories;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace SmartHealthMonitoring.Repositories
 {
     public class ClinicalRecordRepository
-    {
+    : IClinicalRecordRepository {
         private readonly SmartHealthMonitoringContext _context;
 
         public ClinicalRecordRepository(SmartHealthMonitoringContext context)
@@ -90,3 +91,4 @@ namespace SmartHealthMonitoring.Repositories
         }
     }
 }
+

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore.Infrastructure;
+﻿using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using SmartHealthMonitoring.Context;
 
@@ -6,12 +6,10 @@ using SmartHealthMonitoring.Context;
 
 namespace SmartHealthMonitoring.Migrations
 {
-    /// <inheritdoc />
     [DbContext(typeof(SmartHealthMonitoringContext))]
     [Migration("20260629123000_AddAiAlertSettingAudienceRules")]
     public partial class AddAiAlertSettingAudienceRules : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<byte>(
@@ -36,7 +34,6 @@ namespace SmartHealthMonitoring.Migrations
                 defaultValue: (byte)2);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

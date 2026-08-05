@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using SmartHealthMonitoring.Models;
 
 namespace SmartHealthMonitoring.ViewModels;
@@ -7,21 +7,21 @@ public class EmergencyContactFormViewModel : IValidatableObject
 {
     public int? Id { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng nhập họ tên người thân.")]
-    [StringLength(100, MinimumLength = 2, ErrorMessage = "Họ tên phải từ 2 đến 100 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p h? t�n ngu?i th�n.")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "H? t�n ph?i t? 2 d?n 100 k� t?.")]
     public string FullName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập mối quan hệ.")]
-    [StringLength(50, MinimumLength = 2, ErrorMessage = "Mối quan hệ phải từ 2 đến 50 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p m?i quan h?.")]
+    [StringLength(50, MinimumLength = 2, ErrorMessage = "M?i quan h? ph?i t? 2 d?n 50 k� t?.")]
     public string Relationship { get; set; } = string.Empty;
 
-    [EmailAddress(ErrorMessage = "Email liên hệ không hợp lệ.")]
-    [StringLength(150, ErrorMessage = "Email không được vượt quá 150 ký tự.")]
+    [EmailAddress(ErrorMessage = "Email li�n h? kh�ng h?p l?.")]
+    [StringLength(150, ErrorMessage = "Email kh�ng du?c vu?t qu� 150 k� t?.")]
     public string? Email { get; set; }
 
     [RegularExpression(@"^(0[35789]\d{8}|\+84[35789]\d{8})$",
-        ErrorMessage = "Số điện thoại phải là số di động Việt Nam, ví dụ 0901234567 hoặc +84901234567.")]
-    [StringLength(20, ErrorMessage = "Số điện thoại không được vượt quá 20 ký tự.")]
+        ErrorMessage = "S? di?n tho?i ph?i l� s? di d?ng Vi?t Nam, v� d? 0901234567 ho?c +84901234567.")]
+    [StringLength(20, ErrorMessage = "S? di?n tho?i kh�ng du?c vu?t qu� 20 k� t?.")]
     public string? Phone { get; set; }
 
     public bool IsPrimary { get; set; }
@@ -33,7 +33,7 @@ public class EmergencyContactFormViewModel : IValidatableObject
         if (string.IsNullOrWhiteSpace(FullName))
         {
             yield return new ValidationResult(
-                "Vui lòng nhập họ tên người thân.",
+                "Vui l�ng nh?p h? t�n ngu?i th�n.",
                 new[] { nameof(FullName) });
         }
         else
@@ -42,14 +42,14 @@ public class EmergencyContactFormViewModel : IValidatableObject
             if (!fullName.Any(char.IsLetter))
             {
                 yield return new ValidationResult(
-                    "Họ tên phải chứa ít nhất một chữ cái.",
+                    "H? t�n ph?i ch?a �t nh?t m?t ch? c�i.",
                     new[] { nameof(FullName) });
             }
 
             if (fullName.Any(char.IsDigit) || ContainsUnsafeMarkup(fullName))
             {
                 yield return new ValidationResult(
-                    "Họ tên không được chứa số hoặc ký tự < >.",
+                    "H? t�n kh�ng du?c ch?a s? ho?c k� t? < >.",
                     new[] { nameof(FullName) });
             }
         }
@@ -57,27 +57,27 @@ public class EmergencyContactFormViewModel : IValidatableObject
         if (string.IsNullOrWhiteSpace(Relationship))
         {
             yield return new ValidationResult(
-                "Vui lòng nhập mối quan hệ.",
+                "Vui l�ng nh?p m?i quan h?.",
                 new[] { nameof(Relationship) });
         }
         else if (!Relationship.Trim().Any(char.IsLetter) || ContainsUnsafeMarkup(Relationship))
         {
             yield return new ValidationResult(
-                "Mối quan hệ phải chứa chữ cái và không được chứa ký tự < >.",
+                "M?i quan h? ph?i ch?a ch? c�i v� kh�ng du?c ch?a k� t? < >.",
                 new[] { nameof(Relationship) });
         }
 
         if (string.IsNullOrWhiteSpace(Email) && string.IsNullOrWhiteSpace(Phone))
         {
             yield return new ValidationResult(
-                "Vui lòng nhập ít nhất email hoặc số điện thoại.",
+                "Vui l�ng nh?p �t nh?t email ho?c s? di?n tho?i.",
                 new[] { nameof(Email), nameof(Phone) });
         }
 
         if (IsPrimary && !IsActive)
         {
             yield return new ValidationResult(
-                "Liên hệ chính phải đang ở trạng thái sử dụng.",
+                "Li�n h? ch�nh ph?i dang ? tr?ng th�i s? d?ng.",
                 new[] { nameof(IsActive) });
         }
     }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using SmartHealthMonitoring.Services;
+using SmartHealthMonitoring.Interfaces.Minio;
 using SmartHealthMonitoring.ViewModels;
 using System;
 using System.IO;
@@ -21,7 +21,6 @@ namespace SmartHealthMonitoring.Controllers.API
             _minioService = minioService;
         }
 
-        // POST: api/LabWebhook/ReceiveResult
         [HttpPost("ReceiveResult")]
         public async Task<IActionResult> ReceiveResult([FromBody] LabWebhookPayload payload)
         {
@@ -32,30 +31,23 @@ namespace SmartHealthMonitoring.Controllers.API
 
             try
             {
-                // XỬ LÝ TẬP TIN ẢNH NẾU ĐƯỢC MÁY XÉT NGHIỆM ĐẨY KÈM DỮ LIỆU BASE64
                 if (!string.IsNullOrEmpty(payload.EcgImageBase64))
                 {
-                    // Loại bỏ tiền tố Data URL nếu có (ví dụ: "data:image/png;base64,")
                     string cleanBase64 = payload.EcgImageBase64.Contains(",")
                         ? payload.EcgImageBase64.Split(',')[1]
                         : payload.EcgImageBase64;
 
-                    // Giải mã chuỗi Base64 thành mảng byte vật lý
                     byte[] imageBytes = Convert.FromBase64String(cleanBase64);
 
                     using (var stream = new MemoryStream(imageBytes))
                     {
-                        // Định nghĩa cấu trúc tên file duy nhất tránh ghi đè
                         string bucketName = "ecg-images";
                         string objectName = $"ecg_{payload.PatientId}_{DateTimeOffset.Now.ToUnixTimeSeconds()}.png";
 
-                        // Tải tệp dữ liệu lên MinIO Server
                         await _minioService.UploadFileAsync(bucketName, objectName, stream, "image/png");
 
-                        // Tạo đường dẫn liên kết bảo mật có thời hạn sử dụng là 7 ngày (10080 phút)
                         string presignedUrl = await _minioService.GetPresignedUrlAsync(bucketName, objectName, 10080);
 
-                        // Gán đường dẫn vào payload để lưu trữ tạm vào bộ nhớ đệm Cache
                         payload.EcgImageUrl = presignedUrl;
                     }
                 }
@@ -64,7 +56,6 @@ namespace SmartHealthMonitoring.Controllers.API
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromMinutes(30));
 
-                // Lưu trữ dữ liệu cấu trúc kèm link ảnh vào bộ nhớ đệm MemoryCache
                 _cache.Set(cacheKey, payload, cacheEntryOptions);
 
                 return Ok(new { message = $"Đã nhận kết quả xét nghiệm và xử lý tệp ảnh ECG thành công cho PatientId: {payload.PatientId}" });
@@ -75,7 +66,6 @@ namespace SmartHealthMonitoring.Controllers.API
             }
         }
 
-        // GET: api/LabWebhook/CheckResult/{patientId}
         [HttpGet("CheckResult/{patientId}")]
         public IActionResult CheckResult(int patientId)
         {

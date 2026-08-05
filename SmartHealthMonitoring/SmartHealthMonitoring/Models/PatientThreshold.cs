@@ -9,28 +9,22 @@ namespace SmartHealthMonitoring.Models
 
         public int PatientId { get; set; }
 
-        // --- Cấu hình Huyết áp Tâm Thu (Systolic) ---
-        public short SystolicBpWarning { get; set; } = 130; // Từ mức này là Cảnh báo
-        public short SystolicBpDanger { get; set; } = 140;  // Từ mức này là Nguy hiểm
+        public short SystolicBpWarning { get; set; } = 130; // T? m?c n�y l� C?nh b�o
+        public short SystolicBpDanger { get; set; } = 140;  // T? m?c n�y l� Nguy hi?m
 
-        // --- Cấu hình Huyết áp Tâm Trương (Diastolic) ---
         public short DiastolicBpWarning { get; set; } = 80;
         public short DiastolicBpDanger { get; set; } = 90;
 
-        // --- Cấu hình Nhịp tim (Heart Rate) ---
-        // Nhịp tim có ngưỡng trên và ngưỡng dưới
-        public short HeartRateWarningMin { get; set; } = 60;  // Dưới mức này là Cảnh báo
-        public short HeartRateDangerMin { get; set; } = 50;   // Dưới mức này là Nguy hiểm
+        public short HeartRateWarningMin { get; set; } = 60;  // Du?i m?c n�y l� C?nh b�o
+        public short HeartRateDangerMin { get; set; } = 50;   // Du?i m?c n�y l� Nguy hi?m
 
-        public short HeartRateWarningMax { get; set; } = 100; // Trên mức này là Cảnh báo
-        public short HeartRateDangerMax { get; set; } = 120;  // Trên mức này là Nguy hiểm
+        public short HeartRateWarningMax { get; set; } = 100; // Tr�n m?c n�y l� C?nh b�o
+        public short HeartRateDangerMax { get; set; } = 120;  // Tr�n m?c n�y l� Nguy hi?m
 
-        // Lưu vết cấu hình
         public DateTime UpdatedAt { get; set; }
 
         public int? UpdatedByDoctorId { get; set; }
 
-        // Navigation Properties
         public virtual Patient Patient { get; set; } = null!;
         public virtual Doctor? UpdatedByDoctor { get; set; }
     }

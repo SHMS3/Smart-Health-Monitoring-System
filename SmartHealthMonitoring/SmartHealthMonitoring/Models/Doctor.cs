@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace SmartHealthMonitoring.Models;
@@ -31,7 +31,6 @@ public partial class Doctor
 
     public byte? Sex { get; set; }
 
-    /// <summary>Phòng khám cố định của bác sĩ (VD: "P.201")</summary>
     public string? RoomNumber { get; set; }
 
     public virtual User User { get; set; } = null!;

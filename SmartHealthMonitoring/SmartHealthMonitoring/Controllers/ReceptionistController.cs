@@ -1,8 +1,10 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels;
-using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Interfaces.Receptionist;
+using SmartHealthMonitoring.Interfaces.Appointment;
+using SmartHealthMonitoring.Interfaces.Email;
 using System;
 using System.Threading.Tasks;
 using System.Security.Claims;

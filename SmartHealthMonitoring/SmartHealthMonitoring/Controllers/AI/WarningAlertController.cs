@@ -1,12 +1,13 @@
+﻿using SmartHealthMonitoring.Interfaces.Audit;
+using SmartHealthMonitoring.Interfaces.Email;
+using SmartHealthMonitoring.Interfaces.Doctor;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Interfaces;
 using SmartHealthMonitoring.Services;
 using SmartHealthMonitoring.Models;
 
-using SmartHealthMonitoring.Services.AI;
+using SmartHealthMonitoring.Interfaces.AI;
 using SmartHealthMonitoring.ViewModels;
 using System.Security.Claims;
 
@@ -16,7 +17,6 @@ namespace SmartHealthMonitoring.Controllers.AI
     public class WarningAlertController : Controller
     {
         private readonly IAiWarningAlertService _warningAlertService;
-        private readonly SmartHealthMonitoringContext _context;
         private readonly IEmailService _emailService;
         private readonly IDoctorService _doctorService;
         private readonly IEmailTriggerService _emailTriggerService;
@@ -25,11 +25,9 @@ namespace SmartHealthMonitoring.Controllers.AI
         private readonly IThresholdService _thresholdService;
 
 
-
         public WarningAlertController(
             IAiWarningAlertService warningAlertService,
             IDoctorService doctorService,
-            SmartHealthMonitoringContext context,
             IEmailService emailService,
             IEmailTriggerService emailTriggerService,
             IAuditLogService auditLogService,
@@ -38,7 +36,6 @@ namespace SmartHealthMonitoring.Controllers.AI
         {
             _warningAlertService = warningAlertService;
             _doctorService = doctorService;
-            _context = context;
             _emailService = emailService;
             _emailTriggerService = emailTriggerService;
             _auditLogService = auditLogService;
@@ -49,7 +46,6 @@ namespace SmartHealthMonitoring.Controllers.AI
 
         public async Task<IActionResult> Dashboard(byte? status, string? keyword, int page = 1, int pageSize = 10, bool onlyMyAlerts = false)
         {
-            // Truyền doctorId để UI chỉ hiển thị Resolution note cho đúng bác sĩ đã claim
             int? doctorId = null;
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out var userId))
@@ -276,17 +272,7 @@ namespace SmartHealthMonitoring.Controllers.AI
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var alert = await _context.WarningAlerts
-                .Include(a => a.Patient)
-                    .ThenInclude(p => p.User)
-                .Include(a => a.ClaimedByDoctor)
-                    .ThenInclude(d => d.User)
-                .Include(a => a.Prediction)
-                    .ThenInclude(p => p.ClinicalRecord)
-                .Include(a => a.Prediction)
-                    .ThenInclude(p => p.DailyLog)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+            var alert = await _warningAlertService.GetAlertDetailsAsync(id);
 
             if (alert == null)
             {
@@ -294,7 +280,6 @@ namespace SmartHealthMonitoring.Controllers.AI
                 return RedirectToAction(nameof(Dashboard));
             }
 
-            // Truyền doctorId để UI hiển thị biểu mẫu xử lý cho đúng bác sĩ đã claim
             int? doctorId = null;
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out var userId))
@@ -304,22 +289,11 @@ namespace SmartHealthMonitoring.Controllers.AI
             }
             ViewData["DoctorId"] = doctorId;
 
-            // Sinh lời giải thích XAI từ AnfisExplainabilityService
             var explanation = _explainabilityService.Explain(alert.Prediction, alert);
             ViewBag.Explanation = explanation;
 
-            // Fetch history
-            var clinicalHistory = await _context.ClinicalRecords
-                .Where(c => c.PatientId == alert.PatientId && !c.IsDeleted)
-                .OrderByDescending(c => c.VisitDate)
-                .AsNoTracking()
-                .ToListAsync();
-
-            var dailyHistory = await _context.DailyVitalLogs
-                .Where(d => d.PatientId == alert.PatientId && !d.IsDeleted)
-                .OrderByDescending(d => d.LoggedAt)
-                .AsNoTracking()
-                .ToListAsync();
+            var clinicalHistory = await _warningAlertService.GetClinicalHistoryAsync(alert.PatientId);
+            var dailyHistory = await _warningAlertService.GetDailyHistoryAsync(alert.PatientId);
 
             ViewBag.ClinicalHistory = clinicalHistory;
             ViewBag.DailyHistory = dailyHistory;
@@ -328,3 +302,4 @@ namespace SmartHealthMonitoring.Controllers.AI
         }
     }
 }
+

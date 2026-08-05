@@ -1,18 +1,16 @@
+﻿using SmartHealthMonitoring.Interfaces.AI;
+using ModelsPatient = SmartHealthMonitoring.Models.Patient;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using SmartHealthMonitoring.Models;
 
 namespace SmartHealthMonitoring.Services.AI;
 
-/// <summary>
-/// Scoped Service trien khai logic chuan bi du lieu (mapping + Box-Cox transform) va goi ONNX inference.
-/// </summary>
 public class AiPredictionService : IAiPredictionService
 {
     private readonly IAiModelSessionRunner _sessionRunner;
     private readonly ILogger<AiPredictionService> _logger;
 
-    // Lay lambdas tu Singleton SessionRunner (da nap 1 lan luc startup)
     private IReadOnlyDictionary<string, float> Lambdas => _sessionRunner.BoxCoxLambdas;
 
     public AiPredictionService(IAiModelSessionRunner sessionRunner, ILogger<AiPredictionService> logger)
@@ -21,15 +19,7 @@ public class AiPredictionService : IAiPredictionService
         _logger = logger;
     }
 
-    // =========================================================================
-    // Box-Cox Transform
-    // =========================================================================
 
-    /// <summary>
-    /// Ap dung bien doi Box-Cox len mot gia tri continuous.
-    /// Neu lambda ≈ 0 → dung ln(x). Nguoc lai → (x^λ − 1) / λ.
-    /// Neu khong tim thay lambda → tra ve gia tri goc (fallback an toan).
-    /// </summary>
     private float ApplyBoxCox(float value, string featureName)
     {
         if (!Lambdas.TryGetValue(featureName, out float lambda))
@@ -38,31 +28,19 @@ public class AiPredictionService : IAiPredictionService
             return value;
         }
 
-        // Bao ve khoi log(0) hoac pow am
         if (value <= 0f)
         {
             _logger.LogWarning("[BoxCox] Feature '{Feature}' co gia tri {Value} <= 0. Thay bang epsilon.", featureName, value);
             value = 1e-6f;
         }
 
-        // lambda ≈ 0 → log transform
         if (Math.Abs(lambda) < 1e-10f)
             return (float)Math.Log(value);
 
         return (float)((Math.Pow(value, lambda) - 1.0) / lambda);
     }
 
-    // =========================================================================
-    // Feature Vector Builder (dung chung cho ca 2 predict methods)
-    // =========================================================================
 
-    /// <summary>
-    /// Tao feature vector 18 chieu dung thu tu huan luyen:
-    /// [0] age, [1] sex, [2] trestbps, [3] chol, [4] fbs,
-    /// [5] thalach, [6] exang, [7] oldpeak, [8] slope, [9] ca,
-    /// [10-12] cp_1/2/3 (One-Hot), [13-14] restecg_1/2 (One-Hot),
-    /// [15-17] thal_1/2/3 (One-Hot)
-    /// </summary>
     private float[] BuildFeatureVector(
         int age, float sex,
         float trestbps, float chol, float fbs,
@@ -70,19 +48,12 @@ public class AiPredictionService : IAiPredictionService
         float slope, float ca,
         byte cpRaw, byte restecgRaw, byte thalRaw)
     {
-        // Box-Cox tren continuous features
         float ageT      = ApplyBoxCox((float)age, "age");
         float trestbpsT = ApplyBoxCox(trestbps,   "trestbps");
         float cholT     = ApplyBoxCox(chol,        "chol");
         float thalachT  = ApplyBoxCox(thalach,     "thalach");
-        // oldpeak da duoc cong +0.001 tu caller de tranh log(0)
         float oldpeakT  = ApplyBoxCox(oldpeakRaw,  "oldpeak");
 
-        // One-Hot Encoding cho Chest Pain
-        // QUAN TRONG - MAPPING NGUOC:
-        // App: 0=Khong dau, 1=Nhe, 2=Vua, 3=Nang
-        // UCI: 0=Typical Angina (NGUY HIEM NHAT), 1=Atypical, 2=Non-anginal, 3=Asymptomatic (it nguy hiem nhat)
-        // => Dao mapping: app=0 → uci=3, app=3 → uci=0
         byte uciCp = cpRaw switch
         {
             0 => 3, // Khong dau → Asymptomatic
@@ -103,7 +74,6 @@ public class AiPredictionService : IAiPredictionService
         float thal_2 = thalRaw == 2 ? 1f : 0f;
         float thal_3 = thalRaw == 3 ? 1f : 0f;
 
-        // DEBUG: Chi hien o LogLevel=Debug
         _logger.LogDebug(
             "[Debug] Dau vao truoc Box-Cox: age={Age}, sex={Sex}, BP={Trestbps}, chol={Chol}, fbs={Fbs}, HR={Thalach}, exang={Exang}, oldpeak={Oldpeak}, slope={Slope}, ca={Ca}, cp={Cp}, ecg={Restecg}, thal={Thal}",
             age, sex, trestbps, chol, fbs, thalach, exang, oldpeakRaw,
@@ -127,13 +97,9 @@ public class AiPredictionService : IAiPredictionService
         };
     }
 
-    // =========================================================================
-    // Inference Helper
-    // =========================================================================
 
     private AiriskPrediction RunInference(float[] featureValues, string modelType, string dataSource)
     {
-        // Tao Tensor 2D [1 x 18]
         var inputTensor = new DenseTensor<float>(featureValues, new[] { 1, 18 });
 
         var session = _sessionRunner.GetSession(modelType);
@@ -144,11 +110,6 @@ public class AiPredictionService : IAiPredictionService
 
         using var results = session.Run(inputs);
 
-        // QUAN TRONG - NHAN DATASET UCI:
-        //   class 0 = CO BENH TIM (ton thuong dong mach vanh)
-        //   class 1 = KHONG BENH (binh thuong)
-        // => riskScore = probabilities[0] (xac suat class=0 = xac suat CO BENH)
-        // ANFIS cung dung quy uoc nhan giong het KNN/SVM (train cung dataset UCI)
         float prob_disease; // xac suat CO BENH TIM (class=0)
         float prob_healthy; // xac suat KHONG BENH  (class=1)
 
@@ -158,7 +119,6 @@ public class AiPredictionService : IAiPredictionService
         if (isAnfis)
         {
             // ANFIS (PyTorch): Output[0] = label (int64), Output[1] = probabilities (float tensor)
-            // PyTorch model xuat float tensor truc tiep (KHONG phai Sequence<Map>)
             try
             {
                 var probTensor = resultList.Count > 1
@@ -168,8 +128,6 @@ public class AiPredictionService : IAiPredictionService
                 prob_disease = probTensor.Length >= 1 ? probTensor[0] : 0f;
                 prob_healthy = probTensor.Length >= 2 ? probTensor[1] : 1f;
 
-                // ANFIS thuong tra ve Logits thay vi Probabilities.
-                // Ap dung Softmax neu tong khong xap xi 1 hoac co gia tri ngoai [0,1]
                 if (prob_disease < 0f || prob_disease > 1f || prob_healthy < 0f || prob_healthy > 1f
                     || Math.Abs(prob_disease + prob_healthy - 1f) > 0.01f)
                 {
@@ -195,7 +153,6 @@ public class AiPredictionService : IAiPredictionService
         }
         else
         {
-            // KNN/SVM (scikit-learn): Output[0] = label, Output[1] = probabilities
             try
             {
                 // zipmap=False → output la float tensor [1, 2]
@@ -206,7 +163,6 @@ public class AiPredictionService : IAiPredictionService
             }
             catch
             {
-                // Fallback: Sequence<Map<int64, float>>
                 var probMaps = resultList.Skip(1).First()
                     .AsEnumerable<IDictionary<long, float>>().ToArray();
                 prob_disease = probMaps[0].TryGetValue(0L, out var p0) ? p0 : 0f;
@@ -219,7 +175,6 @@ public class AiPredictionService : IAiPredictionService
         long  predictedLabel = prob1 >= 0.5f ? 1L : 0L;
         decimal riskScore    = (decimal)prob1;
 
-        // RiskLevel: 1=Thap (<0.40), 2=Trung binh (0.40-0.70), 3=Cao (>=0.70)
         byte riskLevel = riskScore >= 0.70m ? (byte)3
                        : riskScore >= 0.40m ? (byte)2
                        : (byte)1;
@@ -234,14 +189,7 @@ public class AiPredictionService : IAiPredictionService
         };
     }
 
-    // =========================================================================
-    // Public API
-    // =========================================================================
 
-    /// <summary>
-    /// Du doan nguy co tim mach dua tren ClinicalRecord (kham tai vien).
-    /// Dung khi benh nhan KHONG co DailyVitalLog nao.
-    /// </summary>
     public AiriskPrediction PredictHeartDiseaseRisk(ClinicalRecord record, string modelType = "KNN")
     {
         try
@@ -252,7 +200,6 @@ public class AiPredictionService : IAiPredictionService
             int   age = CalculateAge(record.Patient.DateOfBirth.ToDateTime(TimeOnly.MinValue));
             float sex = record.Patient.Sex;
 
-            // Fallback theo tuổi/giới cho các field null (gói chưa mua)
             var (normalBP, normalMaxHR, normalChol) = GetNormalValues(age, sex);
 
             float restingBp  = record.RestingBp.HasValue    ? (float)record.RestingBp.Value    : normalBP;
@@ -292,50 +239,24 @@ public class AiPredictionService : IAiPredictionService
         }
     }
 
-    /// <summary>
-    /// Du doan ket hop: uu tien chi so sinh hieu moi nhat tu DailyVitalLog,
-    /// bo sung bang chi so xet nghiem tu ClinicalRecord gan nhat (co the null).
-    ///
-    /// DailyVitalLog cung cap:  SystolicBp → trestbps, HeartRate → thalach (uoc tinh),
-    ///                          ChestPainLevel → cp, HasExerciseAngina → exang
-    /// ClinicalRecord cung cap: Cholesterol, FastingBS, RestECG, OldPeak, STSlope, MajorVessels, ThalResult
-    /// Neu ClinicalRecord null hoac da cu → dung gia tri trung binh lam sang lam fallback.
-    ///
-    /// purchasedServiceNames: Danh sach ten dich vu da thanh toan (lowercase).
-    ///   - "huyết áp & triệu chứng" → nhom cp/exang/bp
-    ///   - "phân tích huyết học"    → nhom chol/fbs
-    ///   - "điện tâm đồ & mạch vành" → nhom ecg/oldpeak/slope/ca/thal
-    /// Neu null hoac empty → dung fallback an toan cho tat ca.
-    /// </summary>
-    public AiriskPrediction PredictCombined(DailyVitalLog log, ClinicalRecord? clinicalRecord, Patient patient, string modelType = "KNN", IReadOnlyList<string>? purchasedServiceNames = null)
+    public AiriskPrediction PredictCombined(DailyVitalLog log, ClinicalRecord? clinicalRecord, ModelsPatient patient, string modelType = "KNN", IReadOnlyList<string>? purchasedServiceNames = null)
     {
         try
         {
             if (patient == null)
-                throw new ArgumentException("Patient khong duoc null.", nameof(patient));
+                throw new ArgumentException("ModelsPatient khong duoc null.", nameof(patient));
 
             int   age = CalculateAge(patient.DateOfBirth.ToDateTime(TimeOnly.MinValue));
             float sex = patient.Sex;
 
-            // ── Ghi log các gói dịch vụ đã mua (chỉ để debug, không dùng để quyết định fallback nữa) ──
             _logger.LogDebug(
                 "[PredictCombined] PurchasedServices={Svcs} (Fallback giờ đây dựa vào null-check trực tiếp từ ClinicalRecord)",
                 purchasedServiceNames == null ? "ALL" : string.Join(", ", purchasedServiceNames));
 
-            // ── Chi so tu DailyVitalLog (luon dung - du lieu moi nhat) ──────────
             float trestbps = log.SystolicBp;
             float exang    = log.HasExerciseAngina ? 1f : 0f;
             byte  cpRaw    = log.ChestPainLevel;
 
-            // MAPPING NHIP TIM:
-            // DailyVitalLog.HeartRate = nhip tim NGHI NGOI tai nha (resting HR)
-            // UCI thalach = nhip tim TOI DA khi GANG SUC (max exercise HR)
-            //
-            // Trong UCI: thalach CAO → KHOE MANH | thalach THAP → CO BENH
-            // Nhip nghi cao (>=100 bpm = Tachycardia) → tim kem cardiac reserve → max HR thap khi gang suc
-            //
-            // Cong thuc uoc tinh: theoreticalMax = 220 - age (Haskell-Fox)
-            // Penalty tang dan tu 0% (HR=75) toi 50% (HR=375)
             float restingHR        = log.HeartRate;
             float theoreticalMaxHR = 220f - age;
             float hrPenalty        = Math.Clamp((restingHR - 75f) / 300f, 0f, 0.5f);
@@ -345,13 +266,7 @@ public class AiPredictionService : IAiPredictionService
                 "[HRConvert] Nhip nghi={RHR}bpm, Tuoi={Age} -> HR max ly thuyet={TMax:F0}, Phat={Pen:P0} -> HR max uoc tinh={Thalach:F0}bpm",
                 restingHR, age, theoreticalMaxHR, hrPenalty, thalach);
 
-            // ── Chi so tu ClinicalRecord ─────────────────────────────────────────
-            // Fallback thong minh theo GOI DICH VU DA MUA:
-            //   - Goi chua mua → dung gia tri trung binh nguoi khoe manh (UCI mean)
-            //   - Dam bao mo hinh ONNX luon nhan du 18 features hop le
 
-            // Nhom Huyết học: Cholesterol, FastingBS
-            // Fallback: kiểm tra null trực tiếp từ ClinicalRecord (không còn dùng hasBloodPackage nữa)
             var (normalBP, normalMaxHR, normalChol) = GetNormalValues(age, sex);
             _logger.LogDebug(
                 "[NormalValues] Age={A}, Sex={S} → BP={BP}, MaxHR={HR}, Chol={C}",
@@ -361,7 +276,6 @@ public class AiPredictionService : IAiPredictionService
             float fbs;
             if (clinicalRecord?.Cholesterol != null)
             {
-                // Có dữ liệu thực tế trong DB → dùng luôn
                 chol = (float)clinicalRecord.Cholesterol.Value;
                 fbs  = (clinicalRecord.FastingBs.HasValue && (clinicalRecord.FastingBs.Value > 120 || clinicalRecord.FastingBs.Value == 1)) ? 1f : 0f;
                 _logger.LogDebug("[Blood] Dùng giá trị thực từ ClinicalRecord: chol={C}, fbs={F}", chol, fbs);
@@ -374,8 +288,6 @@ public class AiPredictionService : IAiPredictionService
                 _logger.LogDebug("[Blood] Cholesterol=null → fallback theo tuổi/giới: chol={C}", chol);
             }
 
-            // Nhom Điện tâm đồ & Mạch vành: OldPeak, STSlope, RestECG, MajorVessels, ThalResult
-            // Fallback: kiểm tra null trực tiếp từ ClinicalRecord
             float oldpeak;
             float slope;
             float ca;
@@ -383,7 +295,6 @@ public class AiPredictionService : IAiPredictionService
             byte  thalRaw;
             if (clinicalRecord?.OldPeak != null)
             {
-                // Có dữ liệu ECG thực tế → dùng
                 oldpeak    = (float)clinicalRecord.OldPeak.Value + 0.001f;
                 slope      = clinicalRecord.Stslope.HasValue ? (float)clinicalRecord.Stslope.Value : 2f;
                 ca         = clinicalRecord.MajorVessels.HasValue ? (float)clinicalRecord.MajorVessels.Value : 0f;
@@ -432,23 +343,8 @@ public class AiPredictionService : IAiPredictionService
     }
 
 
-    // =========================================================================
-    // Clinical Normal Values by Age & Sex
-    // =========================================================================
-
-    /// <summary>
-    /// Tra ve gia tri sinh ly BINH THUONG cho 1 benh nhan cu the dua tren tuoi va gioi tinh.
-    /// Tham chieu:
-    ///   - Huyết ap: ACC/AHA 2017 guideline
-    ///   - Cholesterol: NCEP-ATP III / AHA by age-sex strata
-    ///   - Nhip tim toi da: Haskell-Fox (220-age), hieu chinh gioi (nu cao hon 5-7 bpm)
-    ///   - Oldpeak, STSlope, ca, ECG, Thal: khong thay doi theo tuoi (gia tri categorical on dinh)
-    /// </summary>
     private static (float RestingBP, float MaxHR, float Cholesterol) GetNormalValues(int age, float sex)
     {
-        // ── Huyết áp tâm thu nghỉ (mmHg) ────────────────────────────────────────
-        // Nam: thap hon nu truoc 50t, tu 50t tro len tuong duong
-        // Nu:  tang nhanh sau man kinh (~50t)
         float restingBP = sex >= 1f // 1 = Nam
             ? age switch
             {
@@ -469,17 +365,9 @@ public class AiPredictionService : IAiPredictionService
                 _    => 138f
             };
 
-        // ── Nhịp tim tối đa khi gắng sức (bpm) ─────────────────────────────────
-        // Haskell-Fox: 220 - age (cho nam)
-        // Hiệu chỉnh nữ: +5 bpm (trung bình nữ đạt HR tối đa cao hơn)
         float maxHR = (220f - age) + (sex >= 1f ? 0f : 5f);
-        // Clamp về khoảng sinh lý (100-200 bpm)
         maxHR = Math.Clamp(maxHR, 100f, 200f);
 
-        // ── Cholesterol toàn phần (mg/dL) ───────────────────────────────────────
-        // NCEP-ATP III / AHA normals theo lứa tuổi và giới:
-        //   Nam: tăng dần đến 50t rồi ổn định
-        //   Nữ: tăng mạnh sau mãn kinh (50t), đỉnh ở 60-70t
         float chol = sex >= 1f // Nam
             ? age switch
             {
@@ -503,9 +391,6 @@ public class AiPredictionService : IAiPredictionService
         return (restingBP, maxHR, chol);
     }
 
-    // =========================================================================
-    // Helpers
-    // =========================================================================
 
     private static int CalculateAge(DateTime dateOfBirth)
     {
@@ -515,3 +400,5 @@ public class AiPredictionService : IAiPredictionService
         return age;
     }
 }
+
+

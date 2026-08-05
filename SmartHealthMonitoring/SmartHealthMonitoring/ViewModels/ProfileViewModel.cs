@@ -1,10 +1,9 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels
 {
     public class ProfileViewModel
     {
-        // ── Thông tin tài khoản ──
         public int UserId { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
@@ -12,7 +11,6 @@ namespace SmartHealthMonitoring.ViewModels
         public bool IsGoogleAccount { get; set; } // PasswordHash rỗng = đăng nhập Google
         public string? AvatarUrl { get; set; }
 
-        // ── Thông tin bệnh nhân (chỉ dành cho Role = 0) ──
         public int? PatientId { get; set; }
         public DateOnly? DateOfBirth { get; set; }
         public byte? Sex { get; set; }      // 0 = Nữ, 1 = Nam
@@ -20,20 +18,17 @@ namespace SmartHealthMonitoring.ViewModels
         public bool IsPhoneVerified { get; set; }
         public string? Address { get; set; }
 
-        // ── Căn cước & Giấy phép ──
         public string? CitizenId { get; set; }
         public string? CitizenIdFrontUrl { get; set; }
         public string? CitizenIdBackUrl { get; set; }
         public string? PracticeLicense { get; set; }
         public string? Specialty { get; set; }
 
-        // ── Thống kê nhanh ──
         public int TotalVitalLogs { get; set; }
         public int TotalClinicalRecords { get; set; }
         public int TotalWarningAlerts { get; set; }
         public DateTime? LastLogAt { get; set; }
 
-        // ── Computed properties ──
         public int? Age => DateOfBirth.HasValue
             ? (int)((DateTime.Today - DateOfBirth.Value.ToDateTime(TimeOnly.MinValue)).TotalDays / 365.25)
             : null;
@@ -55,14 +50,11 @@ namespace SmartHealthMonitoring.ViewModels
             _ => "Người dùng"
         };
 
-        // ── Thói quen sinh hoạt (chỉ dành cho Role = 0) ──
         public HabitViewModel? Habit { get; set; }
     }
 
-    // ViewModel cho form Thói quen sinh hoạt
     public class HabitViewModel
     {
-        // Nhóm 1: Thói quen ăn uống
         public bool DietSalty { get; set; }
         public bool DietHighFat { get; set; }
         public bool DietHighSugar { get; set; }
@@ -70,21 +62,17 @@ namespace SmartHealthMonitoring.ViewModels
         public bool AlcoholHeavy { get; set; }
         public bool CaffeineSpike { get; set; }
 
-        // Nhóm 2: Thói quen sinh hoạt
         public bool LifestyleSedentary { get; set; }
         public bool LifestyleSitLong { get; set; }
         public bool SleepDeprived { get; set; }
         public bool NoHealthCheck { get; set; }
 
-        // Nhóm 3: Hành vi có hại
         public bool SmokeActive { get; set; }
         public bool SmokePassive { get; set; }
         public bool SelfMedication { get; set; }
 
-        // Nhóm 4: Yếu tố tâm lý
         public bool StressHigh { get; set; }
 
-        // Nhóm 5: Thói quen tốt
         public bool ExerciseRegularly { get; set; }
         public bool SleepEarly { get; set; }
         public bool DrinkEnoughWater { get; set; }
@@ -93,7 +81,6 @@ namespace SmartHealthMonitoring.ViewModels
         public bool NoSubstanceAbuse { get; set; }
     }
 
-    // ViewModel riêng để cập nhật thông tin cá nhân
     public class UpdateProfileViewModel
     {
         [Required(ErrorMessage = "Vui lòng nhập họ và tên.")]

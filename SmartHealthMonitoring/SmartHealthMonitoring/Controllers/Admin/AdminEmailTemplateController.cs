@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SmartHealthMonitoring.Services;
+using SmartHealthMonitoring.Services.Email;
 using SmartHealthMonitoring.ViewModels.Admin;
 
 namespace SmartHealthMonitoring.Controllers.Admin;
@@ -28,7 +28,7 @@ public class AdminEmailTemplateController : Controller
         var model = await _emailTemplateService.GetTemplateForEditAsync(templateName);
         if (model == null)
         {
-            TempData["Error"] = "Không tìm thấy mẫu email.";
+            TempData["Error"] = "Kh�ng t�m th?y m?u email.";
             return RedirectToAction(nameof(Index));
         }
 

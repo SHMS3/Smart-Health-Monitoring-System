@@ -1,10 +1,7 @@
-using System;
+﻿using System;
 
 namespace SmartHealthMonitoring.ViewModels;
 
-/// <summary>
-/// ViewModel hiển thị một liên hệ trong danh sách chat sidebar.
-/// </summary>
 public class ChatContactViewModel
 {
     public int UserId { get; set; }
