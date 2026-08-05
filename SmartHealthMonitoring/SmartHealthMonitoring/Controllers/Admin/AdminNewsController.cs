@@ -1,58 +1,45 @@
- using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SmartHealthMonitoring.Context;
-using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Interfaces.Admin;
+using SmartHealthMonitoring.Interfaces.AI;
 using SmartHealthMonitoring.Models;
-using SmartHealthMonitoring.Services;
 
 namespace SmartHealthMonitoring.Controllers.Admin
 {
     [Authorize(Roles = "2")]
     public class AdminNewsController : Controller
     {
-        private readonly SmartHealthMonitoringContext _context;
-        private readonly GeminiService _gemini;
+        private readonly IAdminNewsService _newsService;
+        private readonly IGeminiService _gemini;
         private readonly IAdminStatisticsService _statsService;
         private readonly IWebHostEnvironment _env;
 
         public AdminNewsController(
-            SmartHealthMonitoringContext context,
-            GeminiService gemini,
+            IAdminNewsService newsService,
+            IGeminiService gemini,
             IAdminStatisticsService statsService,
             IWebHostEnvironment env)
         {
-            _context = context;
+            _newsService = newsService;
             _gemini = gemini;
             _statsService = statsService;
             _env = env;
         }
 
-        // ══════════════════════════════════════════════
-        // INDEX — danh sách tất cả tin tức
-        // ══════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Index(string? status)
         {
-            var query = _context.HealthNewsPosts.AsQueryable();
-            if (!string.IsNullOrEmpty(status))
-                query = query.Where(n => n.Status == status);
-
-            var news = await query.OrderByDescending(n => n.CreatedAt).ToListAsync();
+            var news = await _newsService.GetAllAsync(status);
             ViewBag.CurrentStatus = status ?? "all";
             return View(news);
         }
 
-        // ══════════════════════════════════════════════
-        // CREATE GET — trang tạo bài (form trắng hoặc prefill từ AI)
-        // ══════════════════════════════════════════════
         [HttpGet]
         public IActionResult Create(string? source = null)
         {
-            // Đọc dữ liệu AI từ Session (hỗ trợ nội dung lớn không giới hạn không gian cookie)
             var model = new HealthNewsPost
             {
                 Title   = HttpContext.Session.GetString("AiNewsTitle")   ?? string.Empty,
@@ -61,7 +48,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 Source  = HttpContext.Session.GetString("AiNewsSource")  ?? source ?? "Manual",
                 Status  = "Draft"
             };
-            // Xóa session sau khi đã đọc xong
             HttpContext.Session.Remove("AiNewsTitle");
             HttpContext.Session.Remove("AiNewsSummary");
             HttpContext.Session.Remove("AiNewsContent");
@@ -69,9 +55,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
             return View(model);
         }
 
-        // ══════════════════════════════════════════════
-        // CREATE POST — lưu bài mới
-        // ══════════════════════════════════════════════
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(HealthNewsPost model, string action, IFormFile? uploadImage)
         {
@@ -89,34 +72,10 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 return View(model);
             }
 
-            // Xử lý upload ảnh
-            if (uploadImage != null && uploadImage.Length > 0)
-            {
-                var uploadsFolder = Path.Combine(_env.WebRootPath, "images", "news");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-                
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(uploadImage.FileName);
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await uploadImage.CopyToAsync(stream);
-                }
-                
-                model.ThumbnailUrl = "/images/news/" + fileName;
-            }
-
             var adminName = User.FindFirstValue(ClaimTypes.Name) ?? "Admin";
-            model.AuthorName = adminName;
-            model.CreatedAt  = SmartHealthMonitoring.Common.AppTime.Now;
-            model.Status     = (action == "publish") ? "Published" : "Draft";
-            if (model.Status == "Published")
-                model.PublishedAt = SmartHealthMonitoring.Common.AppTime.Now;
+            var createdModel = await _newsService.CreateAsync(model, adminName, action, _env.WebRootPath, uploadImage);
 
-            _context.HealthNewsPosts.Add(model);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = model.Status == "Published"
+            TempData["Success"] = createdModel.Status == "Published"
                 ? "✅ Bài viết đã được đăng thành công!"
                 : "💾 Bài viết đã được lưu dưới dạng nháp.";
 
@@ -134,7 +93,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
             {
                 return (false, "Chỉ cho phép tải lên ảnh PNG, JPG hoặc JPEG.");
             }
-            // 3. Validate dung lượng 2MB
             const long maxSize = 2 * 1024 * 1024;
             if (image.Length > maxSize)
             {
@@ -143,20 +101,14 @@ namespace SmartHealthMonitoring.Controllers.Admin
             return (true, string.Empty);
         }
 
-        // ══════════════════════════════════════════════
-        // EDIT GET
-        // ══════════════════════════════════════════════
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var post = await _context.HealthNewsPosts.FindAsync(id);
+            var post = await _newsService.GetByIdAsync(id);
             if (post == null) return NotFound();
             return View(post);
         }
 
-        // ══════════════════════════════════════════════
-        // EDIT POST
-        // ══════════════════════════════════════════════
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, HealthNewsPost model, string action, IFormFile? uploadImage)
         {
@@ -175,62 +127,18 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 return View(model);
             }
 
-            var existing = await _context.HealthNewsPosts.FindAsync(id);
-            if (existing == null) return NotFound();
+            var updatedModel = await _newsService.UpdateAsync(id, model, action, _env.WebRootPath, uploadImage);
+            if (updatedModel == null) return NotFound();
 
-            // Xử lý upload ảnh nếu có
-            if (uploadImage != null && uploadImage.Length > 0)
-            {
-                var uploadsFolder = Path.Combine(_env.WebRootPath, "images", "news");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-                
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(uploadImage.FileName);
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await uploadImage.CopyToAsync(stream);
-                }
-                
-                existing.ThumbnailUrl = "/images/news/" + fileName;
-            }
-            else
-            {
-                existing.ThumbnailUrl = model.ThumbnailUrl; // Giữ nguyên hoặc url cũ
-            }
-
-            existing.Title        = model.Title;
-            existing.Summary      = model.Summary;
-            existing.Content      = model.Content;
-            existing.UpdatedAt    = SmartHealthMonitoring.Common.AppTime.Now;
-
-            if (action == "publish" && existing.Status != "Published")
-            {
-                existing.Status      = "Published";
-                existing.PublishedAt = SmartHealthMonitoring.Common.AppTime.Now;
-            }
-            else if (action == "draft")
-            {
-                existing.Status = "Draft";
-            }
-
-            await _context.SaveChangesAsync();
             TempData["Success"] = "✅ Bài viết đã được cập nhật!";
             return RedirectToAction(nameof(Index));
         }
 
-        // =======================================================================================
-        // PUBLISH / HIDE / DELETE / APPROVE / REJECT (POST actions)
-        // =======================================================================================
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Approve(int id)
         {
-            var post = await _context.HealthNewsPosts.FindAsync(id);
-            if (post == null) return NotFound();
-            post.Status = "Published";
-            post.PublishedAt = SmartHealthMonitoring.Common.AppTime.Now;
-            post.RejectionReason = null;
-            await _context.SaveChangesAsync();
+            var success = await _newsService.ApproveAsync(id);
+            if (!success) return NotFound();
             TempData["Success"] = "✅ Bài viết đã được duyệt và đăng tải!";
             return RedirectToAction(nameof(Index));
         }
@@ -238,12 +146,8 @@ namespace SmartHealthMonitoring.Controllers.Admin
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Reject(int id, string rejectionReason)
         {
-            var post = await _context.HealthNewsPosts.FindAsync(id);
-            if (post == null) return NotFound();
-            
-            post.Status = "Draft";
-            post.RejectionReason = rejectionReason;
-            await _context.SaveChangesAsync();
+            var success = await _newsService.RejectAsync(id, rejectionReason);
+            if (!success) return NotFound();
             TempData["Success"] = "⚠️ Đã từ chối bài viết. Tác giả sẽ phải chỉnh sửa lại.";
             return RedirectToAction(nameof(Index));
         }
@@ -251,11 +155,8 @@ namespace SmartHealthMonitoring.Controllers.Admin
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Publish(int id)
         {
-            var post = await _context.HealthNewsPosts.FindAsync(id);
-            if (post == null) return NotFound();
-            post.Status      = "Published";
-            post.PublishedAt = SmartHealthMonitoring.Common.AppTime.Now;
-            await _context.SaveChangesAsync();
+            var success = await _newsService.PublishAsync(id);
+            if (!success) return NotFound();
             TempData["Success"] = "✅ Bài viết đã được đăng!";
             return RedirectToAction(nameof(Index));
         }
@@ -263,10 +164,8 @@ namespace SmartHealthMonitoring.Controllers.Admin
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Hide(int id)
         {
-            var post = await _context.HealthNewsPosts.FindAsync(id);
-            if (post == null) return NotFound();
-            post.Status = "Hidden";
-            await _context.SaveChangesAsync();
+            var success = await _newsService.HideAsync(id);
+            if (!success) return NotFound();
             TempData["Success"] = "🙈 Bài viết đã được ẩn.";
             return RedirectToAction(nameof(Index));
         }
@@ -274,17 +173,12 @@ namespace SmartHealthMonitoring.Controllers.Admin
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var post = await _context.HealthNewsPosts.FindAsync(id);
-            if (post == null) return NotFound();
-            _context.HealthNewsPosts.Remove(post);
-            await _context.SaveChangesAsync();
+            var success = await _newsService.DeleteAsync(id);
+            if (!success) return NotFound();
             TempData["Success"] = "🗑️ Bài viết đã bị xóa.";
             return RedirectToAction(nameof(Index));
         }
 
-        // ══════════════════════════════════════════════
-        // AI GENERATE — từ PatientStatistics
-        // ══════════════════════════════════════════════
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateFromPatientStats()
         {
@@ -301,7 +195,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 var (title, summary, content) = ParseNewsJson(rawJson);
                 Console.WriteLine($"[DEBUG] Parse JSON thành công. Tiêu đề: {title}");
 
-                // Lưu vào Session (không giới hạn kích thước như cookie)
                 HttpContext.Session.SetString("AiNewsTitle",   title);
                 HttpContext.Session.SetString("AiNewsSummary", summary);
                 HttpContext.Session.SetString("AiNewsContent", content);
@@ -318,9 +211,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
             }
         }
 
-        // =======================================================================================
-        // AI GENERATE AJAX (Từ trang Create)
-        // =======================================================================================
         [AllowAnonymous]
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateNewsAjax([FromForm] string source, [FromForm] string userPrompt = "")
@@ -367,9 +257,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
             }
         }
 
-        // ══════════════════════════════════════════════
-        // AI GENERATE — từ HabitStatistics
-        // ══════════════════════════════════════════════
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateFromHabitStats()
         {
@@ -386,7 +273,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 var (title, summary, content) = ParseNewsJson(rawJson);
                 Console.WriteLine($"[DEBUG] Parse JSON thành công. Tiêu đề: {title}");
 
-                // Lưu vào Session (không giới hạn kích thước như cookie)
                 HttpContext.Session.SetString("AiNewsTitle",   title);
                 HttpContext.Session.SetString("AiNewsSummary", summary);
                 HttpContext.Session.SetString("AiNewsContent", content);
@@ -403,21 +289,15 @@ namespace SmartHealthMonitoring.Controllers.Admin
             }
         }
 
-        // ══════════════════════════════════════════════
-        // DETAIL — xem chi tiết (dùng cho trang bệnh nhân)
-        // ══════════════════════════════════════════════
         [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> Detail(int id)
         {
-            var post = await _context.HealthNewsPosts.FindAsync(id);
+            var post = await _newsService.GetByIdAsync(id);
             if (post == null || post.Status != "Published") return NotFound();
             return View(post);
         }
 
-        // ══════════════════════════════════════════════
-        // PRIVATE HELPERS
-        // ══════════════════════════════════════════════
         private static string BuildPatientStatsContext(ViewModels.Admin.DashboardStatisticsViewModel vm)
         {
             var sb = new System.Text.StringBuilder();
@@ -474,7 +354,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
 
         private static (string title, string summary, string content) ParseNewsJson(string raw)
         {
-            // Làm sạch markdown code fence nếu AI trả về
             raw = Regex.Replace(raw, @"```json\s*", "", RegexOptions.IgnoreCase);
             raw = Regex.Replace(raw, @"```\s*", "");
             raw = raw.Trim();
@@ -486,26 +365,19 @@ namespace SmartHealthMonitoring.Controllers.Admin
                 var title   = root.TryGetProperty("title",   out var t) ? t.GetString() ?? "" : "Tin tức sức khỏe";
                 var summary = root.TryGetProperty("summary", out var s) ? s.GetString() ?? "" : "";
                 var content = root.TryGetProperty("content", out var c) ? c.GetString() ?? "" : raw;
-                // Chuyển Markdown → HTML phòng trường hợp AI vẫn trả Markdown
                 content = ConvertMarkdownToHtml(content);
                 return (title, summary, content);
             }
             catch
             {
-                // Fallback: dùng toàn bộ raw làm content
                 return ("Tin tức sức khỏe mới", "", ConvertMarkdownToHtml(raw));
             }
         }
 
-        /// <summary>
-        /// Chuyển đổi Markdown cơ bản sang HTML để đảm bảo hiển thị đúng trong TinyMCE
-        /// dù AI có trả về Markdown thay vì HTML thuần.
-        /// </summary>
         private static string ConvertMarkdownToHtml(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return text;
 
-            // Nếu đã có thẻ HTML thực sự thì chỉ clean nhẹ, không convert
             bool hasHtml = Regex.IsMatch(text, @"<(h[1-6]|p|ul|ol|li|strong|em|br)\b", RegexOptions.IgnoreCase);
 
             var lines = text.Split('\n');
@@ -516,10 +388,8 @@ namespace SmartHealthMonitoring.Controllers.Admin
             {
                 var line = rawLine.TrimEnd();
 
-                // Bỏ dòng chỉ có dấu --- hoặc ***
                 if (Regex.IsMatch(line, @"^[-*_]{3,}\s*$")) continue;
 
-                // ### Heading 3
                 var h3 = Regex.Match(line, @"^#{1,3}\s+(.+)");
                 if (h3.Success)
                 {
@@ -529,7 +399,6 @@ namespace SmartHealthMonitoring.Controllers.Admin
                     continue;
                 }
 
-                // Bullet list: - item hoặc * item
                 var bullet = Regex.Match(line, @"^[\*\-]\s+(.+)");
                 if (bullet.Success)
                 {
@@ -539,21 +408,18 @@ namespace SmartHealthMonitoring.Controllers.Admin
                     continue;
                 }
 
-                // Đóng list nếu đang mở
                 if (inList && !string.IsNullOrWhiteSpace(line))
                 {
                     result.AppendLine("</ul>");
                     inList = false;
                 }
 
-                // Dòng trống
                 if (string.IsNullOrWhiteSpace(line))
                 {
                     if (inList) { result.AppendLine("</ul>"); inList = false; }
                     continue;
                 }
 
-                // Nếu đã có HTML tag thì giữ nguyên, không bọc <p>
                 if (hasHtml && Regex.IsMatch(line, @"^<"))
                 {
                     result.AppendLine(line);
@@ -570,13 +436,10 @@ namespace SmartHealthMonitoring.Controllers.Admin
             return result.ToString().Trim();
         }
 
-        /// <summary>Chuyển inline Markdown: **bold**, *italic* sang HTML</summary>
         private static string ApplyInlineMarkdown(string text)
         {
-            // **bold** hoặc __bold__
             text = Regex.Replace(text, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
             text = Regex.Replace(text, @"__(.+?)__",     "<strong>$1</strong>");
-            // *italic* hoặc _italic_
             text = Regex.Replace(text, @"\*(.+?)\*", "<em>$1</em>");
             text = Regex.Replace(text, @"_(.+?)_",   "<em>$1</em>");
             return text;

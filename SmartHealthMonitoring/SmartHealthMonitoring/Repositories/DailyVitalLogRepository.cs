@@ -2,11 +2,12 @@
 using SmartHealthMonitoring.Common;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Interfaces.Repositories;
 
 namespace SmartHealthMonitoring.Repositories
 {
     public class DailyVitalLogRepository
-    {
+    : IDailyVitalLogRepository {
         private readonly SmartHealthMonitoringContext _context;
 
         public DailyVitalLogRepository(SmartHealthMonitoringContext context)
@@ -28,7 +29,6 @@ namespace SmartHealthMonitoring.Repositories
 
             if (toDate.HasValue)
             {
-                // Lấy đến cuối ngày của toDate (23:59:59)
                 var endOfDay = toDate.Value.Date.AddDays(1).AddTicks(-1);
                 query = query.Where(x => x.LoggedAt <= endOfDay);
             }
@@ -83,13 +83,12 @@ namespace SmartHealthMonitoring.Repositories
             await _context.SaveChangesAsync();
         }
 
-        //cấu hình ngưỡng cho bệnh nhân
         public async Task<PatientThreshold?> GetPatientThresholdAsync(int patientId)
         {
-            // Lấy cấu hình bác sĩ đã set, dùng AsNoTracking vì chỉ cần đọc
             return await _context.PatientThresholds
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.PatientId == patientId);
         }
     }
 }
+

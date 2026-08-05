@@ -4,10 +4,8 @@
 
 namespace SmartHealthMonitoring.Migrations
 {
-    /// <inheritdoc />
     public partial class AddLockReasonToUser : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -157,7 +155,6 @@ namespace SmartHealthMonitoring.Migrations
                 value: null);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

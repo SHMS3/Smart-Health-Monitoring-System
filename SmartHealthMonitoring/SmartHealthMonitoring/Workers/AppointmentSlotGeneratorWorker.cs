@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -8,11 +8,6 @@ using SmartHealthMonitoring.Models;
 
 namespace SmartHealthMonitoring.Workers;
 
-/// <summary>
-/// Background Worker tự động sinh AppointmentSlot 14 ngày tới
-/// dựa trên DoctorWorkSchedule.
-/// Chạy: lúc khởi động ứng dụng, và mỗi ngày lúc 00:05.
-/// </summary>
 public class AppointmentSlotGeneratorWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -28,7 +23,6 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Chạy ngay khi khởi động
         try
         {
             await GenerateSlotsAsync(stoppingToken);
@@ -40,7 +34,6 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            // Tính thời gian đến 00:05 ngày hôm sau
             var now     = SmartHealthMonitoring.Common.AppTime.Now;
             var nextRun = SmartHealthMonitoring.Common.AppTime.Now.Date.AddDays(1).AddMinutes(5);
             var delay   = nextRun - now;
@@ -75,19 +68,16 @@ public class AppointmentSlotGeneratorWorker : BackgroundService
 
         foreach (var schedule in schedules)
         {
-            // Duyệt qua 14 ngày, tìm ngày trùng DayOfWeek
             for (var d = today; d <= genUntil; d = d.AddDays(1))
             {
                 if ((int)d.DayOfWeek != schedule.DayOfWeek) continue;
 
-                // Sinh slot theo SlotDurationMinutes
                 var current = schedule.StartTime;
                 while (current.Add(TimeSpan.FromMinutes(schedule.SlotDurationMinutes)) <= schedule.EndTime)
                 {
                     var slotStart = d.ToDateTime(current, DateTimeKind.Local);
                     var slotEnd   = slotStart.AddMinutes(schedule.SlotDurationMinutes);
 
-                    // Kiểm tra slot đã tồn tại chưa (Unique Index sẽ bắt, nhưng check trước để tránh exception)
                     bool existsInDb = await context.AppointmentSlots
                         .AnyAsync(s => s.DoctorId == schedule.DoctorId && s.SlotStart == slotStart, ct);
 

@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SmartHealthMonitoring.Interfaces;
-using SmartHealthMonitoring.Services;
+using SmartHealthMonitoring.Interfaces.Audit;
+using SmartHealthMonitoring.Services.Patient;
 using SmartHealthMonitoring.ViewModels.Admin;
 
 namespace SmartHealthMonitoring.Controllers.Admin;
@@ -41,7 +41,7 @@ public class AdminPatientInterfaceController : Controller
 
         if (!PatientUiSettingsViewModel.AllowedLogoIcons.Contains(model.LogoIcon))
         {
-            ModelState.AddModelError(nameof(model.LogoIcon), "Biểu tượng logo không hợp lệ.");
+            ModelState.AddModelError(nameof(model.LogoIcon), "Bi?u tu?ng logo kh�ng h?p l?.");
         }
 
         if (!ModelState.IsValid)
@@ -64,11 +64,11 @@ public class AdminPatientInterfaceController : Controller
             "Update",
             "PatientInterface",
             "patient-ui-settings",
-            $"Admin {adminName} cập nhật giao diện bệnh nhân.",
+            $"Admin {adminName} c?p nh?t giao di?n b?nh nh�n.",
             null,
             adminName);
 
-        TempData["Success"] = "Đã lưu giao diện bệnh nhân.";
+        TempData["Success"] = "�� luu giao di?n b?nh nh�n.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -83,11 +83,11 @@ public class AdminPatientInterfaceController : Controller
             "Reset",
             "PatientInterface",
             "patient-ui-settings",
-            $"Admin {adminName} khôi phục giao diện bệnh nhân mặc định.",
+            $"Admin {adminName} kh�i ph?c giao di?n b?nh nh�n m?c d?nh.",
             null,
             adminName);
 
-        TempData["Success"] = "Đã khôi phục giao diện bệnh nhân mặc định.";
+        TempData["Success"] = "�� kh�i ph?c giao di?n b?nh nh�n m?c d?nh.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -104,14 +104,14 @@ public class AdminPatientInterfaceController : Controller
 
         if (file.Length > MaxImageBytes)
         {
-            ModelState.AddModelError(modelStateKey, "Ảnh không được vượt quá 5MB.");
+            ModelState.AddModelError(modelStateKey, "?nh kh�ng du?c vu?t qu� 5MB.");
             return;
         }
 
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (!AllowedImageExtensions.Contains(extension))
         {
-            ModelState.AddModelError(modelStateKey, "Chỉ hỗ trợ ảnh JPG, PNG, WEBP hoặc GIF.");
+            ModelState.AddModelError(modelStateKey, "Ch? h? tr? ?nh JPG, PNG, WEBP ho?c GIF.");
             return;
         }
 

@@ -1,27 +1,26 @@
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
 using SmartHealthMonitoring.ViewModels;
 using System.Security.Claims;
 using Microsoft.Extensions.Caching.Memory;
-using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Interfaces.Auth;
+using SmartHealthMonitoring.Interfaces.Email;
 
 namespace SmartHealthMonitoring.Controllers
 {
     public class AuthController : Controller
     {
-        private readonly SmartHealthMonitoringContext _context;
+        private readonly IAuthService _authService;
         private readonly IMemoryCache _cache;
         private readonly IEmailService _emailService;
 
-        public AuthController(SmartHealthMonitoringContext context, IMemoryCache cache, IEmailService emailService)
+        public AuthController(IAuthService authService, IMemoryCache cache, IEmailService emailService)
         {
-            _context = context;
+            _authService = authService;
             _cache = cache;
             _emailService = emailService;
         }
@@ -48,8 +47,7 @@ namespace SmartHealthMonitoring.Controllers
             {
                 return View(model);
             }
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == model.Email);
+            var user = await _authService.FindByEmailAsync(model.Email);
 
             if (user == null)
             {
@@ -57,15 +55,7 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
             
-            bool isPasswordValid = false;
-            if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
-            {
-                isPasswordValid = BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash);
-            }
-            else
-            {
-                isPasswordValid = (model.Password == user.PasswordHash);
-            }
+            bool isPasswordValid = _authService.ValidatePasswordAsync(user, model.Password);
 
             if (!isPasswordValid)
             {
@@ -73,7 +63,6 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            // 3. KIỂM TRA TRẠNG THÁI KHÓA (Kiểm tra sau khi đã nhập đúng mật khẩu)
             if (user.IsDeleted)
             {
                 string reason = string.IsNullOrWhiteSpace(user.LockReason)
@@ -84,7 +73,6 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            // 4. Tạo Claims cho cookie
             Console.WriteLine($"[DEBUG LOGIN] Email={user.Email}, UserId={user.Id}, Role={user.Role}");
             var claims = new List<Claim>
             {
@@ -104,24 +92,16 @@ namespace SmartHealthMonitoring.Controllers
                     : DateTimeOffset.UtcNow.AddMinutes(60)
             };
 
-            // 5. Đăng nhập (ghi cookie)
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
 
-            // 6. Bật ca trực tự động nếu là Bác sĩ (role = 1)
             if (user.Role == 1)
             {
-                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == user.Id && !d.IsDeleted);
-                if (doctor != null)
-                {
-                    doctor.IsOnShift = true;
-                    await _context.SaveChangesAsync();
-                }
+                await _authService.UpdateDoctorShiftAsync(user.Id, true);
             }
 
-            // 7. Redirect
             Console.WriteLine($"[DEBUG LOGIN] returnUrl='{returnUrl}'");
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) && returnUrl != "/")
             {
@@ -133,7 +113,6 @@ namespace SmartHealthMonitoring.Controllers
             return RedirectByRole(user.Role);
         }
 
-
         [HttpGet]
         public IActionResult GoogleLogin(string? returnUrl = null)
         {
@@ -141,7 +120,6 @@ namespace SmartHealthMonitoring.Controllers
             var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
-
 
         [HttpGet("/Auth/GoogleResponse")]
         [AllowAnonymous]
@@ -157,54 +135,10 @@ namespace SmartHealthMonitoring.Controllers
             if (string.IsNullOrEmpty(googleEmail))
                 return RedirectToAction(nameof(Login));
 
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == googleEmail && !u.IsDeleted);
-
+            var user = await _authService.FindOrCreateGoogleUserAsync(googleEmail, googleName);
             if (user == null)
             {
-                var googleStrategy = _context.Database.CreateExecutionStrategy();
-                try
-                {
-                    user = await googleStrategy.ExecuteAsync(async () =>
-                    {
-                        await using var transaction = await _context.Database.BeginTransactionAsync();
-                        try
-                        {
-                            var newUser = new User
-                            {
-                                FullName = googleName,
-                                Email = googleEmail,
-                                PasswordHash = string.Empty,
-                                Role = 0,
-                                IsDeleted = false,
-                                CreatedAt = SmartHealthMonitoring.Common.AppTime.Now
-                            };
-                            _context.Users.Add(newUser);
-                            await _context.SaveChangesAsync();
-
-                            var patient = new Patient
-                            {
-                                UserId = newUser.Id,
-                                DateOfBirth = new DateOnly(2000, 1, 1),
-                                Sex = 0,
-                                IsDeleted = false
-                            };
-                            _context.Patients.Add(patient);
-                            await _context.SaveChangesAsync();
-                            await transaction.CommitAsync();
-                            return newUser;
-                        }
-                        catch
-                        {
-                            await transaction.RollbackAsync();
-                            throw;
-                        }
-                    });
-                }
-                catch
-                {
-                    return RedirectToAction(nameof(Login));
-                }
+                return RedirectToAction(nameof(Login));
             }
 
             var claims = new List<Claim>
@@ -228,22 +162,15 @@ namespace SmartHealthMonitoring.Controllers
             return RedirectByRole(user.Role);
         }
 
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            // Tắt ca trực khi Bác sĩ đăng xuất
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var roleString = User.FindFirstValue(ClaimTypes.Role);
             if (!string.IsNullOrEmpty(userIdString) && roleString == "1" && int.TryParse(userIdString, out int userId))
             {
-                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId && !d.IsDeleted);
-                if (doctor != null)
-                {
-                    doctor.IsOnShift = false;
-                    await _context.SaveChangesAsync();
-                }
+                await _authService.UpdateDoctorShiftAsync(userId, false);
             }
 
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -255,7 +182,6 @@ namespace SmartHealthMonitoring.Controllers
         {
             return View();
         }
-
 
         private IActionResult RedirectByRole(byte? role = null)
         {
@@ -280,6 +206,7 @@ namespace SmartHealthMonitoring.Controllers
             Console.WriteLine($"[DEBUG RedirectByRole] Redirecting to: {(result as RedirectToActionResult)?.ControllerName}/{(result as RedirectToActionResult)?.ActionName}");
             return result;
         }
+
         [HttpGet]
         public IActionResult ForgotPassword()
         {
@@ -292,21 +219,18 @@ namespace SmartHealthMonitoring.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            var user = await _authService.FindByEmailAsync(model.Email);
             if (user == null || user.IsDeleted)
             {
                 ModelState.AddModelError("Email", "Email không tồn tại hoặc tài khoản đã bị khóa.");
                 return View(model);
             }
 
-            // Generate 6 digit OTP
             var random = new Random();
             string otp = random.Next(100000, 999999).ToString();
 
-            // Store in Cache for 3 minutes
             _cache.Set($"ResetOTP_{model.Email}", otp, TimeSpan.FromMinutes(3));
 
-            // Send Email
             var replacements = new Dictionary<string, string>
             {
                 { "{{OTP_CODE}}", otp }
@@ -334,9 +258,7 @@ namespace SmartHealthMonitoring.Controllers
             {
                 if (storedOtp == model.Otp)
                 {
-                    // OTP valid
                     _cache.Remove($"ResetOTP_{model.Email}");
-                    // Cấp một token tạm thời để ResetPassword
                     string resetToken = Guid.NewGuid().ToString();
                     _cache.Set($"ResetToken_{model.Email}", resetToken, TimeSpan.FromMinutes(10));
                     
@@ -355,8 +277,8 @@ namespace SmartHealthMonitoring.Controllers
             if (string.IsNullOrEmpty(email))
                 return Json(new { success = false, message = "Email không hợp lệ" });
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && !u.IsDeleted);
-            if (user == null)
+            bool exists = await _authService.UserExistsAsync(email);
+            if (!exists)
                 return Json(new { success = false, message = "Email không tồn tại" });
 
             var random = new Random();
@@ -397,13 +319,10 @@ namespace SmartHealthMonitoring.Controllers
                 return RedirectToAction("ForgotPassword");
             }
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
-            if (user != null)
+            var success = await _authService.ResetPasswordAsync(model.Email, model.NewPassword);
+            if (success)
             {
-                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
-                await _context.SaveChangesAsync();
                 _cache.Remove($"ResetToken_{model.Email}");
-                
                 TempData["Success"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
                 return RedirectToAction("Login");
             }

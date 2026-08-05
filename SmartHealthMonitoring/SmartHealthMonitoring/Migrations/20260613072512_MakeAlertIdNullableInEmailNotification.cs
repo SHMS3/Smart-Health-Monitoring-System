@@ -4,10 +4,8 @@
 
 namespace SmartHealthMonitoring.Migrations
 {
-    /// <inheritdoc />
     public partial class MakeAlertIdNullableInEmailNotification : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<int>(
@@ -19,7 +17,6 @@ namespace SmartHealthMonitoring.Migrations
                 oldType: "int");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<int>(

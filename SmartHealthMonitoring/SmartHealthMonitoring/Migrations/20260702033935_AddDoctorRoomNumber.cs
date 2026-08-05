@@ -4,10 +4,8 @@
 
 namespace SmartHealthMonitoring.Migrations
 {
-    /// <inheritdoc />
     public partial class AddDoctorRoomNumber : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -95,7 +93,6 @@ namespace SmartHealthMonitoring.Migrations
                 value: "dr.an@smarthealth.vn");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using SmartHealthMonitoring.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Interfaces.News;
 
 namespace SmartHealthMonitoring.Controllers
 {
@@ -24,10 +24,8 @@ namespace SmartHealthMonitoring.Controllers
         {
             if (!_cache.TryGetValue(CacheKey, out IEnumerable<HealthNewsArticle>? articles))
             {
-                // Cache Miss - scrape the news
                 articles = await _newsScraperService.GetHealthNewsAsync();
 
-                // Store in Cache with absolute expiration of 30 minutes
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromMinutes(30));
 

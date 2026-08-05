@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels
 {
@@ -7,10 +7,10 @@ namespace SmartHealthMonitoring.ViewModels
         [Required]
         public string Email { get; set; } = null!;
 
-        [Required(ErrorMessage = "Mã OTP không được để trống.")]
-        [StringLength(6, MinimumLength = 6, ErrorMessage = "Mã OTP phải có đúng 6 chữ số.")]
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "Mã OTP chỉ bao gồm các chữ số.")]
-        [Display(Name = "Mã OTP")]
+        [Required(ErrorMessage = "M� OTP kh�ng du?c d? tr?ng.")]
+        [StringLength(6, MinimumLength = 6, ErrorMessage = "M� OTP ph?i c� d�ng 6 ch? s?.")]
+        [RegularExpression(@"^\d{6}$", ErrorMessage = "M� OTP ch? bao g?m c�c ch? s?.")]
+        [Display(Name = "M� OTP")]
         public string Otp { get; set; } = null!;
     }
 }

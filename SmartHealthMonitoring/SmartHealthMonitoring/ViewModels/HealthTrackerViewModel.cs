@@ -5,25 +5,18 @@ namespace SmartHealthMonitoring.ViewModels
 {
     public class HealthTrackerViewModel
     {
-        // ==========================================
-        // 1. DỮ LIỆU ĐỂ BINDING FORM NHẬP (POST)
-        // ==========================================
-        [Required(ErrorMessage = "Vui lòng chọn loại chỉ số.")]
+        [Required(ErrorMessage = "Vui l�ng ch?n lo?i ch? s?.")]
         public int MetricTypeId { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng nhập giá trị đo.")]
-        [Range(0.1, 9999.99, ErrorMessage = "Giá trị đo không hợp lệ.")]
+        [Required(ErrorMessage = "Vui l�ng nh?p gi� tr? do.")]
+        [Range(0.1, 9999.99, ErrorMessage = "Gi� tr? do kh�ng h?p l?.")]
         public decimal Value { get; set; }
 
-        [MaxLength(500, ErrorMessage = "Ghi chú không được vượt quá 500 ký tự.")]
+        [MaxLength(500, ErrorMessage = "Ghi ch� kh�ng du?c vu?t qu� 500 k� t?.")]
         public string? Notes { get; set; }
 
-        // Danh sách để load vào Dropdown Select trên giao diện (Huyết áp, Chiều cao, Cân nặng...)
         public List<SelectListItem> AvailableMetrics { get; set; } = new List<SelectListItem>();
 
-        // ==========================================
-        // 2. DỮ LIỆU ĐỂ HIỂN THỊ LÊN BẢNG LỊCH SỬ (GET)
-        // ==========================================
         public List<HealthMetricHistoryDto> History { get; set; } = new List<HealthMetricHistoryDto>();
 
     }

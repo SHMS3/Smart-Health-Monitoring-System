@@ -1,3 +1,4 @@
+﻿using SmartHealthMonitoring.Interfaces.Email;
 using System;
 using System.Linq;
 using System.Threading;
@@ -11,10 +12,6 @@ using SmartHealthMonitoring.Interfaces;
 
 namespace SmartHealthMonitoring.Workers
 {
-    /// <summary>
-    /// Background Worker chạy định kỳ, kiểm tra nếu bệnh nhân sau 1 giờ không ghi log
-    /// thì gửi email nhắc nhở cho bệnh nhân đó.
-    /// </summary>
     public class DailyVitalLogReminderWorker : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
@@ -62,7 +59,6 @@ namespace SmartHealthMonitoring.Workers
             var now = DateTime.Now;
             var oneHourAgo = now.AddHours(-1);
 
-            // Lấy danh sách bệnh nhân hoạt động
             var patients = await dbContext.Patients
                 .Include(p => p.User)
                 .Where(p => !p.IsDeleted && p.User != null && !p.User.IsDeleted && p.User.Role == 0)
@@ -72,7 +68,6 @@ namespace SmartHealthMonitoring.Workers
 
             foreach (var patient in patients)
             {
-                // Tìm log gần nhất của bệnh nhân
                 var latestLog = await dbContext.DailyVitalLogs
                     .Where(l => l.PatientId == patient.Id && !l.IsDeleted)
                     .OrderByDescending(l => l.LoggedAt)
@@ -93,10 +88,8 @@ namespace SmartHealthMonitoring.Workers
                     lastLogTimeDisplay = "Chưa từng ghi nhận";
                 }
 
-                // Nếu thời gian kể từ log cuối cùng (hoặc ngày tạo) đã hơn 1 giờ
                 if (baseTime < oneHourAgo)
                 {
-                    // Kiểm tra xem đã tạo thông báo nội bộ kể từ baseTime chưa
                     bool alreadySent = await dbContext.EmailNotifications
                         .AnyAsync(n => n.PatientId == patient.Id
                                        && n.Status == 3
@@ -113,3 +106,4 @@ namespace SmartHealthMonitoring.Workers
         }
     }
 }
+

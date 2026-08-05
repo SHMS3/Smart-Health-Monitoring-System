@@ -1,16 +1,10 @@
+﻿using SmartHealthMonitoring.Interfaces.AI;
 using SmartHealthMonitoring.Models;
 
 namespace SmartHealthMonitoring.Services.AI;
 
-/// <summary>
-/// XAI Wrapper Layer - Lớp giải thích khả năng đọc hiểu cho kết quả của ANFIS.
-/// Dựa trên các tập luật IF-THEN (Fuzzy Rules) mô phỏng theo logic mờ của ANFIS,
-/// sinh ra đoạn text tiếng Việt giải thích nguyên nhân dẫn đến kết quả dự đoán.
-/// Chạy hoàn toàn offline, tốc độ dưới 1ms, không gọi bất kỳ API bên ngoài nào.
-/// </summary>
 public class AnfisExplainabilityService : IAnfisExplainabilityService
 {
-    // ─── Ngưỡng phân loại các chỉ số lâm sàng (theo tiêu chuẩn WHO/ESC 2023) ──
     private const int    SystolicBpDanger  = 140;  // mmHg  – Tăng huyết áp độ 1+
     private const int    SystolicBpHigh    = 130;  // mmHg  – Tiền tăng huyết áp
     private const int    HeartRateHigh     = 100;  // bpm   – Nhịp tim nhanh
@@ -19,7 +13,6 @@ public class AnfisExplainabilityService : IAnfisExplainabilityService
     private const int    CholesterolHigh   = 200;  // mg/dL – Ngưỡng cần theo dõi
     private const double OldPeakDanger     = 2.0;  // mm    – ST Depression đáng lo ngại
 
-    // ─── Mapping Chest Pain Type → mô tả ─────────────────────────────────────
     private static readonly Dictionary<byte, string> ChestPainDesc = new()
     {
         { 0, "không có đau ngực" },
@@ -43,15 +36,12 @@ public class AnfisExplainabilityService : IAnfisExplainabilityService
         { 3, "khiếm khuyết có thể hồi phục (Reversible Defect - nguy cơ cao nhất)" },
     };
 
-    // ─── Entry point ──────────────────────────────────────────────────────────
 
-    /// <inheritdoc/>
     public ExplainabilityResult Explain(AiriskPrediction prediction, WarningAlert alert)
     {
         var reasons    = new List<string>();
         var protective = new List<string>();
 
-        // Lấy nguồn dữ liệu: ưu tiên ClinicalRecord (đầy đủ hơn), fallback DailyVitalLog
         bool hasClinical = prediction.ClinicalRecord != null;
         bool hasDaily    = prediction.DailyLog != null;
 
@@ -68,14 +58,10 @@ public class AnfisExplainabilityService : IAnfisExplainabilityService
 
         string dataSource = hasClinical ? "Hồ sơ khám lâm sàng (Clinical Exam)" : "Nhật ký chỉ số sinh tồn (Daily Vital Log)";
 
-        // ═══════════════════════════════════════════════════════
-        // LUỒNG 1: Phân tích từ ClinicalRecord (đầy đủ nhất)
-        // ═══════════════════════════════════════════════════════
         if (hasClinical)
         {
             var r = prediction.ClinicalRecord!;
 
-            // --- Huyết áp tâm thu ---
             if (r.RestingBp >= SystolicBpDanger)
                 reasons.Add($"Huyết áp tâm thu khi nghỉ ngơi đang ở mức NGUY HIỂM ({r.RestingBp} mmHg ≥ {SystolicBpDanger} mmHg)");
             else if (r.RestingBp >= SystolicBpHigh)
@@ -83,61 +69,48 @@ public class AnfisExplainabilityService : IAnfisExplainabilityService
             else
                 protective.Add($"Huyết áp tâm thu trong giới hạn ổn định ({r.RestingBp} mmHg)");
 
-            // --- Cholesterol ---
             if (r.Cholesterol >= CholesterolHigh)
                 reasons.Add($"Cholesterol máu vượt ngưỡng an toàn ({r.Cholesterol} mg/dL ≥ {CholesterolHigh} mg/dL) - nguy cơ xơ vữa động mạch");
             else if (r.Cholesterol > 0)
                 protective.Add($"Cholesterol máu trong giới hạn an toàn ({r.Cholesterol} mg/dL)");
 
-            // --- Nhịp tim tối đa khi gắng sức ---
             if (r.MaxHeartRate.HasValue && r.MaxHeartRate < MaxHrDanger)
                 reasons.Add($"Nhịp tim tối đa đạt được khi gắng sức thấp ({r.MaxHeartRate} bpm < {MaxHrDanger} bpm) - dấu hiệu kém thích nghi tim mạch");
             else if (r.MaxHeartRate.HasValue)
                 protective.Add($"Nhịp tim tối đa khi gắng sức đạt mức bình thường ({r.MaxHeartRate} bpm)");
 
-            // --- Đau ngực ---
             if (r.ChestPainType.HasValue && r.ChestPainType >= 1)
                 reasons.Add($"Bệnh nhân có biểu hiện {ChestPainDesc.GetValueOrDefault(r.ChestPainType.Value, $"đau ngực (loại {r.ChestPainType})")}");
 
-            // --- Exercise Angina (đau thắt ngực khi gắng sức) ---
             if (r.ExerciseAngina == 1)
                 reasons.Add("Xuất hiện đau thắt ngực khi gắng sức (Exercise-Induced Angina) - dấu hiệu thiếu máu cơ tim đặc trưng");
 
-            // --- ST Depression (OldPeak) ---
             if (r.OldPeak.HasValue && (double)r.OldPeak.Value >= OldPeakDanger)
                 reasons.Add($"Chỉ số ST Depression (OldPeak) bất thường ({r.OldPeak:F1} mm ≥ {OldPeakDanger} mm) - nguy cơ thiếu máu cơ tim khi gắng sức");
             else if (r.OldPeak.HasValue && (double)r.OldPeak.Value > 0)
                 protective.Add($"Chỉ số ST Depression ở mức nhẹ ({r.OldPeak:F1} mm)");
 
-            // --- ST Slope ---
             if (r.Stslope.HasValue && (r.Stslope == 0 || r.Stslope == 1))
                 reasons.Add($"Hình thái sóng ST bất thường: {SlopePolarityDesc.GetValueOrDefault(r.Stslope.Value, $"Slope={r.Stslope}")}");
             else if (r.Stslope.HasValue)
                 protective.Add($"Hình thái sóng ST bình thường (đi lên - Up Slope)");
 
-            // --- Số mạch vành bị ảnh hưởng ---
             if (r.MajorVessels.HasValue && r.MajorVessels >= 1)
                 reasons.Add($"Phát hiện {r.MajorVessels} mạch vành lớn bị thu hẹp qua chụp mạch vành (Fluoroscopy)");
 
-            // --- Thalassemia / Tưới máu cơ tim ---
             if (r.ThalResult.HasValue && (r.ThalResult == 2 || r.ThalResult == 3))
                 reasons.Add($"Kết quả kiểm tra tưới máu cơ tim (Thalassemia): {ThalDesc.GetValueOrDefault(r.ThalResult.Value, $"loại {r.ThalResult}")}");
 
-            // --- Đường huyết lúc đói ---
             if (r.FastingBs.HasValue && r.FastingBs == 1)
                 reasons.Add("Đường huyết lúc đói > 120 mg/dL (dấu hiệu tiểu đường hoặc tiền tiểu đường - yếu tố nguy cơ tim mạch)");
             else if (r.FastingBs.HasValue)
                 protective.Add("Đường huyết lúc đói trong ngưỡng bình thường");
         }
 
-        // ═══════════════════════════════════════════════════════
-        // LUỒNG 2: Phân tích từ DailyVitalLog (tín hiệu sơ bộ)
-        // ═══════════════════════════════════════════════════════
         else if (hasDaily)
         {
             var d = prediction.DailyLog!;
 
-            // --- Huyết áp ---
             if (d.SystolicBp >= SystolicBpDanger)
                 reasons.Add($"Huyết áp tâm thu đang ở mức NGUY HIỂM ({d.SystolicBp} mmHg)");
             else if (d.SystolicBp >= SystolicBpHigh)
@@ -145,7 +118,6 @@ public class AnfisExplainabilityService : IAnfisExplainabilityService
             else
                 protective.Add($"Huyết áp tâm thu ổn định ({d.SystolicBp} mmHg)");
 
-            // --- Nhịp tim ---
             if (d.HeartRate > HeartRateHigh)
                 reasons.Add($"Nhịp tim đang NHANH bất thường ({d.HeartRate} bpm > {HeartRateHigh} bpm) - tachycardia");
             else if (d.HeartRate < HeartRateLow)
@@ -153,22 +125,17 @@ public class AnfisExplainabilityService : IAnfisExplainabilityService
             else
                 protective.Add($"Nhịp tim trong giới hạn bình thường ({d.HeartRate} bpm)");
 
-            // --- Đau ngực ---
             if (d.ChestPainLevel >= 2)
                 reasons.Add($"Bệnh nhân ghi nhận đau ngực ở mức độ đáng lo ngại (Cấp độ {d.ChestPainLevel}/3)");
             else if (d.ChestPainLevel == 1)
                 reasons.Add($"Bệnh nhân ghi nhận đau ngực nhẹ (Cấp độ {d.ChestPainLevel}/3)");
 
-            // --- Exercise Angina ---
             if (d.HasExerciseAngina)
                 reasons.Add("Xuất hiện triệu chứng đau thắt ngực khi gắng sức");
             else
                 protective.Add("Không có đau thắt ngực khi gắng sức");
         }
 
-        // ═══════════════════════════════════════════════════════
-        // Tổng hợp thành văn bản kết luận
-        // ═══════════════════════════════════════════════════════
         decimal riskPct = prediction.RiskScore * 100;
         string riskLevelText = prediction.RiskLevel switch
         {
@@ -201,3 +168,5 @@ public class AnfisExplainabilityService : IAnfisExplainabilityService
         };
     }
 }
+
+

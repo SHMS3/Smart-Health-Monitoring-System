@@ -3,7 +3,7 @@
 
 @{
     ViewData["Title"] = $"Chi tiết cảnh báo #{Model.Id}";
-    var explanation = ViewBag.Explanation as ExplainabilityResult;
+    var explanation = ViewBag.Explanation as SmartHealthMonitoring.Interfaces.AI.ExplainabilityResult;
     string riskLevelText = Model.Prediction.RiskLevel switch { 3 => "NGUY KỊCH", 2 => "CAO", 1 => "TRUNG BÌNH", _ => "THẤP" };
     string riskClass = Model.Prediction.RiskLevel switch { 3 => "danger", 2 => "danger", 1 => "warning", _ => "success" };
     string statusText = Model.Status switch { 0 => "Chờ xử lý", 1 => "Đang xử lý", 2 => "Đã xử lý", _ => "Không xác định" };
@@ -533,4 +533,6 @@
         });
     </script>
 }
+
+
 

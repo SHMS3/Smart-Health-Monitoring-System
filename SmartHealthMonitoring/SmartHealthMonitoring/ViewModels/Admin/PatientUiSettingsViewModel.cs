@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SmartHealthMonitoring.Models;
@@ -17,131 +17,131 @@ public class PatientUiSettingsViewModel
         "fas fa-shield-heart"
     };
 
-    [Required(ErrorMessage = "Vui lòng nhập tên thương hiệu.")]
-    [MaxLength(80, ErrorMessage = "Tên thương hiệu không được vượt quá 80 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p t�n thuong hi?u.")]
+    [MaxLength(80, ErrorMessage = "T�n thuong hi?u kh�ng du?c vu?t qu� 80 k� t?.")]
     public string BrandName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập dòng mô tả ngắn.")]
-    [MaxLength(80, ErrorMessage = "Dòng mô tả không được vượt quá 80 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p d�ng m� t? ng?n.")]
+    [MaxLength(80, ErrorMessage = "D�ng m� t? kh�ng du?c vu?t qu� 80 k� t?.")]
     public string BrandSubtitle { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập mô tả trang.")]
-    [MaxLength(180, ErrorMessage = "Mô tả trang không được vượt quá 180 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p m� t? trang.")]
+    [MaxLength(180, ErrorMessage = "M� t? trang kh�ng du?c vu?t qu� 180 k� t?.")]
     public string MetaDescription { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập gợi ý ô tìm kiếm.")]
-    [MaxLength(120, ErrorMessage = "Gợi ý tìm kiếm không được vượt quá 120 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p g?i � � t�m ki?m.")]
+    [MaxLength(120, ErrorMessage = "G?i � t�m ki?m kh�ng du?c vu?t qu� 120 k� t?.")]
     public string SearchPlaceholder { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập nhãn hero.")]
-    [MaxLength(100, ErrorMessage = "Nhãn hero không được vượt quá 100 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p nh�n hero.")]
+    [MaxLength(100, ErrorMessage = "Nh�n hero kh�ng du?c vu?t qu� 100 k� t?.")]
     public string HomeHeroEyebrow { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập tiêu đề hero.")]
-    [MaxLength(120, ErrorMessage = "Tiêu đề hero không được vượt quá 120 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p ti�u d? hero.")]
+    [MaxLength(120, ErrorMessage = "Ti�u d? hero kh�ng du?c vu?t qu� 120 k� t?.")]
     public string HomeHeroTitle { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập phần nhấn của tiêu đề.")]
-    [MaxLength(120, ErrorMessage = "Phần nhấn không được vượt quá 120 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p ph?n nh?n c?a ti�u d?.")]
+    [MaxLength(120, ErrorMessage = "Ph?n nh?n kh�ng du?c vu?t qu� 120 k� t?.")]
     public string HomeHeroHighlight { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập nhãn gói.")]
-    [MaxLength(80, ErrorMessage = "Nhãn gói không được vượt quá 80 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p nh�n g�i.")]
+    [MaxLength(80, ErrorMessage = "Nh�n g�i kh�ng du?c vu?t qu� 80 k� t?.")]
     public string HomeHeroPriceTag { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập giá/ưu đãi.")]
-    [MaxLength(60, ErrorMessage = "Giá/ưu đãi không được vượt quá 60 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p gi�/uu d�i.")]
+    [MaxLength(60, ErrorMessage = "Gi�/uu d�i kh�ng du?c vu?t qu� 60 k� t?.")]
     public string HomeHeroPrice { get; set; } = string.Empty;
 
-    [MaxLength(80, ErrorMessage = "Hậu tố giá không được vượt quá 80 ký tự.")]
+    [MaxLength(80, ErrorMessage = "H?u t? gi� kh�ng du?c vu?t qu� 80 k� t?.")]
     public string HomeHeroPriceSuffix { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập ghi chú hero.")]
-    [MaxLength(140, ErrorMessage = "Ghi chú hero không được vượt quá 140 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p ghi ch� hero.")]
+    [MaxLength(140, ErrorMessage = "Ghi ch� hero kh�ng du?c vu?t qu� 140 k� t?.")]
     public string HomeHeroNote { get; set; } = string.Empty;
 
     public string HomeHeroImageUrl { get; set; } = string.Empty;
 
     public IFormFile? HomeHeroImageFile { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng nhập nhãn giới thiệu.")]
-    [MaxLength(80, ErrorMessage = "Nhãn giới thiệu không được vượt quá 80 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p nh�n gi?i thi?u.")]
+    [MaxLength(80, ErrorMessage = "Nh�n gi?i thi?u kh�ng du?c vu?t qu� 80 k� t?.")]
     public string HomeAboutTag { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập tiêu đề giới thiệu.")]
-    [MaxLength(120, ErrorMessage = "Tiêu đề giới thiệu không được vượt quá 120 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p ti�u d? gi?i thi?u.")]
+    [MaxLength(120, ErrorMessage = "Ti�u d? gi?i thi?u kh�ng du?c vu?t qu� 120 k� t?.")]
     public string HomeAboutTitle { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập mô tả giới thiệu.")]
-    [MaxLength(500, ErrorMessage = "Mô tả giới thiệu không được vượt quá 500 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p m� t? gi?i thi?u.")]
+    [MaxLength(500, ErrorMessage = "M� t? gi?i thi?u kh�ng du?c vu?t qu� 500 k� t?.")]
     public string HomeAboutDescription { get; set; } = string.Empty;
 
     public string HomeAboutImageUrl { get; set; } = string.Empty;
 
     public IFormFile? HomeAboutImageFile { get; set; }
 
-    [Required(ErrorMessage = "Vui lòng nhập tiêu đề CTA.")]
-    [MaxLength(120, ErrorMessage = "Tiêu đề CTA không được vượt quá 120 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p ti�u d? CTA.")]
+    [MaxLength(120, ErrorMessage = "Ti�u d? CTA kh�ng du?c vu?t qu� 120 k� t?.")]
     public string HomeCtaTitle { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập mô tả CTA.")]
-    [MaxLength(220, ErrorMessage = "Mô tả CTA không được vượt quá 220 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p m� t? CTA.")]
+    [MaxLength(220, ErrorMessage = "M� t? CTA kh�ng du?c vu?t qu� 220 k� t?.")]
     public string HomeCtaDescription { get; set; } = string.Empty;
 
     [Required]
-    [RegularExpression("^#[0-9a-fA-F]{6}$", ErrorMessage = "Màu chủ đạo phải có dạng #RRGGBB.")]
+    [RegularExpression("^#[0-9a-fA-F]{6}$", ErrorMessage = "M�u ch? d?o ph?i c� d?ng #RRGGBB.")]
     public string PrimaryColor { get; set; } = "#1a73c8";
 
     [Required]
-    [RegularExpression("^#[0-9a-fA-F]{6}$", ErrorMessage = "Màu nhấn đậm phải có dạng #RRGGBB.")]
+    [RegularExpression("^#[0-9a-fA-F]{6}$", ErrorMessage = "M�u nh?n d?m ph?i c� d?ng #RRGGBB.")]
     public string PrimaryDarkColor { get; set; } = "#135fa5";
 
     [Required]
-    [RegularExpression("^#[0-9a-fA-F]{6}$", ErrorMessage = "Màu thanh menu phải có dạng #RRGGBB.")]
+    [RegularExpression("^#[0-9a-fA-F]{6}$", ErrorMessage = "M�u thanh menu ph?i c� d?ng #RRGGBB.")]
     public string NavigationColor { get; set; } = "#1565c0";
 
     [Required]
-    [RegularExpression("^#[0-9a-fA-F]{6}$", ErrorMessage = "Màu cảnh báo phải có dạng #RRGGBB.")]
+    [RegularExpression("^#[0-9a-fA-F]{6}$", ErrorMessage = "M�u c?nh b�o ph?i c� d?ng #RRGGBB.")]
     public string AccentColor { get; set; } = "#e53935";
 
     [Required]
-    [RegularExpression("^#[0-9a-fA-F]{6}$", ErrorMessage = "Màu nền phải có dạng #RRGGBB.")]
+    [RegularExpression("^#[0-9a-fA-F]{6}$", ErrorMessage = "M�u n?n ph?i c� d?ng #RRGGBB.")]
     public string BackgroundColor { get; set; } = "#f4f7fb";
 
-    [Required(ErrorMessage = "Vui lòng chọn biểu tượng logo.")]
+    [Required(ErrorMessage = "Vui l�ng ch?n bi?u tu?ng logo.")]
     public string LogoIcon { get; set; } = "fas fa-heartbeat";
 
-    [Required(ErrorMessage = "Vui lòng nhập số hotline.")]
-    [MaxLength(30, ErrorMessage = "Số hotline không được vượt quá 30 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p s? hotline.")]
+    [MaxLength(30, ErrorMessage = "S? hotline kh�ng du?c vu?t qu� 30 k� t?.")]
     public string HotlinePhone { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập nhãn hotline.")]
-    [MaxLength(40, ErrorMessage = "Nhãn hotline không được vượt quá 40 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p nh�n hotline.")]
+    [MaxLength(40, ErrorMessage = "Nh�n hotline kh�ng du?c vu?t qu� 40 k� t?.")]
     public string HotlineLabel { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập email liên hệ.")]
-    [EmailAddress(ErrorMessage = "Email liên hệ không hợp lệ.")]
-    [MaxLength(120, ErrorMessage = "Email liên hệ không được vượt quá 120 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p email li�n h?.")]
+    [EmailAddress(ErrorMessage = "Email li�n h? kh�ng h?p l?.")]
+    [MaxLength(120, ErrorMessage = "Email li�n h? kh�ng du?c vu?t qu� 120 k� t?.")]
     public string ContactEmail { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập địa chỉ.")]
-    [MaxLength(160, ErrorMessage = "Địa chỉ không được vượt quá 160 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p d?a ch?.")]
+    [MaxLength(160, ErrorMessage = "�?a ch? kh�ng du?c vu?t qu� 160 k� t?.")]
     public string Address { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập phụ đề chân trang.")]
-    [MaxLength(80, ErrorMessage = "Phụ đề chân trang không được vượt quá 80 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p ph? d? ch�n trang.")]
+    [MaxLength(80, ErrorMessage = "Ph? d? ch�n trang kh�ng du?c vu?t qu� 80 k� t?.")]
     public string FooterSubtitle { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập mô tả chân trang.")]
-    [MaxLength(260, ErrorMessage = "Mô tả chân trang không được vượt quá 260 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p m� t? ch�n trang.")]
+    [MaxLength(260, ErrorMessage = "M� t? ch�n trang kh�ng du?c vu?t qu� 260 k� t?.")]
     public string FooterDescription { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập dòng pháp lý chân trang.")]
-    [MaxLength(180, ErrorMessage = "Dòng pháp lý không được vượt quá 180 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p d�ng ph�p l� ch�n trang.")]
+    [MaxLength(180, ErrorMessage = "D�ng ph�p l� kh�ng du?c vu?t qu� 180 k� t?.")]
     public string FooterLicenseText { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Vui lòng nhập dòng cuối footer.")]
-    [MaxLength(180, ErrorMessage = "Dòng cuối footer không được vượt quá 180 ký tự.")]
+    [Required(ErrorMessage = "Vui l�ng nh?p d�ng cu?i footer.")]
+    [MaxLength(180, ErrorMessage = "D�ng cu?i footer kh�ng du?c vu?t qu� 180 k� t?.")]
     public string FooterBottomText { get; set; } = string.Empty;
 
     public List<PatientFooterEditorItemViewModel> WorkScheduleItems { get; set; } = new();
@@ -250,12 +250,12 @@ public class PatientUiSettingsViewModel
     {
         var labels = new Dictionary<string, string>
         {
-            ["fas fa-heartbeat"] = "Nhịp tim",
-            ["fas fa-notes-medical"] = "Sổ y tế",
-            ["fas fa-stethoscope"] = "Ống nghe",
-            ["fas fa-user-md"] = "Bác sĩ",
-            ["fas fa-hospital"] = "Bệnh viện",
-            ["fas fa-shield-heart"] = "Bảo vệ tim"
+            ["fas fa-heartbeat"] = "Nh?p tim",
+            ["fas fa-notes-medical"] = "S? y t?",
+            ["fas fa-stethoscope"] = "?ng nghe",
+            ["fas fa-user-md"] = "B�c si",
+            ["fas fa-hospital"] = "B?nh vi?n",
+            ["fas fa-shield-heart"] = "B?o v? tim"
         };
 
         return AllowedLogoIcons
@@ -281,10 +281,10 @@ public static class PatientFooterItemKinds
 
 public class PatientFooterEditorItemViewModel
 {
-    [MaxLength(80, ErrorMessage = "Nhãn không được vượt quá 80 ký tự.")]
+    [MaxLength(80, ErrorMessage = "Nh�n kh�ng du?c vu?t qu� 80 k� t?.")]
     public string Label { get; set; } = string.Empty;
 
-    [MaxLength(180, ErrorMessage = "Nội dung không được vượt quá 180 ký tự.")]
+    [MaxLength(180, ErrorMessage = "N?i dung kh�ng du?c vu?t qu� 180 k� t?.")]
     public string Value { get; set; } = string.Empty;
 
     public string Kind { get; set; } = PatientFooterItemKinds.Text;

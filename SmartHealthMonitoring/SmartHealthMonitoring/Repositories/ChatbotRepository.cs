@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Interfaces.Repositories;
 
 namespace SmartHealthMonitoring.Repositories
 {
     public class ChatbotRepository
-    {
+    : IChatbotRepository {
         private readonly SmartHealthMonitoringContext _context;
 
         public ChatbotRepository(SmartHealthMonitoringContext context)
@@ -70,3 +71,5 @@ namespace SmartHealthMonitoring.Repositories
         }
     }
 }
+
+

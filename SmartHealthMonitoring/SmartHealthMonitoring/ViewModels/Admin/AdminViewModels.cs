@@ -1,8 +1,7 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels.Admin
 {
-    // 1. Dashboard ViewModels
     public class AdminDashboardViewModel
     {
         public int TotalDoctors { get; set; }
@@ -17,10 +16,9 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         public int AlertId { get; set; }
         public string PatientName { get; set; } = null!;
         public string WarningLevel { get; set; } = null!;
-        public DateTime FlaggedAt { get; set; } // Chuẩn theo DB
+        public DateTime FlaggedAt { get; set; }
     }
 
-    // 2. Quản lý Bác sĩ ViewModels
     public class DoctorListViewModel
     {
         public int UserId { get; set; }
@@ -82,21 +80,19 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         public bool IsOnShift { get; set; }
     }
 
-    // 3. Quản lý Bệnh nhân ViewModels
     public class AdminPatientListViewModel
     {
         public int UserId { get; set; }
         public int PatientId { get; set; }
         public string FullName { get; set; } = null!;
         public string Email { get; set; } = null!;
-        public string? Phone { get; set; } // Chuẩn theo varchar(15) NULL của DB
+        public string? Phone { get; set; }
         public DateOnly DateOfBirth { get; set; }
         public byte Sex { get; set; }
         public bool IsDeleted { get; set; }
         public string? LockReason { get; set; }
     }
 
-    // 4. Statistics ViewModels
     public class PatientDemographicStatsViewModel
     {
         public List<string> AgeLabels { get; set; } = new();
@@ -120,14 +116,13 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         public HabitStatisticsViewModel Habits { get; set; } = new();
     }
 
-    // 5. Habit Statistics ViewModels
     public class HabitItemViewModel
     {
         public string Key { get; set; } = null!;
         public string Label { get; set; } = null!;
         public string Description { get; set; } = null!;
-        public string Category { get; set; } = null!;   // "Ăn uống" | "Sinh hoạt" | "Hành vi" | "Tâm lý"
-        public string Type { get; set; } = null!;        // "bad" | "good"
+        public string Category { get; set; } = null!;   
+        public string Type { get; set; } = null!;      
         public string Icon { get; set; } = null!;
         public int Count { get; set; }
         public double Percentage { get; set; }
@@ -146,13 +141,10 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         public int TotalPatientsWithHabit { get; set; }
         public int TotalPatients { get; set; }
         public List<HabitCategoryViewModel> Categories { get; set; } = new();
-        // Top 5 thói quen xấu phổ biến nhất (for bar chart)
         public List<string> TopBadHabitLabels { get; set; } = new();
         public List<int> TopBadHabitValues { get; set; } = new();
-        // Top 5 thói quen tốt phổ biến nhất (for bar chart)
         public List<string> TopGoodHabitLabels { get; set; } = new();
         public List<int> TopGoodHabitValues { get; set; } = new();
-        // Phân bố số lượng thói quen xấu mỗi bệnh nhân
         public List<string> BadHabitDistributionLabels { get; set; } = new();
         public List<int> BadHabitDistributionValues { get; set; } = new();
     }

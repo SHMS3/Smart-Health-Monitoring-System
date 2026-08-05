@@ -1,14 +1,12 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace SmartHealthMonitoring.Migrations
 {
-    /// <inheritdoc />
     public partial class twoFieldForDailyVitalLog : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<byte>(
@@ -210,7 +208,6 @@ namespace SmartHealthMonitoring.Migrations
                 values: new object[] { null, true, new DateTime(2026, 5, 20, 10, 7, 0, 0, DateTimeKind.Local), null, (byte)1, "patient.mai@gmail.com" });
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

@@ -15,7 +15,6 @@ namespace SmartHealthMonitoring.Repositories
             _context = context;
         }
 
-        //public async Task<PagedResult<UserViewModel>> GetAllUserAsync(string? search, int page, int pageSize, string? status)
         //{
         //    var query = _context.Users.Include(u => u.Role).AsQueryable();
 
@@ -33,20 +32,12 @@ namespace SmartHealthMonitoring.Repositories
 
         //    if (!string.IsNullOrWhiteSpace(search))
         //    {
-        //        string s = search.Trim().ToLower();
 
         //        query = query.Where(u =>
-        //            u.Email.ToLower().Contains(s) ||
-        //            u.Username.ToLower().Contains(s));
         //    }
 
-        //    int total = await query.CountAsync();
 
         //    var items = await query
-        //        .OrderBy(u => u.UserId)
-        //        .Skip((page - 1) * pageSize)
-        //        .Take(pageSize)
-        //        .Select(u => new UserViewModel
         //        {
         //            UserId = u.UserId,
         //            RoleId = u.RoleId,
@@ -56,7 +47,6 @@ namespace SmartHealthMonitoring.Repositories
         //            IsActive = u.IsActive,
         //            CreatedAt = u.CreatedAt
         //        })
-        //        .ToListAsync();
 
         //    return new PagedResult<UserViewModel>
         //    {
@@ -67,19 +57,16 @@ namespace SmartHealthMonitoring.Repositories
         //    };
         //}
 
-        //public void UpdateAccount(Guid id, UserViewModel userVM)
         //{
         //    var user = _context.Users.Find(id);
         //    if (user == null)
         //        throw new Exception("User not found");
 
-        //    user.RoleId = userVM.RoleId;
 
         //    _context.Update(user);
         //    _context.SaveChanges();
         //}
 
-        //public void LockAccount(Guid id, string status)
         //{
         //    var user = _context.Users.Find(id);
            
@@ -87,14 +74,11 @@ namespace SmartHealthMonitoring.Repositories
         //    {
         //        throw new Exception("User not found");
         //    }
-        //    user.IsActive = status == "active";
 
         //    _context.Update(user);
         //    _context.SaveChanges();
         //}
 
-        //public async Task<List<Role>> GetAllRoles() => await _context.Roles.ToListAsync();
-        //public async Task<UserViewModel?> GetUserVmById(Guid id)
         //{
         //    var user = await _context.Users.Include(x => x.Role).FirstOrDefaultAsync(x => x.UserId == id);
 

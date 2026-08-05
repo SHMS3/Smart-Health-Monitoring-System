@@ -1,8 +1,8 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartHealthMonitoring.Common;
-using SmartHealthMonitoring.Services;
+using SmartHealthMonitoring.Services.Clinical;
 using SmartHealthMonitoring.ViewModels;
 
 namespace SmartHealthMonitoring.Controllers
@@ -29,7 +29,7 @@ namespace SmartHealthMonitoring.Controllers
             var lastLog = todayLogs.FirstOrDefault();
 
             bool canLog = true;
-            string logMessage = "Ghi log hôm nay";
+            string logMessage = "Ghi log h�m nay";
 
             DateTime? nextLogTime = null;
             int remainingSeconds = 0;
@@ -37,7 +37,7 @@ namespace SmartHealthMonitoring.Controllers
             if (todayLogs.Count >= 10)
             {
                 canLog = false;
-                logMessage = "Đã đạt giới hạn 10 lần/ngày";
+                logMessage = "�� d?t gi?i h?n 10 l?n/ng�y";
             }
             else if (lastLog != null)
             {
@@ -46,7 +46,7 @@ namespace SmartHealthMonitoring.Controllers
                 if (DateTime.Now < nextLogTime)
                 {
                     canLog = false;
-                    logMessage = "Đang trong thời gian chờ";
+                    logMessage = "�ang trong th?i gian ch?";
 
                     remainingSeconds = (int)(nextLogTime.Value - DateTime.Now).TotalSeconds;
                 }
@@ -127,7 +127,7 @@ namespace SmartHealthMonitoring.Controllers
 
             if (model == null)
             {
-                TempData["ErrorMessage"] = "Không tìm thấy hồ sơ chỉ số này hoặc hồ sơ đã bị xóa.";
+                TempData["ErrorMessage"] = "Kh�ng t�m th?y h? so ch? s? n�y ho?c h? so d� b? x�a.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -142,13 +142,13 @@ namespace SmartHealthMonitoring.Controllers
 
             if (model == null)
             {
-                TempData["ErrorMessage"] = "Không tìm thấy hồ sơ.";
+                TempData["ErrorMessage"] = "Kh�ng t�m th?y h? so.";
                 return RedirectToAction(nameof(Index));
             }
 
             if (model.UpdateCount >= 2)
             {
-                TempData["ErrorMessage"] = "Hồ sơ đã bị khóa.";
+                TempData["ErrorMessage"] = "H? so d� b? kh�a.";
 
                 return RedirectToAction(nameof(Details), new { id = model.Id });
             }
@@ -169,7 +169,7 @@ namespace SmartHealthMonitoring.Controllers
                     var success = await _dailyVitalLogService.UpdateLogAsync(id, model);
                     if (success)
                     {
-                        TempData["SuccessMessage"] = "Cập nhật chỉ số thành công!";
+                        TempData["SuccessMessage"] = "C?p nh?t ch? s? th�nh c�ng!";
                         return RedirectToAction(nameof(Details), new { id = model.Id });
                     }
                 }

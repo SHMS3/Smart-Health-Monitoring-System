@@ -1,4 +1,4 @@
-namespace SmartHealthMonitoring.ViewModels.Admin;
+﻿namespace SmartHealthMonitoring.ViewModels.Admin;
 
 public class AdminCalendarPageViewModel
 {
@@ -49,7 +49,6 @@ public class AdminCalendarEventExtendedProps
     public string EventKind { get; set; } = "appointment"; // appointment | blocked
 }
 
-/// <summary>ADM-02: Báo cáo No-show &amp; tỷ lệ huỷ theo bác sĩ.</summary>
 public class AdminNoShowReportViewModel
 {
     public DateOnly FromDate { get; set; }
@@ -66,7 +65,6 @@ public class AdminNoShowReportViewModel
     public double OverallNoShowRate { get; set; }
     public double OverallCancelRate { get; set; }
 
-    /// <summary>Labels/values for clinic-wide pie (outcome buckets).</summary>
     public List<string> OutcomeLabels { get; set; } = new();
     public List<int> OutcomeValues { get; set; } = new();
     public List<string> OutcomeColors { get; set; } = new();
@@ -91,19 +89,15 @@ public class AdminDoctorNoShowStat
     public double CancelByDoctorRate { get; set; }
 }
 
-/// <summary>ADM-03: Heatmap giờ cao điểm trong tuần.</summary>
 public class AdminHeatmapViewModel
 {
     public DateOnly FromDate { get; set; }
     public DateOnly ToDate { get; set; }
 
-    /// <summary>Cột: T2…CN (index 0 = Monday).</summary>
     public List<string> DayLabels { get; set; } = new();
 
-    /// <summary>Hàng: nhãn giờ (VD "08:00").</summary>
     public List<string> HourLabels { get; set; } = new();
 
-    /// <summary>Counts[hourIndex][dayIndex] — dayIndex 0=Mon … 6=Sun.</summary>
     public int[][] Counts { get; set; } = Array.Empty<int[]>();
 
     public int MaxCount { get; set; }

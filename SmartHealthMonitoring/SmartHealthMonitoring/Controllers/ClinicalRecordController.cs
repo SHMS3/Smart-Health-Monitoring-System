@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Interfaces.Clinical;
 using System;
 using System.Threading.Tasks;
 
 namespace SmartHealthMonitoring.Controllers
 {
-    [Authorize(Roles = "0,1")] // Cho phép cả Bệnh nhân và Bác sĩ đi qua cổng Controller
+    [Authorize(Roles = "0,1")] // Cho ph�p c? B?nh nh�n v� B�c si di qua c?ng Controller
     public class ClinicalRecordController : Controller
     {
         private readonly IClinicalRecordService _clinicalRecordService;
@@ -57,7 +57,7 @@ namespace SmartHealthMonitoring.Controllers
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "Lỗi khi tải hồ sơ y tế: " + ex.Message;
+                TempData["Error"] = "L?i khi t?i h? so y t?: " + ex.Message;
 
                 if (User.IsInRole("1"))
                 {
@@ -69,7 +69,7 @@ namespace SmartHealthMonitoring.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "1")] // Chỉ Bác sĩ mới được quyền Hủy hồ sơ
+        [Authorize(Roles = "1")] // Ch? B�c si m?i du?c quy?n H?y h? so
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
@@ -94,13 +94,13 @@ namespace SmartHealthMonitoring.Controllers
             }
             catch (Exception)
             {
-                TempData["Error"] = "Lỗi hệ thống khi hủy hồ sơ.";
+                TempData["Error"] = "L?i h? th?ng khi h?y h? so.";
                 return RedirectToAction("DoctorQueue", "Appointment");
             }
         }
 
         [HttpPost]
-        [Authorize(Roles = "1")] // Chỉ Bác sĩ mới được cập nhật quyền xem
+        [Authorize(Roles = "1")] // Ch? B�c si m?i du?c c?p nh?t quy?n xem
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleViewForPatient(int id)
         {
@@ -121,7 +121,7 @@ namespace SmartHealthMonitoring.Controllers
             }
             catch (Exception)
             {
-                TempData["Error"] = "Lỗi hệ thống khi cập nhật quyền xem.";
+                TempData["Error"] = "L?i h? th?ng khi c?p nh?t quy?n xem.";
                 return RedirectToAction("DoctorQueue", "Appointment");
             }
         }

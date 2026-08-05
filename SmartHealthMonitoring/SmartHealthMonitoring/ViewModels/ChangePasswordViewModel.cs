@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels
 {
@@ -19,7 +19,6 @@ namespace SmartHealthMonitoring.ViewModels
         [DataType(DataType.Password)]
         public string ConfirmNewPassword { get; set; } = string.Empty;
 
-        // Validation thêm: mật khẩu mới không được giống mật khẩu hiện tại
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (!string.IsNullOrEmpty(NewPassword) &&

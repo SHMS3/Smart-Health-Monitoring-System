@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SmartHealthMonitoring.Context;
 using SmartHealthMonitoring.Models;
+using SmartHealthMonitoring.Interfaces.Repositories;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 namespace SmartHealthMonitoring.Repositories
 {
     public class NewsRepository
-    {
+    : INewsRepository {
         private readonly SmartHealthMonitoringContext _context;
 
         public NewsRepository(SmartHealthMonitoringContext context)
@@ -52,3 +53,5 @@ namespace SmartHealthMonitoring.Repositories
         }
     }
 }
+
+

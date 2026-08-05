@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SmartHealthMonitoring.ViewModels.Admin
 {
@@ -15,7 +15,6 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         [Display(Name = "Mô tả")]
         public string? Description { get; set; }
 
-        /// <summary>0 = Nữ, 1 = Nam, 2 = Chung</summary>
         [Required(ErrorMessage = "Vui lòng chọn giới tính")]
         [Display(Name = "Giới tính áp dụng")]
         public byte Sex { get; set; } = 2;
@@ -30,28 +29,24 @@ namespace SmartHealthMonitoring.ViewModels.Admin
         [Display(Name = "Tuổi tối đa")]
         public byte AgeMax { get; set; } = 120;
 
-        // --- Huyết áp Tâm Thu ---
         [Required][Range(80, 250)][Display(Name = "Cảnh báo HA TT (mmHg)")]
         public short SystolicBpWarning { get; set; } = 130;
 
         [Required][Range(80, 250)][Display(Name = "Nguy hiểm HA TT (mmHg)")]
         public short SystolicBpDanger { get; set; } = 140;
 
-        // --- Huyết áp Tâm Trương ---
         [Required][Range(40, 180)][Display(Name = "Cảnh báo HA TR (mmHg)")]
         public short DiastolicBpWarning { get; set; } = 80;
 
         [Required][Range(40, 180)][Display(Name = "Nguy hiểm HA TR (mmHg)")]
         public short DiastolicBpDanger { get; set; } = 90;
 
-        // --- Nhịp tim thấp ---
         [Required][Range(20, 100)][Display(Name = "Cảnh báo nhịp tim thấp (bpm)")]
         public short HeartRateWarningMin { get; set; } = 60;
 
         [Required][Range(20, 100)][Display(Name = "Nguy hiểm nhịp tim thấp (bpm)")]
         public short HeartRateDangerMin { get; set; } = 50;
 
-        // --- Nhịp tim cao ---
         [Required][Range(80, 250)][Display(Name = "Cảnh báo nhịp tim cao (bpm)")]
         public short HeartRateWarningMax { get; set; } = 100;
 

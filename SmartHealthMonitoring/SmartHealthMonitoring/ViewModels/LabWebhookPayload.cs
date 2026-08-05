@@ -14,7 +14,7 @@
         public byte STSlope { get; set; }
         public byte MajorVessels { get; set; }
         public byte ThalResult { get; set; }
-        public string? EcgImageBase64 { get; set; } // Hứng chuỗi mã hóa ảnh từ máy xét nghiệm đẩy sang
-        public string? EcgImageUrl { get; set; }     // Trả về link Presigned URL của MinIO cho Client
+        public string? EcgImageBase64 { get; set; } // H?ng chu?i m� h�a ?nh t? m�y x�t nghi?m d?y sang
+        public string? EcgImageUrl { get; set; }     // Tr? v? link Presigned URL c?a MinIO cho Client
     }
 }

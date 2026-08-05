@@ -1,3 +1,6 @@
+﻿using SmartHealthMonitoring.Interfaces.Audit;
+using SmartHealthMonitoring.Interfaces.Minio;
+using SmartHealthMonitoring.Interfaces.Email;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -39,7 +42,6 @@ namespace SmartHealthMonitoring.Controllers
         {
             var model = new ClinicalExamFormViewModel { PatientId = patientId };
 
-            // Lấy id bác sĩ
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdString, out int userId))
             {
@@ -48,7 +50,6 @@ namespace SmartHealthMonitoring.Controllers
                 {
                     var today = SmartHealthMonitoring.Common.AppTime.Now.Date;
 
-                    // Lấy tất cả thanh toán Paid trong ngày hôm nay của bác sĩ này cho bệnh nhân này
                     var paidPayments = await _context.Payments
                         .Include(p => p.PaymentDetails)
                             .ThenInclude(pd => pd.Service)
@@ -60,11 +61,9 @@ namespace SmartHealthMonitoring.Controllers
                         .OrderBy(p => p.PaidAt)
                         .ToListAsync();
 
-                    // Đếm số lượng hồ sơ đã tạo trong ngày hôm nay
                     int recordsCount = await _context.ClinicalRecords
                         .CountAsync(r => r.PatientId == patientId && r.DoctorId == doctor.Id && r.VisitDate >= today && !r.IsDeleted);
 
-                    // 1 lần thanh toán = 1 hồ sơ. Lấy thanh toán chưa được sử dụng
                     Payment? availablePayment = null;
                     if (recordsCount < paidPayments.Count)
                     {
@@ -73,7 +72,6 @@ namespace SmartHealthMonitoring.Controllers
 
                     ViewBag.CanFetchData = availablePayment != null;
 
-                    // Lấy danh sách tên dịch vụ đã thanh toán (lowercase để so sánh dễ ở JS)
                     var purchasedServiceNames = availablePayment?.PaymentDetails
                         .Select(pd => pd.Service.Name.ToLower())
                         .ToList() ?? new List<string>();
@@ -82,7 +80,6 @@ namespace SmartHealthMonitoring.Controllers
                 }
             }
 
-            // Đảm bảo luôn có giá trị mặc định tránh null ở Razor
             ViewBag.PurchasedServices ??= new List<string>();
 
             return View(model);
@@ -109,7 +106,6 @@ namespace SmartHealthMonitoring.Controllers
 
             var today = SmartHealthMonitoring.Common.AppTime.Now.Date;
             
-            // Lấy tất cả thanh toán Paid trong ngày hôm nay của bác sĩ này cho bệnh nhân này
             var paidPayments = await _context.Payments
                 .Include(p => p.PaymentDetails)
                     .ThenInclude(pd => pd.Service)
@@ -121,7 +117,6 @@ namespace SmartHealthMonitoring.Controllers
                 .OrderBy(p => p.PaidAt)
                 .ToListAsync();
 
-            // Đếm số lượng hồ sơ đã tạo trong ngày hôm nay
             int recordsCount = await _context.ClinicalRecords
                 .CountAsync(r => r.PatientId == model.PatientId && r.DoctorId == doctor.Id && r.VisitDate >= today && !r.IsDeleted);
 
@@ -162,7 +157,6 @@ namespace SmartHealthMonitoring.Controllers
                 ModelState.Remove(nameof(model.ThalResult));
             }
 
-            // 1. Kiểm tra Lớp 1 (Các ngưỡng Range từ ViewModel)
             if (!ModelState.IsValid)
             {
                 ViewBag.CanFetchData = availablePayment != null;
@@ -171,8 +165,6 @@ namespace SmartHealthMonitoring.Controllers
                 return View(model);
             }
 
-            // 2. Kiểm tra Lớp 2 (Nghiệp vụ Y khoa chéo)
-            // Ví dụ: Bắt ngoại lệ nếu Huyết áp tâm thu < Nhịp tim (Dấu hiệu máy đo hỏng nặng)
             if (hasBpPackage && model.RestingBP < model.MaxHeartRate && model.RestingBP < 80)
             {
                 ViewBag.CanFetchData = availablePayment != null;
@@ -189,25 +181,20 @@ namespace SmartHealthMonitoring.Controllers
                 {
                     using (var stream = model.AttachmentFile.OpenReadStream())
                     {
-                        // Đặt tên file: attach_PatientId_Timestamp_TenFileGoc.ext
                         string extension = Path.GetExtension(model.AttachmentFile.FileName);
                         string objectName = $"attach_{model.PatientId}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}{extension}";
                         string bucketName = "clinical-attachments";
 
-                        // Đẩy file lên MinIO
                         await _minioService.UploadFileAsync(bucketName, objectName, stream, model.AttachmentFile.ContentType);
 
-                        // Sinh link bảo mật thời hạn 7 ngày
                         model.AttachmentUrl = await _minioService.GetPresignedUrlAsync(bucketName, objectName, 10080);
                     }
                 }
 
-                // ── Lấy thông tin patient cho audit log ──────────────────────────────
                 var patient = await _context.Patients
                     .Include(p => p.User)
                     .FirstOrDefaultAsync(p => p.Id == model.PatientId && !p.IsDeleted);
 
-                // ── Tự động cấu hình ngưỡng nếu chưa có ──────────────────────
                 bool isAutoThresholdCreated = false;
                 PatientThreshold autoThreshold = null;
                 if (patient != null)
@@ -246,11 +233,7 @@ namespace SmartHealthMonitoring.Controllers
                         }
                     }
                 }
-                // ─────────────────────────────────────────────────────────────
 
-                // ── Lưu ClinicalRecord với NULL cho các gói chưa thanh toán ─────────────────
-                // Các chỉ số không được mua giữ nguyên là null (không gán fallback).
-                // Fallback chỉ được tính toán ON-THE-FLY bởi AiPredictionService khi phân tích.
                 var record = new ClinicalRecord
                 {
                     PatientId      = model.PatientId,
@@ -284,7 +267,6 @@ namespace SmartHealthMonitoring.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                // Cập nhật trạng thái Appointment (đặt lịch online hoặc qua lễ tân) thành Đã hoàn thành
                 var examToday = SmartHealthMonitoring.Common.AppTime.Now.Date;
                 var activeAppointment = await _context.Appointments
                     .Include(a => a.Slot)
@@ -304,7 +286,6 @@ namespace SmartHealthMonitoring.Controllers
 
                 _cache.Remove($"LabResult_{model.PatientId}");
 
-                // patient đã được fetch ở trên để tính fallback, dùng lại ở đây
 
                 await _auditLogService.LogAsync(
                     "Create",
@@ -325,8 +306,6 @@ namespace SmartHealthMonitoring.Controllers
                         patient?.User?.FullName);
                 }
 
-                // ĐÃ TẮT CƠ CHẾ GỬI EMAIL TỰ ĐỘNG THEO YÊU CẦU NGHIỆP VỤ Y KHOA
-                // Tránh tình trạng bệnh nhân nhận kết quả chẩn đoán bệnh hiểm nghèo qua email mà không có Bác sĩ tư vấn tâm lý.
                 /*
                 try
                 {
@@ -345,7 +324,6 @@ namespace SmartHealthMonitoring.Controllers
                         string htmlContent = _emailService.GetHtmlContentFromFile("PatientHealthReportTemplate.html", replacements);
                         if (!string.IsNullOrEmpty(htmlContent))
                         {
-                            // Đẩy việc gửi mail chạy ngầm (Fire and Forget) để không làm chậm UI
                             var userEmail = patient.User.Email;
                             _ = Task.Run(async () => 
                             {
@@ -371,9 +349,6 @@ namespace SmartHealthMonitoring.Controllers
             }
         }
 
-        // =============================================
-        // FEATURE: CẤU HÌNH NGƯỠNG CHO BỆNH NHÂN (Giữ nguyên)
-        // =============================================
         [HttpGet]
         public async Task<IActionResult> SettingPatientThreshold(int patientId)
         {
@@ -513,23 +488,14 @@ namespace SmartHealthMonitoring.Controllers
             return RedirectToAction("Index", "ClinicalRecord", new { id = model.PatientId });
         }
 
-        // =============================================
-        // API: GỢI Ý NGƯỠNG CHUẨN CHO BÁC SĨ
-        // =============================================
 
-        /// <summary>
-        /// Trả về ngưỡng chuẩn phù hợp nhất theo giới tính và độ tuổi.
-        /// GET /ClinicalExam/GetSuggestedThreshold?sex=1&age=45
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetSuggestedThreshold(byte sex, int age)
         {
-            // Ưu tiên: khớp đúng giới tính + tuổi nằm trong khoảng → nếu không có thì lấy template "Chung"
             var templates = await _context.StandardThresholds
                 .Where(t => t.IsActive && age >= t.AgeMin && age <= t.AgeMax)
                 .ToListAsync();
 
-            // Tìm template khớp giới tính chính xác trước
             var matched = templates.FirstOrDefault(t => t.Sex == sex)
                        ?? templates.FirstOrDefault(t => t.Sex == 2); // fallback: chung
 
@@ -553,10 +519,6 @@ namespace SmartHealthMonitoring.Controllers
             });
         }
 
-        /// <summary>
-        /// Trả về tất cả ngưỡng chuẩn đang active để bác sĩ chọn từ dropdown.
-        /// GET /ClinicalExam/GetAllStandardThresholds
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAllStandardThresholds()
         {
@@ -586,31 +548,20 @@ namespace SmartHealthMonitoring.Controllers
             return Json(list);
         }
 
-        // =============================================
-        // HELPERS: Fallback sinh lý theo tuổi & giới
-        // Tham chiếu: ACC/AHA 2017, NCEP-ATP III, Haskell-Fox
-        // =============================================
 
-        /// <summary>Huyết áp tâm thu nghỉ bình thường (mmHg) theo tuổi và giới tính.</summary>
         private static float GetNormalRestingBP(int age, float sex)
         {
-            // sex: 1 = Nam, 0 = Nữ
             return sex >= 1f
                 ? age switch { < 30 => 115f, < 40 => 120f, < 50 => 124f, < 60 => 128f, < 70 => 132f, _ => 136f }
                 : age switch { < 30 => 110f, < 40 => 114f, < 50 => 118f, < 60 => 128f, < 70 => 134f, _ => 138f };
         }
 
-        /// <summary>
-        /// Nhịp tim tối đa lý thuyết khi gắng sức (bpm) theo tuổi và giới tính.
-        /// Công thức: Haskell-Fox (220 − age), hiệu chỉnh nữ +5 bpm.
-        /// </summary>
         private static float GetNormalMaxHR(int age, float sex)
         {
             float hr = (220f - age) + (sex >= 1f ? 0f : 5f);
             return Math.Clamp(hr, 100f, 200f);
         }
 
-        /// <summary>Cholesterol toàn phần bình thường (mg/dL) theo tuổi và giới tính (NCEP-ATP III).</summary>
         private static float GetNormalCholesterol(int age, float sex)
         {
             return sex >= 1f // Nam
@@ -619,3 +570,5 @@ namespace SmartHealthMonitoring.Controllers
         }
     }
 }
+
+

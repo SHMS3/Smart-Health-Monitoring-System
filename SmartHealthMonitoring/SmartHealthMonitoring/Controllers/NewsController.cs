@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SmartHealthMonitoring.Interfaces;
+using SmartHealthMonitoring.Interfaces.News;
 using SmartHealthMonitoring.Models;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -24,7 +24,7 @@ namespace SmartHealthMonitoring.Controllers
             var news = await _newsService.GetNewsAsync(status);
             
             ViewBag.CurrentStatus = status ?? "all";
-            ViewBag.CurrentAuthor = User.FindFirstValue(ClaimTypes.Name) ?? "Lễ tân";
+            ViewBag.CurrentAuthor = User.FindFirstValue(ClaimTypes.Name) ?? "L? t�n";
             
             return View(news);
         }
@@ -50,7 +50,7 @@ namespace SmartHealthMonitoring.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var authorName = User.FindFirstValue(ClaimTypes.Name) ?? "Lễ tân";
+            var authorName = User.FindFirstValue(ClaimTypes.Name) ?? "L? t�n";
             
             var (success, message) = await _newsService.CreateNewsAsync(model, action, uploadImage, authorName);
 
@@ -75,12 +75,12 @@ namespace SmartHealthMonitoring.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var currentAuthor = User.FindFirstValue(ClaimTypes.Name) ?? "Lễ tân";
+            var currentAuthor = User.FindFirstValue(ClaimTypes.Name) ?? "L? t�n";
             var (success, message, post) = await _newsService.GetNewsForEditAsync(id, currentAuthor);
 
             if (!success)
             {
-                if (message == "Không tìm thấy bài viết.") return NotFound();
+                if (message == "Kh�ng t�m th?y b�i vi?t.") return NotFound();
                 
                 TempData["Error"] = message;
                 return RedirectToAction(nameof(Index));
@@ -102,13 +102,13 @@ namespace SmartHealthMonitoring.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var currentAuthor = User.FindFirstValue(ClaimTypes.Name) ?? "Lễ tân";
+            var currentAuthor = User.FindFirstValue(ClaimTypes.Name) ?? "L? t�n";
             
             var (success, message) = await _newsService.UpdateNewsAsync(id, model, action, uploadImage, currentAuthor);
 
             if (!success)
             {
-                if (message == "Không tìm thấy bài viết.") return NotFound();
+                if (message == "Kh�ng t�m th?y b�i vi?t.") return NotFound();
                 
                 ModelState.AddModelError("", message);
                 return View(model);
@@ -121,7 +121,7 @@ namespace SmartHealthMonitoring.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            var currentAuthor = User.FindFirstValue(ClaimTypes.Name) ?? "Lễ tân";
+            var currentAuthor = User.FindFirstValue(ClaimTypes.Name) ?? "L? t�n";
             var (success, message) = await _newsService.DeleteNewsAsync(id, currentAuthor);
 
             return Json(new { success, message });
